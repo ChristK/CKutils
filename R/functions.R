@@ -257,7 +257,7 @@ replace_from_table <-
     # stopifnot(class(from) == dt[, class(get(colname))]) # not working for factors
     if (!is.null(newcolname) && newcolname %in% names(dt)) stop(
       "The new column name already exists in the data.table.")
-    if (length(from) > length(to)) message("Note: many to few match.")
+    if (length(from) > length(to)) message("Note: matched many to few.")
 
     colorder <- copy(names(dt))
     if (class(from) == class(to)) {
@@ -316,12 +316,13 @@ replace_from_table <-
 #' to_agegrp(data.table(age = 0:99), grp_width = 10, max_age = 85)[]
 to_agegrp <-
   function(dt,
+           grp_width = 5L,
            age_colname = "age",
-           colname = "agegrp",
+           agegrp_colname = "agegrp",
            to_factor = TRUE,
            ...) {
     stopifnot(is.data.table(dt), age_colname %in% names(dt),
-              length(age_colname) == 1L, length(colname) == 1L,
+              length(age_colname) == 1L, length(agegrp_colname) == 1L,
               is.logical(to_factor))
 
     age_vec <- dt[, min(get(age_colname))]:dt[, max(get(age_colname))]
@@ -331,14 +332,16 @@ to_agegrp <-
       from = age_vec,
       to = agegrp_name(
         min_age = min(age_vec),
+        max_age = max(age_vec),
+        grp_width = grp_width,
         match_input = TRUE,
         match_input_max_age = max(age_vec),
         ...
       ),
-      newcolname = colname
+      newcolname = agegrp_colname
     )
     if (to_factor) {
-      dt[, (colname) := factor(get(colname))]
+      dt[, (agegrp_colname) := factor(get(agegrp_colname))]
     }
     return(invisible(dt))
   }
@@ -346,9 +349,9 @@ to_agegrp <-
 # TODO add documentation
 #' Clone a data.table
 #'
-#' `clone_dt` replicates a data.table and binds the replicates a the bottom of
-#' the original one. It also creates an column named`idcol` to identify each
-#' iteration.
+#' `clone_dt` clones a data.table and binds the copies at the bottom of
+#' the original data.table. It also creates an column named \code{`.id`}
+#' to identify each iteration. The keys of the input data.table are retained.
 #'
 #' @export
 clone_dt <-
@@ -576,16 +579,17 @@ match_colnames_pattern <- function(dt, ...) {
 #' @export
 reldist_diagnostics <- function(comparison, reference, comparison_wt, reference_wt,
                                 main, smooth = 0.35, discrete = FALSE) {
+  opar <- par(no.readonly = TRUE)
+  on.exit(par(opar))
   if (!requireNamespace("reldist", quietly = TRUE)) {
     stop("Package \"reldist\" needed for this function to work. Please install it.",
          call. = FALSE)
   }
-  opar <- par(no.readonly = TRUE)
-  on.exit(par(opar))
+
   reference_dens  <- density(reference, weights = reference_wt)
   comparison_dens <- density(comparison, weights = comparison_wt)
 
-  par(mfrow=c(2,2))
+  par(mfrow = c(2,2))
   plot(
     reference_dens,
     main = main,
@@ -718,7 +722,7 @@ dependencies <-
            install = TRUE,
            update  = FALSE,
            quiet   = TRUE,
-           verbose = TRUE,
+           verbose = FALSE,
            ...) {
     myrequire <- function(package, ...) {
       result <- FALSE
@@ -822,6 +826,35 @@ dependencies <-
       invisible(results)
     }
   }
+
+# TODO add documentation
+#' Scrambles rank trajectories of simulants
+#'
+#' Scrambles the rank trajectories using a continuous space random walk. The \code{jump} parameter defines the maximum distance of jump every year
+#'
+#' @export
+scramble_trajectories <- function(x, pid, jump = 0.05) {
+  if (all(x < 0 | x > 1))
+    stop("Input needs to be between 0 and 1")
+  if (is.unsorted(pid))
+    stop("IDs must be sorted")
+  if (jump >= 1)
+    stop("Overlap needs to be <= 1")
+  if (jump == 0) return(x) else return(fscramble_trajectories(x, pid, jump))
+}
+
+
+# tt <- data.table(x = runif(5e5), pid = 1:5e5)
+# tt <- CKutils::clone_dt(tt, 50)
+# setkey(tt, pid, .id)
+# tt[, y := scramble_trajectories(x, pid, 0.05)]
+# tt[998:1003]
+# print(tt[sample(.N, 1e4), ggplot2::qplot(x, y, alpha = I(1/20))])
+# print(tt[.id == 50, hist(y)])
+# print(tt[.id == 50 & y > 0.9, hist(y)])
+# print(tt[.id == 50 & y < 0.1, hist(y)])
+# print(tt[pid == 4,  plot(.id, y, ylim = c(0,1))])
+
 
 .onUnload <- function(libpath) {
   library.dynam.unload("CKutils", libpath)
