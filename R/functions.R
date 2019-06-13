@@ -317,6 +317,7 @@ replace_from_table <-
 to_agegrp <-
   function(dt,
            grp_width = 5L,
+           max_age = 85L,
            age_colname = "age",
            agegrp_colname = "agegrp",
            to_factor = TRUE,
@@ -332,7 +333,7 @@ to_agegrp <-
       from = age_vec,
       to = agegrp_name(
         min_age = min(age_vec),
-        max_age = max(age_vec),
+        max_age = max_age,
         grp_width = grp_width,
         match_input = TRUE,
         match_input_max_age = max(age_vec),
