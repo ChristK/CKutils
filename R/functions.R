@@ -900,8 +900,8 @@ scramble_trajectories <- function(x, pid, jump = 0.05) {
 #' @return A list made of the beta and alpha parameters calculated, called shape1 and shape2
 #' @examples
 #' estim_beta_params(0.6, 5)
-#' $shape1  6.0006e-05
-#' $shape2  4.0004e-05
+#' shape1  6.0006e-05
+#' shape2  4.0004e-05
 estim_beta_params <- function(mu, var) {
   # from https://stats.stackexchange.com/questions/12232/calculating-the-parameters-of-a-beta-distribution-using-the-mean-and-variance and wikipedia
   stopifnot(between(mu, 0, 1), var > 0)
