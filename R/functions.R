@@ -300,8 +300,11 @@ replace_from_table <-
 #' `to_agegrp` creates a new column
 #'
 #' @param dt A data.table with a column named \code{age}.
+#' @param grp_width The group width for the age groups.
+#' @param max_age The max age for the closed agegroups. For ages above the max age,
+#'  an open age group will be created, named max_age+ (i.e. 85+).
 #' @param age_colname A string denoting the age column in \code{dt}.
-#' @param colname A string denoting the name of the column that will be
+#' @param agegrp_colname A string denoting the name of the column that will be
 #'   created for age-groups.
 #' @param to_factor A logical. If \code{TRUE}, then the age-groups
 #'   column is converted to factor.
@@ -317,6 +320,7 @@ replace_from_table <-
 to_agegrp <-
   function(dt,
            grp_width = 5L,
+           max_age = 85L,
            age_colname = "age",
            agegrp_colname = "agegrp",
            to_factor = TRUE,
@@ -332,7 +336,7 @@ to_agegrp <-
       from = age_vec,
       to = agegrp_name(
         min_age = min(age_vec),
-        max_age = max(age_vec),
+        max_age = max_age,
         grp_width = grp_width,
         match_input = TRUE,
         match_input_max_age = max(age_vec),
