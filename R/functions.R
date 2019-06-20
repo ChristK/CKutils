@@ -917,7 +917,7 @@ estim_beta_params <- function(mu, var) {
 #' x <- c("age", "year", "bp", "name")
 #' y <- c("city", "year", "birth", "id")
 #' outersect(x, y)
-#' [1] "age"   "bp"    "name"  "city"  "birth" "id"
+#' #"age" "bp" "name" "city" "birth" "id"
 outersect <-
   function(x, y, ...) {
     big.vec <- c(x, y, ...)
@@ -932,6 +932,7 @@ outersect <-
 #' @export
 #' @return Sample(s) from the \code{`x`} vector, according to eventual conditions provided
 #' @examples
+#' x <- 1:10
 #' resample(x[x >  8]) # length 2 
 #' resample(x[x >  9]) # length 1
 #' resample(x[x > 10]) # length 0

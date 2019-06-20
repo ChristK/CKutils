@@ -21,5 +21,5 @@ A vector made of both contents from x and y, except from the duplicated items
 x <- c("age", "year", "bp", "name")
 y <- c("city", "year", "birth", "id")
 outersect(x, y)
-[1] "age"   "bp"    "name"  "city"  "birth" "id"
+#"age" "bp" "name" "city" "birth" "id"
 }
