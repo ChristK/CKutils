@@ -10,4 +10,6 @@ validate_gamlss(dt, gamlss_obj, mc = 10L, orig_data = dt)
 \code{validate_gamlss} returns a data.table with the observed and predicted
 variable. If \code{mc > 1} multiple predictions are drawn from the predicted
 distributions. Useful for plotting with ggplot
+@param dt A data.table from which come the observed variables
+@param gamlss_obj
 }

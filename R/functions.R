@@ -346,14 +346,22 @@ to_agegrp <-
     return(invisible(dt))
   }
 
-# TODO add documentation
 #' Clone a data.table
 #'
 #' `clone_dt` clones a data.table and binds the copies at the bottom of
 #' the original data.table. It also creates an column named \code{`.id`}
 #' to identify each iteration. The keys of the input data.table are retained.
-#'
+#' @param dt A data.table to be cloned
+#' @param times The number of cloning iterations
+#' @param idcol = TRUE Creates a new column containing the id of each data.table iteration
+#' @return A data.table binding the original one and the new iterations with a column for the id of each iteration, invisibly
 #' @export
+#' @examples
+#' library(data.table)
+#' library(CKutils)
+#' x <- c(1, 5, 3, 6, 4, 2, 9, 8, 7)
+#' dt <- data.table(x)
+#' clone_dt(dt, 3, idcol = TRUE)[]
 clone_dt <-
   function(dt, times, idcol = TRUE) {
     xx <- key(dt)
@@ -362,12 +370,23 @@ clone_dt <-
     return(invisible(out))
   }
 
-# TODO add documentation
+
 #' Calculate percentile rank
 #'
 #' `pctl_rank` calculates the percentile rank of a numeric vector
-#'
+#' @param x A numeric vector to rank
+#' @param ties.method A character string specifying how ties are treated
 #' @export
+#' @return The percentile rank of the \code{`x`} vector calculated according to the ties.method choosen
+#' @examples
+#' library(data.table)
+#' library(CKutils)
+#' x = c(2,5,1,3,4,6)
+#' pctl_rank(x, ties.method="min") #with ties.method = min (assigns every tied element to the lowest rank)
+#' pctl_rank(x, ties.method="max") #with ties.method = max (the opposite)
+#' pctl_rank(x, ties.method="first") #with ties.method = first (the "earlier" entry "win")
+#' pctl_rank(x, ties.method="random") #with ties.method = random (breaks ties randomly)
+#' pctl_rank(x, ties.method="average") #with ties.method = average (assigns ties to average rank)
 pctl_rank <- function(x, ties.method = c("average", "first", "random",
                                        "max", "min", "dense")) {
   stopifnot(is.numeric(x))
@@ -386,6 +405,8 @@ pctl_rank <- function(x, ties.method = c("average", "first", "random",
 #' `validate_gamlss` returns a data.table with the observed and predicted
 #'  variable. If \code{mc > 1} multiple predictions are drawn from the predicted
 #'  distributions. Useful for plotting with ggplot
+#'  @param dt A data.table from which come the observed variables
+#'  @param gamlss_obj 
 #'
 #' @export
 validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
@@ -554,15 +575,22 @@ counts <- function(x) {
   }
 }
 
-# TODO add documentation
+
 #' Obtain matching names corresponding to patterns
 #'
 #' `match_colnames_pattern` returns the matching names of the argument `dt`
 #' (i.e. \code{names(dt)}) corresponding to the regular expression patterns
 #' provided. The patterns must be supported by \code{\link{grep}}.
 #' This is based on `data.table:::patterns`
-#'
+#' @param dt A data.table from which the column names \code{names(dt)} or \code{colnames(dt)} will be tested
+#' @param ... A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops
 #' @export
+#' @examples  
+#' library(data.table)
+#' library(CKutils)
+#' dt <- data.table(id = c("city", "year", "birth", "idp"), b = c("age", "year", "bp", "name"))
+#' z <- list("id", "year", "b")
+#' match_colnames_pattern(dt, z) #[1] "id" "b" 
 match_colnames_pattern <- function(dt, ...) {
   p = unlist(list(...), use.names = FALSE)
   if (!is.character(p)) stop("Input patterns must be of type character.")
@@ -859,4 +887,74 @@ scramble_trajectories <- function(x, pid, jump = 0.05) {
 .onUnload <- function(libpath) {
   library.dynam.unload("CKutils", libpath)
 }
+
+# estimate beta params from mean and variance
+#' `estim_beta_params` estimates the beta parameters from a mean and a variance given
+#' @param mu An integer between 0 and 1
+#' @param var A positive integer
+#' @export
+#' @return A list made of the beta and alpha parameters calculated, called shape1 and shape2
+#' @examples
+#' estim_beta_params(0.6, 5)
+#' $shape1  6.0006e-05
+#' $shape2  4.0004e-05
+estim_beta_params <- function(mu, var) {
+  # from https://stats.stackexchange.com/questions/12232/calculating-the-parameters-of-a-beta-distribution-using-the-mean-and-variance and wikipedia
+  stopifnot(between(mu, 0, 1), var > 0)
+  if (var >= (mu * (1 - mu))) var  <- mu * (1 - mu) * 0.9999
+  alpha <- mu * ((mu * (1 - mu) / var) - 1) # if var < (mu * (1 - mu))
+  beta <- (1 - mu) * ((mu * (1 - mu) / var) - 1) # var < (mu * (1 - mu))
+  return(params = list(shape1 = alpha, shape2 = beta))
+}
+
+# Define outersect. Like setdiff but symmetrical. I.e. setdiff(a,b) is not the
+# same as setdiff(b,a). outersect solve this by calculating both
+#' `outersect` Calculates the symmetrical set difference of subsets
+#' @param x,y vectors, data frames containing a sequence of items
+#' @param ... further arguments to be passed to or from other methods
+#' @export
+#' @return A vector made of both contents from x and y, except from the duplicated items
+#' @examples
+#' x <- c("age", "year", "bp", "name")
+#' y <- c("city", "year", "birth", "id")
+#' outersect(x, y)
+#' [1] "age"   "bp"    "name"  "city"  "birth" "id"
+outersect <-
+  function(x, y, ...) {
+    big.vec <- c(x, y, ...)
+    duplicates <- big.vec[duplicated(big.vec)]
+    setdiff(big.vec, unique(duplicates))
+  }
+
+# Define function for sampling. Taken from sample man pages
+#' `resample` Gives sample of from the elements of \code{`x`} of the specified size. Both size and \code{`x`} has to be integers
+#' @param x A vector to be sampled
+#' @param ... Eventual condition for the vectorisation
+#' @export
+#' @return Sample(s) from the \code{`x`} vector, according to eventual conditions provided
+#' @examples
+#' resample(x[x >  8]) # length 2 
+#' resample(x[x >  9]) # length 1
+#' resample(x[x > 10]) # length 0
+resample <-
+  function(x, ...) {
+    x <- na.omit(x)
+    x[sample.int(length(x), ...)]
+  }
+
+#' # delete output files
+#' #' `delete_output_files` deletes the output files in the directory location specified in parameter
+#' #' @param x The output directory containing the output files to be deleted. Should be a path relative to the directory
+#' #' @export
+#' #' @examples
+#' #' delete_output_files(x = "C:/path/to/output/directory") # deletes all the files in the specified directory
+#' delete_output_files <- function(x = output_dir()) {
+#'   file.remove(list.files(
+#'     path = x,
+#'     full.names = TRUE,
+#'     recursive = TRUE,
+#'     all.files = TRUE
+#'   ))
+#' }
+
 

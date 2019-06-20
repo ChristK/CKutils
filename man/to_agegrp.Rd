@@ -4,21 +4,21 @@
 \alias{to_agegrp}
 \title{Generate age-group from age}
 \usage{
-to_agegrp(dt, age_colname = "age", colname = "agegrp",
-  to_factor = TRUE, ...)
+to_agegrp(dt, grp_width = 5L, age_colname = "age",
+  agegrp_colname = "agegrp", to_factor = TRUE, ...)
 }
 \arguments{
 \item{dt}{A data.table with a column named \code{age}.}
 
 \item{age_colname}{A string denoting the age column in \code{dt}.}
 
-\item{colname}{A string denoting the name of the column that will be
-created for age-groups.}
-
 \item{to_factor}{A logical. If \code{TRUE}, then the age-groups
 column is converted to factor.}
 
 \item{...}{Pass arguements to \code{\link{agegrp_name}}.}
+
+\item{colname}{A string denoting the name of the column that will be
+created for age-groups.}
 }
 \value{
 a data.table, invisibly.
