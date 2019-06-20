@@ -388,9 +388,6 @@ clone_dt <-
 #' x = c(2,5,1,3,4,6)
 #' pctl_rank(x, ties.method="min") #with ties.method = min (assigns every tied element to the lowest rank)
 #' pctl_rank(x, ties.method="max") #with ties.method = max (the opposite)
-#' pctl_rank(x, ties.method="first") #with ties.method = first (the "earlier" entry "win")
-#' pctl_rank(x, ties.method="random") #with ties.method = random (breaks ties randomly)
-#' pctl_rank(x, ties.method="average") #with ties.method = average (assigns ties to average rank)
 pctl_rank <- function(x, ties.method = c("average", "first", "random",
                                        "max", "min", "dense")) {
   stopifnot(is.numeric(x))
@@ -899,9 +896,7 @@ scramble_trajectories <- function(x, pid, jump = 0.05) {
 #' @export
 #' @return A list made of the beta and alpha parameters calculated, called shape1 and shape2
 #' @examples
-#' estim_beta_params(0.6, 5)
-#' shape1  6.0006e-05
-#' shape2  4.0004e-05
+#' estim_beta_params(0.6, 5) #6.0006e-05   4.0004e-05
 estim_beta_params <- function(mu, var) {
   # from https://stats.stackexchange.com/questions/12232/calculating-the-parameters-of-a-beta-distribution-using-the-mean-and-variance and wikipedia
   stopifnot(between(mu, 0, 1), var > 0)

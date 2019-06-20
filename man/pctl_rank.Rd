@@ -24,7 +24,4 @@ library(CKutils)
 x = c(2,5,1,3,4,6)
 pctl_rank(x, ties.method="min") #with ties.method = min (assigns every tied element to the lowest rank)
 pctl_rank(x, ties.method="max") #with ties.method = max (the opposite)
-pctl_rank(x, ties.method="first") #with ties.method = first (the "earlier" entry "win")
-pctl_rank(x, ties.method="random") #with ties.method = random (breaks ties randomly)
-pctl_rank(x, ties.method="average") #with ties.method = average (assigns ties to average rank)
 }

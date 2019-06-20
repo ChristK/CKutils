@@ -4,21 +4,26 @@
 \alias{to_agegrp}
 \title{Generate age-group from age}
 \usage{
-to_agegrp(dt, grp_width = 5L, age_colname = "age",
+to_agegrp(dt, grp_width = 5L, max_age = 85L, age_colname = "age",
   agegrp_colname = "agegrp", to_factor = TRUE, ...)
 }
 \arguments{
 \item{dt}{A data.table with a column named \code{age}.}
 
+\item{grp_width}{The group width for the age groups.}
+
+\item{max_age}{The max age for the closed agegroups. For ages above the max age,
+an open age group will be created, named max_age+ (i.e. 85+).}
+
 \item{age_colname}{A string denoting the age column in \code{dt}.}
+
+\item{agegrp_colname}{A string denoting the name of the column that will be
+created for age-groups.}
 
 \item{to_factor}{A logical. If \code{TRUE}, then the age-groups
 column is converted to factor.}
 
 \item{...}{Pass arguements to \code{\link{agegrp_name}}.}
-
-\item{colname}{A string denoting the name of the column that will be
-created for age-groups.}
 }
 \value{
 a data.table, invisibly.

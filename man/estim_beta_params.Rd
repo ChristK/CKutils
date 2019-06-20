@@ -18,7 +18,5 @@ A list made of the beta and alpha parameters calculated, called shape1 and shape
 \code{estim_beta_params} estimates the beta parameters from a mean and a variance given
 }
 \examples{
-estim_beta_params(0.6, 5)
-$shape1  6.0006e-05
-$shape2  4.0004e-05
+estim_beta_params(0.6, 5) #6.0006e-05   4.0004e-05
 }
