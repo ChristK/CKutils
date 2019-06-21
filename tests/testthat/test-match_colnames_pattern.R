@@ -1,6 +1,6 @@
 library(testthat)
 
-context("returning the matching names of an argument data.table`")
+context("returning the matching names of an argument data.table")
 
 test_that("Names matching works", {
   dt <- data.table(id = c("city", "year", "birth", "idp"), b = c("age", "year", "bp", "name"))
