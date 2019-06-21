@@ -6,6 +6,11 @@
 \usage{
 guess_polr(dt, polr_obj)
 }
+\arguments{
+\item{dt}{a data.table}
+
+\item{polr_obj}{a polr object}
+}
 \description{
 \code{guess_polr} returns a data.table with the predicted
 variable. \code{dt} needs to have a column with percentiles named \code{rank_y},

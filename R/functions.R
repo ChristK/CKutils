@@ -386,8 +386,7 @@ clone_dt <-
 #' library(data.table)
 #' library(CKutils)
 #' x = c(2,5,1,3,4,6)
-#' pctl_rank(x, ties.method="min") #with ties.method = min (assigns every tied element to the lowest rank)
-#' pctl_rank(x, ties.method="max") #with ties.method = max (the opposite)
+#' pctl_rank(x, ties.method="min") # min assigns every tied element to the lowest rank
 pctl_rank <- function(x, ties.method = c("average", "first", "random",
                                        "max", "min", "dense")) {
   stopifnot(is.numeric(x))
@@ -404,12 +403,13 @@ pctl_rank <- function(x, ties.method = c("average", "first", "random",
 #' Stochastic prediction from a gamlss object
 #'
 #' `validate_gamlss` returns a data.table with the observed and predicted
-#'  variable. If \code{mc > 1} multiple predictions are drawn from the predicted
+#'  variable. If  multiple predictions are drawn from the predicted
 #'  distributions. Useful for plotting with ggplot
 #'  @param dt A data.table from which come the observed variables
-#'  @param gamlss_obj 
-#'
-#' @export
+#'  @param gamlss_obj a gamlss object
+#'  @param mc by default =10L
+#'  @param orig_data initial data.table = \code{dt}
+#'  @export
 validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
   if (!requireNamespace("gamlss", quietly = TRUE))
     stop("Please install package gamlss first.")
@@ -441,7 +441,10 @@ validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
 #' `guess_gamlss` returns a data.table with the predicted
 #'  variable. `dt` needs to have a column with percentiles named `rank_y`,
 #'  where `y` the name of the predicted variable (i.e. bmi).
-#'
+#' @param dt A data.table
+#' @param gamlss_obj gamlss object
+#' @param orig_data original data.table
+#' @param nc by default = 1L
 #' @export
 guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
   if (!requireNamespace("gamlss", quietly = TRUE))
@@ -487,7 +490,8 @@ guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
 #' `guess_polr` returns a data.table with the predicted
 #'  variable. `dt` needs to have a column with percentiles named `rank_y`,
 #'  where `y` the name of the predicted variable (i.e. active_days).
-#'
+#' @param dt a data.table
+#' @param polr_obj a polr object
 #' @export
 guess_polr <- function(dt, polr_obj) {
   if (!requireNamespace("MASS", quietly = TRUE))
@@ -523,7 +527,10 @@ guess_polr <- function(dt, polr_obj) {
 #'
 #' `crossval_gamlss` returns the observed and predicted values of the dependent
 #'  variable. Useful for cross-validation metrics.
-#'
+#' @param dt A data. table
+#' @param gamlss_obj a gamlss object
+#' @param orig_data original data.table
+#' @param colnam column names
 #' @export
 crossval_gamlss <- function(dt, gamlss_obj, orig_data = dt, colnam = "rank") {
   stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dt),
@@ -602,9 +609,15 @@ match_colnames_pattern <- function(dt, ...) {
 # TODO add documentation
 #' Compare two distributions
 #'
-#' Summary statistics for the location/shape decomposition of the relative
+#' `reldist_diagnostics` Summary statistics for the location/shape decomposition of the relative
 #' distribution of the exposure: Modelled to Observed."
-#'
+#' @param comparison A comparison
+#' @param reference a reference
+#' @param comparison_wt a comparison
+#' @param reference_wt a reference
+#' @param main the main part
+#' @param smooth smooth object
+#' @param discrete discrete value
 #' @export
 reldist_diagnostics <- function(comparison, reference, comparison_wt, reference_wt,
                                 main, smooth = 0.35, discrete = FALSE) {
@@ -859,8 +872,10 @@ dependencies <-
 # TODO add documentation
 #' Scrambles rank trajectories of simulants
 #'
-#' Scrambles the rank trajectories using a continuous space random walk. The \code{jump} parameter defines the maximum distance of jump every year
-#'
+#' `scramble_trajectories` Scrambles the rank trajectories using a continuous space random walk. The \code{jump} parameter defines the maximum distance of jump every year
+#' @param x A number between 0 and 1
+#' @param pid An id list
+#' @param jump A number that must be <1
 #' @export
 scramble_trajectories <- function(x, pid, jump = 0.05) {
   if (all(x < 0 | x > 1))

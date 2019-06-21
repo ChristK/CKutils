@@ -6,6 +6,15 @@
 \usage{
 guess_gamlss(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L)
 }
+\arguments{
+\item{dt}{A data.table}
+
+\item{gamlss_obj}{gamlss object}
+
+\item{orig_data}{original data.table}
+
+\item{nc}{by default = 1L}
+}
 \description{
 \code{guess_gamlss} returns a data.table with the predicted
 variable. \code{dt} needs to have a column with percentiles named \code{rank_y},

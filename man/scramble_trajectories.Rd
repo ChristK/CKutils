@@ -6,6 +6,13 @@
 \usage{
 scramble_trajectories(x, pid, jump = 0.05)
 }
+\arguments{
+\item{x}{A number between 0 and 1}
+
+\item{pid}{An id list}
+
+\item{jump}{A number that must be <1}
+}
 \description{
-Scrambles the rank trajectories using a continuous space random walk. The \code{jump} parameter defines the maximum distance of jump every year
+\code{scramble_trajectories} Scrambles the rank trajectories using a continuous space random walk. The \code{jump} parameter defines the maximum distance of jump every year
 }

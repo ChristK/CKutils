@@ -22,6 +22,5 @@ The percentile rank of the \code{`x`} vector calculated according to the ties.me
 library(data.table)
 library(CKutils)
 x = c(2,5,1,3,4,6)
-pctl_rank(x, ties.method="min") #with ties.method = min (assigns every tied element to the lowest rank)
-pctl_rank(x, ties.method="max") #with ties.method = max (the opposite)
+pctl_rank(x, ties.method="min") # min assigns every tied element to the lowest rank
 }
