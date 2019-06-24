@@ -11,6 +11,10 @@ building:
     - R -e "remotes::install_deps(dependencies = T)"
     - R -e 'devtools::check()'
 
+buildbinary:
+  stage: build
+  script:
+    - Rscript -e 'devtools::build(binary = TRUE)'
 # To have the converage percentge appear as a gitlab badge follow these instructions
 # https://docs.gitlab.com/ee/user/project/pipelines/settings.html#test-coverage-parsing
 # The coverage parsing string is
@@ -52,6 +56,6 @@ pages:
     artifacts:
         paths:
             - public
-        expire_in: 30 days
+       # expire_in: 30 days
     only:
         - master
