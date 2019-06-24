@@ -18,17 +18,26 @@ building:
 
 testing:
     stage: test
-    allow_failure: true
+    allow_failure: false
     when: on_success
     only:
         - master
+        
     script:
-        - Rscript -e 'install.pacakges("DT")'
-        - Rscript -e 'cc <- covr::package_coverage; covr::gitlab(coverage = cc); cat("Code coverage:", paste0(format(covr::percent_coverage(cc), nsmall = 1),"%"))'
+        - Rscript -e 'install.packages("devtools")'
+     #, repos=file.path("file:",normalizePath("bus/mirror-packages/cran")))'
+        - Rscript -e 'install.packages("remotes")'
+   # script:
+   #     - Rscript -e 'install.pacakges("DT")'
+   #     - Rscript -e 'cc <- covr::package_coverage; covr::gitlab(coverage = cc); cat("Code coverage:", paste0(format(covr::percent_coverage(cc), nsmall = 1),"%"))'
     artifacts:
         paths:
             - public
 
+    unittests:
+       stage: test
+       script:
+          - Rscript -e 'if (any(as.data.frame(devtools::test())[["failed"]] > 0)) stop("Some tests failed.")'
 # To produce a code coverage report as a GitLab page see
 # https://about.gitlab.com/2016/11/03/publish-code-coverage-report-with-gitlab-pages/
 
