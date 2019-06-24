@@ -5,11 +5,11 @@ stages:
   - test
   - deploy
 
-building:
-  stage: build
-  script:
+#building:
+#  stage: build
+#  script:
     #- R -e "remotes::install_deps(dependencies = T)"
-    - R -e 'devtools::check()'
+#    - R -e 'devtools::check()'
 
 buildbinary:
   stage: build
