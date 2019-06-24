@@ -34,10 +34,10 @@ testing:
         paths:
             - public
 
-    unittests:
-       stage: test
-       script:
-          - Rscript -e 'if (any(as.data.frame(devtools::test())[["failed"]] > 0)) stop("Some tests failed.")'
+   # unittests:
+    #   stage: test
+     #  script:
+      #    - Rscript -e 'if (any(as.data.frame(devtools::test())[["failed"]] > 0)) stop("Some tests failed.")'
 # To produce a code coverage report as a GitLab page see
 # https://about.gitlab.com/2016/11/03/publish-code-coverage-report-with-gitlab-pages/
 
@@ -46,7 +46,9 @@ pages:
     dependencies:
         - testing
     script:
-        - ls
+        - mkdir .public
+        - cp -r * .public
+        - mv .public public
     artifacts:
         paths:
             - public
