@@ -1,10 +1,17 @@
+# The docker image to use for the pipeline
 image: rocker/tidyverse
 
+# The order of job execution. Jobs of the same stage are run in parallel and lead to the next stage if completed successfully
+# Here generates 3 steps to the gitlab checking because 3 stages are described
 stages:
   - build
   - test
   - deploy
 
+# Describe the step to build the package/ to do before building the package
+# Here the last line (the check) makes the analyze fail because a lot of warnings are present
+# due to the function involving C++ functions, that are not documented. Adding the "allow_failure: true"
+# allows the code to passed with these warnings, otherwise the analyze stops
 building:
   stage: build
   allow_failure: true
@@ -33,7 +40,7 @@ testing:
      #, repos=file.path("file:",normalizePath("bus/mirror-packages/cran")))'
         - Rscript -e 'install.packages("remotes")'
    # script:
-   #     - Rscript -e 'install.pacakges("DT")'
+        - Rscript -e 'devtools::test("AmandineR/CKutils")'
    #     - Rscript -e 'cc <- covr::package_coverage; covr::gitlab(coverage = cc); cat("Code coverage:", paste0(format(covr::percent_coverage(cc), nsmall = 1),"%"))'
     artifacts:
         paths:
