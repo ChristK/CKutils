@@ -22,7 +22,7 @@ buildbinary:
 
 testing:
     stage: test
-    allow_failure: true
+    allow_failure: false
     when: on_success
     only:
         - master
