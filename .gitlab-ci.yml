@@ -59,3 +59,8 @@ pages:
        # expire_in: 30 days
     only:
         - master
+        
+install:
+  stage: deploy
+  script:
+    - r -e 'devtools::install()'        
