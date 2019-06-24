@@ -28,6 +28,8 @@ buildbinary:
 # The coverage parsing string is
 # Code coverage: \d+\.\d+
 
+
+# Intalls devtools and remotes package and tests all the implemented tests of the functions 
 testing:
     stage: test
     allow_failure: false
@@ -39,20 +41,18 @@ testing:
         - Rscript -e 'install.packages("devtools")'
      #, repos=file.path("file:",normalizePath("bus/mirror-packages/cran")))'
         - Rscript -e 'install.packages("remotes")'
-   # script:
-        - Rscript -e 'devtools::test()'
-   #     - Rscript -e 'cc <- covr::package_coverage; covr::gitlab(coverage = cc); cat("Code coverage:", paste0(format(covr::percent_coverage(cc), nsmall = 1),"%"))'
     artifacts:
         paths:
             - public
 
-   # unittests:
-    #   stage: test
-     #  script:
-      #    - Rscript -e 'if (any(as.data.frame(devtools::test())[["failed"]] > 0)) stop("Some tests failed.")'
+unittests:
+    stage: test
+    script:
+        - Rscript -e 'devtools::test()'
 # To produce a code coverage report as a GitLab page see
 # https://about.gitlab.com/2016/11/03/publish-code-coverage-report-with-gitlab-pages/
 
+# To deploy the package in a new public directory
 pages:
     stage: deploy
     dependencies:
@@ -68,6 +68,7 @@ pages:
     only:
         - master
         
+# Describes how to install the package deployed        
 install:
   stage: deploy
   script:
