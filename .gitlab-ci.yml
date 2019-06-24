@@ -7,9 +7,10 @@ stages:
 
 building:
   stage: build
+  allow_failure: true
   script:
     - R -e "remotes::install_deps(dependencies = T)"
-#    - R -e 'devtools::check()'
+    - R -e 'devtools::check()'
 
 buildbinary:
   stage: build
