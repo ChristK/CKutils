@@ -5,10 +5,10 @@ stages:
   - test
   - deploy
 
-#building:
-#  stage: build
-#  script:
-    #- R -e "remotes::install_deps(dependencies = T)"
+building:
+  stage: build
+  script:
+    - R -e "remotes::install_deps(dependencies = T)"
 #    - R -e 'devtools::check()'
 
 buildbinary:
@@ -22,7 +22,7 @@ buildbinary:
 
 testing:
     stage: test
-    allow_failure: false
+    allow_failure: true
     when: on_success
     only:
         - master
