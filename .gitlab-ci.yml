@@ -40,7 +40,7 @@ testing:
      #, repos=file.path("file:",normalizePath("bus/mirror-packages/cran")))'
         - Rscript -e 'install.packages("remotes")'
    # script:
-        - Rscript -e 'devtools::test("~/amandiner/CKutils")'
+        - Rscript -e 'devtools::test("https://gitlab.com/AmandineR/CKutils")'
    #     - Rscript -e 'cc <- covr::package_coverage; covr::gitlab(coverage = cc); cat("Code coverage:", paste0(format(covr::percent_coverage(cc), nsmall = 1),"%"))'
     artifacts:
         paths:
