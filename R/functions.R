@@ -96,6 +96,7 @@ get_dropbox_path <-
     dropbox_path <-
       normalizePath(paste0(dropbox_path, "/", pathtail), mustWork = FALSE)
     return(dropbox_path)
+    
   }
 
 
