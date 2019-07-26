@@ -26,5 +26,5 @@ library(data.table)
 library(CKutils)
 x <- c(1, 5, 3, 6, 4, 2, 9, 8, 7)
 dt <- data.table(x)
-clone_dt(dt, 3, idcol = TRUE)[]
+clone_dt(dt, 3, idcol = TRUE)
 }
