@@ -331,22 +331,23 @@ to_agegrp <-
               is.logical(to_factor))
 
     age_vec <- dt[, min(get(age_colname))]:dt[, max(get(age_colname))]
+    agegroups <- agegrp_name(
+      min_age = min(age_vec),
+      max_age = max_age,
+      grp_width = grp_width,
+      match_input = TRUE,
+      match_input_max_age = max(age_vec),
+      ...
+    )
     replace_from_table(
       dt,
       colname = age_colname,
       from = age_vec,
-      to = agegrp_name(
-        min_age = min(age_vec),
-        max_age = max_age,
-        grp_width = grp_width,
-        match_input = TRUE,
-        match_input_max_age = max(age_vec),
-        ...
-      ),
+      to = agegroups,
       newcolname = agegrp_colname
     )
     if (to_factor) {
-      dt[, (agegrp_colname) := factor(get(agegrp_colname))]
+      dt[, (agegrp_colname) := factor(get(agegrp_colname), agegroups)]
     }
     return(invisible(dt))
   }
