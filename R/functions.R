@@ -19,17 +19,6 @@
 `:=` = function(...)
   NULL # due to NSE notes in R CMD check
 
-#' @import utils
-#' @import data.table
-NULL
-
-#' @useDynLib CKutils
-#' @importFrom Rcpp sourceCpp evalCpp
-#' @importFrom methods as
-#' @importFrom graphics abline legend lines par plot title
-#' @importFrom stats density .checkMFClasses delete.response model.frame model.matrix plogis predict
-
-NULL
 
 #' Get Dropbox path
 #'
