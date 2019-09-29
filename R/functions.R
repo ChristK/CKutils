@@ -1014,3 +1014,24 @@ resample <-
 #' }
 
 
+#' @export
+del_dt_rows <- function(DT, indx_to_del, DT_env) {
+  keep <- -indx_to_del
+  name_of_DT <- deparse(substitute(DT))
+  DT_names <- copy(names(DT))
+  DT_new <- DT[keep, DT_names[1L], with = F]
+  set(DT, i = NULL, j = 1L, value = NULL)
+
+  for (j in seq_len(ncol(DT))) {
+    set(DT_new,
+        i = NULL,
+        j = DT_names[1L + j],
+        value = DT[[1L]][keep])
+    set(DT,
+        i = NULL,
+        j = 1L,
+        value = NULL)
+
+  }
+  assign(name_of_DT, value = DT_new, envir = DT_env)
+}
