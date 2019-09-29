@@ -7,7 +7,22 @@
 reldist_diagnostics(comparison, reference, comparison_wt, reference_wt,
   main, smooth = 0.35, discrete = FALSE)
 }
+\arguments{
+\item{comparison}{A comparison}
+
+\item{reference}{a reference}
+
+\item{comparison_wt}{a comparison}
+
+\item{reference_wt}{a reference}
+
+\item{main}{the main part}
+
+\item{smooth}{smooth object}
+
+\item{discrete}{discrete value}
+}
 \description{
-Summary statistics for the location/shape decomposition of the relative
+\code{reldist_diagnostics} Summary statistics for the location/shape decomposition of the relative
 distribution of the exposure: Modelled to Observed."
 }

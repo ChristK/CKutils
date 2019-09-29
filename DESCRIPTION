@@ -20,11 +20,12 @@ Depends:
 LinkingTo: 
   Rcpp
 Suggests: 
-  gamlss,
-  jsonlite (>= 1.5),
-  MASS,
-  matrixStats,
-  reldist
+    gamlss,
+    jsonlite (>= 1.5),
+    MASS,
+    matrixStats,
+    reldist,
+    testthat (>= 2.1.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
 SystemRequirements: GNU make

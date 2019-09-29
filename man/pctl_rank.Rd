@@ -7,6 +7,20 @@
 pctl_rank(x, ties.method = c("average", "first", "random", "max", "min",
   "dense"))
 }
+\arguments{
+\item{x}{A numeric vector to rank}
+
+\item{ties.method}{A character string specifying how ties are treated}
+}
+\value{
+The percentile rank of the \code{`x`} vector calculated according to the ties.method choosen
+}
 \description{
 \code{pctl_rank} calculates the percentile rank of a numeric vector
+}
+\examples{
+library(data.table)
+library(CKutils)
+x = c(2,5,1,3,4,6)
+pctl_rank(x, ties.method="min") # min assigns every tied element to the lowest rank
 }

@@ -1,0 +1,75 @@
+# The docker image to use for the pipeline
+image: rocker/tidyverse
+
+# The order of job execution. Jobs of the same stage are run in parallel and lead to the next stage if completed successfully
+# Here generates 3 steps to the gitlab checking because 3 stages are described
+stages:
+  - build
+  - test
+  - deploy
+
+# Describe the step to build the package/ to do before building the package
+# Here the last line (the check) makes the analyze fail because a lot of warnings are present
+# due to the function involving C++ functions, that are not documented. Adding the "allow_failure: true"
+# allows the code to passed with these warnings, otherwise the analyze stops
+building:
+  stage: build
+  allow_failure: true
+  script:
+    - R -e "remotes::install_deps(dependencies = T)"
+    - R -e 'devtools::check()'
+
+buildbinary:
+  stage: build
+  script:
+    - Rscript -e 'devtools::build(binary = TRUE)'
+# To have the converage percentge appear as a gitlab badge follow these instructions
+# https://docs.gitlab.com/ee/user/project/pipelines/settings.html#test-coverage-parsing
+# The coverage parsing string is
+# Code coverage: \d+\.\d+
+
+
+# Intalls devtools and remotes package and tests all the implemented tests of the functions 
+testing:
+    stage: test
+    allow_failure: false
+    when: on_success
+    only:
+        - master
+        
+    script:
+        - Rscript -e 'install.packages("devtools")'
+     #, repos=file.path("file:",normalizePath("bus/mirror-packages/cran")))'
+        - Rscript -e 'install.packages("remotes")'
+    artifacts:
+        paths:
+            - public
+
+unittests:
+    stage: test
+    script:
+        - Rscript -e 'devtools::test()'
+# To produce a code coverage report as a GitLab page see
+# https://about.gitlab.com/2016/11/03/publish-code-coverage-report-with-gitlab-pages/
+
+# To deploy the package in a new public directory
+pages:
+    stage: deploy
+    dependencies:
+        - testing
+    script:
+        - mkdir .public
+        - cp -r * .public
+        - mv .public public
+    artifacts:
+        paths:
+            - public
+       # expire_in: 30 days
+    only:
+        - master
+        
+# Describes how to install the package deployed        
+install:
+  stage: deploy
+  script:
+    - r -e 'devtools::install()'        

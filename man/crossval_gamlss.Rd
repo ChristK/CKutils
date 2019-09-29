@@ -6,6 +6,15 @@
 \usage{
 crossval_gamlss(dt, gamlss_obj, orig_data = dt, colnam = "rank")
 }
+\arguments{
+\item{dt}{A data. table}
+
+\item{gamlss_obj}{a gamlss object}
+
+\item{orig_data}{original data.table}
+
+\item{colnam}{column names}
+}
 \description{
 \code{crossval_gamlss} returns the observed and predicted values of the dependent
 variable. Useful for cross-validation metrics.
