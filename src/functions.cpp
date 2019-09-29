@@ -85,3 +85,33 @@ double prop_if(LogicalVector x, bool na_rm = false) {
   }
   return counter/(double)n;
 }
+
+//' @export
+// [[Rcpp::export]]
+NumericVector clamp(NumericVector& x, double a = 0.0, double b = 1.0, const bool& inplace = false) {
+  if (a > b) {double c = a; a = b; b = c;}; // ensure a < b
+  const int n = x.size();
+  if (!inplace)
+  {
+    NumericVector out(n);
+    for(int i = 0; i < n; i++) {
+      if (Rcpp::NumericVector::is_na(x[i])) out[i] = NA_REAL;
+      else
+      {
+        if (x[i] < a) out[i] = a;
+        else if (x[i] > b) out[i] = b;
+        else out[i] = x[i];
+      }
+    }
+    return out;
+  }
+  else
+  {
+    for(int i = 0; i < n; i++) {
+      if (x[i] < a) x[i] = a;
+      else if (x[i] > b) x[i] = b;
+    }
+    return x; // transforms input vector inplace as long as an numeric is passed to it. If an integer vector is passed to it from R, an impricit copy is happening so it is not inplace anymore
+  }
+}
+

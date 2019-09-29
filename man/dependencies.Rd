@@ -5,7 +5,7 @@
 \title{Simplified loading and installing of packages}
 \usage{
 dependencies(pkges, install = TRUE, update = FALSE, quiet = TRUE,
-  verbose = TRUE, ...)
+  verbose = FALSE, ...)
 }
 \arguments{
 \item{pkges}{a character vector with the names of the packages to load.}

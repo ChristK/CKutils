@@ -64,6 +64,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// clamp
+NumericVector clamp(NumericVector& x, double a, double b, const bool& inplace);
+RcppExport SEXP _CKutils_clamp(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP inplaceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type inplace(inplaceSEXP);
+    rcpp_result_gen = Rcpp::wrap(clamp(x, a, b, inplace));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_tableRcpp", (DL_FUNC) &_CKutils_tableRcpp, 1},
@@ -71,6 +85,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fquantile", (DL_FUNC) &_CKutils_fquantile, 3},
     {"_CKutils_count_if", (DL_FUNC) &_CKutils_count_if, 2},
     {"_CKutils_prop_if", (DL_FUNC) &_CKutils_prop_if, 2},
+    {"_CKutils_clamp", (DL_FUNC) &_CKutils_clamp, 4},
     {NULL, NULL, 0}
 };
 

@@ -24,3 +24,8 @@ prop_if <- function(x, na_rm = FALSE) {
     .Call('_CKutils_prop_if', PACKAGE = 'CKutils', x, na_rm)
 }
 
+#' @export
+clamp <- function(x, a = 0.0, b = 1.0, inplace = FALSE) {
+    .Call('_CKutils_clamp', PACKAGE = 'CKutils', x, a, b, inplace)
+}
+

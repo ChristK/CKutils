@@ -7,7 +7,7 @@
 clone_dt(dt, times, idcol = TRUE)
 }
 \description{
-\code{clone_dt} replicates a data.table and binds the replicates a the bottom of
-the original one. It also creates an column named\code{idcol} to identify each
-iteration.
+\code{clone_dt} clones a data.table and binds the copies at the bottom of
+the original data.table. It also creates an column named \code{`.id`}
+to identify each iteration. The keys of the input data.table are retained.
 }

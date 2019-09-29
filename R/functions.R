@@ -832,20 +832,19 @@ dependencies <-
   }
 
 # TODO add documentation
-#' Scrambles rank trajectories of simulants
-#'
-#' Scrambles the rank trajectories using a continuous space random walk. The \code{jump} parameter defines the maximum distance of jump every year
-#'
-#' @export
-scramble_trajectories <- function(x, pid, jump = 0.05) {
-  if (all(x < 0 | x > 1))
-    stop("Input needs to be between 0 and 1")
-  if (is.unsorted(pid))
-    stop("IDs must be sorted")
-  if (jump >= 1)
-    stop("Overlap needs to be <= 1")
-  if (jump == 0) return(x) else return(fscramble_trajectories(x, pid, jump))
-}
+# Scrambles rank trajectories of simulants
+#
+# Scrambles the rank trajectories using a continuous space random walk. The \code{jump} parameter defines the maximum distance of jump every year
+#
+# scramble_trajectories <- function(x, pid, jump = 0.05) {
+#   if (all(x < 0 | x > 1))
+#     stop("Input needs to be between 0 and 1")
+#   if (is.unsorted(pid))
+#     stop("IDs must be sorted")
+#   if (jump >= 1)
+#     stop("Overlap needs to be <= 1")
+#   if (jump == 0) return(x) else return(fscramble_trajectories(x, pid, jump))
+# }
 
 
 # tt <- data.table(x = runif(5e5), pid = 1:5e5)
@@ -859,6 +858,49 @@ scramble_trajectories <- function(x, pid, jump = 0.05) {
 # print(tt[.id == 50 & y < 0.1, hist(y)])
 # print(tt[pid == 4,  plot(.id, y, ylim = c(0,1))])
 
+#' Copy all columns of dt_i in dt_x
+#' @export
+absorb_dt <- function(dt_x, dt_i, on = ".NATURAL") {
+  stopifnot(is.data.table(dt_x), is.data.table(dt_i), is.character(on))
+  nam_i <- names(dt_i)
+  nam_x <- names(dt_x)
+  if (length(on) == 1 &&
+      on == ".NATURAL")
+    on <- intersect(nam_x, nam_i)
+  colnam_replaced <-
+    intersect(setdiff(nam_x, on), setdiff(nam_i, on))
+  if (length(colnam_replaced) > 0)
+    message(
+      paste(
+        "\ncolumn",
+        colnam_replaced,
+        "in dt_x has been replaced by the identically named column in dt_i",
+        collapse = ","
+      )
+    )
+  colnam <- setdiff(nam_i, on)
+  dt_x[dt_i, (colnam) := mget(paste0("i.", colnam)), on = on]
+}
+
+# dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
+# dt_i <- data.table(a = 1:5, b = 1:5, c = 1:5, d = 1:5)
+# dt_x[dt_i, on = c("a", "b")]
+# absorb_dt(dt_x, dt_i, c("a", "b"))[]
+#
+# dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
+# dt_i <- data.table(a = 3:5, b = 3:5, c = 3:5, d = 3:5)
+# dt_x[dt_i, on = c("a", "b")]
+# absorb_dt(dt_x, dt_i, c("a", "b"))[]
+#
+# dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
+# dt_i <- data.table(a = 3:5, b = 3:5, c = 1:5, d = 1:5)
+# dt_x[dt_i, on = c("a", "b")]
+# absorb_dt(dt_x, dt_i, c("a", "b"))[]
+#
+# dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
+# dt_i <- data.table(a = 1:10, b = 1:10, c = 1:10, d = 1:10)
+# dt_x[dt_i, on = c("a", "b")]
+# absorb_dt(dt_x, dt_i, c("a", "b"))[]
 
 .onUnload <- function(libpath) {
   library.dynam.unload("CKutils", libpath)
