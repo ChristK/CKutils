@@ -1015,23 +1015,26 @@ resample <-
 
 
 #' @export
-del_dt_rows <- function(DT, indx_to_del, DT_env) {
-  keep <- -indx_to_del
-  name_of_DT <- deparse(substitute(DT))
-  DT_names <- copy(names(DT))
-  DT_new <- DT[keep, DT_names[1L], with = F]
-  set(DT, i = NULL, j = 1L, value = NULL)
+del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
+  stopifnot(is.data.table(dt), (is.integer(indx_to_del) | is.logical(indx_to_del)))
+  if (is.integer(indx_to_del)) keep <- -indx_to_del
+  if (is.logical(indx_to_del)) keep <- !indx_to_del
 
-  for (j in seq_len(ncol(DT))) {
-    set(DT_new,
+  name_of_dt <- deparse(substitute(dt))
+  # dt_env <- pryr::where(name_of_dt) # to get dt envirnment
+  dt_names <- copy(names(dt))
+  dt_new <- dt[keep, dt_names[1L], with = F]
+  set(dt, i = NULL, j = 1L, value = NULL)
+
+  for (j in seq_len(ncol(dt))) {
+    set(dt_new,
         i = NULL,
-        j = DT_names[1L + j],
-        value = DT[[1L]][keep])
-    set(DT,
+        j = dt_names[1L + j],
+        value = dt[[1L]][keep])
+    set(dt,
         i = NULL,
         j = 1L,
         value = NULL)
-
   }
-  assign(name_of_DT, value = DT_new, envir = DT_env)
+  assign(name_of_dt, value = dt_new, envir = dt_env)
 }

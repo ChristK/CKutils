@@ -18,7 +18,7 @@ all.files = TRUE
 ))
 }}
 \usage{
-del_dt_rows(DT, indx_to_del, DT_env)
+del_dt_rows(dt, indx_to_del, dt_env = .GlobalEnv)
 }
 \description{
 delete output files
