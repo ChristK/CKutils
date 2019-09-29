@@ -23,10 +23,10 @@ If \code{newcolname = NULL}, \code{colname} is altered by reference}
 a data.table, invisibly.
 }
 \description{
-\code{replace_from_table} replace multiple values in a data.table column.
-. The values in \code{from} arguement are matched
-and replaced by those in \code{to} arguement.
-If \code{newcolname = NULL} the replace is by reference.
+`replace_from_table` replace multiple values in a data.table column.
+ . The values in \code{from} arguement are matched
+   and replaced by those in \code{to} arguement.
+   If \code{newcolname = NULL} the replace is by reference.
 }
 \examples{
 library(data.table)

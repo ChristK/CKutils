@@ -29,7 +29,7 @@ column is converted to factor.}
 a data.table, invisibly.
 }
 \description{
-\code{to_agegrp} creates a new column
+`to_agegrp` creates a new column
 }
 \examples{
 library(data.table)

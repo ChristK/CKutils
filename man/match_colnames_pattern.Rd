@@ -12,10 +12,10 @@ match_colnames_pattern(dt, ...)
 \item{...}{A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops}
 }
 \description{
-\code{match_colnames_pattern} returns the matching names of the argument \code{dt}
+`match_colnames_pattern` returns the matching names of the argument `dt`
 (i.e. \code{names(dt)}) corresponding to the regular expression patterns
 provided. The patterns must be supported by \code{\link{grep}}.
-This is based on \code{data.table:::patterns}
+This is based on `data.table:::patterns`
 }
 \examples{
 library(data.table)

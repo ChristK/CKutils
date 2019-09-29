@@ -7,7 +7,7 @@
 #
 #' @docType package
 #' @author Chris Kypridemos
-#' @import Rcpp data.table utils
+#' @import data.table Rcpp
 #' @importFrom Rcpp sourceCpp evalCpp
 #' @importFrom methods as
 #' @importFrom graphics abline legend lines par plot title

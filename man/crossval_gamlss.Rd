@@ -16,6 +16,6 @@ crossval_gamlss(dt, gamlss_obj, orig_data = dt, colnam = "rank")
 \item{colnam}{column names}
 }
 \description{
-\code{crossval_gamlss} returns the observed and predicted values of the dependent
-variable. Useful for cross-validation metrics.
+`crossval_gamlss` returns the observed and predicted values of the dependent
+ variable. Useful for cross-validation metrics.
 }

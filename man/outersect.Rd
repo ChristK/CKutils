@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{outersect}
 \alias{outersect}
-\title{\code{outersect} Calculates the symmetrical set difference of subsets}
+\title{`outersect` Calculates the symmetrical set difference of subsets}
 \usage{
 outersect(x, y, ...)
 }
@@ -15,7 +15,7 @@ outersect(x, y, ...)
 A vector made of both contents from x and y, except from the duplicated items
 }
 \description{
-\code{outersect} Calculates the symmetrical set difference of subsets
+`outersect` Calculates the symmetrical set difference of subsets
 }
 \examples{
 x <- c("age", "year", "bp", "name")

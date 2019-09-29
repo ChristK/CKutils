@@ -18,7 +18,7 @@ See examples.}
 Dropbax path as a String. If pathtail is present, it concatenates the Dropbox path with pathtail.
 }
 \description{
-\code{get_dropbox_path} returns the path of Dropbox. Works for both personal and business accounts
+`get_dropbox_path` returns the path of Dropbox. Works for both personal and business accounts
 }
 \details{
 This is an auxilliary function: It finds the Dropbox path in Windows, Linux, and OSX operating systems.

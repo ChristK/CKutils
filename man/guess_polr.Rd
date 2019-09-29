@@ -12,7 +12,7 @@ guess_polr(dt, polr_obj)
 \item{polr_obj}{a polr object}
 }
 \description{
-\code{guess_polr} returns a data.table with the predicted
-variable. \code{dt} needs to have a column with percentiles named \code{rank_y},
-where \code{y} the name of the predicted variable (i.e. active_days).
+`guess_polr` returns a data.table with the predicted
+ variable. `dt` needs to have a column with percentiles named `rank_y`,
+ where `y` the name of the predicted variable (i.e. active_days).
 }

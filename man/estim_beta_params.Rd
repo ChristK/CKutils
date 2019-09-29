@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{estim_beta_params}
 \alias{estim_beta_params}
-\title{\code{estim_beta_params} estimates the beta parameters from a mean and a variance given}
+\title{`estim_beta_params` estimates the beta parameters from a mean and a variance given}
 \usage{
 estim_beta_params(mu, var)
 }
@@ -15,7 +15,7 @@ estim_beta_params(mu, var)
 A list made of the beta and alpha parameters calculated, called shape1 and shape2
 }
 \description{
-\code{estim_beta_params} estimates the beta parameters from a mean and a variance given
+`estim_beta_params` estimates the beta parameters from a mean and a variance given
 }
 \examples{
 estim_beta_params(0.6, 5) #6.0006e-05   4.0004e-05

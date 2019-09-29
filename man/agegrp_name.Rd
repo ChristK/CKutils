@@ -30,8 +30,8 @@ and \code{match_input_max_age}.}
 A character vector of with the names for the age-groups.
 }
 \description{
-\code{agegrp_name} generates names for age-group bands given lower and upper
-age limits, and band width
+`agegrp_name` generates names for age-group bands given lower and upper
+  age limits, and band width
 }
 \examples{
 agegrp_name(20, 79, 5)

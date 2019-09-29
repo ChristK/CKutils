@@ -324,7 +324,7 @@ to_agegrp <-
       min_age = min(age_vec),
       max_age = max_age,
       grp_width = grp_width,
-      match_input = TRUE,
+      match_input = FALSE,
       match_input_max_age = max(age_vec),
       ...
     )
@@ -332,7 +332,14 @@ to_agegrp <-
       dt,
       colname = age_colname,
       from = age_vec,
-      to = agegroups,
+      to = agegrp_name(
+        min_age = min(age_vec),
+        max_age = max_age,
+        grp_width = grp_width,
+        match_input = TRUE,
+        match_input_max_age = max(age_vec),
+        ...
+      ),
       newcolname = agegrp_colname
     )
     if (to_factor) {

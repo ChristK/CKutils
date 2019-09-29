@@ -15,7 +15,7 @@ See examples.}
 pCloud path as a String. If pathtail is present, it concatenates the Dropbox path with pathtail.
 }
 \description{
-\code{get_pcloud_path} returns the path of pCloud
+`get_pcloud_path` returns the path of pCloud
 }
 \details{
 This is an auxilliary function: It finds the pCloud path in Windows, Linux, and OSX operating systems.

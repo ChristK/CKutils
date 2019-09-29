@@ -23,6 +23,6 @@ reldist_diagnostics(comparison, reference, comparison_wt, reference_wt,
 \item{discrete}{discrete value}
 }
 \description{
-\code{reldist_diagnostics} Summary statistics for the location/shape decomposition of the relative
+`reldist_diagnostics` Summary statistics for the location/shape decomposition of the relative
 distribution of the exposure: Modelled to Observed."
 }

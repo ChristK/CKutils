@@ -16,7 +16,7 @@ pctl_rank(x, ties.method = c("average", "first", "random", "max", "min",
 The percentile rank of the \code{`x`} vector calculated according to the ties.method choosen
 }
 \description{
-\code{pctl_rank} calculates the percentile rank of a numeric vector
+`pctl_rank` calculates the percentile rank of a numeric vector
 }
 \examples{
 library(data.table)

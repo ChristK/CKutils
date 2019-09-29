@@ -25,16 +25,16 @@ package if available.}
 }
 \value{
 a data frame with four columns and rownames corresponding to the
-packages to be loaded. The four columns are: loaded (logical
-indicating whether the package was successfully loaded), installed
-(logical indicating that the package was installed or updated),
-loaded.version (the version string of the installed package), and
-available.version (the version string of the package currently
-available on CRAN). Note that this only reflects packages listed in
-the \code{pkges} parameter. Other packages may be loaded and/or
-installed as necessary by \code{install.packages} and \code{require}.
-If \code{verbose=FALSE} the data frame will be returned using
-\code{\link{invisible}}.
+        packages to be loaded. The four columns are: loaded (logical
+        indicating whether the package was successfully loaded), installed
+        (logical indicating that the package was installed or updated),
+        loaded.version (the version string of the installed package), and
+        available.version (the version string of the package currently
+        available on CRAN). Note that this only reflects packages listed in
+        the \code{pkges} parameter. Other packages may be loaded and/or
+        installed as necessary by \code{install.packages} and \code{require}.
+        If \code{verbose=FALSE} the data frame will be returned using
+        \code{\link{invisible}}.
 }
 \description{
 This is a wrapper to \code{\link{require}} and \code{\link{install.packages}}.

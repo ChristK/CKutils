@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{resample}
 \alias{resample}
-\title{\code{resample} Gives sample of from the elements of \code{`x`} of the specified size. Both size and \code{`x`} has to be integers}
+\title{`resample` Gives sample of from the elements of \code{`x`} of the specified size. Both size and \code{`x`} has to be integers}
 \usage{
 resample(x, ...)
 }
@@ -15,7 +15,7 @@ resample(x, ...)
 Sample(s) from the \code{`x`} vector, according to eventual conditions provided
 }
 \description{
-\code{resample} Gives sample of from the elements of \code{`x`} of the specified size. Both size and \code{`x`} has to be integers
+`resample` Gives sample of from the elements of \code{`x`} of the specified size. Both size and \code{`x`} has to be integers
 }
 \examples{
 x <- 1:10

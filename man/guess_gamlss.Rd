@@ -16,7 +16,7 @@ guess_gamlss(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L)
 \item{nc}{by default = 1L}
 }
 \description{
-\code{guess_gamlss} returns a data.table with the predicted
-variable. \code{dt} needs to have a column with percentiles named \code{rank_y},
-where \code{y} the name of the predicted variable (i.e. bmi).
+`guess_gamlss` returns a data.table with the predicted
+ variable. `dt` needs to have a column with percentiles named `rank_y`,
+ where `y` the name of the predicted variable (i.e. bmi).
 }

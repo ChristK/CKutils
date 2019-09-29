@@ -16,7 +16,7 @@ This function uses Rcpp sugar to implement a fast \code{table}, for
 unique counts of a single vector. This implementation seeks to
 produce identical output to \code{table(x, useNA="ifany")}. It is borrowed
 from \code{Kmisc} package for convenience, since \code{Kmisc} is not in CRAN
-anymore. \code{Kmisc} is available at https://github.com/kevinushey/Kmisc
+ anymore. \code{Kmisc} is available at https://github.com/kevinushey/Kmisc
 }
 \details{
 The order of \code{NA}, \code{NaN} in the output may differ -- even
