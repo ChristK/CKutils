@@ -1,8 +1,8 @@
 Package: CKutils
 Type: Package
 Title: Some Utility Functions I Use Regularly
-Version: 0.1.0
-Date: 2018-10-16
+Version: 0.1.1
+Date: 2019-09-29
 Author: Chris Kypridemos
 Maintainer: Chris Kypridemos <christodoulosk@gmail.com>
 Description: This package contains some functions I use regularly when I develop simulation models. 
@@ -13,10 +13,9 @@ Byte-Compile: yes
 Imports: 
   methods,
   Rcpp (>= 0.12.18),
+  data.table (>= 1.12.2),
   stats,
   utils
-Depends: 
-  data.table (>= 1.11.4)
 LinkingTo: 
   Rcpp
 Suggests: 
