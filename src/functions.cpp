@@ -115,3 +115,29 @@ NumericVector clamp(NumericVector& x, double a = 0.0, double b = 1.0, const bool
   }
 }
 
+//' @export
+// [[Rcpp::export]]
+LogicalVector fequal(const NumericVector& x, const double& tol) {
+  NumericVector y = na_omit(x);
+  const int n = y.size();
+  for (int i = 0; i < n; ++i) {
+    if (y[i] - y[0] > tol || y[0] - y[i] > tol)
+      return wrap(false);
+  }
+
+  return wrap(true);
+}
+
+//' @export
+// [[Rcpp::export]]
+NumericVector fnormalise(const NumericVector& x) { // between 0, 1
+  const int n = x.size();
+  const double minx = min(na_omit(x));
+  const double maxx = max(na_omit(x));
+  NumericVector out(n);
+  for (int i = 0; i < n; i++) {
+    out[i] = (x[i] - minx) / (maxx - minx);
+  }
+
+  return out;
+}
