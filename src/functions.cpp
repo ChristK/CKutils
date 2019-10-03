@@ -139,3 +139,4 @@ NumericVector fnormalise(const NumericVector& x) { // between 0, 1
   }
   return out;
 }
+
