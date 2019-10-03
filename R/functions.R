@@ -1034,3 +1034,22 @@ del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
   }
   assign(name_of_dt, value = dt_new, envir = dt_env)
 }
+
+#' @export
+identical_elements <-
+  function(x, tol = .Machine$double.eps ^ 0.5) {
+    stopifnot(is.numeric(x))
+    fequal(x, tol)
+  }
+
+
+# normalise a vector to 0,1 range
+#' @export
+normalise <-
+  function(x, ...) {
+    stopifnot(is.numeric(x))
+    if (identical_elements(x))
+      return(1)
+    else
+      return(fnormalise(x))
+  }

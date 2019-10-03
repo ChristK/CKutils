@@ -78,6 +78,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fequal
+LogicalVector fequal(const NumericVector& x, const double& tol);
+RcppExport SEXP _CKutils_fequal(SEXP xSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(fequal(x, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fnormalise
+NumericVector fnormalise(const NumericVector& x);
+RcppExport SEXP _CKutils_fnormalise(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(fnormalise(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_tableRcpp", (DL_FUNC) &_CKutils_tableRcpp, 1},
@@ -86,6 +109,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_count_if", (DL_FUNC) &_CKutils_count_if, 2},
     {"_CKutils_prop_if", (DL_FUNC) &_CKutils_prop_if, 2},
     {"_CKutils_clamp", (DL_FUNC) &_CKutils_clamp, 4},
+    {"_CKutils_fequal", (DL_FUNC) &_CKutils_fequal, 2},
+    {"_CKutils_fnormalise", (DL_FUNC) &_CKutils_fnormalise, 1},
     {NULL, NULL, 0}
 };
 
