@@ -895,12 +895,12 @@ dependencies <-
 
 #' Copy all columns of dt_i in dt_x
 #' @export
-absorb_dt <- function(dt_x, dt_i, on = ".NATURAL") {
+absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL) {
   stopifnot(is.data.table(dt_x), is.data.table(dt_i), is.character(on))
   nam_i <- names(dt_i)
   nam_x <- names(dt_x)
   if (length(on) == 1 && on == ".NATURAL")
-    on <- intersect(nam_x, nam_i)
+    on <- setdiff(intersect(nam_x, nam_i), exclude_col)
   colnam_replaced <-
     intersect(setdiff(nam_x, on), setdiff(nam_i, on))
   if (length(colnam_replaced) > 0)
@@ -915,39 +915,14 @@ absorb_dt <- function(dt_x, dt_i, on = ".NATURAL") {
   colnam <- setdiff(nam_i, on)
   ncol <- length(colnam)
 
-  if (ncol == 1L) {
-    setnames(dt_i, colnam, paste0("COL", seq_len(ncol), "____"))
-    dt_x[dt_i, (colnam) := i.COL1____, on = on]
-    setnames(dt_i, paste0("COL", seq_len(ncol), "____"), colnam)
-  } else if (ncol == 2L) {
-    setnames(dt_i, colnam, paste0("COL", seq_len(ncol), "____"))
-    dt_x[dt_i, (colnam) := c(i.COL1____, i.COL2____), on = on]
-    setnames(dt_i, paste0("COL", seq_len(ncol), "____"), colnam)
-  } else if (ncol == 3L) {
-    setnames(dt_i, colnam, paste0("COL", seq_len(ncol), "____"))
-    dt_x[dt_i, (colnam) := c(i.COL1____, i.COL2____, i.COL3____), on = on]
-    setnames(dt_i, paste0("COL", seq_len(ncol), "____"), colnam)
-  } else if (ncol == 4L) {
-    setnames(dt_i, colnam, paste0("COL", seq_len(ncol), "____"))
-    dt_x[dt_i, (colnam) := c(i.COL1____, i.COL2____, i.COL3____, i.COL4____), on = on]
-    setnames(dt_i, paste0("COL", seq_len(ncol), "____"), colnam)
-  } else if (ncol == 5L) {
-    setnames(dt_i, colnam, paste0("COL", seq_len(ncol), "____"))
-    dt_x[dt_i, (colnam) := c(i.COL1____, i.COL2____, i.COL3____, i.COL4____, i.COL5____), on = on]
-    setnames(dt_i, paste0("COL", seq_len(ncol), "____"), colnam)
-  } else if (ncol == 6L) {
-    setnames(dt_i, colnam, paste0("COL", seq_len(ncol), "____"))
-    dt_x[dt_i, (colnam) := c(i.COL1____, i.COL2____, i.COL3____, i.COL4____,
-                             i.COL5____, i.COL6____), on = on]
-    setnames(dt_i, paste0("COL", seq_len(ncol), "____"), colnam)
-  } else if (ncol == 7L) {
-    setnames(dt_i, colnam, paste0("COL", seq_len(ncol), "____"))
-    dt_x[dt_i, (colnam) := c(i.COL1____, i.COL2____, i.COL3____, i.COL4____,
-                             i.COL5____, i.COL6____, i.COL7____), on = on]
-    setnames(dt_i, paste0("COL", seq_len(ncol), "____"), colnam)
-  } else {
-    dt_x[dt_i, (colnam) := mget(paste0("i.", colnam)), on = on]
-  }
+  colnam_tmp <- paste0("COL", seq_len(ncol), "____")
+  setnames(dt_i, colnam, colnam_tmp)
+  # dt_x[dt_i, (colnam) := .(i.COL1____, i.COL2____), on = on]
+  colnam_tmp2 <- paste0("i.", colnam_tmp)
+  argum <- paste0("dt_x[dt_i, (colnam) := .(", paste(colnam_tmp2, collapse = ", "), "), on = on]")
+  eval(parse(text = argum))
+  setnames(dt_i, colnam_tmp, colnam)
+  invisible(dt_x)
 }
 
 # dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
