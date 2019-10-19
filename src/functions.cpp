@@ -117,6 +117,35 @@ NumericVector clamp(NumericVector& x, double a = 0.0, double b = 1.0, const bool
 
 //' @export
 // [[Rcpp::export]]
+IntegerVector clamp_int(IntegerVector& x, int a = 0, int b = 1, const bool& inplace = false) {
+  if (a > b) {int c = a; a = b; b = c;}; // ensure a < b
+  const int n = x.size();
+  if (!inplace)
+  {
+    IntegerVector out(n);
+    for(int i = 0; i < n; i++) {
+      if (Rcpp::IntegerVector::is_na(x[i])) out[i] = NA_INTEGER;
+      else
+      {
+        if (x[i] < a) out[i] = a;
+        else if (x[i] > b) out[i] = b;
+        else out[i] = x[i];
+      }
+    }
+    return out;
+  }
+  else
+  {
+    for(int i = 0; i < n; i++) {
+      if (x[i] < a) x[i] = a;
+      else if (x[i] > b) x[i] = b;
+    }
+    return x;
+  }
+}
+
+//' @export
+// [[Rcpp::export]]
 LogicalVector fequal(const NumericVector& x, const double& tol) {
   NumericVector y = na_omit(x);
   const int n = y.size();

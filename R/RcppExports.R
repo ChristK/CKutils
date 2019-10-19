@@ -30,6 +30,11 @@ clamp <- function(x, a = 0.0, b = 1.0, inplace = FALSE) {
 }
 
 #' @export
+clamp_int <- function(x, a = 0L, b = 1L, inplace = FALSE) {
+    .Call('_CKutils_clamp_int', PACKAGE = 'CKutils', x, a, b, inplace)
+}
+
+#' @export
 fequal <- function(x, tol) {
     .Call('_CKutils_fequal', PACKAGE = 'CKutils', x, tol)
 }

@@ -78,6 +78,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// clamp_int
+IntegerVector clamp_int(IntegerVector& x, int a, int b, const bool& inplace);
+RcppExport SEXP _CKutils_clamp_int(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP inplaceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type a(aSEXP);
+    Rcpp::traits::input_parameter< int >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type inplace(inplaceSEXP);
+    rcpp_result_gen = Rcpp::wrap(clamp_int(x, a, b, inplace));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fequal
 LogicalVector fequal(const NumericVector& x, const double& tol);
 RcppExport SEXP _CKutils_fequal(SEXP xSEXP, SEXP tolSEXP) {
@@ -109,6 +123,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_count_if", (DL_FUNC) &_CKutils_count_if, 2},
     {"_CKutils_prop_if", (DL_FUNC) &_CKutils_prop_if, 2},
     {"_CKutils_clamp", (DL_FUNC) &_CKutils_clamp, 4},
+    {"_CKutils_clamp_int", (DL_FUNC) &_CKutils_clamp_int, 4},
     {"_CKutils_fequal", (DL_FUNC) &_CKutils_fequal, 2},
     {"_CKutils_fnormalise", (DL_FUNC) &_CKutils_fnormalise, 1},
     {NULL, NULL, 0}

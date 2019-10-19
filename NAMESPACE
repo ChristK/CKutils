@@ -3,6 +3,7 @@
 export(absorb_dt)
 export(agegrp_name)
 export(clamp)
+export(clamp_int)
 export(clone_dt)
 export(count_if)
 export(counts)
