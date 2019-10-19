@@ -4,7 +4,7 @@
 \alias{absorb_dt}
 \title{Copy all columns of dt_i in dt_x}
 \usage{
-absorb_dt(dt_x, dt_i, on = ".NATURAL")
+absorb_dt(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL)
 }
 \description{
 Copy all columns of dt_i in dt_x

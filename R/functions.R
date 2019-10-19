@@ -1021,6 +1021,8 @@ resample <-
 #' @export
 del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
   stopifnot(is.data.table(dt), (is.integer(indx_to_del) | is.logical(indx_to_del)))
+
+  dt_keys <- key(dt)
   if (is.integer(indx_to_del)) keep <- -indx_to_del
   if (is.logical(indx_to_del)) keep <- !indx_to_del
 
@@ -1040,6 +1042,8 @@ del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
         j = 1L,
         value = NULL)
   }
+
+  setkeyv(dt_new, dt_keys)
   assign(name_of_dt, value = dt_new, envir = dt_env)
 }
 
