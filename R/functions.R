@@ -1065,3 +1065,25 @@ normalise <-
     else
       return(fnormalise(x))
   }
+
+# convert csv to fst and optionally delete csv. It accepts vectors
+#' @export
+csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
+  hlpfn <- function(nam, compression) { # input scalar string
+    out <- data.table::fread(nam)
+    new_nam <- gsub(".csv$", ".fst", nam)
+    fst::write_fst(out, new_nam, compress = compression)
+  }
+  lapply(csv_files, hlpfn, compression)
+  if (delete_csv) file.remove(csv_files)
+  return(invisible(NULL))
+}
+
+# Selected columns in a datatable are added, subtracted etc, or a fn is applied to them
+#' @export
+do_cols_dt <- function(dt, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn = NULL) {
+  cols_to_add <- paste0("`", cols_to_add, "`")
+  argum <- paste(cols_to_add, collapse = symbol)
+  if (!is.null(fn)) argum <- paste0(fn, "(", argum, ")")
+  dt[, .(eval(parse(text = argum)))]
+}
