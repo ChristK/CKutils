@@ -4,8 +4,7 @@
 \alias{get_dropbox_path}
 \title{Get Dropbox path}
 \usage{
-get_dropbox_path(pathtail = character(0), type = c("personal",
-  "business"))
+get_dropbox_path(pathtail = character(0), type = c("personal", "business"))
 }
 \arguments{
 \item{pathtail}{A String vector (if not a string then it is converted to String).

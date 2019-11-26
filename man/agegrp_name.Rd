@@ -4,9 +4,14 @@
 \alias{agegrp_name}
 \title{Generate names for age-group bands}
 \usage{
-agegrp_name(min_age = 0L, max_age = 85L, grp_width = 5L,
-  grp_lessthan_1 = TRUE, match_input = FALSE,
-  match_input_max_age = max_age)
+agegrp_name(
+  min_age = 0L,
+  max_age = 85L,
+  grp_width = 5L,
+  grp_lessthan_1 = TRUE,
+  match_input = FALSE,
+  match_input_max_age = max_age
+)
 }
 \arguments{
 \item{min_age}{A non-negative integer. The lower age limit for which

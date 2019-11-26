@@ -3,7 +3,6 @@
 \docType{package}
 \name{CKutils}
 \alias{CKutils}
-\alias{CKutils-package}
 \title{CKutils: A package with utility functions I use regularly.}
 \description{
 This package contains some functions I use regularly when I develop simulation models.

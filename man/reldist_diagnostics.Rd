@@ -4,8 +4,15 @@
 \alias{reldist_diagnostics}
 \title{Compare two distributions}
 \usage{
-reldist_diagnostics(comparison, reference, comparison_wt, reference_wt,
-  main, smooth = 0.35, discrete = FALSE)
+reldist_diagnostics(
+  comparison,
+  reference,
+  comparison_wt,
+  reference_wt,
+  main,
+  smooth = 0.35,
+  discrete = FALSE
+)
 }
 \arguments{
 \item{comparison}{A comparison}

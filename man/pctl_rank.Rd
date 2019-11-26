@@ -4,8 +4,10 @@
 \alias{pctl_rank}
 \title{Calculate percentile rank}
 \usage{
-pctl_rank(x, ties.method = c("average", "first", "random", "max", "min",
-  "dense"))
+pctl_rank(
+  x,
+  ties.method = c("average", "first", "random", "max", "min", "dense")
+)
 }
 \arguments{
 \item{x}{A numeric vector to rank}
