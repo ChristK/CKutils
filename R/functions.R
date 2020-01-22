@@ -922,7 +922,7 @@ absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL) {
   # dt_x[dt_i, (colnam) := .(i.COL1____, i.COL2____), on = on]
   colnam_tmp2 <- paste0("i.", colnam_tmp)
   argum <- paste0("dt_x[dt_i, (colnam) := .(", paste(colnam_tmp2, collapse = ", "), "), on = on]")
-  eval(parse(text = argum))
+  eval(str2lang(argum))
   setnames(dt_i, colnam_tmp, colnam)
   invisible(dt_x)
 }
@@ -1087,5 +1087,5 @@ do_cols_dt <- function(dt, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn 
   cols_to_add <- paste0("`", cols_to_add, "`")
   argum <- paste(cols_to_add, collapse = symbol)
   if (!is.null(fn)) argum <- paste0(fn, "(", argum, ")")
-  dt[, .(eval(parse(text = argum)))]
+  dt[, .(eval(str2lang(argum)))]
 }
