@@ -11,7 +11,7 @@ to_agegrp(
   age_colname = "age",
   agegrp_colname = "agegrp",
   to_factor = TRUE,
-  ...
+  min_age = NULL
 )
 }
 \arguments{

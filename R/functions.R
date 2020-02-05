@@ -310,45 +310,51 @@ replace_from_table <-
 #' to_agegrp(data.table(age = 0:99), max_age = 80L)[]
 #' to_agegrp(data.table(age = 0:99), grp_width = 10, max_age = 85)[]
 to_agegrp <-
-  function(dt,
-           grp_width = 5L,
-           max_age = 85L,
-           age_colname = "age",
-           agegrp_colname = "agegrp",
-           to_factor = TRUE,
-           ...) {
-    stopifnot(is.data.table(dt), age_colname %in% names(dt),
-              length(age_colname) == 1L, length(agegrp_colname) == 1L,
-              is.logical(to_factor))
-
-    age_vec <- dt[, min(get(age_colname))]:dt[, max(get(age_colname))]
-    agegroups <- agegrp_name(
-      min_age = min(age_vec),
-      max_age = max_age,
-      grp_width = grp_width,
-      match_input = FALSE,
-      match_input_max_age = max(age_vec),
-      ...
+  function (dt,
+            grp_width = 5L,
+            max_age = 85L,
+            age_colname = "age",
+            agegrp_colname = "agegrp",
+            to_factor = TRUE,
+            min_age = NULL)
+  {
+    stopifnot(
+      is.data.table(dt),
+      age_colname %in% names(dt),
+      length(age_colname) == 1L,
+      length(agegrp_colname) ==
+        1L,
+      is.logical(to_factor)
     )
+    max_age <-
+      ifelse(is.null(max_age), max(dt[[age_colname]]), max_age)
+    min_age <-
+      ifelse(is.null(min_age), min(dt[[age_colname]]), min_age)
+    age_vec <- min_age:max_age
+    agegroups <- agegrp_name(
+      min_age = min_age,
+      max_age,
+      grp_width = grp_width,
+      match_input = TRUE,
+      match_input_max_age = max_age
+    )
+
     replace_from_table(
       dt,
       colname = age_colname,
       from = age_vec,
-      to = agegrp_name(
-        min_age = min(age_vec),
-        max_age = max_age,
-        grp_width = grp_width,
-        match_input = TRUE,
-        match_input_max_age = max(age_vec),
-        ...
-      ),
+      to = agegroups,
       newcolname = agegrp_colname
     )
+    # TODO better support of replace_from_table so I can convert agegroups vector
+    # to factor, I.e. if (to_factor) agegroups <- factor(agegroups)
     if (to_factor) {
-      dt[, (agegrp_colname) := factor(get(agegrp_colname), agegroups)]
+      dt[, `:=`((agegrp_colname), factor(get(agegrp_colname),
+                                         sort(unique(agegroups))))]
     }
     return(invisible(dt))
   }
+
 
 #' Clone a data.table
 #'
