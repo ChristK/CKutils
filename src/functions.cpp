@@ -60,6 +60,50 @@ NumericVector fquantile(NumericVector x, NumericVector probs, bool na_rm = true)
 
 //' @export
 // [[Rcpp::export]]
+List fquantile_byid(NumericVector x,
+                    NumericVector q,
+                    StringVector id,
+                    bool rounding = false,
+                    bool na_rm = true) {
+  // Need to be sorted by id
+  const int n = x.size();
+  const int m = unique(id).size();
+  NumericMatrix z(m, q.size());
+  StringVector id_nam(m);
+  int start = 0;
+  int counter = 0;
+  int end = 0;
+  int counter_row = 0;
+
+  for (int i = 1; i < n; i++) { // start from 2nd element
+    if (id[i] == id[i-1]) counter++;
+    else
+    {
+      start = i - counter - 1;
+      end = i - 1;
+      counter = 0;
+      if (rounding) z.row(counter_row) = round(fquantile(x[seq(start, end)], q, na_rm), 0);
+      else z.row(counter_row) = fquantile(x[seq(start, end)], q, na_rm);
+      id_nam[counter_row] = id[end];
+      counter_row++;
+    }
+  }
+  // take care the last group. Independent of its number of rows
+  if (rounding) z.row(counter_row) = round(fquantile(x[seq(n - 1 - counter, n - 1)], q, na_rm), 0);
+  else z.row(counter_row) = fquantile(x[seq(n - 1 - counter, n - 1)], q, na_rm);
+  id_nam[counter_row] = id[n - 1];
+
+  // return(z);
+  const int tt = 1 + q.size();
+  List outputList(tt);
+  outputList[0] = id_nam;
+  for (int i = 1; i < tt; i++) {
+    outputList[i] = z(_, i - 1);
+  }
+}
+
+//' @export
+// [[Rcpp::export]]
 int count_if(LogicalVector x, bool na_rm = false) {
   if (na_rm) x = na_omit(x); // remove NA from denominator
   const int n = x.size();

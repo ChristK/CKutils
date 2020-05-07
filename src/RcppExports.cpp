@@ -40,6 +40,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fquantile_byid
+List fquantile_byid(NumericVector x, NumericVector q, StringVector id, bool rounding, bool na_rm);
+RcppExport SEXP _CKutils_fquantile_byid(SEXP xSEXP, SEXP qSEXP, SEXP idSEXP, SEXP roundingSEXP, SEXP na_rmSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type q(qSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type id(idSEXP);
+    Rcpp::traits::input_parameter< bool >::type rounding(roundingSEXP);
+    Rcpp::traits::input_parameter< bool >::type na_rm(na_rmSEXP);
+    rcpp_result_gen = Rcpp::wrap(fquantile_byid(x, q, id, rounding, na_rm));
+    return rcpp_result_gen;
+END_RCPP
+}
 // count_if
 int count_if(LogicalVector x, bool na_rm);
 RcppExport SEXP _CKutils_count_if(SEXP xSEXP, SEXP na_rmSEXP) {
@@ -120,6 +135,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_tableRcpp", (DL_FUNC) &_CKutils_tableRcpp, 1},
     {"_CKutils_counts", (DL_FUNC) &_CKutils_counts, 1},
     {"_CKutils_fquantile", (DL_FUNC) &_CKutils_fquantile, 3},
+    {"_CKutils_fquantile_byid", (DL_FUNC) &_CKutils_fquantile_byid, 5},
     {"_CKutils_count_if", (DL_FUNC) &_CKutils_count_if, 2},
     {"_CKutils_prop_if", (DL_FUNC) &_CKutils_prop_if, 2},
     {"_CKutils_clamp", (DL_FUNC) &_CKutils_clamp, 4},

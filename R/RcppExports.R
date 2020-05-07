@@ -15,6 +15,11 @@ fquantile <- function(x, probs, na_rm = TRUE) {
 }
 
 #' @export
+fquantile_byid <- function(x, q, id, rounding = FALSE, na_rm = TRUE) {
+    .Call('_CKutils_fquantile_byid', PACKAGE = 'CKutils', x, q, id, rounding, na_rm)
+}
+
+#' @export
 count_if <- function(x, na_rm = FALSE) {
     .Call('_CKutils_count_if', PACKAGE = 'CKutils', x, na_rm)
 }
