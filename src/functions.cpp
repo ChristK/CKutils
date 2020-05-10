@@ -100,6 +100,7 @@ List fquantile_byid(NumericVector x,
   for (int i = 1; i < tt; i++) {
     outputList[i] = z(_, i - 1);
   }
+  return(outputList);
 }
 
 //' @export
