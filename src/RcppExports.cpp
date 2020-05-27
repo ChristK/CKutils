@@ -79,9 +79,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// clamp
-NumericVector clamp(NumericVector& x, double a, double b, const bool& inplace);
-RcppExport SEXP _CKutils_clamp(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP inplaceSEXP) {
+// fclamp
+NumericVector fclamp(NumericVector& x, double a, double b, const bool& inplace);
+RcppExport SEXP _CKutils_fclamp(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP inplaceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -89,13 +89,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
     Rcpp::traits::input_parameter< const bool& >::type inplace(inplaceSEXP);
-    rcpp_result_gen = Rcpp::wrap(clamp(x, a, b, inplace));
+    rcpp_result_gen = Rcpp::wrap(fclamp(x, a, b, inplace));
     return rcpp_result_gen;
 END_RCPP
 }
-// clamp_int
-IntegerVector clamp_int(IntegerVector& x, int a, int b, const bool& inplace);
-RcppExport SEXP _CKutils_clamp_int(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP inplaceSEXP) {
+// fclamp_int
+IntegerVector fclamp_int(IntegerVector& x, int a, int b, const bool& inplace);
+RcppExport SEXP _CKutils_fclamp_int(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP inplaceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -103,7 +103,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type a(aSEXP);
     Rcpp::traits::input_parameter< int >::type b(bSEXP);
     Rcpp::traits::input_parameter< const bool& >::type inplace(inplaceSEXP);
-    rcpp_result_gen = Rcpp::wrap(clamp_int(x, a, b, inplace));
+    rcpp_result_gen = Rcpp::wrap(fclamp_int(x, a, b, inplace));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -138,8 +138,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fquantile_byid", (DL_FUNC) &_CKutils_fquantile_byid, 5},
     {"_CKutils_count_if", (DL_FUNC) &_CKutils_count_if, 2},
     {"_CKutils_prop_if", (DL_FUNC) &_CKutils_prop_if, 2},
-    {"_CKutils_clamp", (DL_FUNC) &_CKutils_clamp, 4},
-    {"_CKutils_clamp_int", (DL_FUNC) &_CKutils_clamp_int, 4},
+    {"_CKutils_fclamp", (DL_FUNC) &_CKutils_fclamp, 4},
+    {"_CKutils_fclamp_int", (DL_FUNC) &_CKutils_fclamp_int, 4},
     {"_CKutils_fequal", (DL_FUNC) &_CKutils_fequal, 2},
     {"_CKutils_fnormalise", (DL_FUNC) &_CKutils_fnormalise, 1},
     {NULL, NULL, 0}

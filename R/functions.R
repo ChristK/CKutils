@@ -21,6 +21,9 @@
 `:=` = function(...)
   NULL # due to NSE notes in R CMD check
 
+.onUnload <- function(libpath) {
+  library.dynam.unload("CKutils", libpath)
+}
 
 #' Get Dropbox path
 #'
@@ -953,9 +956,7 @@ absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL) {
 # dt_x[dt_i, on = c("a", "b")]
 # absorb_dt(dt_x, dt_i, c("a", "b"))[]
 
-.onUnload <- function(libpath) {
-  library.dynam.unload("CKutils", libpath)
-}
+
 
 # estimate beta params from mean and variance
 #' `estim_beta_params` estimates the beta parameters from a mean and a variance given
@@ -1094,4 +1095,15 @@ do_cols_dt <- function(dt, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn 
   argum <- paste(cols_to_add, collapse = symbol)
   if (!is.null(fn)) argum <- paste0(fn, "(", argum, ")")
   dt[, .(eval(str2lang(argum)))]
+}
+
+# dispatch fclamp or fclamp_int depending on input
+clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
+  stopifnot(is.numeric(a), is.numeric(b), is.logical(inplace))
+  typ <- typeof(x)
+  if (typ == "double") {
+    return(fclamp(x, a, b, inplace))
+  } else if (typ == "integer") {
+    return(fclamp_int(x, as.integer(a), as.integer(b), inplace))
+  } else stop("Only accepts doubles or integers")
 }

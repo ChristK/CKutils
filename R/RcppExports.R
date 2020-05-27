@@ -30,13 +30,13 @@ prop_if <- function(x, na_rm = FALSE) {
 }
 
 #' @export
-clamp <- function(x, a = 0.0, b = 1.0, inplace = FALSE) {
-    .Call('_CKutils_clamp', PACKAGE = 'CKutils', x, a, b, inplace)
+fclamp <- function(x, a = 0.0, b = 1.0, inplace = FALSE) {
+    .Call('_CKutils_fclamp', PACKAGE = 'CKutils', x, a, b, inplace)
 }
 
 #' @export
-clamp_int <- function(x, a = 0L, b = 1L, inplace = FALSE) {
-    .Call('_CKutils_clamp_int', PACKAGE = 'CKutils', x, a, b, inplace)
+fclamp_int <- function(x, a = 0L, b = 1L, inplace = FALSE) {
+    .Call('_CKutils_fclamp_int', PACKAGE = 'CKutils', x, a, b, inplace)
 }
 
 #' @export

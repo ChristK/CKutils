@@ -133,7 +133,7 @@ double prop_if(LogicalVector x, bool na_rm = false) {
 
 //' @export
 // [[Rcpp::export]]
-NumericVector clamp(NumericVector& x, double a = 0.0, double b = 1.0, const bool& inplace = false) {
+NumericVector fclamp(NumericVector& x, double a = 0.0, double b = 1.0, const bool& inplace = false) {
   if (a > b) {double c = a; a = b; b = c;}; // ensure a < b
   const int n = x.size();
   if (!inplace)
@@ -150,19 +150,23 @@ NumericVector clamp(NumericVector& x, double a = 0.0, double b = 1.0, const bool
     }
     return out;
   }
-  else
-  {
-    for(int i = 0; i < n; i++) {
+  else //if inplace
+  {    // transforms input vector inplace as long as an numeric is passed to it.
+       // If an integer vector is passed to it from R, an implicit copy is
+       // happening so it is not inplace any more. The R fn ensures this is not
+       // happening
+    for (int i = 0; i < n; i++)
+    {
       if (x[i] < a) x[i] = a;
       else if (x[i] > b) x[i] = b;
     }
-    return x; // transforms input vector inplace as long as an numeric is passed to it. If an integer vector is passed to it from R, an impricit copy is happening so it is not inplace anymore
+    return x;
   }
 }
 
 //' @export
 // [[Rcpp::export]]
-IntegerVector clamp_int(IntegerVector& x, int a = 0, int b = 1, const bool& inplace = false) {
+IntegerVector fclamp_int(IntegerVector& x, int a = 0, int b = 1, const bool& inplace = false) {
   if (a > b) {int c = a; a = b; b = c;}; // ensure a < b
   const int n = x.size();
   if (!inplace)
