@@ -1098,6 +1098,7 @@ do_cols_dt <- function(dt, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn 
 }
 
 # dispatch fclamp or fclamp_int depending on input
+#' @export
 clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
   stopifnot(is.numeric(a), is.numeric(b), is.logical(inplace))
   typ <- typeof(x)
@@ -1107,3 +1108,6 @@ clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
     return(fclamp_int(x, as.integer(a), as.integer(b), inplace))
   } else stop("Only accepts doubles or integers")
 }
+
+
+#  remotes::install_github("ChristK/CKutils")
