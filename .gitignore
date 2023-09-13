@@ -27,3 +27,6 @@ rsconnect/
 CKutils.Rproj
 /*.so
 /*.o
+.devcontainer
+.history
+.vscode

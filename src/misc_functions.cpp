@@ -1,5 +1,5 @@
 /* CKutils: an R package with some utility functions I use regularly
-Copyright (C) 2018  Chris Kypridemos
+Copyright (C) 2022  Chris Kypridemos
 
 CKutils is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -216,5 +216,19 @@ NumericVector fnormalise(const NumericVector& x) { // between 0, 1
     out[i] = (x[i] - minx) / (maxx - minx);
   }
   return out;
+}
+
+/* Linear Interpolation */
+//' @export
+// [[Rcpp::export]]
+NumericVector lin_interpolation(
+  const NumericVector& xp,
+  const NumericVector& x0,
+  const NumericVector& x1,
+  const NumericVector& y0,
+  const NumericVector& y1
+)
+{
+  return y0 + ((y1-y0)/(x1-x0)) * (xp - x0);
 }
 

@@ -2,50 +2,55 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 tableRcpp <- function(x) {
-    .Call('_CKutils_tableRcpp', PACKAGE = 'CKutils', x)
+    .Call(`_CKutils_tableRcpp`, x)
 }
 
 counts <- function(x) {
-    .Call('_CKutils_counts', PACKAGE = 'CKutils', x)
+    .Call(`_CKutils_counts`, x)
 }
 
 #' @export
 fquantile <- function(x, probs, na_rm = TRUE) {
-    .Call('_CKutils_fquantile', PACKAGE = 'CKutils', x, probs, na_rm)
+    .Call(`_CKutils_fquantile`, x, probs, na_rm)
 }
 
 #' @export
 fquantile_byid <- function(x, q, id, rounding = FALSE, na_rm = TRUE) {
-    .Call('_CKutils_fquantile_byid', PACKAGE = 'CKutils', x, q, id, rounding, na_rm)
+    .Call(`_CKutils_fquantile_byid`, x, q, id, rounding, na_rm)
 }
 
 #' @export
 count_if <- function(x, na_rm = FALSE) {
-    .Call('_CKutils_count_if', PACKAGE = 'CKutils', x, na_rm)
+    .Call(`_CKutils_count_if`, x, na_rm)
 }
 
 #' @export
 prop_if <- function(x, na_rm = FALSE) {
-    .Call('_CKutils_prop_if', PACKAGE = 'CKutils', x, na_rm)
+    .Call(`_CKutils_prop_if`, x, na_rm)
 }
 
 #' @export
 fclamp <- function(x, a = 0.0, b = 1.0, inplace = FALSE) {
-    .Call('_CKutils_fclamp', PACKAGE = 'CKutils', x, a, b, inplace)
+    .Call(`_CKutils_fclamp`, x, a, b, inplace)
 }
 
 #' @export
 fclamp_int <- function(x, a = 0L, b = 1L, inplace = FALSE) {
-    .Call('_CKutils_fclamp_int', PACKAGE = 'CKutils', x, a, b, inplace)
+    .Call(`_CKutils_fclamp_int`, x, a, b, inplace)
 }
 
 #' @export
 fequal <- function(x, tol) {
-    .Call('_CKutils_fequal', PACKAGE = 'CKutils', x, tol)
+    .Call(`_CKutils_fequal`, x, tol)
 }
 
 #' @export
 fnormalise <- function(x) {
-    .Call('_CKutils_fnormalise', PACKAGE = 'CKutils', x)
+    .Call(`_CKutils_fnormalise`, x)
+}
+
+#' @export
+lin_interpolation <- function(xp, x0, x1, y0, y1) {
+    .Call(`_CKutils_lin_interpolation`, xp, x0, x1, y0, y1)
 }
 

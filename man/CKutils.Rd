@@ -3,10 +3,18 @@
 \docType{package}
 \name{CKutils}
 \alias{CKutils}
+\alias{.datatable.aware}
 \title{CKutils: A package with utility functions I use regularly.}
+\format{
+An object of class \code{logical} of length 1.
+}
+\usage{
+.datatable.aware
+}
 \description{
 This package contains some functions I use regularly when I develop simulation models.
 }
 \author{
 Chris Kypridemos
 }
+\keyword{internal}

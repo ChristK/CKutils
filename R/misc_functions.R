@@ -1,5 +1,5 @@
 ## CKutils: an R package with some utility functions I use regularly
-## Copyright (C) 2018  Chris Kypridemos
+## Copyright (C) 2022  Chris Kypridemos
 
 ## CKutils is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -16,11 +16,6 @@
 ## or write to the Free Software Foundation, Inc., 51 Franklin Street,
 ## Fifth Floor, Boston, MA 02110-1301  USA.
 
-# remotes::install_github("ChristK/CKutils")
-
-`:=` = function(...)
-  NULL # due to NSE notes in R CMD check
-
 .onUnload <- function(libpath) {
   library.dynam.unload("CKutils", libpath)
 }
@@ -35,7 +30,7 @@
 #'    If present, it gets concatenated with the Dropbox path.
 #'    See examples.
 #' @param type A String scalar ("personal" or "business"). Which Dropbox path to return? The personal or the business one? It may be abbreviated.
-#' @return Dropbax path as a String. If pathtail is present, it concatenates the Dropbox path with pathtail.
+#' @return Dropbox path as a String. If pathtail is present, it concatenates the Dropbox path with pathtail.
 #' @export
 #' @examples
 #' \dontrun{
@@ -210,8 +205,8 @@ agegrp_name <-
 #' Replace multiple values in a data.table column
 #'
 #' `replace_from_table` replace multiple values in a data.table column.
-#'  . The values in \code{from} arguement are matched
-#'    and replaced by those in \code{to} arguement.
+#'  . The values in \code{from} argument are matched
+#'    and replaced by those in \code{to} argument.
 #'    If \code{newcolname = NULL} the replace is by reference.
 #'
 #' @param dt A data.table to be changed by reference.
@@ -303,7 +298,7 @@ replace_from_table <-
 #'   created for age-groups.
 #' @param to_factor A logical. If \code{TRUE}, then the age-groups
 #'   column is converted to factor.
-#' @param ... Pass arguements to \code{\link{agegrp_name}}.
+#' @param ... Pass arguments to \code{\link{agegrp_name}}.
 #' @return a data.table, invisibly.
 #' @export
 #' @examples
@@ -377,6 +372,7 @@ to_agegrp <-
 #' clone_dt(dt, 3, idcol = TRUE)
 clone_dt <-
   function(dt, times, idcol = TRUE) {
+    # TODO early escape for times == 1
     xx <- key(dt)
     l <- rep(list(dt), times)
     out <- setkeyv(rbindlist(l, idcol = idcol), xx)
@@ -906,7 +902,7 @@ dependencies <-
 
 #' Copy all columns of dt_i in dt_x
 #' @export
-absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL) {
+absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL, verbose = FALSE) {
   stopifnot(is.data.table(dt_x), is.data.table(dt_i), is.character(on))
   nam_i <- names(dt_i)
   nam_x <- names(dt_x)
@@ -914,7 +910,7 @@ absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL) {
     on <- setdiff(intersect(nam_x, nam_i), exclude_col)
   colnam_replaced <-
     intersect(setdiff(nam_x, on), setdiff(nam_i, on))
-  if (length(colnam_replaced) > 0)
+  if (verbose && length(colnam_replaced) > 0)
     message(
       paste(
         "\ncolumn",
@@ -1109,5 +1105,44 @@ clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
   } else stop("Only accepts doubles or integers")
 }
 
+#' Generate folder structure
+#'
+#' `gnrt_folder_structure` generates the folder structure for an IMPACTncd model
+#'
+#' This is an auxilliary function: It creates the expected folder structure for
+#' an IMPACTncd model.
+#'
+#' @param path A string scalar. The root folder where the folder structure will
+#' be created.
+#' @return NULL
+#' @export
+
+gnrt_folder_structure <- function(path = getwd()) {
+  fldr_strc <- list(
+    "inputs" = file.path(path, "inputs"),
+    "processed_inputs" = file.path(path, "processed_inputs"),
+    "simulation" = file.path(path, "simulation"),
+    "outputs" = file.path(path, "outputs"),
+    "validation" = file.path(path, "validation"),
+    "gui" = file.path(path, "gui"),
+    "logs" = file.path(path, "logs")
+  )
+
+  fldr_strc$inputs <- list(
+    "settings" = file.path(fldr_strc$inputs, "settings"),
+    "open_data" = file.path(fldr_strc$inputs, "open_data"),
+    "secure_data" = file.path(fldr_strc$inputs, "secure_data")
+  )
+
+  fldr_strc$processed_inputs <- list(
+    "exposures" = file.path(fldr_strc$processed_inputs, "exposures"),
+    "disease_epi" = file.path(fldr_strc$processed_inputs, "disease_epi")
+  )
+
+  fldr_strc$inputs$open_data <- list(
+    "RR" = file.path(fldr_strc$inputs$open_data, "RR"),
+    "population" = file.path(fldr_strc$inputs$open_data, "population")
+  )
+}
 
 #  remotes::install_github("ChristK/CKutils")

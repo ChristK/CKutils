@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // tableRcpp
 IntegerVector tableRcpp(SEXP x);
 RcppExport SEXP _CKutils_tableRcpp(SEXP xSEXP) {
@@ -130,6 +135,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// lin_interpolation
+NumericVector lin_interpolation(const NumericVector& xp, const NumericVector& x0, const NumericVector& x1, const NumericVector& y0, const NumericVector& y1);
+RcppExport SEXP _CKutils_lin_interpolation(SEXP xpSEXP, SEXP x0SEXP, SEXP x1SEXP, SEXP y0SEXP, SEXP y1SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type xp(xpSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type x1(x1SEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type y0(y0SEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type y1(y1SEXP);
+    rcpp_result_gen = Rcpp::wrap(lin_interpolation(xp, x0, x1, y0, y1));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_tableRcpp", (DL_FUNC) &_CKutils_tableRcpp, 1},
@@ -142,6 +162,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fclamp_int", (DL_FUNC) &_CKutils_fclamp_int, 4},
     {"_CKutils_fequal", (DL_FUNC) &_CKutils_fequal, 2},
     {"_CKutils_fnormalise", (DL_FUNC) &_CKutils_fnormalise, 1},
+    {"_CKutils_lin_interpolation", (DL_FUNC) &_CKutils_lin_interpolation, 5},
     {NULL, NULL, 0}
 };
 
