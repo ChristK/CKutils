@@ -19,18 +19,18 @@ to_agegrp(
 
 \item{grp_width}{The group width for the age groups.}
 
-\item{max_age}{The max age for the closed agegroups. For ages above the max age,
+\item{max_age}{The max age for the closed age groups. For ages above the max age,
 an open age group will be created, named max_age+ (i.e. 85+).}
 
 \item{age_colname}{A string denoting the age column in \code{dt}.}
 
 \item{agegrp_colname}{A string denoting the name of the column that will be
-created for age-groups.}
+created for age groups.}
 
 \item{to_factor}{A logical. If \code{TRUE}, then the age-groups
 column is converted to factor.}
 
-\item{...}{Pass arguments to \code{\link{agegrp_name}}.}
+\item{min_age}{The minimum age for the age group. If `NULL` the minimum will be considered the that that is not more than the minimum age in the data that can be divided with grp_width.}
 }
 \value{
 a data.table, invisibly.

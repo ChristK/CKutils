@@ -291,14 +291,14 @@ replace_from_table <-
 #'
 #' @param dt A data.table with a column named \code{age}.
 #' @param grp_width The group width for the age groups.
-#' @param max_age The max age for the closed agegroups. For ages above the max age,
+#' @param max_age The max age for the closed age groups. For ages above the max age,
 #'  an open age group will be created, named max_age+ (i.e. 85+).
 #' @param age_colname A string denoting the age column in \code{dt}.
 #' @param agegrp_colname A string denoting the name of the column that will be
-#'   created for age-groups.
+#'   created for age groups.
 #' @param to_factor A logical. If \code{TRUE}, then the age-groups
 #'   column is converted to factor.
-#' @param ... Pass arguments to \code{\link{agegrp_name}}.
+#' @param min_age The minimum age for the age group. If `NULL` the minimum will be considered the that that is not more than the minimum age in the data that can be divided with grp_width.
 #' @return a data.table, invisibly.
 #' @export
 #' @examples
@@ -308,13 +308,13 @@ replace_from_table <-
 #' to_agegrp(data.table(age = 0:99), max_age = 80L)[]
 #' to_agegrp(data.table(age = 0:99), grp_width = 10, max_age = 85)[]
 to_agegrp <-
-  function (dt,
-            grp_width = 5L,
-            max_age = 85L,
-            age_colname = "age",
-            agegrp_colname = "agegrp",
-            to_factor = TRUE,
-            min_age = NULL)
+  function(dt,
+           grp_width = 5L,
+           max_age = 85L,
+           age_colname = "age",
+           agegrp_colname = "agegrp",
+           to_factor = TRUE,
+           min_age = NULL)
   {
     stopifnot(
       is.data.table(dt),
@@ -326,8 +326,9 @@ to_agegrp <-
     )
     max_age <-
       ifelse(is.null(max_age), max(dt[[age_colname]]), max_age)
+    lage <- min(dt[[age_colname]])
     min_age <-
-      ifelse(is.null(min_age), min(dt[[age_colname]]), min_age)
+      ifelse(is.null(min_age), lage - lage%%grp_width, min_age)
     age_vec <- min_age:max_age
     agegroups <- agegrp_name(
       min_age = min_age,
