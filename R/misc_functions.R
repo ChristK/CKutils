@@ -24,7 +24,7 @@
 #'
 #' `get_dropbox_path` returns the path of Dropbox. Works for both personal and business accounts
 #'
-#' This is an auxilliary function: It finds the Dropbox path in Windows, Linux, and OSX operating systems.
+#' This is an auxiliary function: It finds the Dropbox path in Windows, Linux, and OSX operating systems.
 #'
 #' @param pathtail A String vector (if not a string then it is converted to String).
 #'    If present, it gets concatenated with the Dropbox path.
@@ -387,7 +387,7 @@ clone_dt <-
 #' @param x A numeric vector to rank
 #' @param ties.method A character string specifying how ties are treated
 #' @export
-#' @return The percentile rank of the \code{`x`} vector calculated according to the ties.method choosen
+#' @return The percentile rank of the \code{`x`} vector calculated according to the ties.method chosen
 #' @examples
 #' library(data.table)
 #' library(CKutils)
@@ -415,6 +415,7 @@ pctl_rank <- function(x, ties.method = c("average", "first", "random",
 #'  @param gamlss_obj a gamlss object
 #'  @param mc by default =10L
 #'  @param orig_data initial data.table = \code{dt}
+#'  @return A data.table with the observed and predicted
 #'  @export
 validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
   if (!requireNamespace("gamlss", quietly = TRUE))
@@ -451,6 +452,7 @@ validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
 #' @param gamlss_obj gamlss object
 #' @param orig_data original data.table
 #' @param nc by default = 1L
+#' @return A data.table with the predicted
 #' @export
 guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
   if (!requireNamespace("gamlss", quietly = TRUE))
@@ -498,6 +500,7 @@ guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
 #'  where `y` the name of the predicted variable (i.e. active_days).
 #' @param dt a data.table
 #' @param polr_obj a polr object
+#' @return A data.table with the predicted
 #' @export
 guess_polr <- function(dt, polr_obj) {
   if (!requireNamespace("MASS", quietly = TRUE))
@@ -537,6 +540,7 @@ guess_polr <- function(dt, polr_obj) {
 #' @param gamlss_obj a gamlss object
 #' @param orig_data original data.table
 #' @param colnam column names
+#' @return The observed and predicted values of the dependent
 #' @export
 crossval_gamlss <- function(dt, gamlss_obj, orig_data = dt, colnam = "rank") {
   stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dt),
@@ -577,7 +581,7 @@ crossval_gamlss <- function(dt, gamlss_obj, orig_data = dt, colnam = "rank") {
 ##'   nested) list of such vectors. If \code{x} is a list, we recursively apply
 ##'   \code{counts} throughout elements in the list.
 ##' @export
-##' @examples
+##' @example
 ##' x <- round( rnorm(1E2), 1 )
 ##' counts(x)
 counts <- function(x) {
@@ -598,6 +602,7 @@ counts <- function(x) {
 #' This is based on `data.table:::patterns`
 #' @param dt A data.table from which the column names \code{names(dt)} or \code{colnames(dt)} will be tested
 #' @param ... A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops
+#' @return The matching names
 #' @export
 #' @examples
 #' library(data.table)
@@ -902,6 +907,23 @@ dependencies <-
 # print(tt[pid == 4,  plot(.id, y, ylim = c(0,1))])
 
 #' Copy all columns of dt_i in dt_x
+#' @description This function copies columns from one data table into another based on a specified key.
+#'
+#' @param dt_x The data table to be modified.
+#' @param dt_i The data table providing columns to be copied
+#' @param on The key columns for merging. Default is ".NATURAL", which uses common column names.
+#' @param exclude_col A character vector specifying columns to exclude from the merging process.
+#' @param verbose If TRUE, display messages about replaced columns. Default is FALSE.
+#'
+#' @return The modified data table (\code{dt_x}) with copied columns from \code{dt_i}.
+#'
+#' @example
+#' library(data.table)
+#' library(CKutils)
+#' dt_x <- data.table(ID = c(1, 2, 3), Name = c("A", "B", "C"))
+#' dt_i <- data.table(ID = c(2, 3, 4), Age = c(25, 30, 22))
+#' absorb_dt(dt_x, dt_i, on = "ID")
+#'
 #' @export
 absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL, verbose = FALSE) {
   stopifnot(is.data.table(dt_x), is.data.table(dt_i), is.character(on))
@@ -1023,7 +1045,17 @@ resample <-
 #'   ))
 #' }
 
-
+#' Delete Rows from Data Table
+#'@description This function deletes specified rows from a data table based on index or logical condition.
+#'
+#' @param dt The data table from which rows will be deleted.
+#' @param indx_to_del A numeric vector or logical vector specifying the rows to be deleted.
+#' @param dt_env The environment in which the data table is stored. Default is the global environment (\code{.GlobalEnv}).
+#'
+#' @return The modified data table with specified rows removed.
+#'
+#' @example TODO
+#'
 #' @export
 del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
   stopifnot(is.data.table(dt), (is.integer(indx_to_del) | is.logical(indx_to_del)))
@@ -1053,6 +1085,19 @@ del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
   assign(name_of_dt, value = dt_new, envir = dt_env)
 }
 
+#' Check if All Elements are Identical
+#'
+#' This function checks if all elements in a numeric vector are approximately equal within a specified tolerance.
+#'
+#' @param x Numeric vector to be checked for identical elements.
+#' @param tol Tolerance level for equality comparison. Default is \code{.Machine$double.eps ^ 0.5}.
+#'
+#' @return \code{TRUE} if all elements are approximately equal; otherwise, \code{FALSE}.
+#'
+#' @example
+#' values <- c(0.1, 0.2, 0.3, 0.1 + 0.2 + 0.3)
+#' identical_elements(values)
+#'
 #' @export
 identical_elements <-
   function(x, tol = .Machine$double.eps ^ 0.5) {
@@ -1061,7 +1106,19 @@ identical_elements <-
   }
 
 
-# normalise a vector to 0,1 range
+#' normalise a vector to 0,1 range
+#'
+#' @description This function normalizes a numeric vector by checking for identical elements and applying a normalization function.
+#'
+#' @param x A numeric vector to be normalized.
+#' @param ... Additional arguments to be passed to the underlying normalization function.
+#'
+#' @return A normalized version of the input numeric vector.
+#'
+#' @example
+#' x <- c(2, 4, 6, 8)
+#' normalise(x)
+#'
 #' @export
 normalise <-
   function(x, ...) {
@@ -1072,7 +1129,22 @@ normalise <-
       return(fnormalise(x))
   }
 
-# convert csv to fst and optionally delete csv. It accepts vectors
+#' convert csv to fst and optionally delete csv. It accepts vectors
+#'
+#' @description This function converts a list of CSV files to the FST format with optional compression.
+#'
+#' @param csv_files A character vector containing the file paths of the CSV files to be converted.
+#' @param compression An integer specifying the compression level for the FST format. Default is 100.
+#' @param delete_csv If TRUE, delete the original CSV files after conversion. Default is FALSE.
+#'
+#' @return Invisible NULL.
+#'
+#' @example
+#' \dontrun{
+#' files <- c("data/file1.csv", "data/file2.csv")
+#' csv_to_fst(files, compression = 80L, delete_csv = TRUE)
+#' }
+#'
 #' @export
 csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
   hlpfn <- function(nam, compression) { # input scalar string
@@ -1085,7 +1157,20 @@ csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
   return(invisible(NULL))
 }
 
-# Selected columns in a datatable are added, subtracted etc, or a fn is applied to them
+#' Selected columns in a datatable are added, subtracted etc, or a fn is applied to them
+#' @description This function performs column-wise operations on a data table, combining specified columns using given symbols.
+#'
+#' @param dt The data table on which operations are to be performed.
+#' @param cols_to_add A character vector of column names to be combined in the operation.
+#' @param symbol A character vector specifying the symbols to be used in combining columns. Default is c(",", "+", "-", "*", "/").
+#' @param fn An optional function to apply to the combined result.
+#'
+#' @return A new data table containing the result of the column-wise operations.
+#'
+#' @example
+#' dt <- data.table(A = c(1, 2, 3), B = c(4, 5, 6), C = c(7, 8, 9))
+#' do_cols_dt(dt, cols_to_add = c("A", "B", "C"), symbol = "+", fn = "sqrt")
+#'
 #' @export
 do_cols_dt <- function(dt, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn = NULL) {
   cols_to_add <- paste0("`", cols_to_add, "`")
@@ -1094,7 +1179,20 @@ do_cols_dt <- function(dt, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn 
   dt[, .(eval(str2lang(argum)))]
 }
 
-# dispatch fclamp or fclamp_int depending on input
+#' dispatch fclamp or fclamp_int depending on input
+#' @description This function clamps numeric values within a specified range, returning the result.
+#'
+#' @param x Numeric vector to be clamped.
+#' @param a Lower bound of the range. Default is 0.
+#' @param b Upper bound of the range. Default is 1.
+#' @param inplace If TRUE, perform the clamping in-place. Default is FALSE.
+#'
+#' @return A numeric vector with values clamped within the specified range.
+#'
+#' @example
+#' values <- c(0.2, 0.8, 1.5, -0.5)
+#' clamp(values, a = 0, b = 1)
+#'
 #' @export
 clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
   stopifnot(is.numeric(a), is.numeric(b), is.logical(inplace))
