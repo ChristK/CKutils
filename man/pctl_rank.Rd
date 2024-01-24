@@ -15,7 +15,7 @@ pctl_rank(
 \item{ties.method}{A character string specifying how ties are treated}
 }
 \value{
-The percentile rank of the \code{`x`} vector calculated according to the ties.method choosen
+The percentile rank of the \code{`x`} vector calculated according to the ties.method chosen
 }
 \description{
 `pctl_rank` calculates the percentile rank of a numeric vector

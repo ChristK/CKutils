@@ -24,6 +24,7 @@ The order of \code{NA}, \code{NaN} in the output may differ -- even
 are inserted.
 }
 \examples{
+library(CKutils)
 x <- round( rnorm(1E2), 1 )
 counts(x)
 }

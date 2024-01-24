@@ -11,6 +11,9 @@ guess_polr(dt, polr_obj)
 
 \item{polr_obj}{a polr object}
 }
+\value{
+A data.table with the predicted variable.
+}
 \description{
 `guess_polr` returns a data.table with the predicted
  variable. `dt` needs to have a column with percentiles named `rank_y`,

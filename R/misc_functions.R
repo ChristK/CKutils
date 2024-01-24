@@ -415,7 +415,7 @@ pctl_rank <- function(x, ties.method = c("average", "first", "random",
 #'  @param gamlss_obj a gamlss object
 #'  @param mc by default =10L
 #'  @param orig_data initial data.table = \code{dt}
-#'  @return A data.table with the observed and predicted
+#'  @return A data.table with the observed and predicted variable.
 #'  @export
 validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
   if (!requireNamespace("gamlss", quietly = TRUE))
@@ -452,7 +452,7 @@ validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
 #' @param gamlss_obj gamlss object
 #' @param orig_data original data.table
 #' @param nc by default = 1L
-#' @return A data.table with the predicted
+#' @return A data.table with the predicted variable.
 #' @export
 guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
   if (!requireNamespace("gamlss", quietly = TRUE))
@@ -500,7 +500,7 @@ guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
 #'  where `y` the name of the predicted variable (i.e. active_days).
 #' @param dt a data.table
 #' @param polr_obj a polr object
-#' @return A data.table with the predicted
+#' @return A data.table with the predicted variable.
 #' @export
 guess_polr <- function(dt, polr_obj) {
   if (!requireNamespace("MASS", quietly = TRUE))
@@ -540,7 +540,7 @@ guess_polr <- function(dt, polr_obj) {
 #' @param gamlss_obj a gamlss object
 #' @param orig_data original data.table
 #' @param colnam column names
-#' @return The observed and predicted values of the dependent
+#' @return The observed and predicted values of the dependent variable.
 #' @export
 crossval_gamlss <- function(dt, gamlss_obj, orig_data = dt, colnam = "rank") {
   stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dt),
@@ -581,7 +581,8 @@ crossval_gamlss <- function(dt, gamlss_obj, orig_data = dt, colnam = "rank") {
 ##'   nested) list of such vectors. If \code{x} is a list, we recursively apply
 ##'   \code{counts} throughout elements in the list.
 ##' @export
-##' @example
+##' @examples
+##' library(CKutils)
 ##' x <- round( rnorm(1E2), 1 )
 ##' counts(x)
 counts <- function(x) {
@@ -917,7 +918,7 @@ dependencies <-
 #'
 #' @return The modified data table (\code{dt_x}) with copied columns from \code{dt_i}.
 #'
-#' @example
+#' @examples
 #' library(data.table)
 #' library(CKutils)
 #' dt_x <- data.table(ID = c(1, 2, 3), Name = c("A", "B", "C"))
@@ -1054,7 +1055,31 @@ resample <-
 #'
 #' @return The modified data table with specified rows removed.
 #'
-#' @example TODO
+#' @examples
+#' \dontrun{
+#' # Create a sample data.table
+#' library(data.table)
+#' set.seed(123)
+#' dt <- data.table(
+#'   id = 1:10,
+#'   value = rnorm(10),
+#'   category = rep(c("A", "B"), each = 5)
+#' )
+#'
+#' # Print the original data.table
+#' print("Original data.table:")
+#' print(dt)
+#'
+#' # Identify rows to be deleted (e.g., rows where id is even)
+#' rows_to_delete <- dt$id %% 2 == 0
+#'
+#' # Call del_dt_rows to delete specified rows
+#' del_dt_rows(dt, rows_to_delete)
+#'
+#' # Print the modified data.table
+#' print("Modified data.table:")
+#' print(dt)
+#' }
 #'
 #' @export
 del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
@@ -1094,7 +1119,7 @@ del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
 #'
 #' @return \code{TRUE} if all elements are approximately equal; otherwise, \code{FALSE}.
 #'
-#' @example
+#' @examples
 #' values <- c(0.1, 0.2, 0.3, 0.1 + 0.2 + 0.3)
 #' identical_elements(values)
 #'
@@ -1115,7 +1140,8 @@ identical_elements <-
 #'
 #' @return A normalized version of the input numeric vector.
 #'
-#' @example
+#' @examples
+#' library(CKutils)
 #' x <- c(2, 4, 6, 8)
 #' normalise(x)
 #'
@@ -1139,7 +1165,7 @@ normalise <-
 #'
 #' @return Invisible NULL.
 #'
-#' @example
+#' @examples
 #' \dontrun{
 #' files <- c("data/file1.csv", "data/file2.csv")
 #' csv_to_fst(files, compression = 80L, delete_csv = TRUE)
@@ -1167,7 +1193,7 @@ csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
 #'
 #' @return A new data table containing the result of the column-wise operations.
 #'
-#' @example
+#' @examples
 #' dt <- data.table(A = c(1, 2, 3), B = c(4, 5, 6), C = c(7, 8, 9))
 #' do_cols_dt(dt, cols_to_add = c("A", "B", "C"), symbol = "+", fn = "sqrt")
 #'
@@ -1189,7 +1215,8 @@ do_cols_dt <- function(dt, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn 
 #'
 #' @return A numeric vector with values clamped within the specified range.
 #'
-#' @example
+#' @examples
+#' library(CKutils)
 #' values <- c(0.2, 0.8, 1.5, -0.5)
 #' clamp(values, a = 0, b = 1)
 #'

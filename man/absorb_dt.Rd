@@ -6,6 +6,28 @@
 \usage{
 absorb_dt(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL, verbose = FALSE)
 }
+\arguments{
+\item{dt_x}{The data table to be modified.}
+
+\item{dt_i}{The data table providing columns to be copied}
+
+\item{on}{The key columns for merging. Default is ".NATURAL", which uses common column names.}
+
+\item{exclude_col}{A character vector specifying columns to exclude from the merging process.}
+
+\item{verbose}{If TRUE, display messages about replaced columns. Default is FALSE.}
+}
+\value{
+The modified data table (\code{dt_x}) with copied columns from \code{dt_i}.
+}
 \description{
-Copy all columns of dt_i in dt_x
+This function copies columns from one data table into another based on a specified key.
+}
+\examples{
+library(data.table)
+library(CKutils)
+dt_x <- data.table(ID = c(1, 2, 3), Name = c("A", "B", "C"))
+dt_i <- data.table(ID = c(2, 3, 4), Age = c(25, 30, 22))
+absorb_dt(dt_x, dt_i, on = "ID")
+
 }

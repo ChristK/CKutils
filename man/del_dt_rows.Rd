@@ -15,23 +15,48 @@ delete_output_files <- function(x = output_dir()) {
     recursive = TRUE,
     all.files = TRUE
   ))
-}}
+}
+Delete Rows from Data Table}
 \usage{
 del_dt_rows(dt, indx_to_del, dt_env = .GlobalEnv)
 }
-\description{
-# delete output files
-#' `delete_output_files` deletes the output files in the directory location specified in parameter
-#' @param x The output directory containing the output files to be deleted. Should be a path relative to the directory
-#' @export
-#' @examples
-#' delete_output_files(x = "C:/path/to/output/directory") # deletes all the files in the specified directory
-delete_output_files <- function(x = output_dir()) {
-  file.remove(list.files(
-    path = x,
-    full.names = TRUE,
-    recursive = TRUE,
-    all.files = TRUE
-  ))
+\arguments{
+\item{dt}{The data table from which rows will be deleted.}
+
+\item{indx_to_del}{A numeric vector or logical vector specifying the rows to be deleted.}
+
+\item{dt_env}{The environment in which the data table is stored. Default is the global environment (\code{.GlobalEnv}).}
 }
+\value{
+The modified data table with specified rows removed.
+}
+\description{
+This function deletes specified rows from a data table based on index or logical condition.
+}
+\examples{
+\dontrun{
+# Create a sample data.table
+library(data.table)
+set.seed(123)
+dt <- data.table(
+  id = 1:10,
+  value = rnorm(10),
+  category = rep(c("A", "B"), each = 5)
+)
+
+# Print the original data.table
+print("Original data.table:")
+print(dt)
+
+# Identify rows to be deleted (e.g., rows where id is even)
+rows_to_delete <- dt$id \%\% 2 == 0
+
+# Call del_dt_rows to delete specified rows
+del_dt_rows(dt, rows_to_delete)
+
+# Print the modified data.table
+print("Modified data.table:")
+print(dt)
+}
+
 }
