@@ -14,5 +14,6 @@ validate_gamlss(dt, gamlss_obj, mc = 10L, orig_data = dt)
  @param gamlss_obj a gamlss object
  @param mc by default =10L
  @param orig_data initial data.table = \code{dt}
+ @return A data.table with the observed and predicted variable.
  @export
 }
