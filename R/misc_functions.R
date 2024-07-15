@@ -661,6 +661,7 @@ reldist_diagnostics <- function(comparison, reference, comparison_wt, reference_
                  ywgt=comparison_wt, yowgt=reference_wt,
                  #ylim=c(0,1.5),
                  #yolabs=seq(-1,3,by=0.5),
+                 method  = "bgk",
                  bar="yes", quiet=FALSE, discrete = discrete,
                  xlab="proportion of the reference cohort")
   title(main="Overall relative density",cex=0.6)
