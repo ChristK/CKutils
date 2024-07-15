@@ -1,7 +1,7 @@
 Package: CKutils
 Type: Package
 Title: Some Utility Functions I Use Regularly
-Version: 0.1.4.9000
+Version: 0.1.4.9010
 Date: 2023-09-13
 Authors@R: c(
     person("Chris", "Kypridemos", email = "christodoulosk@gmail.com", role = c("aut", "cre")),
