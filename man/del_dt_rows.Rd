@@ -16,16 +16,6 @@ del_dt_rows(dtb, indx_to_del, dt_env = .GlobalEnv)
 \value{
 Invisibly returns the updated data.table with the specified rows removed.
 }
-\arguments{
-\item{dt}{The data table from which rows will be deleted.}
-
-\item{indx_to_del}{A numeric vector or logical vector specifying the rows to be deleted.}
-
-\item{dt_env}{The environment in which the data table is stored. Default is the global environment (\code{.GlobalEnv}).}
-}
-\value{
-The modified data table with specified rows removed.
-}
 \description{
 This function removes rows from a data.table based on specified indices. It creates a new data.table containing only the rows that are retained, preserves the original key, and then reassigns the updated data.table back to its original variable in the specified environment.
 }

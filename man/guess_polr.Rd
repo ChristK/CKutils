@@ -16,9 +16,6 @@ corresponding to the outcome variable prefixed with 'rank_'.}
 The function modifies the input data.table \code{dtb} in place by replacing the outcome column with the predicted
 ordinal category. It returns \code{NULL} invisibly.
 }
-\value{
-A data.table with the predicted variable.
-}
 \description{
 This function generates predictions from a polr (proportional odds logistic regression) model for ordinal data.
 It computes the linear predictor from the input data.table using the model matrix of the provided polr object,

@@ -15,9 +15,6 @@ guess_gamlss(dtb, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L)
 
 \item{nc}{by default = 1L}
 }
-\value{
-A data.table with the predicted variable.
-}
 \description{
 `guess_gamlss` returns a data.table with the predicted
  variable. `dtb` needs to have a column with percentiles named `rank_y`,

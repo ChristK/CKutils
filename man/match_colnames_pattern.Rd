@@ -11,9 +11,6 @@ match_colnames_pattern(dtb, ...)
 
 \item{...}{A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops}
 }
-\value{
-The matching names
-}
 \description{
 `match_colnames_pattern` returns the matching names of the argument `dtb`
 (i.e. \code{names(dtb)}) corresponding to the regular expression patterns
