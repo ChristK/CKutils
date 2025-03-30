@@ -2,27 +2,25 @@
 % Please edit documentation in R/misc_functions.R
 \name{csv_to_fst}
 \alias{csv_to_fst}
-\title{convert csv to fst and optionally delete csv. It accepts vectors}
+\title{Convert CSV Files to FST Format}
 \usage{
 csv_to_fst(csv_files, compression = 100L, delete_csv = FALSE)
 }
 \arguments{
-\item{csv_files}{A character vector containing the file paths of the CSV files to be converted.}
+\item{csv_files}{A character vector of file paths to CSV files.}
 
-\item{compression}{An integer specifying the compression level for the FST format. Default is 100.}
+\item{compression}{An integer specifying the compression level for the FST file. Default is 100L.}
 
-\item{delete_csv}{If TRUE, delete the original CSV files after conversion. Default is FALSE.}
+\item{delete_csv}{Logical. If TRUE, deletes the original CSV file(s) after conversion. Default is FALSE.}
 }
 \value{
-Invisible NULL.
+Invisibly returns NULL.
 }
 \description{
-This function converts a list of CSV files to the FST format with optional compression.
+This function converts one or more CSV files to the FST file format. It reads each CSV file using \code{data.table::fread} and writes it as an FST file using \code{fst::write_fst}. Optionally, the original CSV file(s) can be deleted.
 }
 \examples{
 \dontrun{
-files <- c("data/file1.csv", "data/file2.csv")
-csv_to_fst(files, compression = 80L, delete_csv = TRUE)
+csv_to_fst(c("data.csv"), compression = 100L, delete_csv = TRUE)
 }
-
 }

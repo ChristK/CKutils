@@ -2,6 +2,7 @@
 % Please edit documentation in R/CKutils.R
 \docType{package}
 \name{CKutils}
+\alias{-package}
 \alias{CKutils}
 \alias{.datatable.aware}
 \title{CKutils: A package with utility functions I use regularly.}

@@ -1,5 +1,5 @@
 ## CKutils: an R package with some utility functions I use regularly
-## Copyright (C) 2022  Chris Kypridemos
+## Copyright (C) 2025  Chris Kypridemos
 
 ## CKutils is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #'
 #' `get_dropbox_path` returns the path of Dropbox. Works for both personal and business accounts
 #'
-#' This is an auxiliary function: It finds the Dropbox path in Windows, Linux, and OSX operating systems.
+#' This is an auxilliary function: It finds the Dropbox path in Windows, Linux, and OSX operating systems.
 #'
 #' @param pathtail A String vector (if not a string then it is converted to String).
 #'    If present, it gets concatenated with the Dropbox path.
@@ -209,7 +209,7 @@ agegrp_name <-
 #'    and replaced by those in \code{to} argument.
 #'    If \code{newcolname = NULL} the replace is by reference.
 #'
-#' @param dt A data.table to be changed by reference.
+#' @param dtb A data.table to be changed by reference.
 #' @param colname A string denoting the name of the column to be changed.
 #' @param from A vector with values in \code{colname} to be replaced.
 #' @param to A vector with values in \code{colname} to be replaced.
@@ -221,51 +221,51 @@ agegrp_name <-
 #' @examples
 #' library(data.table)
 #' library(CKutils)
-#' dt <- data.table::data.table("a" = 1:5, "b" = seq(1, 2.2, 0.3),
+#' dtb <- data.table::data.table("a" = 1:5, "b" = seq(1, 2.2, 0.3),
 #'  "d" = letters[1:5])
-#' dt[, e := factor(a, labels = LETTERS[1:5])]
-#' replace_from_table(data.table::copy(dt), "a", 1:3, 3L)[]
-#' replace_from_table(data.table::copy(dt), "a", 3L, -11L)[]
-#' replace_from_table(data.table::copy(dt), "a", 3L, -11L, "newcol")[]
-#' replace_from_table(data.table::copy(dt), "b", 1.3, "a")[]
-#' replace_from_table(data.table::copy(dt), "b", 1.3, "a", "newcol")[]
-#' replace_from_table(data.table::copy(dt), "d", "a", "7")[]
-#' replace_from_table(data.table::copy(dt), "d", "a", 7)[]
-#' replace_from_table(data.table::copy(dt), "e", "B", "J")[]
+#' dtb[, e := factor(a, labels = LETTERS[1:5])]
+#' replace_from_table(data.table::copy(dtb), "a", 1:3, 3L)[]
+#' replace_from_table(data.table::copy(dtb), "a", 3L, -11L)[]
+#' replace_from_table(data.table::copy(dtb), "a", 3L, -11L, "newcol")[]
+#' replace_from_table(data.table::copy(dtb), "b", 1.3, "a")[]
+#' replace_from_table(data.table::copy(dtb), "b", 1.3, "a", "newcol")[]
+#' replace_from_table(data.table::copy(dtb), "d", "a", "7")[]
+#' replace_from_table(data.table::copy(dtb), "d", "a", 7)[]
+#' replace_from_table(data.table::copy(dtb), "e", "B", "J")[]
 replace_from_table <-
-  function(dt,
+  function(dtb,
            colname,
            from,
            to,
            newcolname = NULL) {
     old_ <- i.new_ <- NULL
-    stopifnot(is.data.table(dt))
+    stopifnot(is.data.table(dtb))
     stopifnot(length(colname) == 1L)
     stopifnot(is.null(newcolname) | length(newcolname) == 1L)
-    stopifnot(colname %in% names(dt))
+    stopifnot(colname %in% names(dtb))
     stopifnot(length(from) >= length(to))
-    # stopifnot(class(from) == dt[, class(get(colname))]) # not working for factors
-    if (!is.null(newcolname) && newcolname %in% names(dt)) stop(
+    # stopifnot(class(from) == dtb[, class(get(colname))]) # not working for factors
+    if (!is.null(newcolname) && newcolname %in% names(dtb)) stop(
       "The new column name already exists in the data.table.")
     if (length(from) > length(to)) message("Note: matched many to few.")
 
-    colorder <- copy(names(dt))
+    colorder <- copy(names(dtb))
     if (class(from) == class(to)) {
       reg <- data.table("old_" = from, "new_" = to)
-      dt[, "old_" := get(colname)]
-      dt[reg, on = "old_", old_ := i.new_]
+      dtb[, "old_" := get(colname)]
+      dtb[reg, on = "old_", old_ := i.new_]
       if (is.null(newcolname)) {
-        dt[, (colname) := NULL]
-        setnames(dt, "old_", colname)
-        setcolorder(dt, colorder)
+        dtb[, (colname) := NULL]
+        setnames(dtb, "old_", colname)
+        setcolorder(dtb, colorder)
       } else {
-        setnames(dt, "old_", newcolname)
+        setnames(dtb, "old_", newcolname)
       }
     } else {
       reg <- data.table("old_" = as(from, class(to)),
                         "new_" = to)
-      dt[, "old_" := as(get(colname), class(to))]
-      dt[reg, on = "old_", old_ := i.new_]
+      dtb[, "old_" := as(get(colname), class(to))]
+      dtb[reg, on = "old_", old_ := i.new_]
       if (is.null(newcolname)) {
         message(paste0(
           colname,
@@ -273,14 +273,14 @@ replace_from_table <-
           class(to),
           " to match target class."
         ))
-        dt[, (colname) := NULL]
-        setnames(dt, "old_", colname)
-        setcolorder(dt, colorder)
+        dtb[, (colname) := NULL]
+        setnames(dtb, "old_", colname)
+        setcolorder(dtb, colorder)
       } else {
-        setnames(dt, "old_", newcolname)
+        setnames(dtb, "old_", newcolname)
       }
     }
-    return(invisible(dt))
+    return(invisible(dtb))
   }
 
 
@@ -289,16 +289,16 @@ replace_from_table <-
 #'
 #' `to_agegrp` creates a new column
 #'
-#' @param dt A data.table with a column named \code{age}.
+#' @param dtb A data.table with a column named \code{age}.
 #' @param grp_width The group width for the age groups.
 #' @param max_age The max age for the closed age groups. For ages above the max age,
 #'  an open age group will be created, named max_age+ (i.e. 85+).
-#' @param age_colname A string denoting the age column in \code{dt}.
+#' @param age_colname A string denoting the age column in \code{dtb}.
 #' @param agegrp_colname A string denoting the name of the column that will be
 #'   created for age groups.
 #' @param to_factor A logical. If \code{TRUE}, then the age-groups
 #'   column is converted to factor.
-#' @param min_age The minimum age for the age group. If `NULL` the minimum will be considered the that that is not more than the minimum age in the data that can be divided with grp_width.
+#' @param min_age The minimum age for the age group. If `NULL` the minimum will be considered the that that is not more than the minimum age in the data that can be divided with grp_width
 #' @return a data.table, invisibly.
 #' @export
 #' @examples
@@ -308,25 +308,25 @@ replace_from_table <-
 #' to_agegrp(data.table(age = 0:99), max_age = 80L)[]
 #' to_agegrp(data.table(age = 0:99), grp_width = 10, max_age = 85)[]
 to_agegrp <-
-  function(dt,
-           grp_width = 5L,
-           max_age = 85L,
-           age_colname = "age",
-           agegrp_colname = "agegrp",
-           to_factor = TRUE,
-           min_age = NULL)
+  function(dtb,
+            grp_width = 5L,
+            max_age = 85L,
+            age_colname = "age",
+            agegrp_colname = "agegrp",
+            to_factor = TRUE,
+            min_age = NULL)
   {
     stopifnot(
-      is.data.table(dt),
-      age_colname %in% names(dt),
+      is.data.table(dtb),
+      age_colname %in% names(dtb),
       length(age_colname) == 1L,
       length(agegrp_colname) ==
         1L,
       is.logical(to_factor)
     )
     max_age <-
-      ifelse(is.null(max_age), max(dt[[age_colname]]), max_age)
-    lage <- min(dt[[age_colname]])
+      ifelse(is.null(max_age), max(dtb[[age_colname]]), max_age)
+    lage <- min(dtb[[age_colname]])
     min_age <-
       ifelse(is.null(min_age), lage - lage%%grp_width, min_age)
     age_vec <- min_age:max_age
@@ -339,7 +339,7 @@ to_agegrp <-
     )
 
     replace_from_table(
-      dt,
+      dtb,
       colname = age_colname,
       from = age_vec,
       to = agegroups,
@@ -348,36 +348,10 @@ to_agegrp <-
     # TODO better support of replace_from_table so I can convert agegroups vector
     # to factor, I.e. if (to_factor) agegroups <- factor(agegroups)
     if (to_factor) {
-      dt[, `:=`((agegrp_colname), factor(get(agegrp_colname),
+      dtb[, `:=`((agegrp_colname), factor(get(agegrp_colname),
                                          sort(unique(agegroups))))]
     }
-    return(invisible(dt))
-  }
-
-
-#' Clone a data.table
-#'
-#' `clone_dt` clones a data.table and binds the copies at the bottom of
-#' the original data.table. It also creates an column named \code{`.id`}
-#' to identify each iteration. The keys of the input data.table are retained.
-#' @param dt A data.table to be cloned
-#' @param times The number of cloning iterations
-#' @param idcol = TRUE Creates a new column containing the id of each data.table iteration
-#' @return A data.table binding the original one and the new iterations with a column for the id of each iteration, invisibly
-#' @export
-#' @examples
-#' library(data.table)
-#' library(CKutils)
-#' x <- c(1, 5, 3, 6, 4, 2, 9, 8, 7)
-#' dt <- data.table(x)
-#' clone_dt(dt, 3, idcol = TRUE)
-clone_dt <-
-  function(dt, times, idcol = TRUE) {
-    # TODO early escape for times == 1
-    xx <- key(dt)
-    l <- rep(list(dt), times)
-    out <- setkeyv(rbindlist(l, idcol = idcol), xx)
-    return(invisible(out))
+    return(invisible(dtb))
   }
 
 
@@ -387,7 +361,7 @@ clone_dt <-
 #' @param x A numeric vector to rank
 #' @param ties.method A character string specifying how ties are treated
 #' @export
-#' @return The percentile rank of the \code{`x`} vector calculated according to the ties.method chosen
+#' @return The percentile rank of the \code{`x`} vector calculated according to the ties.method choosen
 #' @examples
 #' library(data.table)
 #' library(CKutils)
@@ -411,26 +385,25 @@ pctl_rank <- function(x, ties.method = c("average", "first", "random",
 #' `validate_gamlss` returns a data.table with the observed and predicted
 #'  variable. If  multiple predictions are drawn from the predicted
 #'  distributions. Useful for plotting with ggplot
-#'  @param dt A data.table from which come the observed variables
+#'  @param dtb A data.table from which come the observed variables
 #'  @param gamlss_obj a gamlss object
 #'  @param mc by default =10L
-#'  @param orig_data initial data.table = \code{dt}
-#'  @return A data.table with the observed and predicted variable.
+#'  @param orig_data initial data.table = \code{dtb}
 #'  @export
-validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
+validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
   if (!requireNamespace("gamlss", quietly = TRUE))
     stop("Please install package gamlss first.")
-  stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dt), mc >= 1,
+  stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dtb), mc >= 1,
             is.data.table(orig_data))
   nam_y <- as.character(gamlss_obj$call$formula[[2]])
   nam_var <- all.vars(gamlss_obj$call$formula[[3]])
   nam_dist <- paste0("r", gamlss_obj$family[[1]])
   nam_param <- gamlss_obj$parameters
-  x <- copy(dt)
+  x <- copy(dtb)
   x[, type := "Observed"]
-  z <- copy(dt)
+  z <- copy(dtb)
   z[, (nam_param) := gamlss::predictAll(gamlss_obj, type = "response",
-                                      newdata = dt[, .SD, .SDcols = nam_var],
+                                      newdata = dtb[, .SD, .SDcols = nam_var],
                                       data = orig_data[, .SD,
                                                        .SDcols = c(nam_var)])]
   z[, type := "Modelled"]
@@ -446,19 +419,18 @@ validate_gamlss <- function(dt, gamlss_obj, mc = 10L, orig_data = dt) {
 #' Prediction from a gamlss object in parallel
 #'
 #' `guess_gamlss` returns a data.table with the predicted
-#'  variable. `dt` needs to have a column with percentiles named `rank_y`,
+#'  variable. `dtb` needs to have a column with percentiles named `rank_y`,
 #'  where `y` the name of the predicted variable (i.e. bmi).
-#' @param dt A data.table
+#' @param dtb A data.table
 #' @param gamlss_obj gamlss object
 #' @param orig_data original data.table
 #' @param nc by default = 1L
-#' @return A data.table with the predicted variable.
 #' @export
-guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
+guess_gamlss <- function(dtb, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
   if (!requireNamespace("gamlss", quietly = TRUE))
     stop("Please install package gamlss first.")
   stopifnot("gamlss" %in% class(gamlss_obj),
-            is.data.table(dt), nc >= 1L,
+            is.data.table(dtb), nc >= 1L,
             is.data.table(orig_data))
   nam_y <- as.character(gamlss_obj$call$formula[[2]])
   nam_var <- all.vars(gamlss_obj$call$formula[[3]])
@@ -466,7 +438,7 @@ guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
   nam_param <- gamlss_obj$parameters
 
   orig_data <- orig_data[, ..nam_var]
-  dtu <- unique(dt[, ..nam_var]) # otherwise too slow
+  dtu <- unique(dtb[, ..nam_var]) # otherwise too slow
   dtu <- split(dtu, dtu$year)
   if("RevoUtilsMath" %in% (.packages())) tt <- getMKLthreads()
   if("RevoUtilsMath" %in% (.packages())) setMKLthreads(1L)
@@ -484,35 +456,53 @@ guess_gamlss <- function(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
   #                                        type = "response",
   #                                        newdata = .SD,
   #                                        data = orig_data)]
-  dt[dtu, on = nam_var, (nam_param) := mget(paste0("i.", nam_param))]
-  dt[, p := get(paste0("rank_", nam_y))]
+  dtb[dtu, on = nam_var, (nam_param) := mget(paste0("i.", nam_param))]
+  dtb[, p := get(paste0("rank_", nam_y))]
   stopifnot(dt[, all(between(p, 0, 1, incbounds = FALSE))])
-  dt[, (nam_y) := do.call(nam_dist, .SD), .SDcols = c("p", nam_param)]
-  dt[, c("p", nam_param) := NULL]
+  dtb[, (nam_y) := do.call(nam_dist, .SD), .SDcols = c("p", nam_param)]
+  dtb[, c("p", nam_param) := NULL]
 }
 
 
-# TODO add documentation
-#' Prediction from a MASS:polr object in parallel
+#' Predict ordinal outcomes from a polr model
 #'
-#' `guess_polr` returns a data.table with the predicted
-#'  variable. `dt` needs to have a column with percentiles named `rank_y`,
-#'  where `y` the name of the predicted variable (i.e. active_days).
-#' @param dt a data.table
-#' @param polr_obj a polr object
-#' @return A data.table with the predicted variable.
+#' This function generates predictions from a polr (proportional odds logistic regression) model for ordinal data.
+#' It computes the linear predictor from the input data.table using the model matrix of the provided polr object,
+#' applies the logistic transformation to the model thresholds, and determines the predicted category as the sum of
+#' thresholds that are less than a reference value. The predicted ordinal outcome replaces the original outcome column
+#' in the data.table.
+#'
+#' @param dtb A data.table containing the predictor variables used for prediction and a column with a name
+#' corresponding to the outcome variable prefixed with 'rank_'.
+#' @param polr_obj An object of class \code{polr} from the MASS package representing the fitted ordinal regression model.
+#'
+#' @return The function modifies the input data.table \code{dtb} in place by replacing the outcome column with the predicted
+#' ordinal category. It returns \code{NULL} invisibly.
+#'
+#' @details This function requires the \code{MASS} and \code{matrixStats} packages.
+#'
 #' @export
-guess_polr <- function(dt, polr_obj) {
+#'
+#' @examples
+#' \dontrun{
+#' library(MASS)
+#' library(matrixStats)
+#' library(data.table)
+#'
+#' # Assuming polr_model is a fitted polr object and dtb is your data.table with predictors and a column named, for example, 'rank_y'
+#' guess_polr(dtb, polr_model)
+#' }
+guess_polr <- function(dtb, polr_obj) {
   if (!requireNamespace("MASS", quietly = TRUE))
     stop("Please install package MASS first.")
   if (!requireNamespace("matrixStats", quietly = TRUE))
     stop("Please install package matrixStats first.")
-  stopifnot("polr" %in% class(polr_obj), is.data.table(dt))
+  stopifnot("polr" %in% class(polr_obj), is.data.table(dtb))
   nam_y <- as.character(polr_obj$call$formula[[2]])
   nam_var <- all.vars(polr_obj$call$formula[[3]])
   #code adapted from method getAnywhere(predict.polr)
   Terms <- delete.response(polr_obj$terms)
-  m <- model.frame(Terms, dt[, ..nam_var], na.action = function(x) x,
+  m <- model.frame(Terms, dtb[, ..nam_var], na.action = function(x) x,
                    xlev = polr_obj$xlevels)
   if (!is.null(cl <- attr(Terms, "dataClasses")))
     .checkMFClasses(cl, m)
@@ -525,9 +515,9 @@ guess_polr <- function(dt, polr_obj) {
   eta <- drop(X %*% polr_obj$coefficients)
   cc <- plogis(matrix(polr_obj$zeta, n, q, byrow = TRUE) -
                  eta)
-  dt[, p := get(paste0("rank_", nam_y))]
-  dt[, (nam_y) := matrixStats::rowSums2(cc < p)]
-  dt[, "p" := NULL]
+  dtb[, p := get(paste0("rank_", nam_y))]
+  dtb[, (nam_y) := matrixStats::rowSums2(cc < p)]
+  dtb[, "p" := NULL]
 }
 
 
@@ -536,24 +526,23 @@ guess_polr <- function(dt, polr_obj) {
 #'
 #' `crossval_gamlss` returns the observed and predicted values of the dependent
 #'  variable. Useful for cross-validation metrics.
-#' @param dt A data. table
+#' @param dtb A data. table
 #' @param gamlss_obj a gamlss object
 #' @param orig_data original data.table
 #' @param colnam column names
-#' @return The observed and predicted values of the dependent variable.
 #' @export
-crossval_gamlss <- function(dt, gamlss_obj, orig_data = dt, colnam = "rank") {
-  stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dt),
+crossval_gamlss <- function(dtb, gamlss_obj, orig_data = dtb, colnam = "rank") {
+  stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dtb),
             is.data.table(orig_data))
   out <- list()
   nam_y <- as.character(gamlss_obj$call$formula[[2]])
   nam_var <- all.vars(gamlss_obj$call$formula[[3]])
   nam_dist <- paste0("q", gamlss_obj$family[[1]])
   nam_param <- gamlss_obj$parameters
-  out$observed <- dt[, get(nam_y)]
-  z <- copy(dt)
+  out$observed <- dtb[, get(nam_y)]
+  z <- copy(dtb)
   z[, (nam_param) := predictAll(gamlss_obj, type = "response",
-                                newdata = dt[, .SD, .SDcols = nam_var],
+                                newdata = dtb[, .SD, .SDcols = nam_var],
                                 data = orig_data[, .SD,
                                                  .SDcols = c(nam_y, nam_var)])]
   setnames(z, colnam, "p")
@@ -564,57 +553,55 @@ crossval_gamlss <- function(dt, gamlss_obj, orig_data = dt, colnam = "rank") {
   return(out)
 }
 
-##' Generate Counts of Values in a Vector
-##'
-##' This function uses Rcpp sugar to implement a fast \code{table}, for
-##' unique counts of a single vector. This implementation seeks to
-##' produce identical output to \code{table(x, useNA="ifany")}. It is borrowed
-##' from \code{Kmisc} package for convenience, since \code{Kmisc} is not in CRAN
-##'  anymore. \code{Kmisc} is available at https://github.com/kevinushey/Kmisc
+#' Generate Counts of Values in a Vector
+#'
+#' This function uses Rcpp sugar to implement a fast \code{table}, for
+#' unique counts of a single vector. This implementation seeks to
+#' produce identical output to \code{table(x, useNA="ifany")}. It is borrowed
+#' from \code{Kmisc} package for convenience, since \code{Kmisc} is not in CRAN
+#'  anymore. \code{Kmisc} is available at https://github.com/kevinushey/Kmisc
 
-##'
-##' The order of \code{NA}, \code{NaN} in the output may differ -- even
-##' \R is inconsistent with the order that \code{NA} and \code{NaN} elements
-##' are inserted.
-##'
-##' @param x A numeric, integer, character or logical vector, or a (potentially
-##'   nested) list of such vectors. If \code{x} is a list, we recursively apply
-##'   \code{counts} throughout elements in the list.
-##' @export
-##' @examples
-##' library(CKutils)
-##' x <- round( rnorm(1E2), 1 )
-##' counts(x)
+#'
+#' The order of \code{NA}, \code{NaN} in the output may differ -- even
+#' \R is inconsistent with the order that \code{NA} and \code{NaN} elements
+#' are inserted.
+#'
+#' @param x A numeric, integer, character or logical vector, or a (potentially
+#'   nested) list of such vectors. If \code{x} is a list, we recursively apply
+#'   \code{counts} throughout elements in the list.
+#' @export
+#' @examples
+#' x <- round( rnorm(1E2), 1 )
+#' counts(x)
 counts <- function(x) {
   if (is.list(x)) {
-    output <- rapply(x, counts, how="list")
+    output <- rapply(x, counts, how = "list")
     return(output)
   } else {
-    return(.Call('_CKutils_counts', x))
+    return(.Call("_CKutils_counts", x))
   }
 }
 
 
 #' Obtain matching names corresponding to patterns
 #'
-#' `match_colnames_pattern` returns the matching names of the argument `dt`
-#' (i.e. \code{names(dt)}) corresponding to the regular expression patterns
+#' `match_colnames_pattern` returns the matching names of the argument `dtb`
+#' (i.e. \code{names(dtb)}) corresponding to the regular expression patterns
 #' provided. The patterns must be supported by \code{\link{grep}}.
 #' This is based on `data.table:::patterns`
-#' @param dt A data.table from which the column names \code{names(dt)} or \code{colnames(dt)} will be tested
+#' @param dtb A data.table from which the column names \code{names(dtb)} or \code{colnames(dtb)} will be tested
 #' @param ... A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops
-#' @return The matching names
 #' @export
 #' @examples
 #' library(data.table)
 #' library(CKutils)
-#' dt <- data.table(id = c("city", "year", "birth", "idp"), b = c("age", "year", "bp", "name"))
+#' dtb <- data.table(id = c("city", "year", "birth", "idp"), b = c("age", "year", "bp", "name"))
 #' z <- list("id", "year", "b")
-#' match_colnames_pattern(dt, z) #[1] "id" "b"
-match_colnames_pattern <- function(dt, ...) {
+#' match_colnames_pattern(dtb, z) #[1] "id" "b"
+match_colnames_pattern <- function(dtb, ...) {
   p = unlist(list(...), use.names = FALSE)
   if (!is.character(p)) stop("Input patterns must be of type character.")
-  cols = names(dt)
+  cols = names(dtb)
   cols[unlist(sapply(p, grep, cols))]
 }
 
@@ -661,7 +648,6 @@ reldist_diagnostics <- function(comparison, reference, comparison_wt, reference_
                  ywgt=comparison_wt, yowgt=reference_wt,
                  #ylim=c(0,1.5),
                  #yolabs=seq(-1,3,by=0.5),
-                 method  = "bgk",
                  bar="yes", quiet=FALSE, discrete = discrete,
                  xlab="proportion of the reference cohort")
   title(main="Overall relative density",cex=0.6)
@@ -908,74 +894,8 @@ dependencies <-
 # print(tt[.id == 50 & y < 0.1, hist(y)])
 # print(tt[pid == 4,  plot(.id, y, ylim = c(0,1))])
 
-#' Copy all columns of dt_i in dt_x
-#' @description This function copies columns from one data table into another based on a specified key.
-#'
-#' @param dt_x The data table to be modified.
-#' @param dt_i The data table providing columns to be copied
-#' @param on The key columns for merging. Default is ".NATURAL", which uses common column names.
-#' @param exclude_col A character vector specifying columns to exclude from the merging process.
-#' @param verbose If TRUE, display messages about replaced columns. Default is FALSE.
-#'
-#' @return The modified data table (\code{dt_x}) with copied columns from \code{dt_i}.
-#'
-#' @examples
-#' library(data.table)
-#' library(CKutils)
-#' dt_x <- data.table(ID = c(1, 2, 3), Name = c("A", "B", "C"))
-#' dt_i <- data.table(ID = c(2, 3, 4), Age = c(25, 30, 22))
-#' absorb_dt(dt_x, dt_i, on = "ID")
-#'
-#' @export
-absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL, verbose = FALSE) {
-  stopifnot(is.data.table(dt_x), is.data.table(dt_i), is.character(on))
-  nam_i <- names(dt_i)
-  nam_x <- names(dt_x)
-  if (length(on) == 1 && on == ".NATURAL")
-    on <- setdiff(intersect(nam_x, nam_i), exclude_col)
-  colnam_replaced <-
-    intersect(setdiff(nam_x, on), setdiff(nam_i, on))
-  if (verbose && length(colnam_replaced) > 0)
-    message(
-      paste(
-        "\ncolumn",
-        colnam_replaced,
-        "in dt_x has been replaced by the identically named column in dt_i",
-        collapse = ","
-      )
-    )
-  colnam <- setdiff(nam_i, on)
-  ncol <- length(colnam)
 
-  colnam_tmp <- paste0("COL", seq_len(ncol), "____")
-  setnames(dt_i, colnam, colnam_tmp)
-  # dt_x[dt_i, (colnam) := .(i.COL1____, i.COL2____), on = on]
-  colnam_tmp2 <- paste0("i.", colnam_tmp)
-  argum <- paste0("dt_x[dt_i, (colnam) := .(", paste(colnam_tmp2, collapse = ", "), "), on = on]")
-  eval(str2lang(argum))
-  setnames(dt_i, colnam_tmp, colnam)
-  invisible(dt_x)
-}
 
-# dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
-# dt_i <- data.table(a = 1:5, b = 1:5, c = 1:5, d = 1:5)
-# dt_x[dt_i, on = c("a", "b")]
-# absorb_dt(dt_x, dt_i, c("a", "b"))[]
-#
-# dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
-# dt_i <- data.table(a = 3:5, b = 3:5, c = 3:5, d = 3:5)
-# dt_x[dt_i, on = c("a", "b")]
-# absorb_dt(dt_x, dt_i, c("a", "b"))[]
-#
-# dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
-# dt_i <- data.table(a = 3:5, b = 3:5, c = 1:5, d = 1:5)
-# dt_x[dt_i, on = c("a", "b")]
-# absorb_dt(dt_x, dt_i, c("a", "b"))[]
-#
-# dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
-# dt_i <- data.table(a = 1:10, b = 1:10, c = 1:10, d = 1:10)
-# dt_x[dt_i, on = c("a", "b")]
-# absorb_dt(dt_x, dt_i, c("a", "b"))[]
 
 
 
@@ -1032,97 +952,18 @@ resample <-
     x[sample.int(length(x), ...)]
   }
 
-#' # delete output files
-#' #' `delete_output_files` deletes the output files in the directory location specified in parameter
-#' #' @param x The output directory containing the output files to be deleted. Should be a path relative to the directory
-#' #' @export
-#' #' @examples
-#' #' delete_output_files(x = "C:/path/to/output/directory") # deletes all the files in the specified directory
-#' delete_output_files <- function(x = output_dir()) {
-#'   file.remove(list.files(
-#'     path = x,
-#'     full.names = TRUE,
-#'     recursive = TRUE,
-#'     all.files = TRUE
-#'   ))
-#' }
 
-#' Delete Rows from Data Table
-#'@description This function deletes specified rows from a data table based on index or logical condition.
-#'
-#' @param dt The data table from which rows will be deleted.
-#' @param indx_to_del A numeric vector or logical vector specifying the rows to be deleted.
-#' @param dt_env The environment in which the data table is stored. Default is the global environment (\code{.GlobalEnv}).
-#'
-#' @return The modified data table with specified rows removed.
-#'
-#' @examples
-#' \dontrun{
-#' # Create a sample data.table
-#' library(data.table)
-#' set.seed(123)
-#' dt <- data.table(
-#'   id = 1:10,
-#'   value = rnorm(10),
-#'   category = rep(c("A", "B"), each = 5)
-#' )
-#'
-#' # Print the original data.table
-#' print("Original data.table:")
-#' print(dt)
-#'
-#' # Identify rows to be deleted (e.g., rows where id is even)
-#' rows_to_delete <- dt$id %% 2 == 0
-#'
-#' # Call del_dt_rows to delete specified rows
-#' del_dt_rows(dt, rows_to_delete)
-#'
-#' # Print the modified data.table
-#' print("Modified data.table:")
-#' print(dt)
-#' }
-#'
-#' @export
-del_dt_rows <- function(dt, indx_to_del, dt_env = .GlobalEnv) {
-  stopifnot(is.data.table(dt), (is.integer(indx_to_del) | is.logical(indx_to_del)))
 
-  dt_keys <- key(dt)
-  if (is.integer(indx_to_del)) keep <- -indx_to_del
-  if (is.logical(indx_to_del)) keep <- !indx_to_del
 
-  name_of_dt <- deparse(substitute(dt))
-  # dt_env <- pryr::where(name_of_dt) # to get dt envirnment
-  dt_names <- copy(names(dt))
-  dt_new <- dt[keep, dt_names[1L], with = F]
-  set(dt, i = NULL, j = 1L, value = NULL)
-
-  for (j in seq_len(ncol(dt))) {
-    set(dt_new,
-        i = NULL,
-        j = dt_names[1L + j],
-        value = dt[[1L]][keep])
-    set(dt,
-        i = NULL,
-        j = 1L,
-        value = NULL)
-  }
-
-  setkeyv(dt_new, dt_keys)
-  assign(name_of_dt, value = dt_new, envir = dt_env)
-}
-
-#' Check if All Elements are Identical
+#' Check if All Elements in a Numeric Vector Are Identical
 #'
-#' This function checks if all elements in a numeric vector are approximately equal within a specified tolerance.
+#' This function checks whether all elements in a numeric vector are equal within a specified tolerance.
+#' It returns TRUE if all elements are identical (considering the tolerance), and FALSE otherwise.
 #'
-#' @param x Numeric vector to be checked for identical elements.
-#' @param tol Tolerance level for equality comparison. Default is \code{.Machine$double.eps ^ 0.5}.
+#' @param x A numeric vector to test.
+#' @param tol A numeric tolerance used for the comparison (default: .Machine$double.eps^0.5).
 #'
-#' @return \code{TRUE} if all elements are approximately equal; otherwise, \code{FALSE}.
-#'
-#' @examples
-#' values <- c(0.1, 0.2, 0.3, 0.1 + 0.2 + 0.3)
-#' identical_elements(values)
+#' @return A logical value indicating whether all elements in \code{x} are identical.
 #'
 #' @export
 identical_elements <-
@@ -1132,19 +973,15 @@ identical_elements <-
   }
 
 
-#' normalise a vector to 0,1 range
+#' Normalize a Vector to the 0-1 Range
 #'
-#' @description This function normalizes a numeric vector by checking for identical elements and applying a normalization function.
+#' This function normalizes a numeric vector so that its values are scaled to lie within the 0 to 1 range.
+#' If all elements in the vector are identical, the function returns 1.
 #'
 #' @param x A numeric vector to be normalized.
-#' @param ... Additional arguments to be passed to the underlying normalization function.
+#' @param ... Additional arguments (currently unused).
 #'
-#' @return A normalized version of the input numeric vector.
-#'
-#' @examples
-#' library(CKutils)
-#' x <- c(2, 4, 6, 8)
-#' normalise(x)
+#' @return A numeric vector with values scaled between 0 and 1, or a single value 1 if all elements are identical.
 #'
 #' @export
 normalise <-
@@ -1156,22 +993,20 @@ normalise <-
       return(fnormalise(x))
   }
 
-#' convert csv to fst and optionally delete csv. It accepts vectors
+#' Convert CSV Files to FST Format
 #'
-#' @description This function converts a list of CSV files to the FST format with optional compression.
+#' This function converts one or more CSV files to the FST file format. It reads each CSV file using \code{data.table::fread} and writes it as an FST file using \code{fst::write_fst}. Optionally, the original CSV file(s) can be deleted.
 #'
-#' @param csv_files A character vector containing the file paths of the CSV files to be converted.
-#' @param compression An integer specifying the compression level for the FST format. Default is 100.
-#' @param delete_csv If TRUE, delete the original CSV files after conversion. Default is FALSE.
+#' @param csv_files A character vector of file paths to CSV files.
+#' @param compression An integer specifying the compression level for the FST file. Default is 100L.
+#' @param delete_csv Logical. If TRUE, deletes the original CSV file(s) after conversion. Default is FALSE.
 #'
-#' @return Invisible NULL.
+#' @return Invisibly returns NULL.
 #'
 #' @examples
 #' \dontrun{
-#' files <- c("data/file1.csv", "data/file2.csv")
-#' csv_to_fst(files, compression = 80L, delete_csv = TRUE)
+#' csv_to_fst(c("data.csv"), compression = 100L, delete_csv = TRUE)
 #' }
-#'
 #' @export
 csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
   hlpfn <- function(nam, compression) { # input scalar string
@@ -1184,43 +1019,19 @@ csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
   return(invisible(NULL))
 }
 
-#' Selected columns in a datatable are added, subtracted etc, or a fn is applied to them
-#' @description This function performs column-wise operations on a data table, combining specified columns using given symbols.
-#'
-#' @param dt The data table on which operations are to be performed.
-#' @param cols_to_add A character vector of column names to be combined in the operation.
-#' @param symbol A character vector specifying the symbols to be used in combining columns. Default is c(",", "+", "-", "*", "/").
-#' @param fn An optional function to apply to the combined result.
-#'
-#' @return A new data table containing the result of the column-wise operations.
-#'
-#' @examples
-#' dt <- data.table(A = c(1, 2, 3), B = c(4, 5, 6), C = c(7, 8, 9))
-#' do_cols_dt(dt, cols_to_add = c("A", "B", "C"), symbol = "+", fn = "sqrt")
-#'
-#' @export
-do_cols_dt <- function(dt, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn = NULL) {
-  cols_to_add <- paste0("`", cols_to_add, "`")
-  argum <- paste(cols_to_add, collapse = symbol)
-  if (!is.null(fn)) argum <- paste0(fn, "(", argum, ")")
-  dt[, .(eval(str2lang(argum)))]
-}
 
-#' dispatch fclamp or fclamp_int depending on input
-#' @description This function clamps numeric values within a specified range, returning the result.
+
+#' Clamp values to a specified range
 #'
-#' @param x Numeric vector to be clamped.
-#' @param a Lower bound of the range. Default is 0.
-#' @param b Upper bound of the range. Default is 1.
-#' @param inplace If TRUE, perform the clamping in-place. Default is FALSE.
+#' `clamp` limits the values in a numeric vector `x` so that all elements are constrained within the interval [a, b].
+#' It dispatches to either `fclamp` for double precision values or `fclamp_int` for integer values.
 #'
-#' @return A numeric vector with values clamped within the specified range.
+#' @param x A numeric vector of values to be clamped.
+#' @param a A numeric value specifying the lower bound (default: 0).
+#' @param b A numeric value specifying the upper bound (default: 1).
+#' @param inplace Logical. If TRUE, the clamping operation is performed in-place; otherwise, a new vector is returned.
 #'
-#' @examples
-#' library(CKutils)
-#' values <- c(0.2, 0.8, 1.5, -0.5)
-#' clamp(values, a = 0, b = 1)
-#'
+#' @return A numeric vector with values clamped to the interval [a, b].
 #' @export
 clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
   stopifnot(is.numeric(a), is.numeric(b), is.logical(inplace))

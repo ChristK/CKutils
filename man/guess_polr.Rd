@@ -2,20 +2,40 @@
 % Please edit documentation in R/misc_functions.R
 \name{guess_polr}
 \alias{guess_polr}
-\title{Prediction from a MASS:polr object in parallel}
+\title{Predict ordinal outcomes from a polr model}
 \usage{
-guess_polr(dt, polr_obj)
+guess_polr(dtb, polr_obj)
 }
 \arguments{
-\item{dt}{a data.table}
+\item{dtb}{A data.table containing the predictor variables used for prediction and a column with a name
+corresponding to the outcome variable prefixed with 'rank_'.}
 
-\item{polr_obj}{a polr object}
+\item{polr_obj}{An object of class \code{polr} from the MASS package representing the fitted ordinal regression model.}
+}
+\value{
+The function modifies the input data.table \code{dtb} in place by replacing the outcome column with the predicted
+ordinal category. It returns \code{NULL} invisibly.
 }
 \value{
 A data.table with the predicted variable.
 }
 \description{
-`guess_polr` returns a data.table with the predicted
- variable. `dt` needs to have a column with percentiles named `rank_y`,
- where `y` the name of the predicted variable (i.e. active_days).
+This function generates predictions from a polr (proportional odds logistic regression) model for ordinal data.
+It computes the linear predictor from the input data.table using the model matrix of the provided polr object,
+applies the logistic transformation to the model thresholds, and determines the predicted category as the sum of
+thresholds that are less than a reference value. The predicted ordinal outcome replaces the original outcome column
+in the data.table.
+}
+\details{
+This function requires the \code{MASS} and \code{matrixStats} packages.
+}
+\examples{
+\dontrun{
+library(MASS)
+library(matrixStats)
+library(data.table)
+
+# Assuming polr_model is a fitted polr object and dtb is your data.table with predictors and a column named, for example, 'rank_y'
+guess_polr(dtb, polr_model)
+}
 }

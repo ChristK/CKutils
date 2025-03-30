@@ -9,46 +9,170 @@ counts <- function(x) {
     .Call(`_CKutils_counts`, x)
 }
 
+#' Convert Factor to Integer (C++ Version)
+#'
+#' This function converts a factor (an integer vector with a "levels" attribute)
+#' to its underlying integer representation by stripping away the factor's levels and class attributes.
+#' By default, the function does not modify the input by reference (a copy is made), but if `inplace`
+#' is set to `true`, the function will modify the input directly.
+#'
+#' @param x A factor object.
+#' @param inplace Logical flag indicating whether to modify the input in place (default: false).
+#'
+#' @return An integer vector containing the underlying integer codes without factor attributes.
+#'
+#' @export
+fct_to_int_cpp <- function(x, inplace = FALSE) {
+    .Call(`_CKutils_fct_to_int_cpp`, x, inplace)
+}
+
+starts_from_1_cpp <- function(tbl, on, i, min_lookup, cardinality) {
+    .Call(`_CKutils_starts_from_1_cpp`, tbl, on, i, min_lookup, cardinality)
+}
+
+dtsubset <- function(x, rows, cols) {
+    .Call(`_CKutils_dtsubset`, x, rows, cols)
+}
+
+#' Compute Quantiles Using Default R Type 7 Method
+#'
+#' This function computes quantiles for a numeric vector using the default R method (type 7).
+#' It handles missing values and can remove them if requested.
+#'
+#' @param x A numeric vector from which quantiles are computed.
+#' @param probs A numeric vector of probabilities for which quantiles are desired.
+#' @param na_rm Logical flag indicating whether to remove NA values (default is true).
+#'
+#' @return A numeric vector containing the computed quantiles corresponding to the probabilities in \code{probs}.
+#'
 #' @export
 fquantile <- function(x, probs, na_rm = TRUE) {
     .Call(`_CKutils_fquantile`, x, probs, na_rm)
 }
 
+#' Compute Quantiles by Group
+#'
+#' This function computes quantiles for subsets of a numeric vector defined by an ID vector.
+#' The input vector must be sorted by the ID vector. Optionally, the results can be rounded.
+#'
+#' @param x A numeric vector from which quantiles are computed.
+#' @param q A numeric vector of probabilities for which quantiles are desired.
+#' @param id A string vector representing group identifiers. The vector \code{x} must be sorted by \code{id}.
+#' @param rounding Logical flag indicating whether to round the quantiles (default is false).
+#' @param na_rm Logical flag indicating whether to remove NA values (default is true).
+#'
+#' @return A list where the first element is a vector of group IDs and subsequent elements are numeric vectors of computed quantiles for each group.
+#'
 #' @export
 fquantile_byid <- function(x, q, id, rounding = FALSE, na_rm = TRUE) {
     .Call(`_CKutils_fquantile_byid`, x, q, id, rounding, na_rm)
 }
 
+#' Count TRUE Values in a Logical Vector
+#'
+#' This function counts the number of TRUE values in a logical vector, with an option to remove missing values.
+#'
+#' @param x A logical vector.
+#' @param na_rm Logical flag indicating whether to remove NA values before counting (default is false).
+#'
+#' @return An integer representing the number of TRUE values in the vector.
+#'
 #' @export
 count_if <- function(x, na_rm = FALSE) {
     .Call(`_CKutils_count_if`, x, na_rm)
 }
 
+#' Proportion of TRUE Values in a Logical Vector
+#'
+#' This function calculates the proportion of TRUE values in a logical vector, with an option to remove missing values.
+#'
+#' @param x A logical vector.
+#' @param na_rm Logical flag indicating whether to remove NA values before calculating the proportion (default is false).
+#'
+#' @return A numeric value representing the proportion of TRUE values in the vector.
+#'
 #' @export
 prop_if <- function(x, na_rm = FALSE) {
     .Call(`_CKutils_prop_if`, x, na_rm)
 }
 
+#' Clamp a Numeric Vector Within a Range
+#'
+#' This function clamps (limits) the values of a numeric vector to lie within a specified range [a, b].
+#' Values below a are set to a and values above b are set to b. Optionally, the operation can be performed in-place.
+#'
+#' @param x A numeric vector to be clamped.
+#' @param a The lower bound (default is 0.0).
+#' @param b The upper bound (default is 1.0).
+#' @param inplace Logical flag indicating whether to modify the input vector in place (default is false).
+#'
+#' @return A numeric vector with values clamped to the range [a, b].
+#'
 #' @export
 fclamp <- function(x, a = 0.0, b = 1.0, inplace = FALSE) {
     .Call(`_CKutils_fclamp`, x, a, b, inplace)
 }
 
+#' Clamp an Integer Vector Within a Range
+#'
+#' This function clamps the values of an integer vector to lie within a specified range [a, b].
+#' Values below a are set to a and values above b are set to b. Optionally, the operation can be performed in-place.
+#'
+#' @param x An integer vector to be clamped.
+#' @param a The lower bound (default is 0).
+#' @param b The upper bound (default is 1).
+#' @param inplace Logical flag indicating whether to modify the input vector in place (default is false).
+#'
+#' @return An integer vector with values clamped to the range [a, b].
+#'
 #' @export
 fclamp_int <- function(x, a = 0L, b = 1L, inplace = FALSE) {
     .Call(`_CKutils_fclamp_int`, x, a, b, inplace)
 }
 
+#' Check Numeric Vector Equality Within Tolerance
+#'
+#' This function checks whether all non-missing elements in a numeric vector are equal
+#' within a specified tolerance. Differences between elements that are less than or equal
+#' to the tolerance are considered negligible.
+#'
+#' @param x A numeric vector to test for equality.
+#' @param tol A tolerance value. Differences below or equal to this value are considered equal.
+#'
+#' @return A logical value: TRUE if all non-missing elements are equal within the tolerance,
+#'         and FALSE otherwise.
+#'
 #' @export
 fequal <- function(x, tol) {
     .Call(`_CKutils_fequal`, x, tol)
 }
 
+#' Normalize a Numeric Vector to the 0-1 Range
+#'
+#' This function normalizes a numeric vector so that its values are scaled to lie within the 0 to 1 range.
+#' If all elements in the vector are identical, the function returns a vector of ones.
+#'
+#' @param x A numeric vector to be normalized.
+#'
+#' @return A numeric vector with values scaled between 0 and 1.
+#'
 #' @export
 fnormalise <- function(x) {
     .Call(`_CKutils_fnormalise`, x)
 }
 
+#' Perform Linear Interpolation
+#'
+#' This function performs linear interpolation for a set of points.
+#'
+#' @param xp A numeric vector of new x values at which to interpolate.
+#' @param x0 A numeric vector of original x values (starting points for interpolation).
+#' @param x1 A numeric vector of original x values (ending points for interpolation).
+#' @param y0 A numeric vector of original y values corresponding to x0.
+#' @param y1 A numeric vector of original y values corresponding to x1.
+#'
+#' @return A numeric vector of interpolated y values corresponding to \code{xp}.
+#'
 #' @export
 lin_interpolation <- function(xp, x0, x1, y0, y1) {
     .Call(`_CKutils_lin_interpolation`, xp, x0, x1, y0, y1)

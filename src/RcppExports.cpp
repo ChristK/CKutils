@@ -32,6 +32,46 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fct_to_int_cpp
+IntegerVector fct_to_int_cpp(SEXP x, bool inplace);
+RcppExport SEXP _CKutils_fct_to_int_cpp(SEXP xSEXP, SEXP inplaceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< bool >::type inplace(inplaceSEXP);
+    rcpp_result_gen = Rcpp::wrap(fct_to_int_cpp(x, inplace));
+    return rcpp_result_gen;
+END_RCPP
+}
+// starts_from_1_cpp
+IntegerVector starts_from_1_cpp(DataFrame tbl, CharacterVector on, int i, List min_lookup, List cardinality);
+RcppExport SEXP _CKutils_starts_from_1_cpp(SEXP tblSEXP, SEXP onSEXP, SEXP iSEXP, SEXP min_lookupSEXP, SEXP cardinalitySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type tbl(tblSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type on(onSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< List >::type min_lookup(min_lookupSEXP);
+    Rcpp::traits::input_parameter< List >::type cardinality(cardinalitySEXP);
+    rcpp_result_gen = Rcpp::wrap(starts_from_1_cpp(tbl, on, i, min_lookup, cardinality));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dtsubset
+SEXP dtsubset(SEXP x, SEXP rows, SEXP cols);
+RcppExport SEXP _CKutils_dtsubset(SEXP xSEXP, SEXP rowsSEXP, SEXP colsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type rows(rowsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type cols(colsSEXP);
+    rcpp_result_gen = Rcpp::wrap(dtsubset(x, rows, cols));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fquantile
 NumericVector fquantile(NumericVector x, NumericVector probs, bool na_rm);
 RcppExport SEXP _CKutils_fquantile(SEXP xSEXP, SEXP probsSEXP, SEXP na_rmSEXP) {
@@ -154,6 +194,9 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_tableRcpp", (DL_FUNC) &_CKutils_tableRcpp, 1},
     {"_CKutils_counts", (DL_FUNC) &_CKutils_counts, 1},
+    {"_CKutils_fct_to_int_cpp", (DL_FUNC) &_CKutils_fct_to_int_cpp, 2},
+    {"_CKutils_starts_from_1_cpp", (DL_FUNC) &_CKutils_starts_from_1_cpp, 5},
+    {"_CKutils_dtsubset", (DL_FUNC) &_CKutils_dtsubset, 3},
     {"_CKutils_fquantile", (DL_FUNC) &_CKutils_fquantile, 3},
     {"_CKutils_fquantile_byid", (DL_FUNC) &_CKutils_fquantile_byid, 5},
     {"_CKutils_count_if", (DL_FUNC) &_CKutils_count_if, 2},

@@ -4,16 +4,15 @@
 \alias{validate_gamlss}
 \title{Stochastic prediction from a gamlss object}
 \usage{
-validate_gamlss(dt, gamlss_obj, mc = 10L, orig_data = dt)
+validate_gamlss(dtb, gamlss_obj, mc = 10L, orig_data = dtb)
 }
 \description{
 `validate_gamlss` returns a data.table with the observed and predicted
  variable. If  multiple predictions are drawn from the predicted
  distributions. Useful for plotting with ggplot
- @param dt A data.table from which come the observed variables
+ @param dtb A data.table from which come the observed variables
  @param gamlss_obj a gamlss object
  @param mc by default =10L
- @param orig_data initial data.table = \code{dt}
- @return A data.table with the observed and predicted variable.
+ @param orig_data initial data.table = \code{dtb}
  @export
 }

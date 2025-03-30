@@ -2,23 +2,19 @@
 % Please edit documentation in R/misc_functions.R
 \name{identical_elements}
 \alias{identical_elements}
-\title{Check if All Elements are Identical}
+\title{Check if All Elements in a Numeric Vector Are Identical}
 \usage{
 identical_elements(x, tol = .Machine$double.eps^0.5)
 }
 \arguments{
-\item{x}{Numeric vector to be checked for identical elements.}
+\item{x}{A numeric vector to test.}
 
-\item{tol}{Tolerance level for equality comparison. Default is \code{.Machine$double.eps ^ 0.5}.}
+\item{tol}{A numeric tolerance used for the comparison (default: .Machine$double.eps^0.5).}
 }
 \value{
-\code{TRUE} if all elements are approximately equal; otherwise, \code{FALSE}.
+A logical value indicating whether all elements in \code{x} are identical.
 }
 \description{
-This function checks if all elements in a numeric vector are approximately equal within a specified tolerance.
-}
-\examples{
-values <- c(0.1, 0.2, 0.3, 0.1 + 0.2 + 0.3)
-identical_elements(values)
-
+This function checks whether all elements in a numeric vector are equal within a specified tolerance.
+It returns TRUE if all elements are identical (considering the tolerance), and FALSE otherwise.
 }

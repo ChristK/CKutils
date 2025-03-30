@@ -5,7 +5,7 @@
 \title{Generate age-group from age}
 \usage{
 to_agegrp(
-  dt,
+  dtb,
   grp_width = 5L,
   max_age = 85L,
   age_colname = "age",
@@ -15,14 +15,14 @@ to_agegrp(
 )
 }
 \arguments{
-\item{dt}{A data.table with a column named \code{age}.}
+\item{dtb}{A data.table with a column named \code{age}.}
 
 \item{grp_width}{The group width for the age groups.}
 
 \item{max_age}{The max age for the closed age groups. For ages above the max age,
 an open age group will be created, named max_age+ (i.e. 85+).}
 
-\item{age_colname}{A string denoting the age column in \code{dt}.}
+\item{age_colname}{A string denoting the age column in \code{dtb}.}
 
 \item{agegrp_colname}{A string denoting the name of the column that will be
 created for age groups.}
@@ -30,7 +30,7 @@ created for age groups.}
 \item{to_factor}{A logical. If \code{TRUE}, then the age-groups
 column is converted to factor.}
 
-\item{min_age}{The minimum age for the age group. If `NULL` the minimum will be considered the that that is not more than the minimum age in the data that can be divided with grp_width.}
+\item{min_age}{The minimum age for the age group. If `NULL` the minimum will be considered the that that is not more than the minimum age in the data that can be divided with grp_width}
 }
 \value{
 a data.table, invisibly.

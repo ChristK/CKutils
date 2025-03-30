@@ -25,7 +25,7 @@
 #' @author Chris Kypridemos
 #' @name CKutils
 
-#' @import     data.table fst
+#' @import data.table fst
 
 #' @importFrom methods as
 #' @importFrom graphics abline legend lines par plot title
@@ -43,6 +43,9 @@
 #' @importFrom data.table .NGRP
 #' @importFrom data.table .SD
 #' @importFrom Rcpp sourceCpp
+#' @importFrom utils installed.packages
+#' @importFrom remotes install_local
+#' @importFrom roxygen2 roxygenise
 #' @useDynLib CKutils, .registration = TRUE
 
 # Make sure data.table knows we know we're using it

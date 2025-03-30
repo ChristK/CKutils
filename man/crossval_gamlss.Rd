@@ -4,10 +4,10 @@
 \alias{crossval_gamlss}
 \title{Deterministic prediction from a gamlss object}
 \usage{
-crossval_gamlss(dt, gamlss_obj, orig_data = dt, colnam = "rank")
+crossval_gamlss(dtb, gamlss_obj, orig_data = dtb, colnam = "rank")
 }
 \arguments{
-\item{dt}{A data. table}
+\item{dtb}{A data. table}
 
 \item{gamlss_obj}{a gamlss object}
 

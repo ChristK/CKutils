@@ -4,10 +4,10 @@
 \alias{guess_gamlss}
 \title{Prediction from a gamlss object in parallel}
 \usage{
-guess_gamlss(dt, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L)
+guess_gamlss(dtb, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L)
 }
 \arguments{
-\item{dt}{A data.table}
+\item{dtb}{A data.table}
 
 \item{gamlss_obj}{gamlss object}
 
@@ -20,6 +20,6 @@ A data.table with the predicted variable.
 }
 \description{
 `guess_gamlss` returns a data.table with the predicted
- variable. `dt` needs to have a column with percentiles named `rank_y`,
+ variable. `dtb` needs to have a column with percentiles named `rank_y`,
  where `y` the name of the predicted variable (i.e. bmi).
 }

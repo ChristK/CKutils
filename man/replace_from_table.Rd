@@ -4,10 +4,10 @@
 \alias{replace_from_table}
 \title{Replace multiple values in a data.table column}
 \usage{
-replace_from_table(dt, colname, from, to, newcolname = NULL)
+replace_from_table(dtb, colname, from, to, newcolname = NULL)
 }
 \arguments{
-\item{dt}{A data.table to be changed by reference.}
+\item{dtb}{A data.table to be changed by reference.}
 
 \item{colname}{A string denoting the name of the column to be changed.}
 
@@ -31,15 +31,15 @@ a data.table, invisibly.
 \examples{
 library(data.table)
 library(CKutils)
-dt <- data.table::data.table("a" = 1:5, "b" = seq(1, 2.2, 0.3),
+dtb <- data.table::data.table("a" = 1:5, "b" = seq(1, 2.2, 0.3),
  "d" = letters[1:5])
-dt[, e := factor(a, labels = LETTERS[1:5])]
-replace_from_table(data.table::copy(dt), "a", 1:3, 3L)[]
-replace_from_table(data.table::copy(dt), "a", 3L, -11L)[]
-replace_from_table(data.table::copy(dt), "a", 3L, -11L, "newcol")[]
-replace_from_table(data.table::copy(dt), "b", 1.3, "a")[]
-replace_from_table(data.table::copy(dt), "b", 1.3, "a", "newcol")[]
-replace_from_table(data.table::copy(dt), "d", "a", "7")[]
-replace_from_table(data.table::copy(dt), "d", "a", 7)[]
-replace_from_table(data.table::copy(dt), "e", "B", "J")[]
+dtb[, e := factor(a, labels = LETTERS[1:5])]
+replace_from_table(data.table::copy(dtb), "a", 1:3, 3L)[]
+replace_from_table(data.table::copy(dtb), "a", 3L, -11L)[]
+replace_from_table(data.table::copy(dtb), "a", 3L, -11L, "newcol")[]
+replace_from_table(data.table::copy(dtb), "b", 1.3, "a")[]
+replace_from_table(data.table::copy(dtb), "b", 1.3, "a", "newcol")[]
+replace_from_table(data.table::copy(dtb), "d", "a", "7")[]
+replace_from_table(data.table::copy(dtb), "d", "a", 7)[]
+replace_from_table(data.table::copy(dtb), "e", "B", "J")[]
 }

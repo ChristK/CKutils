@@ -2,28 +2,23 @@
 % Please edit documentation in R/misc_functions.R
 \name{clamp}
 \alias{clamp}
-\title{dispatch fclamp or fclamp_int depending on input}
+\title{Clamp values to a specified range}
 \usage{
 clamp(x, a = 0, b = 1, inplace = FALSE)
 }
 \arguments{
-\item{x}{Numeric vector to be clamped.}
+\item{x}{A numeric vector of values to be clamped.}
 
-\item{a}{Lower bound of the range. Default is 0.}
+\item{a}{A numeric value specifying the lower bound (default: 0).}
 
-\item{b}{Upper bound of the range. Default is 1.}
+\item{b}{A numeric value specifying the upper bound (default: 1).}
 
-\item{inplace}{If TRUE, perform the clamping in-place. Default is FALSE.}
+\item{inplace}{Logical. If TRUE, the clamping operation is performed in-place; otherwise, a new vector is returned.}
 }
 \value{
-A numeric vector with values clamped within the specified range.
+A numeric vector with values clamped to the interval [a, b].
 }
 \description{
-This function clamps numeric values within a specified range, returning the result.
-}
-\examples{
-library(CKutils)
-values <- c(0.2, 0.8, 1.5, -0.5)
-clamp(values, a = 0, b = 1)
-
+`clamp` limits the values in a numeric vector `x` so that all elements are constrained within the interval [a, b].
+It dispatches to either `fclamp` for double precision values or `fclamp_int` for integer values.
 }

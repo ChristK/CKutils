@@ -4,10 +4,10 @@
 \alias{match_colnames_pattern}
 \title{Obtain matching names corresponding to patterns}
 \usage{
-match_colnames_pattern(dt, ...)
+match_colnames_pattern(dtb, ...)
 }
 \arguments{
-\item{dt}{A data.table from which the column names \code{names(dt)} or \code{colnames(dt)} will be tested}
+\item{dtb}{A data.table from which the column names \code{names(dtb)} or \code{colnames(dtb)} will be tested}
 
 \item{...}{A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops}
 }
@@ -15,15 +15,15 @@ match_colnames_pattern(dt, ...)
 The matching names
 }
 \description{
-`match_colnames_pattern` returns the matching names of the argument `dt`
-(i.e. \code{names(dt)}) corresponding to the regular expression patterns
+`match_colnames_pattern` returns the matching names of the argument `dtb`
+(i.e. \code{names(dtb)}) corresponding to the regular expression patterns
 provided. The patterns must be supported by \code{\link{grep}}.
 This is based on `data.table:::patterns`
 }
 \examples{
 library(data.table)
 library(CKutils)
-dt <- data.table(id = c("city", "year", "birth", "idp"), b = c("age", "year", "bp", "name"))
+dtb <- data.table(id = c("city", "year", "birth", "idp"), b = c("age", "year", "bp", "name"))
 z <- list("id", "year", "b")
-match_colnames_pattern(dt, z) #[1] "id" "b"
+match_colnames_pattern(dtb, z) #[1] "id" "b"
 }
