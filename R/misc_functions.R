@@ -1083,5 +1083,5 @@ gnrt_folder_structure <- function(path = getwd()) {
   )
 }
 
-# remotes::install_github("ChristK/CKutils")
+# remotes::install_github("ChristK/CKutils", force = TRUE)
 # Rscript -e 'remotes::install_github("ChristK/CKutils")'
