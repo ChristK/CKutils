@@ -178,11 +178,12 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
     }
 
     # For integer columns, ensure the values form a consecutive sequence
-    x <- sort(lookup_tbl[[j]])
-    if (length(x) > 1 && any(diff(x) > 1L)) {
-      stop(paste0("Lookup table key column '", j, "' does not contain consecutive integer values."))
+    if (is.integer(lookup_tbl[[j]])) {
+      x <- sort(lookup_tbl[[j]])
+      if (length(x) > 1 && any(diff(x) > 1L)) {
+        stop(paste0("Lookup table key column '", j, "' does not contain consecutive integer values."))
+      }
     }
-  }
 
   # Recommend setting the key for best performance if not already set
   if (!identical(key(lookup_tbl), keycols)) {
