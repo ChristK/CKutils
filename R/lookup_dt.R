@@ -185,21 +185,22 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
       }
     }
 
-  # Recommend setting the key for best performance if not already set
-  if (!identical(key(lookup_tbl), keycols)) {
-    message("For best performance, consider setting the key of lookup_tbl to: ", paste(keycols, collapse = ", "))
-    if (fixkey) {
-      setkeyv(lookup_tbl, keycols)
-      message("Key has been set to: ", paste(keycols, collapse = ", "))
+    # Recommend setting the key for best performance if not already set
+    if (!identical(key(lookup_tbl), keycols)) {
+      message("For best performance, consider setting the key of lookup_tbl to: ", paste(keycols, collapse = ", "))
+      if (fixkey) {
+        setkeyv(lookup_tbl, keycols)
+        message("Key has been set to: ", paste(keycols, collapse = ", "))
+      }
     }
-  }
 
-  # Verify the lookup table has the expected number of rows
-  if (nrow(lookup_tbl) != expected_rows) {
-    stop(paste0("Lookup table should have ", expected_rows, " rows based on key combinations, but has ", nrow(lookup_tbl), " rows."))
-  }
+    # Verify the lookup table has the expected number of rows
+    if (nrow(lookup_tbl) != expected_rows) {
+      stop(paste0("Lookup table should have ", expected_rows, " rows based on key combinations, but has ", nrow(lookup_tbl), " rows."))
+    }
 
-  return(TRUE)
+    return(TRUE)
+  }
 }
 
 
