@@ -47,7 +47,11 @@ detach_package <- function(pkg) {
     detached <- FALSE
 
     while (search_item %in% search()) {
-        try(detach(search_item, unload = TRUE, character.only = TRUE), silent = TRUE)
+        try({
+          detach(search_item, unload = TRUE, character.only = TRUE)
+          library.dynam.unload(pkg, system.file(package = pkg))
+          unloadNamespace(pkg)
+          }, silent = TRUE)
         message(sprintf("Detached package: %s", pkg))
         detached <- TRUE
     }
