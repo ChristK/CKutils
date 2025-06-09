@@ -39,28 +39,31 @@
 #'
 #' @export
 detach_package <- function(pkg) {
-    if (!is.character(pkg)) {
-        stop("pkg must be a character string")
-    }
+  if (!is.character(pkg)) {
+    stop("pkg must be a character string")
+  }
 
-    search_item <- paste0("package:", pkg)
-    detached <- FALSE
+  search_item <- paste0("package:", pkg)
+  detached <- FALSE
 
-    while (search_item %in% search()) {
-        try({
-          detach(search_item, unload = TRUE, character.only = TRUE)
-          library.dynam.unload(pkg, system.file(package = pkg))
-          unloadNamespace(pkg)
-          }, silent = TRUE)
-        message(sprintf("Detached package: %s", pkg))
-        detached <- TRUE
-    }
+  while (search_item %in% search()) {
+    try(
+      {
+        detach(search_item, unload = TRUE, character.only = TRUE)
+        library.dynam.unload(pkg, system.file(package = pkg))
+        unloadNamespace(pkg)
+      },
+      silent = TRUE
+    )
+    message(sprintf("Detached package: %s", pkg))
+    detached <- TRUE
+  }
 
-    if (!detached) {
-        message(sprintf("Package '%s' was not attached.", pkg))
-    }
+  if (!detached) {
+    message(sprintf("Package '%s' was not attached.", pkg))
+  }
 
-    invisible(detached)
+  invisible(detached)
 }
 
 #' @title Install or Reinstall a Local R Package
@@ -101,7 +104,6 @@ installLocalPackage <- function(sPackageDirPath) {
   }
   roxygen2::roxygenise(sPackageDirPath, clean = TRUE)
 
-
   # Detach package if already loaded
   # Read package name from DESCRIPTION file
   desc_path <- file.path(sPackageDirPath, "DESCRIPTION")
@@ -122,17 +124,20 @@ installLocalPackage <- function(sPackageDirPath) {
   file.remove(compiled_files)
 
   # Install the package from local directory
-  tryCatch({
-    remotes::install_local(
-      sPackageDirPath,
-      build_vignettes = TRUE,
-      force = TRUE,
-      upgrade = "never"
-    )
-    message(paste0(pkg_name, " package installed successfully."))
-  }, error = function(e) {
-    message(paste0("Failed to install ", pkg_name, " package: "), e$message)
-  })
+  tryCatch(
+    {
+      remotes::install_local(
+        sPackageDirPath,
+        build_vignettes = TRUE,
+        force = TRUE,
+        upgrade = "never"
+      )
+      message(paste0(pkg_name, " package installed successfully."))
+    },
+    error = function(e) {
+      message(paste0("Failed to install ", pkg_name, " package: "), e$message)
+    }
+  )
 }
 
 #' @title Install Local Package If Changed
@@ -184,9 +189,16 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path) {
   if (needs_install) {
     installLocalPackage(pkg_path)
 
-    if (!is.null(snapshot)) file.remove(snapshot_path)
+    if (!is.null(snapshot)) {
+      file.remove(snapshot_path)
+    }
 
-    snapshot <- fileSnapshot(pkg_path, timestamp = NULL, md5sum = TRUE, recursive = TRUE)
+    snapshot <- fileSnapshot(
+      pkg_path,
+      timestamp = NULL,
+      md5sum = TRUE,
+      recursive = TRUE
+    )
     saveRDS(snapshot, snapshot_path)
   }
 

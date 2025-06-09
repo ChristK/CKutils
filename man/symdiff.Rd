@@ -15,7 +15,7 @@ symdiff(x, y)
 A vector containing elements that are in either x or y, but not in both
 }
 \description{
-`symdiff` returns the symmetric difference between two vectors. The symmetric 
+`symdiff` returns the symmetric difference between two vectors. The symmetric
 difference consists of elements that are in either x or y, but not in both.
 This is equivalent to the union of the two sets minus their intersection.
 }

@@ -41,26 +41,35 @@
 #'  # where Dropbox_path is the path to personal Dropbox
 #' }
 get_dropbox_path <-
-  function(pathtail = character(0),
-           type = c("personal", "business")) {
-    if (!requireNamespace("jsonlite", quietly = TRUE))
+  function(pathtail = character(0), type = c("personal", "business")) {
+    if (!requireNamespace("jsonlite", quietly = TRUE)) {
       stop("Please install package jsonlite first.")
+    }
     type <- match.arg(type)
     if (type[[1]] == "personal") {
       if (.Platform$OS.type == "windows") {
         if (file.exists(paste0(Sys.getenv("APPDATA"), "/Dropbox/info.json"))) {
           # for older versions of Dropbox
           dropbox_path <-
-            jsonlite::read_json(paste0(Sys.getenv("APPDATA"), "/Dropbox/info.json"))$personal$path
+            jsonlite::read_json(paste0(
+              Sys.getenv("APPDATA"),
+              "/Dropbox/info.json"
+            ))$personal$path
         }
-        if (file.exists(paste0(Sys.getenv("LOCALAPPDATA"), "/Dropbox/info.json"))) {
+        if (
+          file.exists(paste0(Sys.getenv("LOCALAPPDATA"), "/Dropbox/info.json"))
+        ) {
           dropbox_path <-
-            jsonlite::read_json(paste0(Sys.getenv("LOCALAPPDATA"), "/Dropbox/info.json"))$personal$path
+            jsonlite::read_json(paste0(
+              Sys.getenv("LOCALAPPDATA"),
+              "/Dropbox/info.json"
+            ))$personal$path
         }
       } else {
-        if (file.exists("~/.dropbox/info.json"))
+        if (file.exists("~/.dropbox/info.json")) {
           dropbox_path <-
             jsonlite::read_json("~/.dropbox/info.json")$personal$path
+        }
       }
     }
     if (type[[1]] == "business") {
@@ -68,27 +77,34 @@ get_dropbox_path <-
         if (file.exists(paste0(Sys.getenv("APPDATA"), "/Dropbox/info.json"))) {
           # for older versions of Dropbox
           dropbox_path <-
-            jsonlite::read_json(paste0(Sys.getenv("APPDATA"), "/Dropbox/info.json"))$business$path
+            jsonlite::read_json(paste0(
+              Sys.getenv("APPDATA"),
+              "/Dropbox/info.json"
+            ))$business$path
         }
-        if (file.exists(paste0(Sys.getenv("LOCALAPPDATA"), "/Dropbox/info.json"))) {
+        if (
+          file.exists(paste0(Sys.getenv("LOCALAPPDATA"), "/Dropbox/info.json"))
+        ) {
           dropbox_path <-
-            jsonlite::read_json(paste0(Sys.getenv("LOCALAPPDATA"), "/Dropbox/info.json"))$business$path
+            jsonlite::read_json(paste0(
+              Sys.getenv("LOCALAPPDATA"),
+              "/Dropbox/info.json"
+            ))$business$path
         }
       } else {
-        if (file.exists("~/.dropbox/info.json"))
+        if (file.exists("~/.dropbox/info.json")) {
           dropbox_path <-
             jsonlite::read_json("~/.dropbox/info.json")$business$path
+        }
       }
     }
-    if (is.null(dropbox_path))
+    if (is.null(dropbox_path)) {
       stop("Dropbox path cannot be located.")
+    }
     dropbox_path <-
       normalizePath(paste0(dropbox_path, "/", pathtail), mustWork = FALSE)
     return(dropbox_path)
-
   }
-
-
 
 
 #' Get pCloud path
@@ -112,14 +128,14 @@ get_dropbox_path <-
 get_pcloud_path <- function(pathtail = character(0)) {
   if (.Platform$OS.type == "windows") {
     pcloud_path <- "p:\\"
-  } else
+  } else {
     pcloud_path <- "~/pCloudDrive/"
+  }
 
   pcloud_path <-
     normalizePath(paste0(pcloud_path, "/", pathtail), mustWork = FALSE)
   return(pcloud_path)
 }
-
 
 
 #' Generate names for age-group bands
@@ -149,12 +165,14 @@ get_pcloud_path <- function(pathtail = character(0)) {
 #' agegrp_name(20, 30, 5, FALSE, TRUE)
 #' agegrp_name(20, 30, 5, FALSE, TRUE, 32)
 agegrp_name <-
-  function(min_age = 0L,
-           max_age = 85L,
-           grp_width = 5L,
-           grp_lessthan_1 = TRUE,
-           match_input = FALSE,
-           match_input_max_age = max_age) {
+  function(
+    min_age = 0L,
+    max_age = 85L,
+    grp_width = 5L,
+    grp_lessthan_1 = TRUE,
+    match_input = FALSE,
+    match_input_max_age = max_age
+  ) {
     stopifnot(
       min_age >= 0,
       max_age > 0,
@@ -178,8 +196,10 @@ agegrp_name <-
 
       if (grp_lessthan_1 && min_age == 0) {
         if (match_input && ((tail(x, 1) - 1L) != max_age)) {
-          out <- c(rep(out[2:((length(out) - 1L))], each = grp_width),
-                   rep(out[length(out)], match_input_max_age - tail(x, 1) + 1L))
+          out <- c(
+            rep(out[2:((length(out) - 1L))], each = grp_width),
+            rep(out[length(out)], match_input_max_age - tail(x, 1) + 1L)
+          )
           out[1] <- "<1"
         }
         if (match_input && ((tail(x, 1) - 1L) == max_age)) {
@@ -188,8 +208,10 @@ agegrp_name <-
         }
       } else {
         if (match_input && ((tail(x, 1) - 1L) != max_age)) {
-          out <- c(rep(out[1:((length(out) - 1L))], each = grp_width),
-                   rep(out[length(out)], match_input_max_age - tail(x, 1) + 1L))
+          out <- c(
+            rep(out[1:((length(out) - 1L))], each = grp_width),
+            rep(out[length(out)], match_input_max_age - tail(x, 1) + 1L)
+          )
         }
         if (match_input && ((tail(x, 1) - 1L) == max_age)) {
           out <- rep(out, each = grp_width)
@@ -233,11 +255,7 @@ agegrp_name <-
 #' replace_from_table(data.table::copy(dtb), "d", "a", 7)[]
 #' replace_from_table(data.table::copy(dtb), "e", "B", "J")[]
 replace_from_table <-
-  function(dtb,
-           colname,
-           from,
-           to,
-           newcolname = NULL) {
+  function(dtb, colname, from, to, newcolname = NULL) {
     old_ <- i.new_ <- NULL
     stopifnot(is.data.table(dtb))
     stopifnot(length(colname) == 1L)
@@ -245,9 +263,14 @@ replace_from_table <-
     stopifnot(colname %in% names(dtb))
     stopifnot(length(from) >= length(to))
     # stopifnot(class(from) == dtb[, class(get(colname))]) # not working for factors
-    if (!is.null(newcolname) && newcolname %in% names(dtb)) stop(
-      "The new column name already exists in the data.table.")
-    if (length(from) > length(to)) message("Note: matched many to few.")
+    if (!is.null(newcolname) && newcolname %in% names(dtb)) {
+      stop(
+        "The new column name already exists in the data.table."
+      )
+    }
+    if (length(from) > length(to)) {
+      message("Note: matched many to few.")
+    }
 
     colorder <- copy(names(dtb))
     if (class(from) == class(to)) {
@@ -262,8 +285,7 @@ replace_from_table <-
         setnames(dtb, "old_", newcolname)
       }
     } else {
-      reg <- data.table("old_" = as(from, class(to)),
-                        "new_" = to)
+      reg <- data.table("old_" = as(from, class(to)), "new_" = to)
       dtb[, "old_" := as(get(colname), class(to))]
       dtb[reg, on = "old_", old_ := i.new_]
       if (is.null(newcolname)) {
@@ -282,7 +304,6 @@ replace_from_table <-
     }
     return(invisible(dtb))
   }
-
 
 
 #' Generate age-group from age
@@ -308,34 +329,37 @@ replace_from_table <-
 #' to_agegrp(data.table(age = 0:99), max_age = 80L)[]
 #' to_agegrp(data.table(age = 0:99), grp_width = 10, max_age = 85)[]
 to_agegrp <-
-  function(dtb,
-            grp_width = 5L,
-            max_age = 85L,
-            age_colname = "age",
-            agegrp_colname = "agegrp",
-            to_factor = TRUE,
-            min_age = NULL)
-  {
+  function(
+    dtb,
+    grp_width = 5L,
+    max_age = 85L,
+    age_colname = "age",
+    agegrp_colname = "agegrp",
+    to_factor = TRUE,
+    min_age = NULL
+  ) {
     stopifnot(
       is.data.table(dtb),
       age_colname %in% names(dtb),
       length(age_colname) == 1L,
-      length(agegrp_colname) ==
-        1L,
+      length(agegrp_colname) == 1L,
       is.logical(to_factor)
     )
     max_age <-
       ifelse(is.null(max_age), max(dtb[[age_colname]]), max_age)
     lage <- min(dtb[[age_colname]])
     min_age <-
-      ifelse(is.null(min_age), lage - lage%%grp_width, min_age)
-    age_vec <- min_age:max_age
+      ifelse(is.null(min_age), lage - lage %% grp_width, min_age)
+    # Include all ages in the data, and ensure we cover at least up to max_age
+    actual_max_age <- max(dtb[[age_colname]])
+    effective_max_age <- max(actual_max_age, max_age)
+    age_vec <- min_age:effective_max_age
     agegroups <- agegrp_name(
       min_age = min_age,
       max_age,
       grp_width = grp_width,
       match_input = TRUE,
-      match_input_max_age = max_age
+      match_input_max_age = effective_max_age
     )
 
     replace_from_table(
@@ -348,8 +372,10 @@ to_agegrp <-
     # TODO better support of replace_from_table so I can convert agegroups vector
     # to factor, I.e. if (to_factor) agegroups <- factor(agegroups)
     if (to_factor) {
-      dtb[, `:=`((agegrp_colname), factor(get(agegrp_colname),
-                                         sort(unique(agegroups))))]
+      dtb[, `:=`(
+        (agegrp_colname),
+        factor(get(agegrp_colname), sort(unique(agegroups)))
+      )]
     }
     return(invisible(dtb))
   }
@@ -367,14 +393,14 @@ to_agegrp <-
 #' library(CKutils)
 #' x = c(2,5,1,3,4,6)
 #' pctl_rank(x, ties.method="min") # min assigns every tied element to the lowest rank
-pctl_rank <- function(x, ties.method = c("average", "first", "random",
-                                       "max", "min", "dense")) {
+pctl_rank <- function(
+  x,
+  ties.method = c("average", "first", "random", "max", "min", "dense")
+) {
   stopifnot(is.numeric(x))
   ties.method <- match.arg(ties.method)
-  n   <- length(x)
-  out <- (frank(x,
-         na.last = F,
-         ties.method = ties.method) - 1) / (n - 1)
+  n <- length(x)
+  out <- (frank(x, na.last = F, ties.method = ties.method) - 1) / (n - 1)
   return(out)
 }
 
@@ -391,10 +417,15 @@ pctl_rank <- function(x, ties.method = c("average", "first", "random",
 #'  @param orig_data initial data.table = \code{dtb}
 #'  @export
 validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
-  if (!requireNamespace("gamlss", quietly = TRUE))
+  if (!requireNamespace("gamlss", quietly = TRUE)) {
     stop("Please install package gamlss first.")
-  stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dtb), mc >= 1,
-            is.data.table(orig_data))
+  }
+  stopifnot(
+    "gamlss" %in% class(gamlss_obj),
+    is.data.table(dtb),
+    mc >= 1,
+    is.data.table(orig_data)
+  )
   nam_y <- as.character(gamlss_obj$call$formula[[2]])
   nam_var <- all.vars(gamlss_obj$call$formula[[3]])
   nam_dist <- paste0("r", gamlss_obj$family[[1]])
@@ -402,10 +433,14 @@ validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
   x <- copy(dtb)
   x[, type := "Observed"]
   z <- copy(dtb)
-  z[, (nam_param) := gamlss::predictAll(gamlss_obj, type = "response",
-                                      newdata = dtb[, .SD, .SDcols = nam_var],
-                                      data = orig_data[, .SD,
-                                                       .SDcols = c(nam_var)])]
+  z[,
+    (nam_param) := gamlss::predictAll(
+      gamlss_obj,
+      type = "response",
+      newdata = dtb[, .SD, .SDcols = nam_var],
+      data = orig_data[, .SD, .SDcols = c(nam_var)]
+    )
+  ]
   z[, type := "Modelled"]
   z <- rbindlist(rep(list(z), mc))
   z[, (nam_y) := do.call(nam_dist, c(.N, .SD)), , .SDcols = nam_param]
@@ -426,12 +461,21 @@ validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
 #' @param orig_data original data.table
 #' @param nc by default = 1L
 #' @export
-guess_gamlss <- function(dtb, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) {
-  if (!requireNamespace("gamlss", quietly = TRUE))
+guess_gamlss <- function(
+  dtb,
+  gamlss_obj,
+  orig_data = gamlss_obj$data,
+  nc = 1L
+) {
+  if (!requireNamespace("gamlss", quietly = TRUE)) {
     stop("Please install package gamlss first.")
-  stopifnot("gamlss" %in% class(gamlss_obj),
-            is.data.table(dtb), nc >= 1L,
-            is.data.table(orig_data))
+  }
+  stopifnot(
+    "gamlss" %in% class(gamlss_obj),
+    is.data.table(dtb),
+    nc >= 1L,
+    is.data.table(orig_data)
+  )
   nam_y <- as.character(gamlss_obj$call$formula[[2]])
   nam_var <- all.vars(gamlss_obj$call$formula[[3]])
   nam_dist <- paste0("q", gamlss_obj$family[[1]])
@@ -440,17 +484,30 @@ guess_gamlss <- function(dtb, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) 
   orig_data <- orig_data[, ..nam_var]
   dtu <- unique(dtb[, ..nam_var]) # otherwise too slow
   dtu <- split(dtu, dtu$year)
-  if("RevoUtilsMath" %in% (.packages())) tt <- getMKLthreads()
-  if("RevoUtilsMath" %in% (.packages())) setMKLthreads(1L)
-  dtu <- parallel::mclapply(dtu, function(x) {
-    x[, (nam_param) := gamlss::predictAll(gamlss_obj,
-                                          type = "response",
-                                          newdata = .SD,
-                                          data = orig_data)]
-  },
-  mc.preschedule = FALSE,
-  mc.cores = nc)
-  if("RevoUtilsMath" %in% (.packages())) setMKLthreads(tt)
+  if ("RevoUtilsMath" %in% (.packages())) {
+    tt <- getMKLthreads()
+  }
+  if ("RevoUtilsMath" %in% (.packages())) {
+    setMKLthreads(1L)
+  }
+  dtu <- parallel::mclapply(
+    dtu,
+    function(x) {
+      x[,
+        (nam_param) := gamlss::predictAll(
+          gamlss_obj,
+          type = "response",
+          newdata = .SD,
+          data = orig_data
+        )
+      ]
+    },
+    mc.preschedule = FALSE,
+    mc.cores = nc
+  )
+  if ("RevoUtilsMath" %in% (.packages())) {
+    setMKLthreads(tt)
+  }
   dtu <- rbindlist(dtu)
   # dtu[, (nam_param) := gamlss::predictAll(gamlss_obj,
   #                                        type = "response",
@@ -493,28 +550,38 @@ guess_gamlss <- function(dtb, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L) 
 #' guess_polr(dtb, polr_model)
 #' }
 guess_polr <- function(dtb, polr_obj) {
-  if (!requireNamespace("MASS", quietly = TRUE))
+  if (!requireNamespace("MASS", quietly = TRUE)) {
     stop("Please install package MASS first.")
-  if (!requireNamespace("matrixStats", quietly = TRUE))
+  }
+  if (!requireNamespace("matrixStats", quietly = TRUE)) {
     stop("Please install package matrixStats first.")
+  }
   stopifnot("polr" %in% class(polr_obj), is.data.table(dtb))
   nam_y <- as.character(polr_obj$call$formula[[2]])
   nam_var <- all.vars(polr_obj$call$formula[[3]])
   #code adapted from method getAnywhere(predict.polr)
   Terms <- delete.response(polr_obj$terms)
-  m <- model.frame(Terms, dtb[, ..nam_var], na.action = function(x) x,
-                   xlev = polr_obj$xlevels)
-  if (!is.null(cl <- attr(Terms, "dataClasses")))
+  m <- model.frame(
+    Terms,
+    dtb[, ..nam_var],
+    na.action = function(x) x,
+    xlev = polr_obj$xlevels
+  )
+  if (!is.null(cl <- attr(Terms, "dataClasses"))) {
     .checkMFClasses(cl, m)
+  }
   X <- model.matrix(Terms, m, contrasts = polr_obj$contrasts)
   xint <- match("(Intercept)", colnames(X), nomatch = 0L)
-  if (xint > 0L)
+  if (xint > 0L) {
     X <- X[, -xint, drop = FALSE]
+  }
   n <- nrow(X)
   q <- length(polr_obj$zeta)
   eta <- drop(X %*% polr_obj$coefficients)
-  cc <- plogis(matrix(polr_obj$zeta, n, q, byrow = TRUE) -
-                 eta)
+  cc <- plogis(
+    matrix(polr_obj$zeta, n, q, byrow = TRUE) -
+      eta
+  )
   dtb[, p := get(paste0("rank_", nam_y))]
   dtb[, (nam_y) := matrixStats::rowSums2(cc < p)]
   dtb[, "p" := NULL]
@@ -532,8 +599,11 @@ guess_polr <- function(dtb, polr_obj) {
 #' @param colnam column names
 #' @export
 crossval_gamlss <- function(dtb, gamlss_obj, orig_data = dtb, colnam = "rank") {
-  stopifnot("gamlss" %in% class(gamlss_obj), is.data.table(dtb),
-            is.data.table(orig_data))
+  stopifnot(
+    "gamlss" %in% class(gamlss_obj),
+    is.data.table(dtb),
+    is.data.table(orig_data)
+  )
   out <- list()
   nam_y <- as.character(gamlss_obj$call$formula[[2]])
   nam_var <- all.vars(gamlss_obj$call$formula[[3]])
@@ -541,10 +611,14 @@ crossval_gamlss <- function(dtb, gamlss_obj, orig_data = dtb, colnam = "rank") {
   nam_param <- gamlss_obj$parameters
   out$observed <- dtb[, get(nam_y)]
   z <- copy(dtb)
-  z[, (nam_param) := predictAll(gamlss_obj, type = "response",
-                                newdata = dtb[, .SD, .SDcols = nam_var],
-                                data = orig_data[, .SD,
-                                                 .SDcols = c(nam_y, nam_var)])]
+  z[,
+    (nam_param) := predictAll(
+      gamlss_obj,
+      type = "response",
+      newdata = dtb[, .SD, .SDcols = nam_var],
+      data = orig_data[, .SD, .SDcols = c(nam_y, nam_var)]
+    )
+  ]
   setnames(z, colnam, "p")
   z[p == 0, p := 0.0001]
   z[p == 1, p := 0.9999]
@@ -600,7 +674,9 @@ counts <- function(x) {
 #' match_colnames_pattern(dtb, z) #[1] "id" "b"
 match_colnames_pattern <- function(dtb, ...) {
   p = unlist(list(...), use.names = FALSE)
-  if (!is.character(p)) stop("Input patterns must be of type character.")
+  if (!is.character(p)) {
+    stop("Input patterns must be of type character.")
+  }
   cols = names(dtb)
   cols[unlist(sapply(p, grep, cols))]
 }
@@ -618,102 +694,149 @@ match_colnames_pattern <- function(dtb, ...) {
 #' @param smooth smooth object
 #' @param discrete discrete value
 #' @export
-reldist_diagnostics <- function(comparison, reference, comparison_wt, reference_wt,
-                                main, smooth = 0.35, discrete = FALSE) {
+reldist_diagnostics <- function(
+  comparison,
+  reference,
+  comparison_wt,
+  reference_wt,
+  main,
+  smooth = 0.35,
+  discrete = FALSE
+) {
   opar <- par(no.readonly = TRUE)
   on.exit(par(opar))
   if (!requireNamespace("reldist", quietly = TRUE)) {
-    stop("Package \"reldist\" needed for this function to work. Please install it.",
-         call. = FALSE)
+    stop(
+      "Package \"reldist\" needed for this function to work. Please install it.",
+      call. = FALSE
+    )
   }
 
-  reference_dens  <- density(reference, weights = reference_wt)
+  reference_dens <- density(reference, weights = reference_wt)
   comparison_dens <- density(comparison, weights = comparison_wt)
 
-  par(mfrow = c(2,2))
+  par(mfrow = c(2, 2))
   plot(
     reference_dens,
     main = main,
     lty = 3,
-    ylim = c(0, 1.1 * max(c(
-      reference_dens$y, comparison_dens$y
-    )))
+    ylim = c(
+      0,
+      1.1 *
+        max(c(
+          reference_dens$y,
+          comparison_dens$y
+        ))
+    )
   )
   lines(comparison_dens, col = "red", lty = 2)
-  legend("topright", bg="transparent" ,
-         legend=c("Comparison", "Reference"), box.lty = 0,
-         col = c("red", "black"), lty = 2:3, cex = 0.8)
-  g10 <- reldist::reldist(y=comparison, yo=reference,
-                 smooth=smooth, ci=TRUE,
-                 ywgt=comparison_wt, yowgt=reference_wt,
-                 #ylim=c(0,1.5),
-                 #yolabs=seq(-1,3,by=0.5),
-                 bar="yes", quiet=FALSE, discrete = discrete,
-                 xlab="proportion of the reference cohort")
-  title(main="Overall relative density",cex=0.6)
-  abline(h=1,lty=2)
-  g1A <- reldist::reldist(y=comparison, yo=reference,
-                 ywgt=comparison_wt, yowgt=reference_wt,
-                 show="effect",
-                 bar="yes", quiet=FALSE,
-                 smooth=smooth, ci=TRUE, discrete = discrete,
-                 #ylim=c(0,1.5),
-                 #yolabs=seq(-1,3,by=0.5),
-                 xlab="proportion of the reference cohort")
-  title(main= "Effect of the median shift",cex=0.6)
-  abline(h=1,lty=2)
-  gA0 <- reldist::reldist(y=comparison, yo=reference,
-                 smooth=smooth, ci=TRUE,
-                 ywgt=comparison_wt, yowgt=reference_wt,
-                 show="residual",
-                 bar="yes", quiet=FALSE, discrete = discrete,
-                 #ylim=c(0,1.5),
-                 #yolabs=seq(-1,3,by=0.5),
-                 xlab="proportion of the reference cohort")
-  title(main="Median-adjusted relative density" ,cex=0.6)
-  abline(h=1,lty=2)
+  legend(
+    "topright",
+    bg = "transparent",
+    legend = c("Comparison", "Reference"),
+    box.lty = 0,
+    col = c("red", "black"),
+    lty = 2:3,
+    cex = 0.8
+  )
+  g10 <- reldist::reldist(
+    y = comparison,
+    yo = reference,
+    smooth = smooth,
+    ci = TRUE,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    #ylim=c(0,1.5),
+    #yolabs=seq(-1,3,by=0.5),
+    bar = "yes",
+    quiet = FALSE,
+    discrete = discrete,
+    xlab = "proportion of the reference cohort"
+  )
+  title(main = "Overall relative density", cex = 0.6)
+  abline(h = 1, lty = 2)
+  g1A <- reldist::reldist(
+    y = comparison,
+    yo = reference,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    show = "effect",
+    bar = "yes",
+    quiet = FALSE,
+    smooth = smooth,
+    ci = TRUE,
+    discrete = discrete,
+    #ylim=c(0,1.5),
+    #yolabs=seq(-1,3,by=0.5),
+    xlab = "proportion of the reference cohort"
+  )
+  title(main = "Effect of the median shift", cex = 0.6)
+  abline(h = 1, lty = 2)
+  gA0 <- reldist::reldist(
+    y = comparison,
+    yo = reference,
+    smooth = smooth,
+    ci = TRUE,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    show = "residual",
+    bar = "yes",
+    quiet = FALSE,
+    discrete = discrete,
+    #ylim=c(0,1.5),
+    #yolabs=seq(-1,3,by=0.5),
+    xlab = "proportion of the reference cohort"
+  )
+  title(main = "Median-adjusted relative density", cex = 0.6)
+  abline(h = 1, lty = 2)
 
-  a1 <- reldist::rpy(y=comparison,yo=reference,
-      ywgt=comparison_wt,yowgt=reference_wt,pvalue=TRUE)
-  a2 <- reldist::rpluy(y=comparison,yo=reference,
-              ywgt=comparison_wt,yowgt=reference_wt,pvalue=TRUE)
-  a3 <- reldist::rpluy(y=comparison,yo=reference,
-              ywgt=comparison_wt,yowgt=reference_wt,pvalue=TRUE,
-              upper=TRUE)
+  a1 <- reldist::rpy(
+    y = comparison,
+    yo = reference,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    pvalue = TRUE
+  )
+  a2 <- reldist::rpluy(
+    y = comparison,
+    yo = reference,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    pvalue = TRUE
+  )
+  a3 <- reldist::rpluy(
+    y = comparison,
+    yo = reference,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    pvalue = TRUE,
+    upper = TRUE
+  )
   # p1 <- ifelse(a1[[4]]<0.001, "<0.001", format(a1[[4]], digits = 3))
   # p2 <- ifelse(a2[[4]]<0.001, "<0.001", format(a2[[4]], digits = 3))
   # p3 <- ifelse(a3[[4]]<0.001, "<0.001", format(a3[[4]], digits = 3))
 
-  out <- data.table("Summary statistics" = c("Overall change entropy",
-                                            "Median effect entropy",
-                                            "Shape effect entropy",
-                                            "Median polarization index",
-                                            "Lower polarization index",
-                                            "Upper polarization index"
-                                            ),
-                    "Measure" = c(g10$entropy,
-                                  reldist::entropy(g1A,g10),
-                                  gA0$entropy,
-                                  a1[[2]],
-                                  a2[[2]],
-                                  a3[[2]]
-                    ),
-                    "Lower 95% CI" = c(NA, NA, NA,
-                                       a1[[1]],
-                                       a2[[1]],
-                                       a3[[1]]
-                    ),
-                    "Upper 95% CI" = c(NA, NA, NA,
-                                       a1[[3]],
-                                       a2[[3]],
-                                       a3[[3]]
-                    ),
-                    "p-value" = c(NA, NA, NA,
-                                       a1[[4]],
-                                       a2[[4]],
-                                       a3[[4]]
-                    )
-                    )
+  out <- data.table(
+    "Summary statistics" = c(
+      "Overall change entropy",
+      "Median effect entropy",
+      "Shape effect entropy",
+      "Median polarization index",
+      "Lower polarization index",
+      "Upper polarization index"
+    ),
+    "Measure" = c(
+      g10$entropy,
+      reldist::entropy(g1A, g10),
+      gA0$entropy,
+      a1[[2]],
+      a2[[2]],
+      a3[[2]]
+    ),
+    "Lower 95% CI" = c(NA, NA, NA, a1[[1]], a2[[1]], a3[[1]]),
+    "Upper 95% CI" = c(NA, NA, NA, a1[[3]], a2[[3]], a3[[3]]),
+    "p-value" = c(NA, NA, NA, a1[[4]], a2[[4]], a3[[4]])
+  )
   return(out[])
 }
 
@@ -759,16 +882,20 @@ reldist_diagnostics <- function(comparison, reference, comparison_wt, reference_
 #' dependencies(c('devtools','lattice','ggplot2','psych'))
 #' }
 dependencies <-
-  function(pkges,
-           install = TRUE,
-           update  = FALSE,
-           quiet   = TRUE,
-           verbose = FALSE,
-           ...) {
+  function(
+    pkges,
+    install = TRUE,
+    update = FALSE,
+    quiet = TRUE,
+    verbose = FALSE,
+    ...
+  ) {
     myrequire <- function(package, ...) {
       result <- FALSE
       if (quiet) {
-        suppressMessages(suppressWarnings(result <- requireNamespace(package, ...)))
+        suppressMessages(suppressWarnings(
+          result <- requireNamespace(package, ...)
+        ))
       } else {
         result <- suppressWarnings(requireNamespace(package, ...))
       }
@@ -894,11 +1021,6 @@ dependencies <-
 # print(tt[.id == 50 & y < 0.1, hist(y)])
 # print(tt[pid == 4,  plot(.id, y, ylim = c(0,1))])
 
-
-
-
-
-
 # estimate beta params from mean and variance
 #' `estim_beta_params` estimates the beta parameters from a mean and a variance given
 #' @param mu An integer between 0 and 1
@@ -910,7 +1032,9 @@ dependencies <-
 estim_beta_params <- function(mu, var) {
   # from https://stats.stackexchange.com/questions/12232/calculating-the-parameters-of-a-beta-distribution-using-the-mean-and-variance and wikipedia
   stopifnot(between(mu, 0, 1), var > 0)
-  if (var >= (mu * (1 - mu))) var  <- mu * (1 - mu) * 0.9999
+  if (var >= (mu * (1 - mu))) {
+    var <- mu * (1 - mu) * 0.9999
+  }
   alpha <- mu * ((mu * (1 - mu) / var) - 1) # if var < (mu * (1 - mu))
   beta <- (1 - mu) * ((mu * (1 - mu) / var) - 1) # var < (mu * (1 - mu))
   return(params = list(shape1 = alpha, shape2 = beta))
@@ -936,10 +1060,9 @@ outersect <-
   }
 
 
-
 #' Calculate Symmetric Difference Between Two Sets
 #'
-#' `symdiff` returns the symmetric difference between two vectors. The symmetric 
+#' `symdiff` returns the symmetric difference between two vectors. The symmetric
 #' difference consists of elements that are in either x or y, but not in both.
 #' This is equivalent to the union of the two sets minus their intersection.
 #'
@@ -952,13 +1075,13 @@ outersect <-
 #' @examples
 #' # With numeric vectors
 #' symdiff(c(1, 2, 3, 4), c(3, 4, 5, 6))  # Returns c(1, 2, 5, 6)
-#' 
+#'
 #' # With character vectors
 #' symdiff(c("a", "b", "c"), c("b", "c", "d"))  # Returns c("a", "d")
-#' 
+#'
 #' # With logical vectors
 #' symdiff(c(TRUE, FALSE), c(FALSE))  # Returns TRUE
-#' 
+#'
 #' # Empty result when sets are identical
 #' symdiff(c(1, 2, 3), c(1, 2, 3))  # Returns integer(0)
 symdiff <- function(x, y) {
@@ -983,8 +1106,6 @@ resample <-
   }
 
 
-
-
 #' Check if All Elements in a Numeric Vector Are Identical
 #'
 #' This function checks whether all elements in a numeric vector are equal within a specified tolerance.
@@ -997,7 +1118,7 @@ resample <-
 #'
 #' @export
 identical_elements <-
-  function(x, tol = .Machine$double.eps ^ 0.5) {
+  function(x, tol = .Machine$double.eps^0.5) {
     stopifnot(is.numeric(x))
     fequal(x, tol)
   }
@@ -1017,10 +1138,11 @@ identical_elements <-
 normalise <-
   function(x, ...) {
     stopifnot(is.numeric(x))
-    if (identical_elements(x))
+    if (identical_elements(x)) {
       return(1)
-    else
+    } else {
       return(fnormalise(x))
+    }
   }
 
 #' Convert CSV Files to FST Format
@@ -1039,16 +1161,18 @@ normalise <-
 #' }
 #' @export
 csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
-  hlpfn <- function(nam, compression) { # input scalar string
+  hlpfn <- function(nam, compression) {
+    # input scalar string
     out <- data.table::fread(nam)
     new_nam <- gsub(".csv$", ".fst", nam)
     fst::write_fst(out, new_nam, compress = compression)
   }
   lapply(csv_files, hlpfn, compression)
-  if (delete_csv) file.remove(csv_files)
+  if (delete_csv) {
+    file.remove(csv_files)
+  }
   return(invisible(NULL))
 }
-
 
 
 #' Clamp values to a specified range
@@ -1070,7 +1194,9 @@ clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
     return(fclamp(x, a, b, inplace))
   } else if (typ == "integer") {
     return(fclamp_int(x, as.integer(a), as.integer(b), inplace))
-  } else stop("Only accepts doubles or integers")
+  } else {
+    stop("Only accepts doubles or integers")
+  }
 }
 
 #' Generate folder structure

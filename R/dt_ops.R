@@ -16,7 +16,6 @@
 ## or write to the Free Software Foundation, Inc., 51 Franklin Street,
 ## Fifth Floor, Boston, MA 02110-1301  USA.
 
-
 #' Clone a data.table
 #'
 #' `clone_dt` clones a data.table and binds the copies at the bottom of
@@ -34,14 +33,13 @@
 #' dtb <- data.table(x)
 #' clone_dtb(dtb, 3, idcol = TRUE)
 clone_dt <-
-  function(dtb, times, idcol = TRUE) {
-    # TODO early escape for times == 1
-    xx <- key(dtb)
-    l <- rep(list(dtb), times)
-    out <- setkeyv(rbindlist(l, idcol = idcol), xx)
-    return(invisible(out))
-  }
-
+    function(dtb, times, idcol = TRUE) {
+        # TODO early escape for times == 1
+        xx <- key(dtb)
+        l <- rep(list(dtb), times)
+        out <- setkeyv(rbindlist(l, idcol = idcol), xx)
+        return(invisible(out))
+    }
 
 
 #' Absorb Columns from One data.table into Another
@@ -63,7 +61,13 @@ clone_dt <-
 #' dt_x <- data.table(a = 1:5, b = 1:5, c = 5:9, d = 5:1, e = 1:5)
 #' dt_i <- data.table(a = 1:5, b = 1:5, c = 1:5, d = 1:5)
 #' absorb_dt(dt_x, dt_i, on = c("a", "b"))
-absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL, verbose = FALSE) {
+absorb_dt <- function(
+    dt_x,
+    dt_i,
+    on = ".NATURAL",
+    exclude_col = NULL,
+    verbose = FALSE
+) {
     stopifnot(is.data.table(dt_x), is.data.table(dt_i), is.character(on))
     nam_i <- names(dt_i)
     nam_x <- names(dt_x)
@@ -89,7 +93,11 @@ absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL, verbose =
     setnames(dt_i, colnam, colnam_tmp)
     # dt_x[dt_i, (colnam) := .(i.COL1____, i.COL2____), on = on]
     colnam_tmp2 <- paste0("i.", colnam_tmp)
-    argum <- paste0("dt_x[dt_i, (colnam) := .(", paste(colnam_tmp2, collapse = ", "), "), on = on]")
+    argum <- paste0(
+        "dt_x[dt_i, (colnam) := .(",
+        paste(colnam_tmp2, collapse = ", "),
+        "), on = on]"
+    )
     eval(str2lang(argum))
     setnames(dt_i, colnam_tmp, colnam)
     invisible(dt_x)
@@ -115,11 +123,18 @@ absorb_dt <- function(dt_x, dt_i, on = ".NATURAL", exclude_col = NULL, verbose =
 #' del_dt_rows(dtb, dtb$a %% 2 == 0)
 #' @export
 del_dt_rows <- function(dtb, indx_to_del, dt_env = .GlobalEnv) {
-    stopifnot(is.data.table(dtb), (is.integer(indx_to_del) | is.logical(indx_to_del)))
+    stopifnot(
+        is.data.table(dtb),
+        (is.integer(indx_to_del) | is.logical(indx_to_del))
+    )
 
     dt_keys <- key(dtb)
-    if (is.integer(indx_to_del)) keep <- -indx_to_del
-    if (is.logical(indx_to_del)) keep <- !indx_to_del
+    if (is.integer(indx_to_del)) {
+        keep <- -indx_to_del
+    }
+    if (is.logical(indx_to_del)) {
+        keep <- !indx_to_del
+    }
 
     name_of_dt <- deparse(substitute(dtb))
     # dt_env <- pryr::where(name_of_dt) # to get dt envirnment
@@ -128,22 +143,13 @@ del_dt_rows <- function(dtb, indx_to_del, dt_env = .GlobalEnv) {
     set(dtb, i = NULL, j = 1L, value = NULL)
 
     for (j in seq_len(ncol(dtb))) {
-        set(dt_new,
-            i = NULL,
-            j = dt_names[1L + j],
-            value = dtb[[1L]][keep]
-        )
-        set(dtb,
-            i = NULL,
-            j = 1L,
-            value = NULL
-        )
+        set(dt_new, i = NULL, j = dt_names[1L + j], value = dtb[[1L]][keep])
+        set(dtb, i = NULL, j = 1L, value = NULL)
     }
 
     setkeyv(dt_new, dt_keys)
     assign(name_of_dt, value = dt_new, envir = dt_env)
 }
-
 
 
 #' Perform operations on selected columns in a data.table
@@ -173,9 +179,16 @@ del_dt_rows <- function(dtb, indx_to_del, dt_env = .GlobalEnv) {
 #' do_cols_dt(dtb, c("a", "b"), symbol = "+", fn = "sum")
 #' }
 #' @export
-do_cols_dt <- function(dtb, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn = NULL) {
+do_cols_dt <- function(
+    dtb,
+    cols_to_add,
+    symbol = c(",", "+", "-", "*", "/"),
+    fn = NULL
+) {
     cols_to_add <- paste0("`", cols_to_add, "`")
     argum <- paste(cols_to_add, collapse = symbol)
-    if (!is.null(fn)) argum <- paste0(fn, "(", argum, ")")
+    if (!is.null(fn)) {
+        argum <- paste0(fn, "(", argum, ")")
+    }
     dtb[, .(eval(str2lang(argum)))]
 }

@@ -16,9 +16,6 @@
 ## or write to the Free Software Foundation, Inc., 51 Franklin Street,
 ## Fifth Floor, Boston, MA 02110-1301  USA.
 
-
-
-
 # lookup_tbl = CJ(b=1:4, a = factor(letters[1:4]))[, c:=rep(1:4, 4)]
 # tbl = data.table(b=0:5, a = factor(letters[1:4]))
 
@@ -40,11 +37,13 @@
 #' otherwise, a data.table containing only the lookup results is returned.
 #'
 #' @export
-lookup_dt <- function(tbl,
-                      lookup_tbl,
-                      merge = TRUE,
-                      exclude_col = NULL,
-                      check_lookup_tbl_validity = FALSE) {
+lookup_dt <- function(
+  tbl,
+  lookup_tbl,
+  merge = TRUE,
+  exclude_col = NULL,
+  check_lookup_tbl_validity = FALSE
+) {
   # Ensure both inputs are data.tables
   if (!is.data.table(tbl)) {
     stop("tbl must be a data.table")
@@ -68,7 +67,9 @@ lookup_dt <- function(tbl,
     stop("No common keys found between tbl and lookup_tbl")
   }
   if (length(on) == length(nam_i)) {
-    stop("No value columns identified in lookup_tbl. Consider using the 'exclude_col' argument.")
+    stop(
+      "No value columns identified in lookup_tbl. Consider using the 'exclude_col' argument."
+    )
   }
 
   # Optionally validate lookup_tbl structure
@@ -97,8 +98,11 @@ lookup_dt <- function(tbl,
       # For integer keys, assume values are sorted and consecutive
       xmax <- last(lookup_tbl[[j]])
       xmin <- first(lookup_tbl[[j]])
-      if (check_lookup_tbl_validity &&
-        (min(tbl[[j]], na.rm = TRUE) < xmin || max(tbl[[j]], na.rm = TRUE) > xmax)) {
+      if (
+        check_lookup_tbl_validity &&
+          (min(tbl[[j]], na.rm = TRUE) < xmin ||
+            max(tbl[[j]], na.rm = TRUE) > xmax)
+      ) {
         message(j, " has rows in tbl without a match in lookup_tbl!")
       }
       cardinality[[j]] <- xmax - xmin + 1L
@@ -110,11 +114,18 @@ lookup_dt <- function(tbl,
   cardinality_prod <- shift(rev(cumprod(rev(cardinality))), -1, fill = 1L)
 
   # Map each row in tbl to a unique lookup index using the starts_from_1 function
-  rownum <- as.integer(starts_from_1_cpp(tbl, on, 1L, min_lookup, cardinality) * cardinality_prod[[1L]])
+  rownum <- as.integer(
+    starts_from_1_cpp(tbl, on, 1L, min_lookup, cardinality) *
+      cardinality_prod[[1L]]
+  )
   if (length(on) > 1L) {
     for (i in 2:length(on)) {
-      rownum <- as.integer(rownum -
-        (cardinality[[i]] - starts_from_1_cpp(tbl, on, i, min_lookup, cardinality)) * cardinality_prod[[i]])
+      rownum <- as.integer(
+        rownum -
+          (cardinality[[i]] -
+            starts_from_1_cpp(tbl, on, i, min_lookup, cardinality)) *
+            cardinality_prod[[i]]
+      )
     }
   }
 
@@ -174,20 +185,31 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
   for (j in keycols) {
     # Check that the column is of type integer (factors are stored as integers)
     if (typeof(lookup_tbl[[j]]) != "integer") {
-      stop(paste0("Lookup table key columns must be of type integer (or factor). Column '", j, "' is not integer."))
+      stop(paste0(
+        "Lookup table key columns must be of type integer (or factor). Column '",
+        j,
+        "' is not integer."
+      ))
     }
 
     # For integer columns, ensure the values form a consecutive sequence
     if (is.integer(lookup_tbl[[j]])) {
       x <- sort(lookup_tbl[[j]])
       if (length(x) > 1 && any(diff(x) > 1L)) {
-        stop(paste0("Lookup table key column '", j, "' does not contain consecutive integer values."))
+        stop(paste0(
+          "Lookup table key column '",
+          j,
+          "' does not contain consecutive integer values."
+        ))
       }
     }
 
     # Recommend setting the key for best performance if not already set
     if (!identical(key(lookup_tbl), keycols)) {
-      message("For best performance, consider setting the key of lookup_tbl to: ", paste(keycols, collapse = ", "))
+      message(
+        "For best performance, consider setting the key of lookup_tbl to: ",
+        paste(keycols, collapse = ", ")
+      )
       if (fixkey) {
         setkeyv(lookup_tbl, keycols)
         message("Key has been set to: ", paste(keycols, collapse = ", "))
@@ -196,7 +218,13 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
 
     # Verify the lookup table has the expected number of rows
     if (nrow(lookup_tbl) != expected_rows) {
-      stop(paste0("Lookup table should have ", expected_rows, " rows based on key combinations, but has ", nrow(lookup_tbl), " rows."))
+      stop(paste0(
+        "Lookup table should have ",
+        expected_rows,
+        " rows based on key combinations, but has ",
+        nrow(lookup_tbl),
+        " rows."
+      ))
     }
 
     return(TRUE)
@@ -233,7 +261,6 @@ set_lookup_tbl_key <- function(lookup_tbl, keycols) {
 
   return(invisible(lookup_tbl))
 }
-
 
 # # fct_to_int ----
 # #' @title Convert Factor to Integer
@@ -295,7 +322,6 @@ set_lookup_tbl_key <- function(lookup_tbl, keycols) {
 #     stop("Column data must be either an integer or a factor.")
 #   }
 # }
-
 
 # #' @export
 # lookup_dt_r <- function(tbl,

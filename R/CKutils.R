@@ -30,8 +30,6 @@
 #' @importFrom methods as
 #' @importFrom graphics abline legend lines par plot title
 #' @importFrom stats density .checkMFClasses delete.response model.frame model.matrix plogis predict
-#' @importFrom yaml write_yaml
-
 
 ## usethis namespace: start
 #' @importFrom data.table :=
@@ -53,8 +51,9 @@
 
 # Prevent R CMD check from complaining about the use of pipe expressions
 # standard data.table variables
-if (getRversion() >= "2.15.1")
+if (getRversion() >= "2.15.1") {
   utils::globalVariables(c(".", ".I", ".N", ".SD"), utils::packageName())
+}
 
 ## usethis namespace: end
 NULL
