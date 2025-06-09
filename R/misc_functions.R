@@ -935,6 +935,36 @@ outersect <-
     setdiff(big.vec, unique(duplicates))
   }
 
+
+
+#' Calculate Symmetric Difference Between Two Sets
+#'
+#' `symdiff` returns the symmetric difference between two vectors. The symmetric 
+#' difference consists of elements that are in either x or y, but not in both.
+#' This is equivalent to the union of the two sets minus their intersection.
+#'
+#' @param x A vector (numeric, character, logical, etc.)
+#' @param y A vector of the same type as x
+#'
+#' @return A vector containing elements that are in either x or y, but not in both
+#'
+#' @export
+#' @examples
+#' # With numeric vectors
+#' symdiff(c(1, 2, 3, 4), c(3, 4, 5, 6))  # Returns c(1, 2, 5, 6)
+#' 
+#' # With character vectors
+#' symdiff(c("a", "b", "c"), c("b", "c", "d"))  # Returns c("a", "d")
+#' 
+#' # With logical vectors
+#' symdiff(c(TRUE, FALSE), c(FALSE))  # Returns TRUE
+#' 
+#' # Empty result when sets are identical
+#' symdiff(c(1, 2, 3), c(1, 2, 3))  # Returns integer(0)
+symdiff <- function(x, y) {
+  setdiff(union(x, y), intersect(x, y))
+}
+
 # Define function for sampling. Taken from sample man pages
 #' `resample` Gives sample of from the elements of \code{`x`} of the specified size. Both size and \code{`x`} has to be integers
 #' @param x A vector to be sampled
