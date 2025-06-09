@@ -52,7 +52,7 @@ install the newer version.
 }
 \details{
 The function was originally created by Jason Bryer
-\href{https://www.r-bloggers.com/function-to-simplify-loading-and-installing-packages/}{here}
+\href{https://www.r-bloggers.com/2014/02/function-to-simplify-loading-and-installing-packages/}{here}
 and the source is available \href{https://gist.github.com/jbryer/9112634}{here}.
 Note: I renamed the function to \code{dependencies} and adapted it to attach
 instead of only load the packages.

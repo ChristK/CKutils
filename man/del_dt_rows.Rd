@@ -23,7 +23,7 @@ This function removes rows from a data.table based on specified indices. It crea
 library(data.table)
 dtb <- data.table(a = 1:5, b = letters[1:5])
 # Delete the 2nd and 4th rows
-del_dt_rows(dtb, c(2, 4))
+del_dt_rows(dtb, c(2L, 4L))
 # Alternatively, using a logical vector to delete rows where 'a' is even
 del_dt_rows(dtb, dtb$a \%\% 2 == 0)
 }

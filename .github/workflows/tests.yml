@@ -1,0 +1,127 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+      - name: Run specific dt_ops tests
+        run: |
+          Rscript -e "
+          library(tinytest)
+          library(CKutils)
+          
+          # Run dt_ops tests specifically
+          cat('\n=== RUNNING dt_ops.R TESTS ===\n')
+          test_dir <- system.file('tinytest', package='CKutils')
+          dt_ops_file <- file.path(test_dir, 'test-dt_ops.R')
+          
+          if (!file.exists(dt_ops_file)) {
+            stop('test-dt_ops.R file not found in installed package!')
+          }
+          
+          dt_ops_results <- run_test_file(dt_ops_file)
+          
+          cat('dt_ops.R tests:', length(dt_ops_results), 'tests run\n')
+          
+          # Check for failures
+          if (any(!is.na(dt_ops_results) & dt_ops_results == FALSE)) {
+            stop('dt_ops.R tests failed!')
+          } else {
+            cat('All dt_ops.R tests passed!\n')
+          }
+          "
+        shell: bash, master, develop ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.config.os }}
+    
+    name: Test ${{ matrix.config.os }} (${{ matrix.config.r }})
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: ubuntu-latest, r: 'release'}
+          - {os: windows-latest, r: 'release'}
+          - {os: macOS-latest, r: 'release'}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::tinytest, any::data.table
+          needs: |
+            tinytest
+            data.table
+
+      - name: Install system dependencies on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+
+      - name: Install package
+        run: R CMD INSTALL .
+        shell: bash
+
+      - name: Run tinytest tests
+        run: |
+          Rscript -e "
+          library(tinytest)
+          library(CKutils)
+          
+          # Run all tests and capture results
+          results <- test_package('CKutils')
+          
+          # Print summary
+          cat('\n=== TINYTEST RESULTS ===\n')
+          print(results)
+          
+          # Check if any tests failed
+          if (length(results) == 0) {
+            stop('No tests were found!')
+          }
+          
+          failed_tests <- results[!is.na(results) & results == FALSE]
+          if (length(failed_tests) > 0) {
+            cat('\n=== FAILED TESTS ===\n')
+            print(failed_tests)
+            stop('Some tests failed!')
+          } else {
+            cat('\nAll tests passed successfully!\n')
+            cat('Total tests run:', length(results), '\n')
+          }
+          "
+        shell: bash
+
+      - name: Run specific dt_ops tests
+        run: |
+          Rscript -e "
+          library(tinytest)
+          library(CKutils)
+          
+          # Run dt_ops tests specifically
+          cat('\n=== RUNNING dt_ops.R TESTS ===\n')
+          dt_ops_results <- run_test_file(system.file('tinytest', 'test-dt_ops.R', package = 'CKutils'))
+          
+          cat('dt_ops.R tests:', length(dt_ops_results), 'tests run\n')
+          
+          # Check for failures
+          if (any(!is.na(dt_ops_results) & dt_ops_results == FALSE)) {
+            stop('dt_ops.R tests failed!')
+          } else {
+            cat('All dt_ops.R tests passed!\n')
+          }
+          "
+        shell: bash

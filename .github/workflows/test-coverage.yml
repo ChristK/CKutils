@@ -1,0 +1,57 @@
+name: test-coverage
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::covr, any::tinytest
+          needs: coverage
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+
+      - name: Test coverage
+        run: |
+          Rscript -e "
+          # Install the package first
+          install.packages('.', repos = NULL, type = 'source')
+          
+          # Load required libraries
+          library(covr)
+          library(tinytest)
+          
+          # Calculate coverage using tinytest
+          cov <- package_coverage(
+            path = '.',
+            type = 'tests',
+            code = '
+              library(tinytest)
+              test_package(\"CKutils\")
+            '
+          )
+          
+          # Print coverage report
+          print(cov)
+          percent_coverage <- percent_coverage(cov)
+          cat('Overall coverage:', percent_coverage, '%\n')
+          "
+        shell: bash

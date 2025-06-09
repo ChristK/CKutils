@@ -1,7 +1,7 @@
 ## CKutils: an R package with some utility functions I use regularly
 ## Copyright (C) 2018  Chris Kypridemos
 
-## US Sodium Policy model is free software; you can redistribute it and/or modify
+## CKutils is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 3 of the License, or
 ## (at your option) any later version.
@@ -16,5 +16,7 @@
 ## or write to the Free Software Foundation, Inc., 51 Franklin Street,
 ## Fifth Floor, Boston, MA 02110-1301  USA.
 
+# Basic CKutils tests
 
-context("CKutils tests")
+# Test that package loads without error
+expect_true(require("CKutils", quietly = TRUE), info = "CKutils package loads successfully")

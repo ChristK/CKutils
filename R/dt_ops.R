@@ -31,7 +31,7 @@
 #' library(CKutils)
 #' x <- c(1, 5, 3, 6, 4, 2, 9, 8, 7)
 #' dtb <- data.table(x)
-#' clone_dtb(dtb, 3, idcol = TRUE)
+#' clone_dt(dtb, 3, idcol = TRUE)
 clone_dt <-
     function(dtb, times, idcol = TRUE) {
         # TODO early escape for times == 1
@@ -118,7 +118,7 @@ absorb_dt <- function(
 #' library(data.table)
 #' dtb <- data.table(a = 1:5, b = letters[1:5])
 #' # Delete the 2nd and 4th rows
-#' del_dt_rows(dtb, c(2, 4))
+#' del_dt_rows(dtb, c(2L, 4L))
 #' # Alternatively, using a logical vector to delete rows where 'a' is even
 #' del_dt_rows(dtb, dtb$a %% 2 == 0)
 #' @export
