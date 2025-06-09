@@ -15,3 +15,7 @@
 ^comprehensive_benchmark\.R$
 ^quick_benchmark\.R$
 ^test_github_actions\.R$
+^src/.*\.o$
+^src/.*\.so$
+^src/.*\.dll$
+^src/symbols\.rds$
