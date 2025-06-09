@@ -1,11 +1,12 @@
 Package: CKutils
 Type: Package
 Title: Some Utility Functions I Use Regularly
-Version: 0.1.5.9000
-Date: 2025-03-30
+Version: 0.1.5.9500
+Date: 2025-06-09
 Authors@R: c(
-    person("Chris", "Kypridemos", email = "christodoulosk@gmail.com", role = c("aut", "cre")),
+    person("Chris", "Kypridemos", email = "christodoulosk@gmail.com", role = c("aut", "cre"), omment = c(ORCID = "0000-0002-0746-9229")),
     person("Amandine", "Robert", email = "amandine.rob.26@gmail.com", role = "ctb"))
+Maintainer: Chris Kypridemos <christodoulosk@gmail.com>
 Description: This package contains some functions I use regularly when I develop simulation models. 
 License: GPL (>= 3)
 Encoding: UTF-8
@@ -30,8 +31,8 @@ Suggests:
     reldist,
     testthat (>= 2.1.0)
 LinkingTo: 
-  Rcpp,
-  data.table
+    Rcpp,
+    data.table
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 SystemRequirements: GNU make
