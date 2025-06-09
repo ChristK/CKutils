@@ -11,7 +11,7 @@ do_cols_dt(dtb, cols_to_add, symbol = c(",", "+", "-", "*", "/"), fn = NULL)
 
 \item{cols_to_add}{A character vector of column names to be operated on.}
 
-\item{symbol}{A character string specifying the operator to use between the columns. Defaults to '+' (if a vector is provided, the first element is used). Other examples include '-', '*', '/', or ','.}
+\item{symbol}{A character string specifying the operator to use between the columns. Defaults to ',' (if a vector is provided, the first element is used). Other examples include '+', '-', '*', or '/'.}
 
 \item{fn}{An optional function name as a string. If provided, the operator expression is wrapped inside this function call.}
 }

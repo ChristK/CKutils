@@ -154,7 +154,7 @@ del_dt_rows <- function(dtb, indx_to_del, dt_env = .GlobalEnv) {
 #'
 #' @param dtb A data.table.
 #' @param cols_to_add A character vector of column names to be operated on.
-#' @param symbol A character string specifying the operator to use between the columns. Defaults to '+' (if a vector is provided, the first element is used). Other examples include '-', '*', '/', or ','.
+#' @param symbol A character string specifying the operator to use between the columns. Defaults to ',' (if a vector is provided, the first element is used). Other examples include '+', '-', '*', or '/'.
 #' @param fn An optional function name as a string. If provided, the operator expression is wrapped inside this function call.
 #'
 #' @return A data.table with one column containing the result of the evaluated expression.
