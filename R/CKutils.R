@@ -56,19 +56,22 @@
     stop("data.table package is required but not available")
   }
   
-  # Explicitly load data.table to ensure C API is available
-  library(data.table)
-  
-  # On Windows, we might need to explicitly initialize data.table internals
-  if (.Platform$OS.type == "windows") {
-    # Force data.table initialization by accessing a data.table function
-    tryCatch({
-      dt_test <- data.table::data.table(x = 1)
-      invisible(dt_test[, get("x")])
-    }, error = function(e) {
-      warning("Could not initialize data.table on Windows: ", e$message)
-    })
-  }
+  # Try to safely initialize data.table
+  tryCatch({
+    # Explicitly require data.table
+    requireNamespace("data.table", quietly = TRUE)
+    
+    # On Windows, we might need extra initialization
+    if (.Platform$OS.type == "windows") {
+      # Try a simple data.table operation to ensure initialization
+      dt_test <- data.table::data.table(x = 1L)
+      invisible(dt_test[, .N])
+    }
+  }, error = function(e) {
+    # Don't fail package loading if data.table initialization fails
+    warning("data.table initialization failed: ", e$message, 
+            ". Some functions may not work properly.")
+  })
 }
 
 # Prevent R CMD check from complaining about the use of pipe expressions
