@@ -4,33 +4,7 @@ on:
   push:
     branches: [ main, master, develop ]
   pull_request:
-      - name: Run specific dt_ops tests
-        run: |
-          Rscript -e "
-          library(tinytest)
-          library(CKutils)
-          
-          # Run dt_ops tests specifically
-          cat('\n=== RUNNING dt_ops.R TESTS ===\n')
-          test_dir <- system.file('tinytest', package='CKutils')
-          dt_ops_file <- file.path(test_dir, 'test-dt_ops.R')
-          
-          if (!file.exists(dt_ops_file)) {
-            stop('test-dt_ops.R file not found in installed package!')
-          }
-          
-          dt_ops_results <- run_test_file(dt_ops_file)
-          
-          cat('dt_ops.R tests:', length(dt_ops_results), 'tests run\n')
-          
-          # Check for failures
-          if (any(!is.na(dt_ops_results) & dt_ops_results == FALSE)) {
-            stop('dt_ops.R tests failed!')
-          } else {
-            cat('All dt_ops.R tests passed!\n')
-          }
-          "
-        shell: bash, master, develop ]
+    branches: [ main, master, develop ]
 
 jobs:
   test:
