@@ -49,6 +49,28 @@
 # Make sure data.table knows we know we're using it
 .datatable.aware = TRUE
 
+# Initialize data.table API when package loads
+.onLoad <- function(libname, pkgname) {
+  # Initialize the data.table API for C++ functions
+  if (!requireNamespace("data.table", quietly = TRUE)) {
+    stop("data.table package is required but not available")
+  }
+  
+  # Explicitly load data.table to ensure C API is available
+  library(data.table)
+  
+  # On Windows, we might need to explicitly initialize data.table internals
+  if (.Platform$OS.type == "windows") {
+    # Force data.table initialization by accessing a data.table function
+    tryCatch({
+      dt_test <- data.table::data.table(x = 1)
+      invisible(dt_test[, get("x")])
+    }, error = function(e) {
+      warning("Could not initialize data.table on Windows: ", e$message)
+    })
+  }
+}
+
 # Prevent R CMD check from complaining about the use of pipe expressions
 # standard data.table variables
 if (getRversion() >= "2.15.1") {

@@ -21,7 +21,7 @@ Imports:
     remotes,
     roxygen2,
     fst,
-    data.table (>= 1.16.4)
+    data.table (>= 1.17.4)
 Suggests: 
     spelling,
     gamlss,

@@ -47,6 +47,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
+      - name: Install system dependencies on Windows
+        if: runner.os == 'Windows'
+        run: |
+          # Ensure Rtools is available for compilation
+          Rscript -e "if (!('pkgbuild' %in% installed.packages()[,'Package'])) install.packages('pkgbuild'); pkgbuild::check_rtools()"
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
