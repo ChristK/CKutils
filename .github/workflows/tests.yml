@@ -104,7 +104,7 @@ jobs:
             cat('No tests found via test_package, trying manual approach...\n')
             test_dir <- system.file('tinytest', package = 'CKutils')
             if (test_dir != '') {
-              test_files <- list.files(test_dir, pattern = '\\\\.R\\$', full.names = TRUE)
+              test_files <- list.files(test_dir, pattern = '\\\\.R$$', full.names = TRUE)
               cat('Found', length(test_files), 'test files\n')
               if (length(test_files) > 0) {
                 for (tf in test_files) {
