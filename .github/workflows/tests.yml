@@ -59,17 +59,17 @@ jobs:
       - name: Test package loading and basic functions
         run: |
           Rscript -e "
-          cat('=== TESTING PACKAGE LOADING ===\\n')
+          cat('=== TESTING PACKAGE LOADING ===\n')
           library(CKutils)
-          cat('Package loaded successfully\\n')
+          cat('Package loaded successfully\n')
           
           # Test basic C++ functionality
           library(data.table)
           tryCatch({
             result <- fct_to_int_cpp(factor(letters[1:3]))
-            cat('C++ function test: PASSED\\n')
+            cat('C++ function test: PASSED\n')
           }, error = function(e) {
-            cat('C++ function test: FAILED -', e\\$message, '\\n')
+            cat('C++ function test: FAILED -', e$message, '\n')
             quit(status = 1)
           })
           
@@ -78,13 +78,13 @@ jobs:
             dt1 <- data.table(a = 1:3, b = 1:3)
             dt2 <- data.table(a = 1:3, value = 10:12)
             result <- lookup_dt(dt1, dt2)
-            cat('Data.table integration test: PASSED\\n')
+            cat('Data.table integration test: PASSED\n')
           }, error = function(e) {
-            cat('Data.table integration test: FAILED -', e\\$message, '\\n')
+            cat('Data.table integration test: FAILED -', e$message, '\n')
             quit(status = 1)
           })
           
-          cat('All core functionality tests passed!\\n')
+          cat('All core functionality tests passed!\n')
           "
         shell: bash
 
@@ -94,41 +94,41 @@ jobs:
           library(tinytest)
           library(CKutils)
           
-          cat('=== RUNNING TINYTEST SUITE ===\\n')
+          cat('=== RUNNING TINYTEST SUITE ===\n')
           
           # Simple approach: just run test_package
           results <- test_package('CKutils')
           
           if (length(results) == 0) {
             # Fallback: try to find and run tests manually
-            cat('No tests found via test_package, trying manual approach...\\n')
+            cat('No tests found via test_package, trying manual approach...\n')
             test_dir <- system.file('tinytest', package = 'CKutils')
             if (test_dir != '') {
               test_files <- list.files(test_dir, pattern = '\\\\.R\\$', full.names = TRUE)
-              cat('Found', length(test_files), 'test files\\n')
+              cat('Found', length(test_files), 'test files\n')
               if (length(test_files) > 0) {
                 for (tf in test_files) {
-                  cat('Running', basename(tf), '...\\n')
+                  cat('Running', basename(tf), '...\n')
                   source(tf, local = TRUE)
                 }
-                cat('Manual test execution completed\\n')
+                cat('Manual test execution completed\n')
               }
             } else {
-              cat('No test directory found, skipping tests\\n')
+              cat('No test directory found, skipping tests\n')
             }
           } else {
             # Check results
             failed <- sum(!is.na(results) & results == FALSE)
             passed <- sum(!is.na(results) & results == TRUE)
-            cat('Tests completed:', passed, 'passed,', failed, 'failed\\n')
+            cat('Tests completed:', passed, 'passed,', failed, 'failed\n')
             
             if (failed > 0) {
-              cat('FAILED TESTS:\\n')
+              cat('FAILED TESTS:\n')
               print(results[!is.na(results) & results == FALSE])
               quit(status = 1)
             }
           }
           
-          cat('All tests completed successfully!\\n')
+          cat('All tests completed successfully!\n')
           "
         shell: bash
