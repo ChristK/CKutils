@@ -32,7 +32,8 @@ library(MASS)
 library(matrixStats)
 library(data.table)
 
-# Assuming polr_model is a fitted polr object and dtb is your data.table with predictors and a column named, for example, 'rank_y'
+# Assuming polr_model is a fitted polr object and dtb is your data.table 
+# with predictors and a column named, for example, 'rank_y'
 guess_polr(dtb, polr_model)
 }
 }

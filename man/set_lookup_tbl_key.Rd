@@ -19,3 +19,20 @@ Sets the key columns of a lookup table to optimize performance for lookup operat
 The key columns are sorted (with a priority given to "year" if present) and then set
 as the key for the data.table.
 }
+\details{
+The \code{set_lookup_tbl_key} function assigns key columns to a lookup table, enhancing
+the performance of subsequent lookup operations. It is essential that the specified key
+columns are appropriate for the data and that they uniquely identify rows in the table.
+}
+\examples{
+library(data.table)
+my_lookup <- data.table(year = rep(2020:2021, each = 2),
+                        product_id = rep(1:2, 2),
+                        price = rnorm(4, 10, 2))
+print(key(my_lookup)) # NULL
+set_lookup_tbl_key(my_lookup, keycols = c("year", "product_id"))
+print(key(my_lookup)) # "year" "product_id"
+
+}
+\keyword{internal}
+\keyword{utilities}

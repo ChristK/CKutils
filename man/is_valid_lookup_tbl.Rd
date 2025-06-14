@@ -22,3 +22,38 @@ for key-based lookups. It checks that key columns are of type integer (or factor
 that each key column has a consecutive sequence of values, and that the table has the expected
 number of rows based on all possible combinations of key values.
 }
+\details{
+The \code{is_valid_lookup_tbl} function checks the structural validity of a lookup table
+used in conjunction with the \code{lookup_dt} function. It ensures that the key columns
+are appropriately defined and that the table contains all necessary combinations of key
+values without gaps or duplicates.
+
+Key checks include:
+- Presence of duplicate rows based on key columns.
+- Non-consecutive integer values in key columns (where applicable).
+- Correct number of rows based on the Cartesian product of key levels/values.
+}
+\examples{
+library(data.table)
+# Example 1: Valid lookup table
+valid_lt <- data.table(id = 1:3, category = factor(letters[1:2]), value = runif(6))
+setkeyv(valid_lt, c("id", "category")) # Set keys
+# Manually ensure it meets criteria for a real use case, e.g., all combinations present
+# For this example, let's assume it's structured correctly for its intended keys.
+# is_valid_lookup_tbl(valid_lt, keycols = c("id", "category"))
+# This would typically run if valid_lt had unique combinations of id & category
+# and id was consecutive, category levels were fully represented.
+
+# Example 2: Invalid lookup table (duplicate keys)
+invalid_lt_dup <- data.table(id = c(1, 1, 2), value = c(10, 20, 30))
+try(is_valid_lookup_tbl(invalid_lt_dup, keycols = "id"))
+
+# Example 3: Invalid lookup table (non-consecutive integer key)
+invalid_lt_gap <- data.table(id = c(1, 3, 4), value = c(10, 20, 30))
+setkey(invalid_lt_gap, id)
+# try(is_valid_lookup_tbl(invalid_lt_gap, keycols = "id")) # Will error due to gap
+
+}
+\keyword{internal}
+\keyword{utilities}
+\keyword{validation}

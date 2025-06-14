@@ -2,17 +2,13 @@
 % Please edit documentation in R/CKutils.R
 \docType{package}
 \name{CKutils}
-\alias{-package}
+\alias{CKutils-package}
 \alias{CKutils}
-\alias{.datatable.aware}
-\title{CKutils: A package with utility functions I use regularly.}
-\format{
-An object of class \code{logical} of length 1.
-}
-\usage{
-.datatable.aware
-}
+\title{CKutils}
 \description{
+CKutils: A package with utility functions I use regularly.
+}
+\details{
 This package contains some functions I use regularly when I develop simulation models.
 }
 \author{

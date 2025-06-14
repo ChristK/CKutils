@@ -2,3 +2,4 @@
 *.so
 *.dll
 symbols.rds
+src/*.o

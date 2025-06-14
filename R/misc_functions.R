@@ -405,17 +405,18 @@ pctl_rank <- function(
 }
 
 
-# TODO add documentation
 #' Stochastic prediction from a gamlss object
 #'
 #' `validate_gamlss` returns a data.table with the observed and predicted
-#'  variable. If  multiple predictions are drawn from the predicted
-#'  distributions. Useful for plotting with ggplot
-#'  @param dtb A data.table from which come the observed variables
-#'  @param gamlss_obj a gamlss object
-#'  @param mc by default =10L
-#'  @param orig_data initial data.table = \code{dtb}
-#'  @export
+#' variable. Multiple predictions are drawn from the predicted
+#' distributions. Useful for plotting with ggplot.
+#'
+#' @param dtb A data.table from which come the observed variables
+#' @param gamlss_obj A gamlss object
+#' @param mc Number of Monte Carlo simulations, by default 10L
+#' @param orig_data Initial data.table, defaults to \code{dtb}
+#' @return A data.table with observed and predicted variables
+#' @export
 validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
   if (!requireNamespace("gamlss", quietly = TRUE)) {
     stop("Please install package gamlss first.")
@@ -485,10 +486,10 @@ guess_gamlss <- function(
   dtu <- unique(dtb[, ..nam_var]) # otherwise too slow
   dtu <- split(dtu, dtu$year)
   if ("RevoUtilsMath" %in% (.packages())) {
-    tt <- getMKLthreads()
+    tt <- get("getMKLthreads", mode = "function")()
   }
   if ("RevoUtilsMath" %in% (.packages())) {
-    setMKLthreads(1L)
+    get("setMKLthreads", mode = "function")(1L)
   }
   dtu <- parallel::mclapply(
     dtu,
@@ -506,7 +507,7 @@ guess_gamlss <- function(
     mc.cores = nc
   )
   if ("RevoUtilsMath" %in% (.packages())) {
-    setMKLthreads(tt)
+    get("setMKLthreads", mode = "function")(tt)
   }
   dtu <- rbindlist(dtu)
   # dtu[, (nam_param) := gamlss::predictAll(gamlss_obj,
@@ -546,7 +547,8 @@ guess_gamlss <- function(
 #' library(matrixStats)
 #' library(data.table)
 #'
-#' # Assuming polr_model is a fitted polr object and dtb is your data.table with predictors and a column named, for example, 'rank_y'
+#' # Assuming polr_model is a fitted polr object and dtb is your data.table 
+#' # with predictors and a column named, for example, 'rank_y'
 #' guess_polr(dtb, polr_model)
 #' }
 guess_polr <- function(dtb, polr_obj) {
@@ -612,7 +614,7 @@ crossval_gamlss <- function(dtb, gamlss_obj, orig_data = dtb, colnam = "rank") {
   out$observed <- dtb[, get(nam_y)]
   z <- copy(dtb)
   z[,
-    (nam_param) := predictAll(
+    (nam_param) := gamlss::predictAll(
       gamlss_obj,
       type = "response",
       newdata = dtb[, .SD, .SDcols = nam_var],

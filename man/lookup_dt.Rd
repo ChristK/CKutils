@@ -9,7 +9,7 @@ lookup_dt(
   lookup_tbl,
   merge = TRUE,
   exclude_col = NULL,
-  check_lookup_tbl_validity = FALSE
+  check_lookup_tbl_validity = TRUE
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ lookup_dt(
 
 \item{exclude_col}{A character vector specifying column names to exclude from the lookup keys.}
 
-\item{check_lookup_tbl_validity}{Logical. If \code{TRUE}, validates the structure of \code{lookup_tbl}.}
+\item{check_lookup_tbl_validity}{Logical. If \code{TRUE} (default), validates the structure of \code{lookup_tbl}.}
 }
 \value{
 A data.table. When \code{merge = TRUE}, \code{tbl} is returned with additional lookup columns;
@@ -33,3 +33,92 @@ The lookup is conducted on key columns (which are factors or integers starting f
 unique combination to a corresponding index. The lookup values are then merged into the main table
 or returned separately based on the \code{merge} parameter.
 }
+\details{
+The \code{lookup_dt} function is designed for efficient data merging and lookup operations
+on \code{data.table} objects. It works by identifying common key columns between the main
+table (\code{tbl}) and the lookup table (\code{lookup_tbl}). These key columns should
+ideally be factors or integers representing categorical data or ordered sequences.
+
+The core logic involves mapping each unique combination of key values in \code{tbl}
+to a specific row index in \code{lookup_tbl}. This is achieved by calculating a
+unique integer index for each row in \code{tbl} based on the cardinalities (number of
+unique values) of the key columns. The \code{starts_from_1_cpp} function (a C++
+helper) is used to efficiently convert key column values into 1-based indices.
+
+If \code{merge = TRUE}, the values from the non-key columns in \code{lookup_tbl}
+(i.e., the lookup values) are added as new columns to \code{tbl}. If \code{merge = FALSE},
+only the selected lookup values corresponding to the rows in \code{tbl} are returned
+as a new \code{data.table}.
+
+The \code{exclude_col} parameter allows specific columns to be ignored during the
+key matching process, which can be useful if some common columns are not part of
+the intended join key.
+
+The \code{check_lookup_tbl_validity} parameter, when \code{TRUE}, invokes
+\code{is_valid_lookup_tbl} to ensure that \code{lookup_tbl} is structured correctly
+for the lookup (e.g., unique keys, consecutive integer values for non-factor keys).
+
+This function is particularly useful when dealing with large datasets where
+standard merge operations might be less performant or when a more controlled
+lookup based on pre-defined key structures is required.
+}
+\examples{
+library(data.table)
+# Example 1: Basic lookup and merge
+main_dt <- data.table(id = 1:5, category = factor(c("A", "B", "A", "C", "B")))
+lookup_values <- data.table(category = factor(c("A", "B", "C")),
+                            value = c(10, 20, 30))
+result_dt <- lookup_dt(main_dt, lookup_values, merge = TRUE)
+print(result_dt)
+# Returns main_dt with an added 'value' column:
+#    id category value
+# 1:  1        A    10
+# 2:  2        B    20
+# 3:  3        A    10
+# 4:  4        C    30
+# 5:  5        B    20
+
+# Example 2: Lookup without merging, returning only lookup results
+main_dt2 <- data.table(year = c(2020L, 2021L, 2020L),
+                       product_id = c(101L, 102L, 101L))
+price_lookup <- data.table(year = c(2020L, 2021L, 2020L, 2021L),
+                           product_id = c(101L, 102L, 102L, 101L),
+                           price = c(5.99, 8.50, 8, 6.75))
+# Ensure lookup_tbl has keys set for is_valid_lookup_tbl if used,
+# or for the main lookup_dt logic.
+setkeyv(price_lookup, c("year", "product_id"))
+prices_only <- lookup_dt(main_dt2, price_lookup, merge = FALSE)
+print(prices_only)
+# Returns a data.table with prices corresponding to main_dt2 rows:
+#    price
+# 1:  5.99
+# 2:  8.50
+# 3:  5.99
+
+# Example 3: Using exclude_col
+sales_data <- data.table(region = c("North", "South", "North"),
+                         item = factor(c("apple", "banana", "apple"),
+                                       levels = c("apple", "banana")),
+                         sales_rep_id = c(1, 2, 1))
+item_details <- data.table(item = factor(c("apple", "banana"), 
+                                         levels = c("apple", "banana")),
+                           category = c("fruit", "fruit"),
+                           supplier_id = c(10, 20),
+                           sales_rep_id = c(99, 99)) # This sales_rep_id should be ignored
+# We want to lookup 'category' and 'supplier_id' based on 'item' only.
+setkey(item_details, item) # Key for lookup
+sales_with_details <- lookup_dt(sales_data, item_details,
+                                exclude_col = "sales_rep_id", merge = TRUE)
+print(sales_with_details)
+#    region   item sales_rep_id category supplier_id
+# 1:  North  apple            1    fruit          10
+# 2:  South banana            2    fruit          20
+# 3:  North  apple            1    fruit          10
+
+}
+\seealso{
+\code{\link[data.table]{setkeyv}}, \code{\link{is_valid_lookup_tbl}}
+}
+\keyword{data}
+\keyword{manipulation}
+\keyword{utilities}

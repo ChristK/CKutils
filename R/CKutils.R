@@ -19,17 +19,21 @@
 #' CKutils: A package with utility functions I use regularly.
 #'
 #' This package contains some functions I use regularly when I develop simulation models.
-#
+#'
 #' @keywords internal
 #' @docType package
 #' @author Chris Kypridemos
+#' @rdname CKutils
 #' @name CKutils
+#' @title CKutils
+"_PACKAGE"
 
 #' @import data.table fst
 
 #' @importFrom methods as
 #' @importFrom graphics abline legend lines par plot title
-#' @importFrom stats density .checkMFClasses delete.response model.frame model.matrix plogis predict
+#' @importFrom stats density .checkMFClasses delete.response model.frame model.matrix plogis predict dt na.omit
+#' @importFrom utils available.packages changedFiles fileSnapshot head install.packages packageVersion tail
 
 ## usethis namespace: start
 #' @importFrom data.table :=
@@ -77,7 +81,7 @@
 # Prevent R CMD check from complaining about the use of pipe expressions
 # standard data.table variables
 if (getRversion() >= "2.15.1") {
-  utils::globalVariables(c(".", ".I", ".N", ".SD"), utils::packageName())
+  utils::globalVariables(c(".", ".I", ".N", ".SD", "type", "p", "..nam_var", "dt"), utils::packageName())
 }
 
 ## usethis namespace: end

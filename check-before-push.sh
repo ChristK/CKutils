@@ -12,22 +12,59 @@ if [ ! -f "DESCRIPTION" ]; then
     exit 1
 fi
 
-# Install the package
-echo "📦 Installing package..."
-R CMD INSTALL . --no-multiarch --with-keep.source
+# Clean up previous build artifacts
+echo "🧹 Cleaning up previous build artifacts..."
+rm -f CKutils_*.tar.gz
+rm -rf CKutils.Rcheck # R CMD check output directory with dot
+rm -rf ..Rcheck # R CMD check output directory if run from subdir or with .. prefix
 
-if [ $? -ne 0 ]; then
-    echo "❌ Package installation failed"
+# Get package name and version
+PKG_NAME=$(grep -E "^Package:" DESCRIPTION | awk '{print $2}')
+PKG_VERSION=$(grep -E "^Version:" DESCRIPTION | awk '{print $2}')
+TARBALL="${PKG_NAME}_${PKG_VERSION}.tar.gz"
+
+Rscript -e "roxygen2::roxygenise()"
+
+# Build the package
+echo "📦 Building package tarball..."
+R CMD build .
+
+if [ ! -f "$TARBALL" ]; then
+    echo "❌ Package build failed: $TARBALL not found"
     exit 1
 fi
+echo "✅ Package built: $TARBALL"
 
-# Run R CMD check
+# Install the package from the tarball (optional, but good for a full test)
 echo ""
-echo "🔍 Running R CMD check..."
-R CMD check . --no-manual --as-cran
+echo "📦 Installing package from tarball..."
+R CMD INSTALL "$TARBALL" --no-multiarch --with-keep.source
 
 if [ $? -ne 0 ]; then
-    echo "❌ R CMD check failed"
+    echo "❌ Package installation from tarball failed"
+    exit 1
+fi
+echo "✅ Package installed from tarball."
+
+
+# Run R CMD check on the tarball
+echo ""
+echo "🔍 Running R CMD check on $TARBALL..."
+R CMD check "$TARBALL" --no-manual --as-cran
+
+# R CMD check creates a directory named <packagename>.Rcheck
+CHECK_DIR="${PKG_NAME}.Rcheck"
+
+if [ ! -d "$CHECK_DIR" ] || ! grep -q "Status: OK" "${CHECK_DIR}/00check.log"; then
+    if [ -d "$CHECK_DIR" ]; then
+        WARNINGS=$(grep -c "WARNING" "${CHECK_DIR}/00check.log")
+        NOTES=$(grep -c "NOTE" "${CHECK_DIR}/00check.log")
+        echo "❌ R CMD check found ${WARNINGS} WARNING(s) and ${NOTES} NOTE(s)."
+        # Print details from the log
+        cat "${CHECK_DIR}/00check.log"
+    else
+        echo "❌ R CMD check failed to produce a check directory."
+    fi
     exit 1
 fi
 

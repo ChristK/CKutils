@@ -6,13 +6,20 @@
 \usage{
 validate_gamlss(dtb, gamlss_obj, mc = 10L, orig_data = dtb)
 }
+\arguments{
+\item{dtb}{A data.table from which come the observed variables}
+
+\item{gamlss_obj}{A gamlss object}
+
+\item{mc}{Number of Monte Carlo simulations, by default 10L}
+
+\item{orig_data}{Initial data.table, defaults to \code{dtb}}
+}
+\value{
+A data.table with observed and predicted variables
+}
 \description{
 `validate_gamlss` returns a data.table with the observed and predicted
- variable. If  multiple predictions are drawn from the predicted
- distributions. Useful for plotting with ggplot
- @param dtb A data.table from which come the observed variables
- @param gamlss_obj a gamlss object
- @param mc by default =10L
- @param orig_data initial data.table = \code{dtb}
- @export
+variable. Multiple predictions are drawn from the predicted
+distributions. Useful for plotting with ggplot.
 }
