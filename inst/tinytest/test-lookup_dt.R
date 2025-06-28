@@ -278,17 +278,17 @@ if (length(result24$grade) == length(expected_grades)) {
 # Test 25: Lookup with no matches in tbl for some rows (should produce NAs)
 tbl_some_nomatch2 <- data.table(id_key = c(1L, 2L, 1L, 3L),
                                factor_key = factor(c("X", "Y", "Y", "X")))
-result25 <- lookup_dt(copy(tbl_some_nomatch2), lt, merge = TRUE)
+expect_message(result25 <- lookup_dt(copy(tbl_some_nomatch2), lt, merge = TRUE))
 expect_identical(result25$lookup_val, c("1X", "2Y", "1Y", NA_character_),
                  info = "lookup_dt: NA for rows in tbl with no match in lookup_tbl (integer key out of range)")
 
 # Test 26: Empty tbl
 empty_tbl <- tbl_to_lookup[0, ]
-result26_merge_true <- lookup_dt(copy(empty_tbl), lt, merge = TRUE)
+expect_warning(result26_merge_true <- lookup_dt(copy(empty_tbl), lt, merge = TRUE))
 expect_identical(nrow(result26_merge_true), 0L, info = "lookup_dt (empty tbl, merge=T): 0 rows")
 expect_true("lookup_val" %in% names(result26_merge_true), info = "lookup_dt (empty tbl, merge=T): lookup col present")
 
-result26_merge_false <- lookup_dt(empty_tbl, lt, merge = FALSE)
+expect_warning(result26_merge_false <- lookup_dt(empty_tbl, lt, merge = FALSE))
 expect_identical(nrow(result26_merge_false), 0L, info = "lookup_dt (empty tbl, merge=F): 0 rows")
 expect_identical(names(result26_merge_false), "lookup_val", info = "lookup_dt (empty tbl, merge=F): lookup col present")
 
@@ -310,7 +310,7 @@ expect_error(lookup_dt(copy(tbl_for_empty_factor_lt), lt_factor_empty, merge = T
 # Test 29: Examples from documentation
 main_dt_ex1 <- data.table(id = 1:5, category = factor(c("A", "B", "A", "C", "B")))
 lookup_values_ex1 <- data.table(category = factor(c("A", "B", "C")), value = c(10, 20, 30))
-result_ex1 <- lookup_dt(copy(main_dt_ex1), lookup_values_ex1, merge = TRUE)
+expect_message(result_ex1 <- lookup_dt(copy(main_dt_ex1), lookup_values_ex1, merge = TRUE))
 expected_ex1 <- data.table(id = 1:5, category = factor(c("A", "B", "A", "C", "B")), value = c(10, 20, 10, 30, 20))
 expect_identical(result_ex1, expected_ex1, info = "lookup_dt: Example 1 from documentation")
 
@@ -339,4 +339,5 @@ expected_ex3 <- data.table(region = c("North", "South", "North"),
                            supplier_id = c(10, 20, 10))
 setcolorder(result_ex3, names(expected_ex3))
 expect_identical(result_ex3, expected_ex3, info = "lookup_dt: Example 3 (exclude_col) from documentation")
+
 

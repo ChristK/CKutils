@@ -53,5 +53,8 @@ jobs:
           print(cov)
           percent_coverage <- percent_coverage(cov)
           cat('Overall coverage:', percent_coverage, '%\n')
+          
+          # Upload to Codecov
+          codecov(coverage = cov)
           "
         shell: bash

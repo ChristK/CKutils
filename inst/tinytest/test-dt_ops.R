@@ -1,8 +1,37 @@
 # Comprehensive unit tests for dt_ops.R
 # Tests cover every function and code path in the file
 
+# Setup: Ensure data.table is available
+if (!requireNamespace("data.table", quietly = TRUE)) {
+  exit_file("data.table package not available")
+}
 library(data.table)
-library(CKutils)
+
+# Helper to load CKutils if not already loaded (for interactive testing)
+# This assumes the package is installed or can be loaded via devtools::load_all()
+if (isNamespaceLoaded("CKutils")) {
+  # If loaded, ensure functions are accessible
+  lookup_dt <- CKutils::lookup_dt
+  is_valid_lookup_tbl <- CKutils::is_valid_lookup_tbl
+  set_lookup_tbl_key <- CKutils::set_lookup_tbl_key
+} else {
+  # Attempt to load if in an interactive session or testing environment
+  # that might not have it fully loaded.
+  # This part might need adjustment based on how tests are run.
+  if (interactive() || Sys.getenv("R_TESTS") != "") {
+    if (requireNamespace("CKutils", quietly = TRUE)) {
+      lookup_dt <- CKutils::lookup_dt
+      is_valid_lookup_tbl <- CKutils::is_valid_lookup_tbl
+      set_lookup_tbl_key <- CKutils::set_lookup_tbl_key
+    } else {
+      # Fallback if CKutils is not installed/loaded - tests will likely fail
+      # or need to source the functions directly if run standalone.
+      # For R CMD check, functions are typically available.
+      warning("CKutils namespace not loaded. Tests might not find functions.")
+    }
+  }
+}
+
 
 # =============================================================================
 # Tests for clone_dt function

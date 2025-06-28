@@ -133,7 +133,7 @@ get_pcloud_path <- function(pathtail = character(0)) {
   }
 
   pcloud_path <-
-    normalizePath(paste0(pcloud_path, "/", pathtail), mustWork = FALSE)
+    normalizePath(paste0(pcloud_path, pathtail), mustWork = FALSE)
   return(pcloud_path)
 }
 
@@ -1239,6 +1239,8 @@ gnrt_folder_structure <- function(path = getwd()) {
     "RR" = file.path(fldr_strc$inputs$open_data, "RR"),
     "population" = file.path(fldr_strc$inputs$open_data, "population")
   )
+
+  NULL
 }
 
 # remotes::install_github("ChristK/CKutils", force = TRUE)

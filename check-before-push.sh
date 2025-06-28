@@ -17,6 +17,7 @@ echo "🧹 Cleaning up previous build artifacts..."
 rm -f CKutils_*.tar.gz
 rm -rf CKutils.Rcheck # R CMD check output directory with dot
 rm -rf ..Rcheck # R CMD check output directory if run from subdir or with .. prefix
+rm -f tests/test.R # Remove auto-generated test file
 
 # Get package name and version
 PKG_NAME=$(grep -E "^Package:" DESCRIPTION | awk '{print $2}')
@@ -104,6 +105,11 @@ fi
 echo ""
 echo "🎉 All checks passed! Ready to push to GitHub."
 echo ""
+
+# Clean up auto-generated files
+echo "🧹 Cleaning up auto-generated test files..."
+rm -f tests/test.R
+
 echo "GitHub Actions will run:"
 echo "  - R CMD check on Ubuntu, Windows, and macOS"
 echo "  - Full test suite with tinytest"
