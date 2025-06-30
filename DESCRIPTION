@@ -1,0 +1,40 @@
+Package: CKutils
+Type: Package
+Title: Some Utility Functions I Use Regularly
+Version: 0.1.7
+Date: 2025-06-29
+Author: Chris Kypridemos [aut, cre] (<https://orcid.org/0000-0002-0746-9229>),
+  Amandine Robert [ctb]
+Authors@R: c(
+    person("Chris", "Kypridemos", email = "christodoulosk@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0746-9229")),
+    person("Amandine", "Robert", email = "amandine.rob.26@gmail.com", role = "ctb"))
+Maintainer: Chris Kypridemos <christodoulosk@gmail.com>
+Description: Contains utility functions for developing simulation models. 
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    methods,
+    stats,
+    utils,
+    Rcpp,
+    remotes,
+    roxygen2,
+    fst,
+    data.table (>= 1.17.4)
+Suggests: 
+    spelling,
+    gamlss,
+    gamlss.dist,
+    jsonlite (>= 1.5),
+    MASS,
+    matrixStats,
+    reldist,
+    tinytest,
+    knitr
+LinkingTo: 
+    Rcpp,
+    data.table
+RoxygenNote: 7.3.2
+SystemRequirements: GNU make
+Language: en-GB

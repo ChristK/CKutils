@@ -1,0 +1,1247 @@
+## CKutils: an R package with some utility functions I use regularly
+## Copyright (C) 2025  Chris Kypridemos
+
+## CKutils is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3 of the License, or
+## (at your option) any later version.
+
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, see <http://www.gnu.org/licenses/>
+## or write to the Free Software Foundation, Inc., 51 Franklin Street,
+## Fifth Floor, Boston, MA 02110-1301  USA.
+
+.onUnload <- function(libpath) {
+  library.dynam.unload("CKutils", libpath)
+}
+
+#' Get Dropbox path
+#'
+#' `get_dropbox_path` returns the path of Dropbox. Works for both personal and business accounts
+#'
+#' This is an auxilliary function: It finds the Dropbox path in Windows, Linux, and OSX operating systems.
+#'
+#' @param pathtail A String vector (if not a string then it is converted to String).
+#'    If present, it gets concatenated with the Dropbox path.
+#'    See examples.
+#' @param type A String scalar ("personal" or "business"). Which Dropbox path to return? The personal or the business one? It may be abbreviated.
+#' @return Dropbox path as a String. If pathtail is present, it concatenates the Dropbox path with pathtail.
+#' @export
+#' @examples
+#' \dontrun{
+#' # Only work if Dropbox is installed.
+#' get_dropbox_path() # Returns personal Dropbox path
+#' get_dropbox_path(type = "business") # Returns business Dropbox path
+#' get_dropbox_path("pathdownthetree") # Returns "Dropbox_path/pathdownthetree",
+#'  # where Dropbox_path is the path to personal Dropbox
+#' }
+get_dropbox_path <-
+  function(pathtail = character(0), type = c("personal", "business")) {
+    if (!requireNamespace("jsonlite", quietly = TRUE)) {
+      stop("Please install package jsonlite first.")
+    }
+    type <- match.arg(type)
+    if (type[[1]] == "personal") {
+      if (.Platform$OS.type == "windows") {
+        if (file.exists(paste0(Sys.getenv("APPDATA"), "/Dropbox/info.json"))) {
+          # for older versions of Dropbox
+          dropbox_path <-
+            jsonlite::read_json(paste0(
+              Sys.getenv("APPDATA"),
+              "/Dropbox/info.json"
+            ))$personal$path
+        }
+        if (
+          file.exists(paste0(Sys.getenv("LOCALAPPDATA"), "/Dropbox/info.json"))
+        ) {
+          dropbox_path <-
+            jsonlite::read_json(paste0(
+              Sys.getenv("LOCALAPPDATA"),
+              "/Dropbox/info.json"
+            ))$personal$path
+        }
+      } else {
+        if (file.exists("~/.dropbox/info.json")) {
+          dropbox_path <-
+            jsonlite::read_json("~/.dropbox/info.json")$personal$path
+        }
+      }
+    }
+    if (type[[1]] == "business") {
+      if (.Platform$OS.type == "windows") {
+        if (file.exists(paste0(Sys.getenv("APPDATA"), "/Dropbox/info.json"))) {
+          # for older versions of Dropbox
+          dropbox_path <-
+            jsonlite::read_json(paste0(
+              Sys.getenv("APPDATA"),
+              "/Dropbox/info.json"
+            ))$business$path
+        }
+        if (
+          file.exists(paste0(Sys.getenv("LOCALAPPDATA"), "/Dropbox/info.json"))
+        ) {
+          dropbox_path <-
+            jsonlite::read_json(paste0(
+              Sys.getenv("LOCALAPPDATA"),
+              "/Dropbox/info.json"
+            ))$business$path
+        }
+      } else {
+        if (file.exists("~/.dropbox/info.json")) {
+          dropbox_path <-
+            jsonlite::read_json("~/.dropbox/info.json")$business$path
+        }
+      }
+    }
+    if (is.null(dropbox_path)) {
+      stop("Dropbox path cannot be located.")
+    }
+    dropbox_path <-
+      normalizePath(paste0(dropbox_path, "/", pathtail), mustWork = FALSE)
+    return(dropbox_path)
+  }
+
+
+#' Get pCloud path
+#'
+#' `get_pcloud_path` returns the path of pCloud
+#'
+#' This is an auxilliary function: It finds the pCloud path in Windows, Linux, and OSX operating systems.
+#'
+#' @param pathtail A String vector (if not a string then it is converted to String).
+#'    If present, it gets concatenated with the pCloud path.
+#'    See examples.
+#' @return pCloud path as a String. If pathtail is present, it concatenates the Dropbox path with pathtail.
+#' @export
+#' @examples
+#' \dontrun{
+#' # Only work if Dropbox is installed.
+#' get_pcloud_path() # Returns pCloud path
+#' get_pcloud_path("pathdownthetree") # Returns "pcloud_path_path/pathdownthetree",
+#' # where pcloud_path is the path to pCloud
+#' }
+get_pcloud_path <- function(pathtail = character(0)) {
+  if (.Platform$OS.type == "windows") {
+    pcloud_path <- "p:\\"
+  } else {
+    pcloud_path <- "~/pCloudDrive/"
+  }
+
+  pcloud_path <-
+    normalizePath(paste0(pcloud_path, pathtail), mustWork = FALSE)
+  return(pcloud_path)
+}
+
+
+#' Generate names for age-group bands
+#'
+#' `agegrp_name` generates names for age-group bands given lower and upper
+#'   age limits, and band width
+#'
+#'
+#' @param min_age A non-negative integer. The lower age limit for which
+#'   names will be generated.
+#' @param max_age A non-negative integer. The upper age limit for which
+#'   names will be generated.
+#' @param grp_width A positive integer. The band width of the age-groups.
+#' @param grp_lessthan_1 A logical scalar. if \code{TRUE} and
+#'  \code{min_age == 0}, then the first age-group name is "<1".
+#' @param match_input A logical scalar. If \code{TRUE}, then the names
+#'  are repeated to match every single year of age between \code{min_age}
+#'  and \code{match_input_max_age}.
+#' @param match_input_max_age a non-negative integer. See above.
+#' @return A character vector of with the names for the age-groups.
+#' @export
+#' @examples
+#' agegrp_name(20, 79, 5)
+#' agegrp_name(20, 80, 5)
+#' agegrp_name(0, 80, 10, TRUE)
+#' agegrp_name(20, 30, 5, FALSE, TRUE)
+#' agegrp_name(20, 30, 5, FALSE, TRUE)
+#' agegrp_name(20, 30, 5, FALSE, TRUE, 32)
+agegrp_name <-
+  function(
+    min_age = 0L,
+    max_age = 85L,
+    grp_width = 5L,
+    grp_lessthan_1 = TRUE,
+    match_input = FALSE,
+    match_input_max_age = max_age
+  ) {
+    stopifnot(
+      min_age >= 0,
+      max_age > 0,
+      grp_width >= 1,
+      max_age > min_age,
+      match_input_max_age >= max_age
+    )
+    if (grp_width > 1) {
+      x <- seq(min_age, max_age + 1L, grp_width)
+      y <- shift(x, type = "lead") - 1L
+      out <- paste0(sprintf("%02.0f", x), "-", sprintf("%02.0f", y))
+      if ((tail(x, 1) - 1L) != max_age) {
+        out[length(out)] <- paste0(x[length(x)], "+")
+      } else {
+        out <- head(out, length(out) - 1L)
+      }
+      if (grp_lessthan_1 && min_age == 0) {
+        out <- c("<1", out)
+        out[2] <- paste0("01", "-", sprintf("%02.0f", y[1]))
+      }
+
+      if (grp_lessthan_1 && min_age == 0) {
+        if (match_input && ((tail(x, 1) - 1L) != max_age)) {
+          out <- c(
+            rep(out[2:((length(out) - 1L))], each = grp_width),
+            rep(out[length(out)], match_input_max_age - tail(x, 1) + 1L)
+          )
+          out[1] <- "<1"
+        }
+        if (match_input && ((tail(x, 1) - 1L) == max_age)) {
+          out <- rep(out[2:length(out)], each = grp_width)
+          out[1] <- "<1"
+        }
+      } else {
+        if (match_input && ((tail(x, 1) - 1L) != max_age)) {
+          out <- c(
+            rep(out[1:((length(out) - 1L))], each = grp_width),
+            rep(out[length(out)], match_input_max_age - tail(x, 1) + 1L)
+          )
+        }
+        if (match_input && ((tail(x, 1) - 1L) == max_age)) {
+          out <- rep(out, each = grp_width)
+        }
+      }
+    } else {
+      out <- paste0(sprintf("%02.0f", seq(min_age, max_age, grp_width)))
+    }
+    return(out)
+  }
+
+
+#' Replace multiple values in a data.table column
+#'
+#' `replace_from_table` replace multiple values in a data.table column.
+#'  . The values in \code{from} argument are matched
+#'    and replaced by those in \code{to} argument.
+#'    If \code{newcolname = NULL} the replace is by reference.
+#'
+#' @param dtb A data.table to be changed by reference.
+#' @param colname A string denoting the name of the column to be changed.
+#' @param from A vector with values in \code{colname} to be replaced.
+#' @param to A vector with values in \code{colname} to be replaced.
+#' @param newcolname A string denoting the name of a new column
+#'    to be created. If present, \code{colname} is not altered.
+#'    If \code{newcolname = NULL}, \code{colname} is altered by reference
+#' @return a data.table, invisibly.
+#' @export
+#' @examples
+#' library(data.table)
+#' library(CKutils)
+#' dtb <- data.table::data.table("a" = 1:5, "b" = seq(1, 2.2, 0.3),
+#'  "d" = letters[1:5])
+#' dtb[, e := factor(a, labels = LETTERS[1:5])]
+#' replace_from_table(data.table::copy(dtb), "a", 1:3, 3L)[]
+#' replace_from_table(data.table::copy(dtb), "a", 3L, -11L)[]
+#' replace_from_table(data.table::copy(dtb), "a", 3L, -11L, "newcol")[]
+#' replace_from_table(data.table::copy(dtb), "b", 1.3, "a")[]
+#' replace_from_table(data.table::copy(dtb), "b", 1.3, "a", "newcol")[]
+#' replace_from_table(data.table::copy(dtb), "d", "a", "7")[]
+#' replace_from_table(data.table::copy(dtb), "d", "a", 7)[]
+#' replace_from_table(data.table::copy(dtb), "e", "B", "J")[]
+replace_from_table <-
+  function(dtb, colname, from, to, newcolname = NULL) {
+    old_ <- i.new_ <- NULL
+    stopifnot(is.data.table(dtb))
+    stopifnot(length(colname) == 1L)
+    stopifnot(is.null(newcolname) | length(newcolname) == 1L)
+    stopifnot(colname %in% names(dtb))
+    stopifnot(length(from) >= length(to))
+    # stopifnot(class(from) == dtb[, class(get(colname))]) # not working for factors
+    if (!is.null(newcolname) && newcolname %in% names(dtb)) {
+      stop(
+        "The new column name already exists in the data.table."
+      )
+    }
+    if (length(from) > length(to)) {
+      message("Note: matched many to few.")
+    }
+
+    colorder <- copy(names(dtb))
+    if (class(from) == class(to)) {
+      reg <- data.table("old_" = from, "new_" = to)
+      dtb[, "old_" := get(colname)]
+      dtb[reg, on = "old_", old_ := i.new_]
+      if (is.null(newcolname)) {
+        dtb[, (colname) := NULL]
+        setnames(dtb, "old_", colname)
+        setcolorder(dtb, colorder)
+      } else {
+        setnames(dtb, "old_", newcolname)
+      }
+    } else {
+      reg <- data.table("old_" = as(from, class(to)), "new_" = to)
+      dtb[, "old_" := as(get(colname), class(to))]
+      dtb[reg, on = "old_", old_ := i.new_]
+      if (is.null(newcolname)) {
+        message(paste0(
+          colname,
+          " coerced to ",
+          class(to),
+          " to match target class."
+        ))
+        dtb[, (colname) := NULL]
+        setnames(dtb, "old_", colname)
+        setcolorder(dtb, colorder)
+      } else {
+        setnames(dtb, "old_", newcolname)
+      }
+    }
+    return(invisible(dtb))
+  }
+
+
+#' Generate age-group from age
+#'
+#' `to_agegrp` creates a new column
+#'
+#' @param dtb A data.table with a column named \code{age}.
+#' @param grp_width The group width for the age groups.
+#' @param max_age The max age for the closed age groups. For ages above the max age,
+#'  an open age group will be created, named max_age+ (i.e. 85+).
+#' @param age_colname A string denoting the age column in \code{dtb}.
+#' @param agegrp_colname A string denoting the name of the column that will be
+#'   created for age groups.
+#' @param to_factor A logical. If \code{TRUE}, then the age-groups
+#'   column is converted to factor.
+#' @param min_age The minimum age for the age group. If `NULL` the minimum will be considered the that that is not more than the minimum age in the data that can be divided with grp_width
+#' @return a data.table, invisibly.
+#' @export
+#' @examples
+#' library(data.table)
+#' library(CKutils)
+#' to_agegrp(data.table(age = 0:99))[]
+#' to_agegrp(data.table(age = 0:99), max_age = 80L)[]
+#' to_agegrp(data.table(age = 0:99), grp_width = 10, max_age = 85)[]
+to_agegrp <-
+  function(
+    dtb,
+    grp_width = 5L,
+    max_age = 85L,
+    age_colname = "age",
+    agegrp_colname = "agegrp",
+    to_factor = TRUE,
+    min_age = NULL
+  ) {
+    stopifnot(
+      is.data.table(dtb),
+      age_colname %in% names(dtb),
+      length(age_colname) == 1L,
+      length(agegrp_colname) == 1L,
+      is.logical(to_factor)
+    )
+    max_age <-
+      ifelse(is.null(max_age), max(dtb[[age_colname]]), max_age)
+    lage <- min(dtb[[age_colname]])
+    min_age <-
+      ifelse(is.null(min_age), lage - lage %% grp_width, min_age)
+    # Include all ages in the data, and ensure we cover at least up to max_age
+    actual_max_age <- max(dtb[[age_colname]])
+    effective_max_age <- max(actual_max_age, max_age)
+    age_vec <- min_age:effective_max_age
+    agegroups <- agegrp_name(
+      min_age = min_age,
+      max_age,
+      grp_width = grp_width,
+      match_input = TRUE,
+      match_input_max_age = effective_max_age
+    )
+
+    replace_from_table(
+      dtb,
+      colname = age_colname,
+      from = age_vec,
+      to = agegroups,
+      newcolname = agegrp_colname
+    )
+    # TODO better support of replace_from_table so I can convert agegroups vector
+    # to factor, I.e. if (to_factor) agegroups <- factor(agegroups)
+    if (to_factor) {
+      dtb[, `:=`(
+        (agegrp_colname),
+        factor(get(agegrp_colname), sort(unique(agegroups)))
+      )]
+    }
+    return(invisible(dtb))
+  }
+
+
+#' Calculate percentile rank
+#'
+#' `pctl_rank` calculates the percentile rank of a numeric vector
+#' @param x A numeric vector to rank
+#' @param ties.method A character string specifying how ties are treated
+#' @export
+#' @return The percentile rank of the \code{`x`} vector calculated according to the ties.method choosen
+#' @examples
+#' library(data.table)
+#' library(CKutils)
+#' x = c(2,5,1,3,4,6)
+#' pctl_rank(x, ties.method="min") # min assigns every tied element to the lowest rank
+pctl_rank <- function(
+  x,
+  ties.method = c("average", "first", "random", "max", "min", "dense")
+) {
+  stopifnot(is.numeric(x))
+  ties.method <- match.arg(ties.method)
+  n <- length(x)
+  out <- (frank(x, na.last = F, ties.method = ties.method) - 1) / (n - 1)
+  return(out)
+}
+
+
+#' Stochastic prediction from a gamlss object
+#'
+#' `validate_gamlss` returns a data.table with the observed and predicted
+#' variable. Multiple predictions are drawn from the predicted
+#' distributions. Useful for plotting with ggplot.
+#'
+#' @param dtb A data.table from which come the observed variables
+#' @param gamlss_obj A gamlss object
+#' @param mc Number of Monte Carlo simulations, by default 10L
+#' @param orig_data Initial data.table, defaults to \code{dtb}
+#' @return A data.table with observed and predicted variables
+#' @export
+validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
+  if (!requireNamespace("gamlss", quietly = TRUE)) {
+    stop("Please install package gamlss first.")
+  }
+  stopifnot(
+    "gamlss" %in% class(gamlss_obj),
+    is.data.table(dtb),
+    mc >= 1,
+    is.data.table(orig_data)
+  )
+  nam_y <- as.character(gamlss_obj$call$formula[[2]])
+  nam_var <- all.vars(gamlss_obj$call$formula[[3]])
+  nam_dist <- paste0("r", gamlss_obj$family[[1]])
+  nam_param <- gamlss_obj$parameters
+  x <- copy(dtb)
+  x[, type := "Observed"]
+  z <- copy(dtb)
+  z[,
+    (nam_param) := gamlss::predictAll(
+      gamlss_obj,
+      type = "response",
+      newdata = dtb[, .SD, .SDcols = nam_var],
+      data = orig_data[, .SD, .SDcols = c(nam_var)]
+    )
+  ]
+  z[, type := "Modelled"]
+  z <- rbindlist(rep(list(z), mc))
+  z[, (nam_y) := do.call(nam_dist, c(.N, .SD)), , .SDcols = nam_param]
+  out <- rbind(x, z, use.names = TRUE, fill = TRUE)
+  out[, (nam_param) := NULL]
+}
+
+# TODO add documentation
+# If I name the function predict_gamlss CKutils:: is necessary when I
+# call the function.
+#' Prediction from a gamlss object in parallel
+#'
+#' `guess_gamlss` returns a data.table with the predicted
+#'  variable. `dtb` needs to have a column with percentiles named `rank_y`,
+#'  where `y` the name of the predicted variable (i.e. bmi).
+#' @param dtb A data.table
+#' @param gamlss_obj gamlss object
+#' @param orig_data original data.table
+#' @param nc by default = 1L
+#' @export
+guess_gamlss <- function(
+  dtb,
+  gamlss_obj,
+  orig_data = gamlss_obj$data,
+  nc = 1L
+) {
+  if (!requireNamespace("gamlss", quietly = TRUE)) {
+    stop("Please install package gamlss first.")
+  }
+  stopifnot(
+    "gamlss" %in% class(gamlss_obj),
+    is.data.table(dtb),
+    nc >= 1L,
+    is.data.table(orig_data)
+  )
+  nam_y <- as.character(gamlss_obj$call$formula[[2]])
+  nam_var <- all.vars(gamlss_obj$call$formula[[3]])
+  nam_dist <- paste0("q", gamlss_obj$family[[1]])
+  nam_param <- gamlss_obj$parameters
+
+  orig_data <- orig_data[, ..nam_var]
+  dtu <- unique(dtb[, ..nam_var]) # otherwise too slow
+  dtu <- split(dtu, dtu$year)
+  if ("RevoUtilsMath" %in% (.packages())) {
+    tt <- get("getMKLthreads", mode = "function")()
+  }
+  if ("RevoUtilsMath" %in% (.packages())) {
+    get("setMKLthreads", mode = "function")(1L)
+  }
+  dtu <- parallel::mclapply(
+    dtu,
+    function(x) {
+      x[,
+        (nam_param) := gamlss::predictAll(
+          gamlss_obj,
+          type = "response",
+          newdata = .SD,
+          data = orig_data
+        )
+      ]
+    },
+    mc.preschedule = FALSE,
+    mc.cores = nc
+  )
+  if ("RevoUtilsMath" %in% (.packages())) {
+    get("setMKLthreads", mode = "function")(tt)
+  }
+  dtu <- rbindlist(dtu)
+  # dtu[, (nam_param) := gamlss::predictAll(gamlss_obj,
+  #                                        type = "response",
+  #                                        newdata = .SD,
+  #                                        data = orig_data)]
+  dtb[dtu, on = nam_var, (nam_param) := mget(paste0("i.", nam_param))]
+  dtb[, p := get(paste0("rank_", nam_y))]
+  stopifnot(dt[, all(between(p, 0, 1, incbounds = FALSE))])
+  dtb[, (nam_y) := do.call(nam_dist, .SD), .SDcols = c("p", nam_param)]
+  dtb[, c("p", nam_param) := NULL]
+}
+
+
+#' Predict ordinal outcomes from a polr model
+#'
+#' This function generates predictions from a polr (proportional odds logistic regression) model for ordinal data.
+#' It computes the linear predictor from the input data.table using the model matrix of the provided polr object,
+#' applies the logistic transformation to the model thresholds, and determines the predicted category as the sum of
+#' thresholds that are less than a reference value. The predicted ordinal outcome replaces the original outcome column
+#' in the data.table.
+#'
+#' @param dtb A data.table containing the predictor variables used for prediction and a column with a name
+#' corresponding to the outcome variable prefixed with 'rank_'.
+#' @param polr_obj An object of class \code{polr} from the MASS package representing the fitted ordinal regression model.
+#'
+#' @return The function modifies the input data.table \code{dtb} in place by replacing the outcome column with the predicted
+#' ordinal category. It returns \code{NULL} invisibly.
+#'
+#' @details This function requires the \code{MASS} and \code{matrixStats} packages.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(MASS)
+#' library(matrixStats)
+#' library(data.table)
+#'
+#' # Assuming polr_model is a fitted polr object and dtb is your data.table 
+#' # with predictors and a column named, for example, 'rank_y'
+#' guess_polr(dtb, polr_model)
+#' }
+guess_polr <- function(dtb, polr_obj) {
+  if (!requireNamespace("MASS", quietly = TRUE)) {
+    stop("Please install package MASS first.")
+  }
+  if (!requireNamespace("matrixStats", quietly = TRUE)) {
+    stop("Please install package matrixStats first.")
+  }
+  stopifnot("polr" %in% class(polr_obj), is.data.table(dtb))
+  nam_y <- as.character(polr_obj$call$formula[[2]])
+  nam_var <- all.vars(polr_obj$call$formula[[3]])
+  #code adapted from method getAnywhere(predict.polr)
+  Terms <- delete.response(polr_obj$terms)
+  m <- model.frame(
+    Terms,
+    dtb[, ..nam_var],
+    na.action = function(x) x,
+    xlev = polr_obj$xlevels
+  )
+  if (!is.null(cl <- attr(Terms, "dataClasses"))) {
+    .checkMFClasses(cl, m)
+  }
+  X <- model.matrix(Terms, m, contrasts = polr_obj$contrasts)
+  xint <- match("(Intercept)", colnames(X), nomatch = 0L)
+  if (xint > 0L) {
+    X <- X[, -xint, drop = FALSE]
+  }
+  n <- nrow(X)
+  q <- length(polr_obj$zeta)
+  eta <- drop(X %*% polr_obj$coefficients)
+  cc <- plogis(
+    matrix(polr_obj$zeta, n, q, byrow = TRUE) -
+      eta
+  )
+  dtb[, p := get(paste0("rank_", nam_y))]
+  dtb[, (nam_y) := matrixStats::rowSums2(cc < p)]
+  dtb[, "p" := NULL]
+}
+
+
+# TODO add documentation
+#' Deterministic prediction from a gamlss object
+#'
+#' `crossval_gamlss` returns the observed and predicted values of the dependent
+#'  variable. Useful for cross-validation metrics.
+#' @param dtb A data. table
+#' @param gamlss_obj a gamlss object
+#' @param orig_data original data.table
+#' @param colnam column names
+#' @export
+crossval_gamlss <- function(dtb, gamlss_obj, orig_data = dtb, colnam = "rank") {
+  stopifnot(
+    "gamlss" %in% class(gamlss_obj),
+    is.data.table(dtb),
+    is.data.table(orig_data)
+  )
+  out <- list()
+  nam_y <- as.character(gamlss_obj$call$formula[[2]])
+  nam_var <- all.vars(gamlss_obj$call$formula[[3]])
+  nam_dist <- paste0("q", gamlss_obj$family[[1]])
+  nam_param <- gamlss_obj$parameters
+  out$observed <- dtb[, get(nam_y)]
+  z <- copy(dtb)
+  z[,
+    (nam_param) := gamlss::predictAll(
+      gamlss_obj,
+      type = "response",
+      newdata = dtb[, .SD, .SDcols = nam_var],
+      data = orig_data[, .SD, .SDcols = c(nam_y, nam_var)]
+    )
+  ]
+  setnames(z, colnam, "p")
+  z[p == 0, p := 0.0001]
+  z[p == 1, p := 0.9999]
+  z[, (nam_y) := do.call(nam_dist, .SD), .SDcols = c("p", nam_param)]
+  out$predicted <- z[, get(nam_y)]
+  return(out)
+}
+
+#' Generate Counts of Values in a Vector
+#'
+#' This function uses Rcpp sugar to implement a fast \code{table}, for
+#' unique counts of a single vector. This implementation seeks to
+#' produce identical output to \code{table(x, useNA="ifany")}. It is borrowed
+#' from \code{Kmisc} package for convenience, since \code{Kmisc} is not in CRAN
+#'  anymore. \code{Kmisc} is available at https://github.com/kevinushey/Kmisc
+
+#'
+#' The order of \code{NA}, \code{NaN} in the output may differ -- even
+#' \R is inconsistent with the order that \code{NA} and \code{NaN} elements
+#' are inserted.
+#'
+#' @param x A numeric, integer, character or logical vector, or a (potentially
+#'   nested) list of such vectors. If \code{x} is a list, we recursively apply
+#'   \code{counts} throughout elements in the list.
+#' @export
+#' @examples
+#' x <- round( rnorm(1E2), 1 )
+#' counts(x)
+counts <- function(x) {
+  if (is.list(x)) {
+    output <- rapply(x, counts, how = "list")
+    return(output)
+  } else {
+    return(.Call("_CKutils_counts", x))
+  }
+}
+
+
+#' Obtain matching names corresponding to patterns
+#'
+#' `match_colnames_pattern` returns the matching names of the argument `dtb`
+#' (i.e. \code{names(dtb)}) corresponding to the regular expression patterns
+#' provided. The patterns must be supported by \code{\link{grep}}.
+#' This is based on `data.table:::patterns`
+#' @param dtb A data.table from which the column names \code{names(dtb)} or \code{colnames(dtb)} will be tested
+#' @param ... A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops
+#' @export
+#' @examples
+#' library(data.table)
+#' library(CKutils)
+#' dtb <- data.table(id = c("city", "year", "birth", "idp"), b = c("age", "year", "bp", "name"))
+#' z <- list("id", "year", "b")
+#' match_colnames_pattern(dtb, z) #[1] "id" "b"
+match_colnames_pattern <- function(dtb, ...) {
+  p = unlist(list(...), use.names = FALSE)
+  if (!is.character(p)) {
+    stop("Input patterns must be of type character.")
+  }
+  cols = names(dtb)
+  cols[unlist(sapply(p, grep, cols))]
+}
+
+# TODO add documentation
+#' Compare two distributions
+#'
+#' `reldist_diagnostics` Summary statistics for the location/shape decomposition of the relative
+#' distribution of the exposure: Modelled to Observed."
+#' @param comparison A comparison
+#' @param reference a reference
+#' @param comparison_wt a comparison
+#' @param reference_wt a reference
+#' @param main the main part
+#' @param smooth smooth object
+#' @param discrete discrete value
+#' @export
+reldist_diagnostics <- function(
+  comparison,
+  reference,
+  comparison_wt,
+  reference_wt,
+  main,
+  smooth = 0.35,
+  discrete = FALSE
+) {
+  opar <- par(no.readonly = TRUE)
+  on.exit(par(opar))
+  if (!requireNamespace("reldist", quietly = TRUE)) {
+    stop(
+      "Package \"reldist\" needed for this function to work. Please install it.",
+      call. = FALSE
+    )
+  }
+
+  reference_dens <- density(reference, weights = reference_wt)
+  comparison_dens <- density(comparison, weights = comparison_wt)
+
+  par(mfrow = c(2, 2))
+  plot(
+    reference_dens,
+    main = main,
+    lty = 3,
+    ylim = c(
+      0,
+      1.1 *
+        max(c(
+          reference_dens$y,
+          comparison_dens$y
+        ))
+    )
+  )
+  lines(comparison_dens, col = "red", lty = 2)
+  legend(
+    "topright",
+    bg = "transparent",
+    legend = c("Comparison", "Reference"),
+    box.lty = 0,
+    col = c("red", "black"),
+    lty = 2:3,
+    cex = 0.8
+  )
+  g10 <- reldist::reldist(
+    y = comparison,
+    yo = reference,
+    smooth = smooth,
+    ci = TRUE,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    #ylim=c(0,1.5),
+    #yolabs=seq(-1,3,by=0.5),
+    bar = "yes",
+    quiet = FALSE,
+    discrete = discrete,
+    xlab = "proportion of the reference cohort"
+  )
+  title(main = "Overall relative density", cex = 0.6)
+  abline(h = 1, lty = 2)
+  g1A <- reldist::reldist(
+    y = comparison,
+    yo = reference,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    show = "effect",
+    bar = "yes",
+    quiet = FALSE,
+    smooth = smooth,
+    ci = TRUE,
+    discrete = discrete,
+    #ylim=c(0,1.5),
+    #yolabs=seq(-1,3,by=0.5),
+    xlab = "proportion of the reference cohort"
+  )
+  title(main = "Effect of the median shift", cex = 0.6)
+  abline(h = 1, lty = 2)
+  gA0 <- reldist::reldist(
+    y = comparison,
+    yo = reference,
+    smooth = smooth,
+    ci = TRUE,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    show = "residual",
+    bar = "yes",
+    quiet = FALSE,
+    discrete = discrete,
+    #ylim=c(0,1.5),
+    #yolabs=seq(-1,3,by=0.5),
+    xlab = "proportion of the reference cohort"
+  )
+  title(main = "Median-adjusted relative density", cex = 0.6)
+  abline(h = 1, lty = 2)
+
+  a1 <- reldist::rpy(
+    y = comparison,
+    yo = reference,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    pvalue = TRUE
+  )
+  a2 <- reldist::rpluy(
+    y = comparison,
+    yo = reference,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    pvalue = TRUE
+  )
+  a3 <- reldist::rpluy(
+    y = comparison,
+    yo = reference,
+    ywgt = comparison_wt,
+    yowgt = reference_wt,
+    pvalue = TRUE,
+    upper = TRUE
+  )
+  # p1 <- ifelse(a1[[4]]<0.001, "<0.001", format(a1[[4]], digits = 3))
+  # p2 <- ifelse(a2[[4]]<0.001, "<0.001", format(a2[[4]], digits = 3))
+  # p3 <- ifelse(a3[[4]]<0.001, "<0.001", format(a3[[4]], digits = 3))
+
+  out <- data.table(
+    "Summary statistics" = c(
+      "Overall change entropy",
+      "Median effect entropy",
+      "Shape effect entropy",
+      "Median polarization index",
+      "Lower polarization index",
+      "Upper polarization index"
+    ),
+    "Measure" = c(
+      g10$entropy,
+      reldist::entropy(g1A, g10),
+      gA0$entropy,
+      a1[[2]],
+      a2[[2]],
+      a3[[2]]
+    ),
+    "Lower 95% CI" = c(NA, NA, NA, a1[[1]], a2[[1]], a3[[1]]),
+    "Upper 95% CI" = c(NA, NA, NA, a1[[3]], a2[[3]], a3[[3]]),
+    "p-value" = c(NA, NA, NA, a1[[4]], a2[[4]], a3[[4]])
+  )
+  return(out[])
+}
+
+
+#' Simplified loading and installing of packages
+#'
+#' This is a wrapper to \code{\link{require}} and \code{\link{install.packages}}.
+#' Specifically, this will first try to load the package(s) and if not found
+#' it will install then load and attach the packages. Additionally, if the
+#' \code{update=TRUE} parameter is specified it will check the currently
+#' installed package version with what is available on CRAN (or mirror) and
+#' install the newer version.
+#'
+#' The function was originally created by Jason Bryer
+#' \href{https://www.r-bloggers.com/2014/02/function-to-simplify-loading-and-installing-packages/}{here}
+#' and the source is available \href{https://gist.github.com/jbryer/9112634}{here}.
+#' Note: I renamed the function to \code{dependencies} and adapted it to attach
+#' instead of only load the packages.
+#'
+#' @param pkges a character vector with the names of the packages to load.
+#' @param install if TRUE (default), any packages not already installed will be.
+#' @param update if TRUE, this function will install a newer version of the
+#'        package if available.
+#' @param quiet if TRUE (default), package startup messages will be suppressed.
+#' @param verbose if TRUE (default), diagnostic messages will be printed.
+#' @param ... other parameters passed to \code{\link{require}},
+#'            \code{\link{install.packages}}, and
+#'            \code{\link{available.packages}}.
+#' @return a data frame with four columns and rownames corresponding to the
+#'         packages to be loaded. The four columns are: loaded (logical
+#'         indicating whether the package was successfully loaded), installed
+#'         (logical indicating that the package was installed or updated),
+#'         loaded.version (the version string of the installed package), and
+#'         available.version (the version string of the package currently
+#'         available on CRAN). Note that this only reflects packages listed in
+#'         the \code{pkges} parameter. Other packages may be loaded and/or
+#'         installed as necessary by \code{install.packages} and \code{require}.
+#'         If \code{verbose=FALSE} the data frame will be returned using
+#'         \code{\link{invisible}}.
+#' @export
+#' @examples
+#' \dontrun{
+#' dependencies(c('devtools','lattice','ggplot2','psych'))
+#' }
+dependencies <-
+  function(
+    pkges,
+    install = TRUE,
+    update = FALSE,
+    quiet = TRUE,
+    verbose = FALSE,
+    ...
+  ) {
+    myrequire <- function(package, ...) {
+      result <- FALSE
+      if (quiet) {
+        suppressMessages(suppressWarnings(
+          result <- requireNamespace(package, ...)
+        ))
+      } else {
+        result <- suppressWarnings(requireNamespace(package, ...))
+      }
+      return(result)
+    }
+    mymessage <- function(msg) {
+      if (verbose) {
+        message(msg)
+      }
+    }
+
+    installedpkgs <- installed.packages()
+    availpkgs <- available.packages()[, c('Package', 'Version')]
+    if (nrow(availpkgs) == 0) {
+      warning(
+        paste0(
+          'There appear to be no packages available from the ',
+          'repositories. Perhaps you are not connected to the ',
+          'Internet?'
+        )
+      )
+    }
+    # It appears that hyphens (-) will be replaced with dots (.) in version
+    # numbers by the packageVersion function
+    availpkgs[, 'Version'] <- gsub('-', '.', availpkgs[, 'Version'])
+    results <- data.frame(
+      loaded = rep(FALSE, length(pkges)),
+      installed = rep(FALSE, length(pkges)),
+      loaded.version = rep(as.character(NA), length(pkges)),
+      available.version = rep(as.character(NA), length(pkges)),
+      stringsAsFactors = FALSE
+    )
+    row.names(results) <- pkges
+    for (i in pkges) {
+      loadedPkgs <- search()
+      needInstall <- FALSE
+      if (i %in% row.names(installedpkgs)) {
+        v <- as.character(packageVersion(i))
+        if (i %in% row.names(availpkgs)) {
+          if (v != availpkgs[i, 'Version']) {
+            if (!update) {
+              mymessage(
+                paste0(
+                  'A different version of ',
+                  i,
+                  ' is available ',
+                  '(current=',
+                  v,
+                  '; available=',
+                  availpkgs[i, 'Version'],
+                  ')'
+                )
+              )
+            }
+            needInstall <- update
+          }
+          results[i, ]$available.version <- availpkgs[i, 'Version']
+        } else {
+          mymessage(paste0(i, ' is not available on the repositories.'))
+        }
+      } else {
+        if (i %in% row.names(availpkgs)) {
+          needInstall <- TRUE & install
+          results[i, ]$available.version <- availpkgs[i, 'Version']
+        } else {
+          warning(paste0(
+            i,
+            ' is not available on the repositories and ',
+            'is not installed locally'
+          ))
+        }
+      }
+      if (needInstall | !myrequire(i)) {
+        install.packages(pkgs = i, quiet = quiet)
+        if (!myrequire(i, ...)) {
+          warning(paste0('Error loading package: ', i))
+        } else {
+          results[i, ]$installed <- TRUE
+          results[i, ]$loaded <- TRUE
+          results[i, ]$loaded.version <- as.character(packageVersion(i))
+        }
+      } else {
+        results[i, ]$loaded <- TRUE
+        results[i, ]$loaded.version <- as.character(packageVersion(i))
+      }
+      loadedPkgs2 <- search()
+      for (j in loadedPkgs2[!loadedPkgs2 %in% loadedPkgs]) {
+        try(detach(j, character.only = TRUE), silent = TRUE)
+      }
+      library(i, character.only = TRUE)
+    }
+    # library(pkges, character.only	= TRUE)
+    if (verbose) {
+      return(results)
+    } else {
+      invisible(results)
+    }
+  }
+
+# TODO add documentation
+# Scrambles rank trajectories of simulants
+#
+# Scrambles the rank trajectories using a continuous space random walk. The \code{jump} parameter defines the maximum distance of jump every year
+#
+# scramble_trajectories <- function(x, pid, jump = 0.05) {
+#   if (all(x < 0 | x > 1))
+#     stop("Input needs to be between 0 and 1")
+#   if (is.unsorted(pid))
+#     stop("IDs must be sorted")
+#   if (jump >= 1)
+#     stop("Overlap needs to be <= 1")
+#   if (jump == 0) return(x) else return(fscramble_trajectories(x, pid, jump))
+# }
+
+# tt <- data.table(x = runif(5e5), pid = 1:5e5)
+# tt <- CKutils::clone_dt(tt, 50)
+# setkey(tt, pid, .id)
+# tt[, y := scramble_trajectories(x, pid, 0.05)]
+# tt[998:1003]
+# print(tt[sample(.N, 1e4), ggplot2::qplot(x, y, alpha = I(1/20))])
+# print(tt[.id == 50, hist(y)])
+# print(tt[.id == 50 & y > 0.9, hist(y)])
+# print(tt[.id == 50 & y < 0.1, hist(y)])
+# print(tt[pid == 4,  plot(.id, y, ylim = c(0,1))])
+
+# estimate beta params from mean and variance
+#' `estim_beta_params` estimates the beta parameters from a mean and a variance given
+#' @param mu An integer between 0 and 1
+#' @param var A positive integer
+#' @export
+#' @return A list made of the beta and alpha parameters calculated, called shape1 and shape2
+#' @examples
+#' estim_beta_params(0.6, 5) #6.0006e-05   4.0004e-05
+estim_beta_params <- function(mu, var) {
+  # from https://stats.stackexchange.com/questions/12232/calculating-the-parameters-of-a-beta-distribution-using-the-mean-and-variance and wikipedia
+  stopifnot(between(mu, 0, 1), var > 0)
+  if (var >= (mu * (1 - mu))) {
+    var <- mu * (1 - mu) * 0.9999
+  }
+  alpha <- mu * ((mu * (1 - mu) / var) - 1) # if var < (mu * (1 - mu))
+  beta <- (1 - mu) * ((mu * (1 - mu) / var) - 1) # var < (mu * (1 - mu))
+  return(params = list(shape1 = alpha, shape2 = beta))
+}
+
+# Define outersect. Like setdiff but symmetrical. I.e. setdiff(a,b) is not the
+# same as setdiff(b,a). outersect solve this by calculating both
+#' `outersect` Calculates the symmetrical set difference of subsets
+#' @param x,y vectors, data frames containing a sequence of items
+#' @param ... further arguments to be passed to or from other methods
+#' @export
+#' @return A vector made of both contents from x and y, except from the duplicated items
+#' @examples
+#' x <- c("age", "year", "bp", "name")
+#' y <- c("city", "year", "birth", "id")
+#' outersect(x, y)
+#' #"age" "bp" "name" "city" "birth" "id"
+outersect <-
+  function(x, y, ...) {
+    big.vec <- c(x, y, ...)
+    duplicates <- big.vec[duplicated(big.vec)]
+    setdiff(big.vec, unique(duplicates))
+  }
+
+
+#' Calculate Symmetric Difference Between Two Sets
+#'
+#' `symdiff` returns the symmetric difference between two vectors. The symmetric
+#' difference consists of elements that are in either x or y, but not in both.
+#' This is equivalent to the union of the two sets minus their intersection.
+#'
+#' @param x A vector (numeric, character, logical, etc.)
+#' @param y A vector of the same type as x
+#'
+#' @return A vector containing elements that are in either x or y, but not in both
+#'
+#' @export
+#' @examples
+#' # With numeric vectors
+#' symdiff(c(1, 2, 3, 4), c(3, 4, 5, 6))  # Returns c(1, 2, 5, 6)
+#'
+#' # With character vectors
+#' symdiff(c("a", "b", "c"), c("b", "c", "d"))  # Returns c("a", "d")
+#'
+#' # With logical vectors
+#' symdiff(c(TRUE, FALSE), c(FALSE))  # Returns TRUE
+#'
+#' # Empty result when sets are identical
+#' symdiff(c(1, 2, 3), c(1, 2, 3))  # Returns integer(0)
+symdiff <- function(x, y) {
+  setdiff(union(x, y), intersect(x, y))
+}
+
+# Define function for sampling. Taken from sample man pages
+#' `resample` Gives sample of from the elements of \code{`x`} of the specified size. Both size and \code{`x`} has to be integers
+#' @param x A vector to be sampled
+#' @param ... Eventual condition for the vectorisation
+#' @export
+#' @return Sample(s) from the \code{`x`} vector, according to eventual conditions provided
+#' @examples
+#' x <- 1:10
+#' resample(x[x >  8]) # length 2
+#' resample(x[x >  9]) # length 1
+#' resample(x[x > 10]) # length 0
+resample <-
+  function(x, ...) {
+    x <- na.omit(x)
+    x[sample.int(length(x), ...)]
+  }
+
+
+#' Check if All Elements in a Numeric Vector Are Identical
+#'
+#' This function checks whether all elements in a numeric vector are equal within a specified tolerance.
+#' It returns TRUE if all elements are identical (considering the tolerance), and FALSE otherwise.
+#'
+#' @param x A numeric vector to test.
+#' @param tol A numeric tolerance used for the comparison (default: .Machine$double.eps^0.5).
+#'
+#' @return A logical value indicating whether all elements in \code{x} are identical.
+#'
+#' @export
+identical_elements <-
+  function(x, tol = .Machine$double.eps^0.5) {
+    stopifnot(is.numeric(x))
+    fequal(x, tol)
+  }
+
+
+#' Normalize a Vector to the 0-1 Range
+#'
+#' This function normalizes a numeric vector so that its values are scaled to lie within the 0 to 1 range.
+#' If all elements in the vector are identical, the function returns 1.
+#'
+#' @param x A numeric vector to be normalized.
+#' @param ... Additional arguments (currently unused).
+#'
+#' @return A numeric vector with values scaled between 0 and 1, or a single value 1 if all elements are identical.
+#'
+#' @export
+normalise <-
+  function(x, ...) {
+    stopifnot(is.numeric(x))
+    if (identical_elements(x)) {
+      return(1)
+    } else {
+      return(fnormalise(x))
+    }
+  }
+
+#' Convert CSV Files to FST Format
+#'
+#' This function converts one or more CSV files to the FST file format. It reads each CSV file using \code{data.table::fread} and writes it as an FST file using \code{fst::write_fst}. Optionally, the original CSV file(s) can be deleted.
+#'
+#' @param csv_files A character vector of file paths to CSV files.
+#' @param compression An integer specifying the compression level for the FST file. Default is 100L.
+#' @param delete_csv Logical. If TRUE, deletes the original CSV file(s) after conversion. Default is FALSE.
+#'
+#' @return Invisibly returns NULL.
+#'
+#' @examples
+#' \dontrun{
+#' csv_to_fst(c("data.csv"), compression = 100L, delete_csv = TRUE)
+#' }
+#' @export
+csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
+  hlpfn <- function(nam, compression) {
+    # input scalar string
+    out <- data.table::fread(nam)
+    new_nam <- gsub(".csv$", ".fst", nam)
+    fst::write_fst(out, new_nam, compress = compression)
+  }
+  lapply(csv_files, hlpfn, compression)
+  if (delete_csv) {
+    file.remove(csv_files)
+  }
+  return(invisible(NULL))
+}
+
+
+#' Clamp values to a specified range
+#'
+#' `clamp` limits the values in a numeric vector `x` so that all elements are constrained within the interval [a, b].
+#' It dispatches to either `fclamp` for double precision values or `fclamp_int` for integer values.
+#'
+#' @param x A numeric vector of values to be clamped.
+#' @param a A numeric value specifying the lower bound (default: 0).
+#' @param b A numeric value specifying the upper bound (default: 1).
+#' @param inplace Logical. If TRUE, the clamping operation is performed in-place; otherwise, a new vector is returned.
+#'
+#' @return A numeric vector with values clamped to the interval [a, b].
+#' @export
+clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
+  stopifnot(is.numeric(a), is.numeric(b), is.logical(inplace))
+  typ <- typeof(x)
+  if (typ == "double") {
+    return(fclamp(x, a, b, inplace))
+  } else if (typ == "integer") {
+    return(fclamp_int(x, as.integer(a), as.integer(b), inplace))
+  } else {
+    stop("Only accepts doubles or integers")
+  }
+}
+
+#' Generate folder structure
+#'
+#' `gnrt_folder_structure` generates the folder structure for an IMPACTncd model
+#'
+#' This is an auxilliary function: It creates the expected folder structure for
+#' an IMPACTncd model.
+#'
+#' @param path A string scalar. The root folder where the folder structure will
+#' be created.
+#' @return NULL
+#' @export
+
+gnrt_folder_structure <- function(path = getwd()) {
+  fldr_strc <- list(
+    "inputs" = file.path(path, "inputs"),
+    "processed_inputs" = file.path(path, "processed_inputs"),
+    "simulation" = file.path(path, "simulation"),
+    "outputs" = file.path(path, "outputs"),
+    "validation" = file.path(path, "validation"),
+    "gui" = file.path(path, "gui"),
+    "logs" = file.path(path, "logs")
+  )
+
+  fldr_strc$inputs <- list(
+    "settings" = file.path(fldr_strc$inputs, "settings"),
+    "open_data" = file.path(fldr_strc$inputs, "open_data"),
+    "secure_data" = file.path(fldr_strc$inputs, "secure_data")
+  )
+
+  fldr_strc$processed_inputs <- list(
+    "exposures" = file.path(fldr_strc$processed_inputs, "exposures"),
+    "disease_epi" = file.path(fldr_strc$processed_inputs, "disease_epi")
+  )
+
+  fldr_strc$inputs$open_data <- list(
+    "RR" = file.path(fldr_strc$inputs$open_data, "RR"),
+    "population" = file.path(fldr_strc$inputs$open_data, "population")
+  )
+
+  NULL
+}
+
+# remotes::install_github("ChristK/CKutils", force = TRUE)
+# Rscript -e 'remotes::install_github("ChristK/CKutils")'

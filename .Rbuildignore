@@ -1,0 +1,29 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.travis\.yml$
+^\.gitlab-ci\.yml$
+^\.devcontainer$
+^\.history$
+^\.vscode$
+^\.git$
+^\.github$
+^\.gitignore$
+^src/\.gitignore$
+^\.\.Rcheck$ # Exclude the R CMD check output directory itself
+^check-before-push\.sh$
+^comprehensive_benchmark\.R$
+^quick_benchmark\.R$
+^test_github_actions\.R$
+^tinytest$
+^.*_benchmark\.R$
+^src/.*\.o$
+^src/.*\.so$
+^src/.*\.dll$
+^src/symbols\.rds$
+^LICENSE\.md$
+# Ensure .Rhistory is ignored if present at top level
+^\.Rhistory$
+# Exclude any stray .DS_Store files (macOS)
+^\.DS_Store$
+# Exclude build artifacts if R CMD build is run in place
+^CKutils_.*\.tar\.gz$
