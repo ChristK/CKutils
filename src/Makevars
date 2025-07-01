@@ -1,4 +1,4 @@
-# Avoid overriding user/site settings by appending to CXXFLAGS instead of overwriting
-CXXFLAGS += -O2 -Wall
+# Avoid overriding user/site settings by appending to CXXFLAGS explicitly
+CXXFLAGS = $(CXXFLAGS) -O2 -Wall
 PKG_CXXFLAGS = $(shell "$(R_HOME)/bin/Rscript" -e "Rcpp:::CxxFlags()") $(shell "$(R_HOME)/bin/Rscript" -e "cat(paste0('-I\"', system.file('include', package='data.table'), '\"'))")
 PKG_LIBS = $(shell "$(R_HOME)/bin/Rscript" -e "Rcpp:::LdFlags()")
