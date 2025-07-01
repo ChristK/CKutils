@@ -4,9 +4,11 @@
 \alias{fqBCPEo}
 \title{Box-Cox Power Exponential Distribution (BCPEo) - Quantile Function}
 \usage{
-fqBCPEo(p_input, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE)
+fqBCPEo(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
+\item{p}{vector of probabilities (must be between 0 and 1).}
+
 \item{mu}{vector of (positive) location parameters.}
 
 \item{sigma}{vector of (positive) scale parameters.}
@@ -15,12 +17,10 @@ fqBCPEo(p_input, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE)
 
 \item{tau}{vector of (positive) shape parameters.}
 
-\item{lower_tail}{logical; if TRUE (default), probabilities are P(X \eqn{\leq} x),
+\item{lower_tail}{logical; if TRUE (default), probabilities are P(X ≤ x), 
 otherwise P(X > x).}
 
 \item{log_p}{logical; if TRUE, probabilities p are given as log(p).}
-
-\item{p}{vector of probabilities (must be between 0 and 1).}
 }
 \value{
 A numeric vector of quantiles.
@@ -79,4 +79,5 @@ Chapman and Hall/CRC.
 }
 \seealso{
 \code{\link{fdBCPEo}}, \code{\link{fpBCPEo}}
+qBCPEo quantile function
 }

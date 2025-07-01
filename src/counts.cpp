@@ -1,5 +1,5 @@
 /* CKutils: an R package with some utility functions I use regularly
-Copyright (C) 2022  Chris Kypridemos
+Copyright (C) 2025  Chris Kypridemos
 
 CKutils is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

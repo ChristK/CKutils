@@ -9,6 +9,66 @@ counts <- function(x) {
     .Call(`_CKutils_counts`, x)
 }
 
+#' Box-Cox Power Exponential Distribution (BCPEo) - Density Function
+#'
+#' Density function for the Box-Cox Power Exponential distribution with log link for mu,
+#' optimized for SIMD vectorization and unique parameter values.
+#'
+#' @param x vector of (non-negative) quantiles.
+#' @param mu vector of (positive) location parameters.
+#' @param sigma vector of (positive) scale parameters.
+#' @param nu vector of shape parameters.
+#' @param tau vector of (positive) shape parameters.
+#' @param log_ logical; if TRUE, densities are returned on the log scale.
+#'
+#' @details
+#' The Box-Cox Power Exponential (BCPEo) distribution is a four-parameter continuous
+#' distribution defined on the positive real line. The BCPEo variant uses a log link
+#' for the location parameter mu.
+#'
+#' The probability density function is given by:
+#' \deqn{f(x|\mu,\sigma,\nu,\tau) = \frac{1}{\sigma x^{\nu}} \frac{f_T(z)}{F_T(1/(\sigma|\nu|))}}
+#' where \eqn{z = (x^{\nu} - 1)/(\nu\sigma)} when \eqn{\nu \neq 0} and 
+#' \eqn{z = \log(x)/\sigma} when \eqn{\nu = 0}, and \eqn{f_T} and \eqn{F_T} are 
+#' the density and distribution functions of a specific T distribution.
+#'
+#' This implementation is optimized for cases where tau values are rarely repeated,
+#' using SIMD vectorization and per-element computation without caching.
+#'
+#' @return A numeric vector of densities.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos, D. M. (2003) Flexible regression smoothing 
+#' using GAMLSS. Applied Statistics, 52, 229-237.
+#'
+#' Stasinopoulos, D. M., Rigby, R. A., Heller, G. Z., Voudouris, V., and 
+#' De Bastiani, F. (2017) Flexible Regression and Smoothing: Using GAMLSS in R,
+#' Chapman and Hall/CRC.
+#'
+#' @note
+#' This implementation is based on the gamlss.dist package dBCPEo function
+#' but optimized for performance with unique parameter values and SIMD vectorization.
+#'
+#' @examples
+#' # Basic usage
+#' x <- c(1, 2, 3, 4, 5)
+#' mu <- c(2, 2, 2, 2, 2)
+#' sigma <- c(0.5, 0.5, 0.5, 0.5, 0.5)
+#' nu <- c(1, 1, 1, 1, 1)
+#' tau <- c(2, 2, 2, 2, 2)
+#' 
+#' # Calculate densities
+#' fdBCPEo(x, mu, sigma, nu, tau)
+#' 
+#' # Log densities
+#' fdBCPEo(x, mu, sigma, nu, tau, log_ = TRUE)
+#'
+#' @seealso \code{\link{fpBCPEo}}, \code{\link{fqBCPEo}}
+#' @export
+fdBCPEo <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
+    .Call(`_CKutils_fdBCPEo`, x, mu, sigma, nu, tau, log_)
+}
+
 #' Box-Cox Power Exponential Distribution (BCPEo) - Distribution Function
 #'
 #' Distribution function for the Box-Cox Power Exponential distribution with log link for mu,
@@ -69,6 +129,7 @@ counts <- function(x) {
 #' fpBCPEo(q, mu, sigma, nu, tau, log_p = TRUE)
 #'
 #' @seealso \code{\link{fdBCPEo}}, \code{\link{fqBCPEo}}
+#' pBCPEo distribution function
 #' @export
 fpBCPEo <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fpBCPEo`, q, mu, sigma, nu, tau, lower_tail, log_p)
@@ -138,69 +199,10 @@ fpBCPEo <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' fqBCPEo(log_p, mu, sigma, nu, tau, log_p = TRUE)
 #'
 #' @seealso \code{\link{fdBCPEo}}, \code{\link{fpBCPEo}}
+#' qBCPEo quantile function
 #' @export
-fqBCPEo <- function(p_input, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
-    .Call(`_CKutils_fqBCPEo`, p_input, mu, sigma, nu, tau, lower_tail, log_p)
-}
-
-#' Box-Cox Power Exponential Distribution (BCPEo) - Density Function
-#'
-#' Density function for the Box-Cox Power Exponential distribution with log link for mu,
-#' optimized for SIMD vectorization and unique parameter values.
-#'
-#' @param x vector of (non-negative) quantiles.
-#' @param mu vector of (positive) location parameters.
-#' @param sigma vector of (positive) scale parameters.
-#' @param nu vector of shape parameters.
-#' @param tau vector of (positive) shape parameters.
-#' @param log_ logical; if TRUE, densities are returned on the log scale.
-#'
-#' @details
-#' The Box-Cox Power Exponential (BCPEo) distribution is a four-parameter continuous
-#' distribution defined on the positive real line. The BCPEo variant uses a log link
-#' for the location parameter mu.
-#'
-#' The probability density function is given by:
-#' \deqn{f(x|\mu,\sigma,\nu,\tau) = \frac{1}{\sigma x^{\nu}} \frac{f_T(z)}{F_T(1/(\sigma|\nu|))}}
-#' where \eqn{z = (x^{\nu} - 1)/(\nu\sigma)} when \eqn{\nu \neq 0} and 
-#' \eqn{z = \log(x)/\sigma} when \eqn{\nu = 0}, and \eqn{f_T} and \eqn{F_T} are 
-#' the density and distribution functions of a specific T distribution.
-#'
-#' This implementation is optimized for cases where tau values are rarely repeated,
-#' using SIMD vectorization and per-element computation without caching.
-#'
-#' @return A numeric vector of densities.
-#'
-#' @references
-#' Rigby, R. A. and Stasinopoulos, D. M. (2003) Flexible regression smoothing 
-#' using GAMLSS. Applied Statistics, 52, 229-237.
-#'
-#' Stasinopoulos, D. M., Rigby, R. A., Heller, G. Z., Voudouris, V., and 
-#' De Bastiani, F. (2017) Flexible Regression and Smoothing: Using GAMLSS in R,
-#' Chapman and Hall/CRC.
-#'
-#' @note
-#' This implementation is based on the gamlss.dist package dBCPEo function
-#' but optimized for performance with unique parameter values and SIMD vectorization.
-#'
-#' @examples
-#' # Basic usage
-#' x <- c(1, 2, 3, 4, 5)
-#' mu <- c(2, 2, 2, 2, 2)
-#' sigma <- c(0.5, 0.5, 0.5, 0.5, 0.5)
-#' nu <- c(1, 1, 1, 1, 1)
-#' tau <- c(2, 2, 2, 2, 2)
-#' 
-#' # Calculate densities
-#' fdBCPEo(x, mu, sigma, nu, tau)
-#' 
-#' # Log densities
-#' fdBCPEo(x, mu, sigma, nu, tau, log_ = TRUE)
-#'
-#' @seealso \code{\link{fpBCPEo}}, \code{\link{fqBCPEo}}
-#' @export
-fdBCPEo <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
-    .Call(`_CKutils_fdBCPEo`, x, mu, sigma, nu, tau, log_)
+fqBCPEo <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqBCPEo`, p, mu, sigma, nu, tau, lower_tail, log_p)
 }
 
 #' Convert Factor to Integer (C++ Version)

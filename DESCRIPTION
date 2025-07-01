@@ -12,7 +12,6 @@ Maintainer: Chris Kypridemos <christodoulosk@gmail.com>
 Description: Contains utility functions for developing simulation models. 
 License: GPL (>= 3)
 Encoding: UTF-8
-LazyData: true
 Imports: 
     methods,
     stats,

@@ -66,19 +66,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // fqBCPEo
-NumericVector fqBCPEo(const NumericVector& p_input, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const NumericVector& tau, const bool& lower_tail, const bool& log_p);
-RcppExport SEXP _CKutils_fqBCPEo(SEXP p_inputSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP tauSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+NumericVector fqBCPEo(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const NumericVector& tau, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fqBCPEo(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP tauSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericVector& >::type p_input(p_inputSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type tau(tauSEXP);
     Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
     Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    rcpp_result_gen = Rcpp::wrap(fqBCPEo(p_input, mu, sigma, nu, tau, lower_tail, log_p));
+    rcpp_result_gen = Rcpp::wrap(fqBCPEo(p, mu, sigma, nu, tau, lower_tail, log_p));
     return rcpp_result_gen;
 END_RCPP
 }

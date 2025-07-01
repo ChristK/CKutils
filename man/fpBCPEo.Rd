@@ -17,7 +17,7 @@ fpBCPEo(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE)
 
 \item{tau}{vector of (positive) shape parameters.}
 
-\item{lower_tail}{logical; if TRUE (default), probabilities are P(X \eqn{\leq} x),
+\item{lower_tail}{logical; if TRUE (default), probabilities are P(X ≤ x), 
 otherwise P(X > x).}
 
 \item{log_p}{logical; if TRUE, probabilities p are given as log(p).}
@@ -75,4 +75,5 @@ Chapman and Hall/CRC.
 }
 \seealso{
 \code{\link{fdBCPEo}}, \code{\link{fqBCPEo}}
+pBCPEo distribution function
 }

@@ -1,23 +1,20 @@
-/* IMPACTncdEngl is an implementation of the IMPACTncd framework, developed by Chris
- Kypridemos with contributions from Peter Crowther (Melandra Ltd), Maria
- Guzman-Castillo, Amandine Robert, and Piotr Bandosz. This work has been
- funded by NIHR  HTA Project: 16/165/01 - IMPACTncdEngl: Health Outcomes
- Research Simulation Environment.  The views expressed are those of the
- authors and not necessarily those of the NHS, the NIHR or the Department of
- Health.
+/* CKutils: an R package with some utility functions I use regularly
+Copyright (C) 2025  Chris Kypridemos
 
- Copyright (C) 2018-2025 University of Liverpool, Chris Kypridemos
+CKutils is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 
- IMPACTncdEngl is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
- Foundation; either version 3 of the License, or (at your option) any later
- version. This program is distributed in the hope that it will be useful, but
- WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- details. You should have received a copy of the GNU General Public License
- along with this program; if not, see <http://www.gnu.org/licenses/> or write
- to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- Boston, MA 02110-1301 USA. */
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>
+or write to the Free Software Foundation, Inc., 51 Franklin Street,
+Fifth Floor, Boston, MA 02110-1301  USA. */
 
 #include <Rcpp.h>
 #include <math.h>
@@ -265,7 +262,7 @@ NumericVector fdBCPEo(const NumericVector& x,
 //' fpBCPEo(q, mu, sigma, nu, tau, log_p = TRUE)
 //'
 //' @seealso \code{\link{fdBCPEo}}, \code{\link{fqBCPEo}}
-// pBCPEo distribution function
+//' pBCPEo distribution function
 //' @export
 // [[Rcpp::export]]
 NumericVector fpBCPEo(const NumericVector& q,
@@ -395,10 +392,10 @@ NumericVector fpBCPEo(const NumericVector& q,
 //' fqBCPEo(log_p, mu, sigma, nu, tau, log_p = TRUE)
 //'
 //' @seealso \code{\link{fdBCPEo}}, \code{\link{fpBCPEo}}
-// qBCPEo quantile function
+//' qBCPEo quantile function
 //' @export
 // [[Rcpp::export]]
-NumericVector fqBCPEo(const NumericVector& p_input,
+NumericVector fqBCPEo(const NumericVector& p,
                         const NumericVector& mu,
                         const NumericVector& sigma,
                         const NumericVector& nu,
@@ -406,15 +403,15 @@ NumericVector fqBCPEo(const NumericVector& p_input,
                         const bool& lower_tail = true,
                         const bool& log_p = false)
 {
-  if (p_input.length() != mu.length() || mu.length() != sigma.length() ||
+  if (p.length() != mu.length() || mu.length() != sigma.length() ||
       sigma.length() != nu.length() || nu.length() != tau.length()
   ) stop("Distribution parameters must be of same length");
 
-  const int n = p_input.length();
+  const int n = p.length();
   NumericVector out(n);
   
   // Make a copy of p to avoid modifying the input
-  NumericVector p = clone(p_input);
+  NumericVector p_cloned = clone(p);
   
   // Input validation for parameters
   for (int i = 0; i < n; i++) {
@@ -426,18 +423,19 @@ NumericVector fqBCPEo(const NumericVector& p_input,
   // Transform p values first (matching R reference order)
   if (log_p) {
     for (int i = 0; i < n; i++) {
-      p[i] = exp(p[i]);
+      p_cloned[i] = exp(p_cloned[i]);
     }
   }
   
   // Input validation for p values after log_p transformation (matching R reference)
   for (int i = 0; i < n; i++) {
-    if (p[i] < 0.0 || p[i] > 1.0) stop("p must be between 0 and 1");
+    if (p_cloned[i] < 0.0 || p_cloned[i] > 1.0)
+      stop("p must be between 0 and 1");
   }
   
   if (!lower_tail) {
     for (int i = 0; i < n; i++) {
-      p[i] = 1.0 - p[i];
+      p_cloned[i] = 1.0 - p_cloned[i];
     }
   }
 
@@ -445,26 +443,28 @@ NumericVector fqBCPEo(const NumericVector& p_input,
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Handle edge cases for p=0 and p=1
-    if (p[i] == 0.0) {
+    if (p_cloned[i] == 0.0)
+    {
       out[i] = 0.0;  // Lower bound of BCPEo distribution
       continue;
     }
-    if (p[i] == 1.0) {
+    if (p_cloned[i] == 1.0)
+    {
       out[i] = R_PosInf;  // Upper bound of BCPEo distribution
       continue;
     }
-    
+
     double za;
     const double sigma_abs_nu = sigma[i] * std::abs(nu[i]);
     
     if (nu[i] < 0.0) {
       const double F_bound = fdBCPEo_hlp_F_T(1.0 / sigma_abs_nu, tau[i]);
-      za = fqBCPEo_hlp_q_T(p[i] * F_bound, tau[i]);
+      za = fqBCPEo_hlp_q_T(p_cloned[i] * F_bound, tau[i]);
     } else if (nu[i] == 0.0) {
-      za = fqBCPEo_hlp_q_T(p[i], tau[i]);
+      za = fqBCPEo_hlp_q_T(p_cloned[i], tau[i]);
     } else { // nu > 0
       const double F_bound = fdBCPEo_hlp_F_T(1.0 / sigma_abs_nu, tau[i]);
-      za = fqBCPEo_hlp_q_T(1.0 - (1.0 - p[i]) * F_bound, tau[i]);
+      za = fqBCPEo_hlp_q_T(1.0 - (1.0 - p_cloned[i]) * F_bound, tau[i]);
     }
 
     if (nu[i] == 0.0) {
@@ -478,33 +478,3 @@ NumericVector fqBCPEo(const NumericVector& p_input,
   if (any(is_na(out))) warning("NaNs or NAs were produced");
   return out;
 }
-
-/*** R
-
-# N <- 1e5
-# n_cpu <- 1L
-# x <- sample(1e2, N, TRUE)
-# q <- sample(1e2, N, TRUE)
-# p <- runif(N, 0, 1)
-# mu <- runif(N, 0, 30)
-# sigma <- runif(N, 0, 5)
-# nu <- runif(N, 0, 1)
-# tau <- runif(N, 0, 10)
-# log <- FALSE
-# lower_tail <- TRUE
-# max_value <- 10000L
-#
-# library(microbenchmark)
-# library(ggplot2)
-# library(gamlss)
-
-# all.equal(fdBCPEo(x, mu, sigma, nu, tau, log), gamlss.dist::dBCPEo(x, mu, sigma, nu, tau, log))
-# autoplot(microbenchmark(fdBCPEo(x, mu, sigma, nu, tau, log), gamlss.dist::dBCPEo(x, mu, sigma, nu, tau, log), times = 10))
-
-# all.equal(fpBCPEo(q, mu, sigma, nu, tau, lower_tail, log), gamlss.dist::pBCPEo(q, mu, sigma, nu, tau, lower_tail, log))
-# autoplot(microbenchmark(fpBCPEo(q, mu, sigma, nu, tau, lower_tail, log), gamlss.dist::pBCPEo(q, mu, sigma, nu, tau, lower_tail, log), times = 10))
-
-# all.equal(fqBCPEo(p, mu, sigma, nu, tau, lower_tail, log), gamlss.dist::qBCPEo(p, mu, sigma, nu, tau, lower_tail, log))
-# autoplot(microbenchmark(fqBCPEo(p, mu, sigma, nu, tau, lower_tail, log), gamlss.dist::qBCPEo(p, mu, sigma, nu, tau, lower_tail, log), times = 10))
-
-*/
