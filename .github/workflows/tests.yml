@@ -69,12 +69,22 @@ jobs:
       - name: Setup R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::tinytest  # Ensure tinytest is available
+          extra-packages: |
+            any::tinytest
+            any::devtools
           needs: check                   # Install dependencies needed for checking
 
       # Step 4: Run the test suite
       - name: Run tinytest suite
         run: |
+          # Install the package first to make functions available
+          cat("Installing CKutils package...\n")
+          devtools::install(".", upgrade = "never", quiet = FALSE)
+          
+          # Load the package to make functions available
+          cat("Loading CKutils package...\n")
+          library(CKutils)
+          
           # Load tinytest library
           library(tinytest)
           
