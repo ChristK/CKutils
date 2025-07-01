@@ -84,41 +84,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev libudunits2-dev libgdal-dev libgeos-dev libproj-dev
 
-      # Step 2.5: Install system dependencies (macOS specific fix for data.table)
+      # Step 2.5: Install system dependencies (macOS)
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          # Install gettext for libintl.h (required by data.table on macOS)
-          brew install gettext gdal proj
-          # Force link gettext to make libintl.h available system-wide
+          # Install system dependencies (matching data.table's approach)
+          brew install gdal proj gettext
+          
+          # Force link gettext to make libintl.h available
           brew link --force gettext
           
-          # Set exact environment variables that data.table expects
+          # Set environment variables for compilation
           gettext_prefix=$(brew --prefix gettext)
-          
-          # Set basic macOS environment variables for compilation
           echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include -I${gettext_prefix}/include" >> $GITHUB_ENV
           echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib -L${gettext_prefix}/lib" >> $GITHUB_ENV
-          echo "R_CONFIGURE_ARGS=--with-gettext-prefix=${gettext_prefix}" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
-          echo "BIOCONDUCTOR_USE_BINARY=FALSE" >> $GITHUB_ENV
-          echo "PKGTYPE=source" >> $GITHUB_ENV
-          
-          # Create .R directory and Makevars for user-level configuration
-          mkdir -p ~/.R
-          echo "CPPFLAGS=-I\$(brew --prefix gettext)/include \$(CPPFLAGS)" > ~/.R/Makevars
-          echo "LDFLAGS=-L\$(brew --prefix gettext)/lib \$(LDFLAGS)" >> ~/.R/Makevars
-          echo "PKG_CONFIG_PATH=\$(brew --prefix gettext)/lib/pkgconfig:\$(PKG_CONFIG_PATH)" >> ~/.R/Makevars
           
           # Verify gettext installation
           ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
-          
-          # Log environment for debugging
-          echo "Environment variables set for data.table compilation"
-          ls -la $(brew --prefix gettext)/include/libintl.h || echo "Warning: libintl.h not found"
-          
-          # Log environment for debugging
-          echo "Environment variables set for data.table compilation"
 
       # Step 3: Install package dependencies and tinytest
       - name: Setup R dependencies
