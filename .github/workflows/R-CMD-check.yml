@@ -70,6 +70,8 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}  # GitHub API access
       R_KEEP_PKG_SOURCE: yes                   # Keep source files for better error reporting
+      # macOS-specific environment variables for data.table compilation
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1  # Speed up brew operations
 
     steps:
       # Step 1: Checkout the repository code
@@ -94,10 +96,25 @@ jobs:
         run: |
           # Install gettext for libintl.h (required by data.table on macOS)
           brew install gettext
-          # Link gettext to make libintl.h available
+          # Force link gettext to make libintl.h available system-wide
           brew link --force gettext
+          
+          # Set compiler and linker flags for this session and future steps
           echo "CPPFLAGS=-I$(brew --prefix gettext)/include" >> $GITHUB_ENV
           echo "LDFLAGS=-L$(brew --prefix gettext)/lib" >> $GITHUB_ENV
+          
+          # Also set for immediate use in this step
+          export CPPFLAGS="-I$(brew --prefix gettext)/include"
+          export LDFLAGS="-L$(brew --prefix gettext)/lib"
+          
+          # Verify gettext installation
+          ls -la $(brew --prefix gettext)/include/libintl.h || echo "Warning: libintl.h not found"
+          
+          # Set additional R-specific environment variables
+          echo "R_CONFIGURE_ARGS=--with-gettext-prefix=$(brew --prefix gettext)" >> $GITHUB_ENV
+          
+          # Also try to ensure pkg-config can find gettext
+          echo "PKG_CONFIG_PATH=$(brew --prefix gettext)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
 
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
