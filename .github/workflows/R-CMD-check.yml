@@ -1,0 +1,102 @@
+# =============================================================================
+# R CMD Check Workflow for CKutils R Package
+# =============================================================================
+#
+# This workflow runs comprehensive R CMD check across multiple platforms and
+# R versions to ensure CRAN compliance and cross-platform compatibility.
+#
+# Workflow triggers:
+# - Push to main/master branches
+# - Pull requests to main/master branches
+#
+# Testing matrix covers:
+# - Operating Systems: macOS (Intel + Apple Silicon), Windows, Ubuntu (multiple versions)
+# - R Versions: devel, release, oldrel-1, oldrel-2 (for maximum compatibility)
+# - Architectures: 32-bit and 64-bit (automatic on Windows)
+#
+# This comprehensive testing ensures:
+# - CRAN submission readiness
+# - Cross-platform compatibility
+# - Backward compatibility with older R versions
+# - Forward compatibility with R-devel
+#
+# The workflow uses r-lib/actions which provide standardized, well-maintained
+# GitHub Actions specifically designed for R package development.
+#
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# =============================================================================
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: R-CMD-check
+
+jobs:
+  R-CMD-check:
+    runs-on: ${{ matrix.config.os }}
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
+    # Comprehensive testing matrix for maximum compatibility
+    # fail-fast: false ensures all configurations are tested even if some fail
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          # macOS testing (covers both Intel and Apple Silicon)
+          - {os: macos-latest,   r: 'release'}    # Apple Silicon (M1/M2) - current stable
+          - {os: macos-latest,   r: 'devel', http-user-agent: 'release'}     # Apple Silicon - future compatibility
+          - {os: macos-latest,   r: 'oldrel-1'}   # Apple Silicon - backward compatibility
+          
+          # Windows testing (covers both 32-bit and 64-bit automatically)
+          - {os: windows-latest, r: 'release'}    # Current stable Windows
+          - {os: windows-latest, r: 'devel', http-user-agent: 'release'}     # Future Windows compatibility
+          - {os: windows-latest, r: 'oldrel-1'}   # Backward Windows compatibility
+          
+          # Ubuntu testing (primary CRAN checking environment)
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}    # R-devel (future R version)
+          - {os: ubuntu-latest,   r: 'release'}   # Current stable R
+          - {os: ubuntu-latest,   r: 'oldrel-1'}  # Previous R version
+          - {os: ubuntu-latest,   r: 'oldrel-2'}  # Two versions back
+          
+          # Additional compatibility testing
+          - {os: ubuntu-20.04,   r: 'release'}    # Older Ubuntu LTS for broader compatibility
+          - {os: macos-12,       r: 'release'}    # Intel Mac specifically
+
+    # Environment variables for authentication and debugging
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}  # GitHub API access
+      R_KEEP_PKG_SOURCE: yes                   # Keep source files for better error reporting
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Pandoc (required for vignettes and R Markdown)
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      # Step 3: Set up R environment with specified version and configuration
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true  # Use RStudio Package Manager for faster installs
+
+      # Step 4: Install package dependencies required for checking
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck  # Ensure rcmdcheck package is available
+          needs: check                    # Install all dependencies needed for R CMD check
+
+      # Step 5: Run comprehensive R CMD check
+      - name: Run R CMD check
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true  # Upload test snapshots on failure for debugging

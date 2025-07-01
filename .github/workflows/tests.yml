@@ -1,0 +1,115 @@
+# =============================================================================
+# Tests Workflow for CKutils R Package
+# =============================================================================
+# 
+# This workflow runs the tinytest suite for the CKutils package to ensure
+# all unit tests pass across different R versions and platforms.
+#
+# Workflow triggers:
+# - Push to main/master branches
+# - Pull requests to main/master branches
+#
+# Test strategy:
+# - Runs on Ubuntu (latest and devel R versions)
+# - Uses tinytest framework for lightweight, fast testing
+# - Automatically detects test location (inst/tinytest or tests/tinytest)
+# - Fails the build if any tests fail
+#
+# Test discovery logic:
+# 1. First checks for tests in inst/tinytest/ (standard for packages)
+# 2. Falls back to tests/tinytest/ if inst/tinytest/ doesn't exist
+# 3. Uses test_package() as final fallback for automatic discovery
+#
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# =============================================================================
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: Tests
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.config.os }}
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
+    # Test matrix configuration
+    # - ubuntu-latest with R release: Standard testing environment
+    # - ubuntu-latest with R devel: Future compatibility testing
+    strategy:
+      fail-fast: false  # Continue testing other configurations if one fails
+      matrix:
+        config:
+          - {os: ubuntu-latest,   r: 'release'}
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+
+    # Environment variables for GitHub API access and R source retention
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}  # For accessing private repos if needed
+      R_KEEP_PKG_SOURCE: yes                   # Keep source for better error messages
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up R environment with specified version
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true  # Use faster package installation
+
+      # Step 3: Install package dependencies and tinytest
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::tinytest  # Ensure tinytest is available
+          needs: check                   # Install dependencies needed for checking
+
+      # Step 4: Run the test suite
+      - name: Run tinytest suite
+        run: |
+          # Load tinytest library
+          library(tinytest)
+          
+          # Smart test discovery and execution
+          # Priority: inst/tinytest > tests/tinytest > automatic discovery
+          if (dir.exists("inst/tinytest")) {
+            cat("Running tests from inst/tinytest/\n")
+            test_results <- run_test_dir("inst/tinytest")
+          } else if (dir.exists("tests/tinytest")) {
+            cat("Running tests from tests/tinytest/\n") 
+            test_results <- run_test_dir("tests/tinytest") 
+          } else {
+            cat("Using automatic test discovery\n")
+            # Fallback to standard test running
+            test_results <- test_package(".")
+          }
+          
+          # Display test results
+          print(test_results)
+          
+          # Count and report test statistics
+          total_tests <- length(test_results)
+          passed_tests <- sum(test_results, na.rm = TRUE)
+          failed_tests <- total_tests - passed_tests
+          
+          cat(sprintf("\n=== Test Summary ===\n"))
+          cat(sprintf("Total tests: %d\n", total_tests))
+          cat(sprintf("Passed: %d\n", passed_tests))
+          cat(sprintf("Failed: %d\n", failed_tests))
+          
+          # Fail the workflow if any tests failed
+          if (any(!test_results)) {
+            cat("ERROR: Some tests failed!\n")
+            stop("Test suite failed - see above for details")
+          } else {
+            cat("SUCCESS: All tests passed!\n")
+          }
+        shell: Rscript {0}

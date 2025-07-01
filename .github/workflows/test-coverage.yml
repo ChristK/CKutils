@@ -1,0 +1,97 @@
+# =============================================================================
+# Test Coverage Workflow for CKutils R Package
+# =============================================================================
+#
+# This workflow measures code coverage for the CKutils package and uploads
+# results to Codecov for tracking coverage trends and pull request analysis.
+#
+# Workflow triggers:
+# - Push to main/master branches
+# - Pull requests to main/master branches
+#
+# Coverage process:
+# 1. Installs package with dependencies in a temporary location
+# 2. Runs all tests while measuring code coverage using the 'covr' package
+# 3. Uploads coverage results to Codecov for analysis and reporting
+# 4. Provides coverage reports in pull requests
+#
+# The workflow runs on Ubuntu with the latest R release for consistency.
+# Coverage results help maintain code quality and identify untested code paths.
+#
+# Codecov integration provides:
+# - Coverage percentage tracking over time
+# - Pull request coverage diff reporting  
+# - Identification of uncovered lines
+# - Coverage trends and analytics
+#
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# =============================================================================
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: test-coverage
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest  # Use Ubuntu for consistent coverage measurement
+    
+    # Environment variables for GitHub API access
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}  # Required for GitHub API access
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up R environment with latest release
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true  # Use RStudio Package Manager for faster package installation
+
+      # Step 3: Install package dependencies and coverage tools
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::covr  # Install covr package for coverage measurement
+          needs: coverage            # Install dependencies needed for coverage analysis
+
+      # Step 4: Generate and upload test coverage
+      - name: Measure test coverage
+        run: |
+          # Run coverage analysis with detailed options
+          covr::codecov(
+            quiet = FALSE,                                                    # Show detailed output
+            clean = FALSE,                                                   # Keep intermediate files for debugging
+            install_path = file.path(Sys.getenv("RUNNER_TEMP"), "package")  # Install to temp directory
+          )
+        shell: Rscript {0}
+
+      # Step 5: Show detailed test output if available (for debugging)
+      - name: Show testthat output
+        if: always()  # Run even if previous steps failed
+        run: |
+          ## --------------------------------------------------------------------
+          echo "=== Searching for test output files ==="
+          find ${{ runner.temp }}/package -name 'testthat.Rout*' -exec echo "Found: {}" \;
+          echo ""
+          echo "=== Test output content ==="
+          find ${{ runner.temp }}/package -name 'testthat.Rout*' -exec cat '{}' \; || true
+          echo ""
+          echo "=== Coverage analysis complete ==="
+        shell: bash
+
+      # Step 6: Upload test artifacts on failure (for debugging)
+      - name: Upload test results on failure
+        if: failure()  # Only run if the workflow failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-test-failures
+          path: ${{ runner.temp }}/package
+          retention-days: 7  # Keep artifacts for 7 days
