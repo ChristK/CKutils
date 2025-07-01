@@ -60,15 +60,9 @@ jobs:
 
     # Environment variables for GitHub API access and R source retention
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}  # For accessing private repos if needed
-      R_KEEP_PKG_SOURCE: yes                   # Keep source for better error messages
-      # macOS-specific environment variables for data.table compilation
-      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1  # Speed up brew operations
-      # Force environment variables for macOS data.table compilation
-      CPPFLAGS: ${{ runner.os == 'macOS' && '-I/opt/homebrew/include -I/usr/local/include' || '' }}
-      LDFLAGS: ${{ runner.os == 'macOS' && '-L/opt/homebrew/lib -L/usr/local/lib' || '' }}
-      PKG_CONFIG_PATH: ${{ runner.os == 'macOS' && '/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig' || '' }}
-      PKGTYPE: ${{ runner.os == 'macOS' && 'source' || '' }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
 
     steps:
       # Step 1: Checkout the repository code
@@ -101,10 +95,12 @@ jobs:
           
           # Set exact environment variables that data.table expects
           gettext_prefix=$(brew --prefix gettext)
-          echo "CPPFLAGS=-I${gettext_prefix}/include:${CPPFLAGS}" >> $GITHUB_ENV
-          echo "LDFLAGS=-L${gettext_prefix}/lib:${LDFLAGS}" >> $GITHUB_ENV
+          
+          # Set basic macOS environment variables for compilation
+          echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include -I${gettext_prefix}/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib -L${gettext_prefix}/lib" >> $GITHUB_ENV
           echo "R_CONFIGURE_ARGS=--with-gettext-prefix=${gettext_prefix}" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:${PKG_CONFIG_PATH}" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
           echo "BIOCONDUCTOR_USE_BINARY=FALSE" >> $GITHUB_ENV
           echo "PKGTYPE=source" >> $GITHUB_ENV
           

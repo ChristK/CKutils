@@ -38,10 +38,6 @@ jobs:
     runs-on: ubuntu-latest
     name: 'R CMD check with rchk'
     
-    # Skip rchk on forks unless specifically requested
-    # (rchk can be resource intensive and may not be needed for all contributors)
-    if: github.repository == 'ckyprid/CKutils' || contains(github.event.head_commit.message, '[run-rchk]')
-    
     steps:
       # Step 1: Checkout the repository code
       - name: Checkout repository
