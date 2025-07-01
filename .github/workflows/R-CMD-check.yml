@@ -88,6 +88,17 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true  # Use RStudio Package Manager for faster installs
 
+      # Step 3.5: Install system dependencies (macOS specific fix for data.table)
+      - name: Install system dependencies
+        if: runner.os == 'macOS'
+        run: |
+          # Install gettext for libintl.h (required by data.table on macOS)
+          brew install gettext
+          # Link gettext to make libintl.h available
+          brew link --force gettext
+          echo "CPPFLAGS=-I$(brew --prefix gettext)/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$(brew --prefix gettext)/lib" >> $GITHUB_ENV
+
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2

@@ -38,14 +38,25 @@ jobs:
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
     # Test matrix configuration
-    # - ubuntu-latest with R release: Standard testing environment
-    # - ubuntu-latest with R devel: Future compatibility testing
+    # Run tests across all major platforms to ensure cross-platform compatibility
+    # - ubuntu-latest: Linux testing (primary CRAN environment)
+    # - windows-latest: Windows testing (important for CRAN)
+    # - macos-latest: macOS testing (Apple Silicon and Intel compatibility)
     strategy:
       fail-fast: false  # Continue testing other configurations if one fails
       matrix:
         config:
+          # Ubuntu/Linux testing
           - {os: ubuntu-latest,   r: 'release'}
           - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+          
+          # Windows testing
+          - {os: windows-latest,  r: 'release'}
+          - {os: windows-latest,  r: 'devel', http-user-agent: 'release'}
+          
+          # macOS testing
+          - {os: macos-latest,    r: 'release'}
+          - {os: macos-latest,    r: 'devel', http-user-agent: 'release'}
 
     # Environment variables for GitHub API access and R source retention
     env:
@@ -64,6 +75,17 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true  # Use faster package installation
+
+      # Step 2.5: Install system dependencies (macOS specific fix for data.table)
+      - name: Install system dependencies
+        if: runner.os == 'macOS'
+        run: |
+          # Install gettext for libintl.h (required by data.table on macOS)
+          brew install gettext
+          # Link gettext to make libintl.h available
+          brew link --force gettext
+          echo "CPPFLAGS=-I$(brew --prefix gettext)/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$(brew --prefix gettext)/lib" >> $GITHUB_ENV
 
       # Step 3: Install package dependencies and tinytest
       - name: Setup R dependencies
