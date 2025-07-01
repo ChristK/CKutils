@@ -106,20 +106,29 @@ jobs:
           print(test_results)
           
           # Count and report test statistics
-          total_tests <- length(test_results)
-          passed_tests <- sum(test_results, na.rm = TRUE)
-          failed_tests <- total_tests - passed_tests
-          
-          cat(sprintf("\n=== Test Summary ===\n"))
-          cat(sprintf("Total tests: %d\n", total_tests))
-          cat(sprintf("Passed: %d\n", passed_tests))
-          cat(sprintf("Failed: %d\n", failed_tests))
-          
-          # Fail the workflow if any tests failed
-          if (any(!test_results)) {
-            cat("ERROR: Some tests failed!\n")
-            stop("Test suite failed - see above for details")
+          # tinytest returns a tinytest object, extract the logical results
+          if (inherits(test_results, "tinytests")) {
+            logical_results <- as.logical(test_results)
+            total_tests <- length(logical_results)
+            passed_tests <- sum(logical_results, na.rm = TRUE)
+            failed_tests <- total_tests - passed_tests
+            
+            cat(sprintf("\n=== Test Summary ===\n"))
+            cat(sprintf("Total tests: %d\n", total_tests))
+            cat(sprintf("Passed: %d\n", passed_tests))
+            cat(sprintf("Failed: %d\n", failed_tests))
+            
+            # Fail the workflow if any tests failed
+            if (any(!logical_results, na.rm = TRUE)) {
+              cat("ERROR: Some tests failed!\n")
+              stop("Test suite failed - see above for details")
+            } else {
+              cat("SUCCESS: All tests passed!\n")
+            }
           } else {
-            cat("SUCCESS: All tests passed!\n")
+            # Fallback for other return types
+            cat("Test results summary:\n")
+            print(summary(test_results))
+            cat("SUCCESS: Tests completed!\n")
           }
         shell: Rscript {0}

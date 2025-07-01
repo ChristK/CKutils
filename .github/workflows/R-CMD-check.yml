@@ -63,7 +63,7 @@ jobs:
           - {os: ubuntu-latest,   r: 'oldrel-2'}  # Two versions back
           
           # Additional compatibility testing
-          - {os: ubuntu-20.04,   r: 'release'}    # Older Ubuntu LTS for broader compatibility
+          - {os: ubuntu-22.04,   r: 'release'}    # Ubuntu 22.04 LTS for broader compatibility
           - {os: macos-12,       r: 'release'}    # Intel Mac specifically
 
     # Environment variables for authentication and debugging
