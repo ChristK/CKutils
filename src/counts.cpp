@@ -116,6 +116,7 @@ inline IntegerVector do_counts<LogicalVector, int>(const LogicalVector& x) {
 
   // yuck
   SEXP namesptr = Rf_getAttrib(output, R_NamesSymbol);
+  PROTECT(namesptr);  // Protect against garbage collection
   for (int i=0; i < output.size(); ++i) {
     if (strcmp(CHAR(STRING_ELT(namesptr, i)), "0") == 0) {
       SET_STRING_ELT(namesptr, i, Rf_mkChar("FALSE"));
@@ -124,6 +125,7 @@ inline IntegerVector do_counts<LogicalVector, int>(const LogicalVector& x) {
       SET_STRING_ELT(namesptr, i, Rf_mkChar("TRUE"));
     }
   }
+  UNPROTECT(1);  // Unprotect namesptr
 
   return output;
 
