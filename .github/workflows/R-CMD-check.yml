@@ -101,19 +101,22 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           # Install system dependencies (matching data.table's approach)
-          brew install gdal proj gettext
+          # brew install gdal proj gettext
+          brew install gdal proj
+
+          sudo Rscript -e "source('https://mac.R-project.org/bin/install.R'); install.libs('gettext')"
           
           # Force link gettext to make libintl.h available
-          brew link --force gettext
+          # brew link --force gettext
           
           # Set environment variables for compilation
-          gettext_prefix=$(brew --prefix gettext)
-          echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include -I${gettext_prefix}/include" >> $GITHUB_ENV
-          echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib -L${gettext_prefix}/lib" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
+          # gettext_prefix=$(brew --prefix gettext)
+          # echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include -I${gettext_prefix}/include" >> $GITHUB_ENV
+          # echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib -L${gettext_prefix}/lib" >> $GITHUB_ENV
+          # echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
           
           # Verify gettext installation
-          ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
+          # ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
 
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
