@@ -90,12 +90,19 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true  # Use RStudio Package Manager for faster installs
 
+      # Step 3.2: Install system dependencies (Ubuntu)
+      - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libudunits2-dev libgdal-dev libgeos-dev libproj-dev
+
       # Step 3.5: Install system dependencies (macOS specific fix for data.table)
       - name: Install system dependencies
         if: runner.os == 'macOS'
         run: |
           # Install gettext for libintl.h (required by data.table on macOS)
-          brew install gettext
+          brew install gettext gdal proj
           # Force link gettext to make libintl.h available system-wide
           brew link --force gettext
           
@@ -109,13 +116,14 @@ jobs:
           echo "BIOCONDUCTOR_USE_BINARY=FALSE" >> $GITHUB_ENV
           echo "PKGTYPE=source" >> $GITHUB_ENV
           
-          # Also set for immediate use in this step (may help in some cases)
-          export CPPFLAGS="-I$(brew --prefix gettext)/include"
-          export LDFLAGS="-L$(brew --prefix gettext)/lib"
-          export PKG_CONFIG_PATH="$(brew --prefix gettext)/lib/pkgconfig:$PKG_CONFIG_PATH"
-          
           # Verify gettext installation
           ls -la $(brew --prefix gettext)/include/libintl.h || echo "Warning: libintl.h not found"
+          
+          # Log environment for debugging
+          echo "Environment variables set:"
+          echo "CPPFLAGS=$CPPFLAGS"
+          echo "LDFLAGS=$LDFLAGS"
+          echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
 
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
@@ -123,14 +131,6 @@ jobs:
         with:
           extra-packages: any::rcmdcheck  # Ensure rcmdcheck package is available
           needs: check                    # Install all dependencies needed for R CMD check
-        env:
-          # Ensure macOS environment variables are available during package installation
-          CPPFLAGS: ${{ env.CPPFLAGS }}
-          LDFLAGS: ${{ env.LDFLAGS }}
-          PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}
-          R_CONFIGURE_ARGS: ${{ env.R_CONFIGURE_ARGS }}
-          BIOCONDUCTOR_USE_BINARY: ${{ env.BIOCONDUCTOR_USE_BINARY }}
-          PKGTYPE: ${{ env.PKGTYPE }}
 
       # Step 5: Run comprehensive R CMD check
       - name: Run R CMD check

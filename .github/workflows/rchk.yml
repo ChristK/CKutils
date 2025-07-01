@@ -1,0 +1,162 @@
+# =============================================================================
+# RCHK Workflow for CKutils R Package  
+# =============================================================================
+#
+# This workflow runs rchk (R Check) static analysis tool to detect potential
+# memory safety issues in C/C++ code within the CKutils package.
+#
+# RCHK (R Check) is a tool for checking R packages written in C/C++ for:
+# - Memory leaks
+# - Use of unprotected values
+# - Improper use of R API functions
+# - Potential crashes due to garbage collection
+#
+# Workflow triggers:
+# - Push to main/master branches
+# - Pull requests to main/master branches
+#
+# The workflow:
+# 1. Builds the package from source
+# 2. Runs the kalibera/rchk Docker container
+# 3. Analyzes the package for potential issues
+# 4. Fails if suspicious calls, unprotected values [UP], or protect bugs [PB] are found
+#
+# Based on data.table's rchk workflow:
+# https://github.com/Rdatatable/data.table/blob/master/.github/workflows/rchk.yaml
+# =============================================================================
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: 'rchk'
+
+jobs:
+  rchk:
+    runs-on: ubuntu-latest
+    name: 'R CMD check with rchk'
+    
+    # Skip rchk on forks unless specifically requested
+    # (rchk can be resource intensive and may not be needed for all contributors)
+    if: github.repository == 'ckyprid/CKutils' || contains(github.event.head_commit.message, '[run-rchk]')
+    
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up R development version for rchk compatibility
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'devel'
+          use-public-rspm: true
+
+      # Step 3: Install system dependencies for CKutils package
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libfontconfig1-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libfreetype6-dev \
+            libpng-dev \
+            libtiff5-dev \
+            libjpeg-dev \
+            libgdal-dev \
+            libgeos-dev \
+            libproj-dev
+
+      # Step 4: Install R dependencies
+      - name: Install package dependencies
+        run: |
+          # Install devtools and dependencies
+          install.packages(c("devtools", "remotes"))
+          
+          # Install CKutils dependencies
+          deps <- remotes::dev_package_deps(".", dependencies = TRUE)
+          remotes::install_deps(".", dependencies = TRUE, upgrade = "never")
+        shell: Rscript {0}
+
+      # Step 5: Build the package for rchk analysis
+      - name: Build package
+        run: |
+          echo "Package contents:"
+          ls -la
+          
+          # Build the package (without vignettes to speed up the process)
+          echo "Building CKutils package..."
+          R CMD build --no-build-vignettes .
+          
+          # Create packages directory for rchk
+          mkdir -p packages
+          
+          # Move the built package to packages directory
+          mv CKutils_*.tar.gz packages/
+          
+          echo "Built package:"
+          ls -la packages/
+
+      # Step 6: Run rchk static analysis
+      - name: Run rchk analysis
+        run: |
+          echo "Running rchk analysis on CKutils package..."
+          
+          # Run the rchk Docker container on our package
+          # The kalibera/rchk:latest container contains the rchk tool
+          docker run -v `pwd`/packages:/rchk/packages kalibera/rchk:latest \
+            /rchk/packages/CKutils_*.tar.gz |& tee rchk.out
+          
+          echo "RCHK analysis completed. Output saved to rchk.out"
+
+      # Step 7: Check for rchk errors and fail if found
+      - name: Check rchk results
+        run: |
+          echo "=== RCHK Analysis Results ==="
+          cat rchk.out
+          echo "============================"
+          
+          # Count different types of issues
+          suspicious_calls=$(grep -Fc "Suspicious call" rchk.out || echo "0")
+          unprotected_values=$(grep -F "[UP]" rchk.out | grep -Fvc "results will be incomplete" || echo "0")
+          protect_bugs=$(grep -Fc "[PB]" rchk.out || echo "0")
+          
+          echo "Analysis Summary:"
+          echo "- Suspicious calls: $suspicious_calls"
+          echo "- Unprotected values [UP]: $unprotected_values" 
+          echo "- Protect bugs [PB]: $protect_bugs"
+          
+          # Check for errors and fail if found
+          # Suspicious call, [UP], and [PB] are the main error types from rchk
+          # Reference: https://github.com/kalibera/cran-checks/tree/HEAD/rchk/results
+          if [ $suspicious_calls -gt 0 ] || [ $unprotected_values -gt 0 ] || [ $protect_bugs -gt 0 ]; then
+            echo "❌ RCHK found potential issues in the C/C++ code!"
+            echo "Please review the output above and fix any memory safety issues."
+            exit 1
+          else
+            echo "✅ RCHK analysis passed - no issues found!"
+          fi
+        if: always()
+
+      # Step 8: Always dump the full rchk output for debugging
+      - name: Dump rchk output logs
+        run: |
+          echo "=== Full RCHK Output ==="
+          cat rchk.out
+          echo "======================="
+        if: always()
+
+      # Step 9: Upload rchk results as artifact for further analysis
+      - name: Upload rchk results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rchk-results
+          path: rchk.out
+          retention-days: 30
