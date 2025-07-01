@@ -598,4 +598,4 @@ expect_equal(outersect(y, v), u, info = "Outersect with mixed types works")
 result <- outersect(v, y)
 expect_true(length(result) > 0, info = "Function produces result without error")
 
-cat("All misc_functions.R tests completed successfully!\n")
+# cat("All misc_functions.R tests completed successfully!\n")

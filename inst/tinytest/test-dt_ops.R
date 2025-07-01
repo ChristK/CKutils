@@ -216,4 +216,4 @@ result_empty_clone <- clone_dt(dt_empty, 2, idcol = TRUE)
 expect_equal(nrow(result_empty_clone), 0, info = "Empty data.table cloning works")
 # Note: empty data.table doesn't get .id column - this is expected behavior
 
-cat("All dt_ops.R tests completed successfully!\n")
+# cat("All dt_ops.R tests completed successfully!\n")
