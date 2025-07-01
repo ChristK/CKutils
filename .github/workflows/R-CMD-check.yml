@@ -72,6 +72,11 @@ jobs:
       R_KEEP_PKG_SOURCE: yes                   # Keep source files for better error reporting
       # macOS-specific environment variables for data.table compilation
       HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1  # Speed up brew operations
+      # Force environment variables for macOS data.table compilation
+      CPPFLAGS: ${{ runner.os == 'macOS' && '-I/opt/homebrew/include -I/usr/local/include' || '' }}
+      LDFLAGS: ${{ runner.os == 'macOS' && '-L/opt/homebrew/lib -L/usr/local/lib' || '' }}
+      PKG_CONFIG_PATH: ${{ runner.os == 'macOS' && '/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig' || '' }}
+      PKGTYPE: ${{ runner.os == 'macOS' && 'source' || '' }}
 
     steps:
       # Step 1: Checkout the repository code
@@ -98,7 +103,7 @@ jobs:
           sudo apt-get install -y libcurl4-openssl-dev libudunits2-dev libgdal-dev libgeos-dev libproj-dev
 
       # Step 3.5: Install system dependencies (macOS specific fix for data.table)
-      - name: Install system dependencies
+      - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           # Install gettext for libintl.h (required by data.table on macOS)
@@ -106,24 +111,33 @@ jobs:
           # Force link gettext to make libintl.h available system-wide
           brew link --force gettext
           
-          # Set compiler and linker flags for this session and future steps
-          echo "CPPFLAGS=-I$(brew --prefix gettext)/include" >> $GITHUB_ENV
-          echo "LDFLAGS=-L$(brew --prefix gettext)/lib" >> $GITHUB_ENV
-          echo "R_CONFIGURE_ARGS=--with-gettext-prefix=$(brew --prefix gettext)" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix gettext)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          # Set exact environment variables that data.table expects
+          gettext_prefix=$(brew --prefix gettext)
+          echo "CPPFLAGS=-I${gettext_prefix}/include:${CPPFLAGS}" >> $GITHUB_ENV
+          echo "LDFLAGS=-L${gettext_prefix}/lib:${LDFLAGS}" >> $GITHUB_ENV
+          echo "R_CONFIGURE_ARGS=--with-gettext-prefix=${gettext_prefix}" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:${PKG_CONFIG_PATH}" >> $GITHUB_ENV
           
-          # Force source installation for Bioconductor packages to avoid ARM64 binary 404s
+          # Additional data.table-specific flags
           echo "BIOCONDUCTOR_USE_BINARY=FALSE" >> $GITHUB_ENV
           echo "PKGTYPE=source" >> $GITHUB_ENV
           
+          # Create .R directory and Makevars for user-level configuration
+          mkdir -p ~/.R
+          echo "CPPFLAGS=-I\$(brew --prefix gettext)/include \$(CPPFLAGS)" > ~/.R/Makevars
+          echo "LDFLAGS=-L\$(brew --prefix gettext)/lib \$(LDFLAGS)" >> ~/.R/Makevars
+          echo "PKG_CONFIG_PATH=\$(brew --prefix gettext)/lib/pkgconfig:\$(PKG_CONFIG_PATH)" >> ~/.R/Makevars
+          
           # Verify gettext installation
-          ls -la $(brew --prefix gettext)/include/libintl.h || echo "Warning: libintl.h not found"
+          ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
           
           # Log environment for debugging
           echo "Environment variables set:"
-          echo "CPPFLAGS=$CPPFLAGS"
-          echo "LDFLAGS=$LDFLAGS"
-          echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
+          echo "CPPFLAGS=${CPPFLAGS}"
+          echo "LDFLAGS=${LDFLAGS}"
+          echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH}"
+          echo "~/.R/Makevars contents:"
+          cat ~/.R/Makevars
 
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
