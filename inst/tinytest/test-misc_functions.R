@@ -598,4 +598,141 @@ expect_equal(outersect(y, v), u, info = "Outersect with mixed types works")
 result <- outersect(v, y)
 expect_true(length(result) > 0, info = "Function produces result without error")
 
+# =============================================================================
+# Tests for shift_bypid function
+# =============================================================================
+
+# Test input validation
+expect_error(shift_bypid(NULL, 1, c(1, 2)), info = "Error when x is not a vector")
+expect_error(shift_bypid(1:5, "not_numeric", c(1, 2, 3, 4, 5)), info = "Error when lag is not numeric")
+expect_error(shift_bypid(1:5, c(1, 2), c(1, 2, 3, 4, 5)), info = "Error when lag is not scalar")
+expect_error(shift_bypid(1:5, 1, NULL), info = "Error when id is not a vector")
+expect_error(shift_bypid(1:5, 1, c("a", "b", "c", "d", "e")), info = "Error when id is not numeric")
+expect_error(shift_bypid(1:5, 1, c(1, 2, 3)), info = "Error when x and id have different lengths")
+
+# Test basic functionality with numeric data
+dt_test <- data.table(
+  id = rep(1:3, each = 4),
+  time = rep(1:4, 3),
+  value = 1:12
+)
+
+# Test lag = 0 (should return unchanged)
+result_lag0 <- shift_bypid(dt_test$value, lag = 0, id = dt_test$id)
+expect_equal(result_lag0, dt_test$value, info = "lag = 0 returns unchanged vector")
+
+# Test basic lag = 1
+result_lag1 <- shift_bypid(dt_test$value, lag = 1, id = dt_test$id)
+expected_lag1 <- c(NA, 1, 2, 3, NA, 5, 6, 7, NA, 9, 10, 11)
+expect_equal(result_lag1, expected_lag1, info = "lag = 1 produces correct results")
+
+# Test basic lead = -1
+result_lead1 <- shift_bypid(dt_test$value, lag = -1, id = dt_test$id)
+expected_lead1 <- c(2, 3, 4, NA, 6, 7, 8, NA, 10, 11, 12, NA)
+expect_equal(result_lead1, expected_lead1, info = "lead (lag = -1) produces correct results")
+
+# Test with larger lag
+result_lag2 <- shift_bypid(dt_test$value, lag = 2, id = dt_test$id)
+expected_lag2 <- c(NA, NA, 1, 2, NA, NA, 5, 6, NA, NA, 9, 10)
+expect_equal(result_lag2, expected_lag2, info = "lag = 2 produces correct results")
+
+# Test with custom replace value
+result_custom_replace <- shift_bypid(dt_test$value, lag = 1, id = dt_test$id, replace = -999)
+expected_custom <- c(-999, 1, 2, 3, -999, 5, 6, 7, -999, 9, 10, 11)
+expect_equal(result_custom_replace, expected_custom, info = "Custom replace value works")
+
+# Test with integer data
+int_data <- as.integer(dt_test$value)
+result_int <- shift_bypid(int_data, lag = 1, id = dt_test$id)
+expect_true(is.integer(result_int), info = "Integer input produces integer output")
+expect_equal(result_int, as.integer(expected_lag1), info = "Integer data produces correct results")
+
+# Test with logical data
+logical_data <- c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE)
+result_logical <- shift_bypid(logical_data, lag = 1, id = dt_test$id)
+expected_logical <- c(NA, TRUE, FALSE, TRUE, NA, TRUE, FALSE, TRUE, NA, TRUE, FALSE, TRUE)
+expect_true(is.logical(result_logical), info = "Logical input produces logical output")
+expect_equal(result_logical, expected_logical, info = "Logical data produces correct results")
+
+# Test with double/numeric data
+double_data <- as.double(dt_test$value)
+result_double <- shift_bypid(double_data, lag = 1, id = dt_test$id)
+expect_true(is.double(result_double), info = "Double input produces double output")
+expect_equal(result_double, as.double(expected_lag1), info = "Double data produces correct results")
+
+# Test with factor data
+factor_data <- factor(c("A", "B", "A", "B", "A", "B", "A", "B", "A", "B", "A", "B"), 
+                     levels = c("A", "B", "C"))
+result_factor <- shift_bypid(factor_data, lag = 1, id = dt_test$id)
+expected_factor <- factor(c(NA, "A", "B", "A", NA, "A", "B", "A", NA, "A", "B", "A"), 
+                         levels = c("A", "B", "C"))
+expect_true(is.factor(result_factor), info = "Factor input produces factor output")
+expect_equal(levels(result_factor), levels(factor_data), info = "Factor levels preserved")
+expect_equal(as.character(result_factor), as.character(expected_factor), info = "Factor data produces correct results")
+
+# Test with single group
+single_group_data <- 1:5
+single_group_id <- rep(1, 5)
+result_single <- shift_bypid(single_group_data, lag = 1, id = single_group_id)
+expected_single <- c(NA, 1, 2, 3, 4)
+expect_equal(result_single, expected_single, info = "Single group produces correct results")
+
+# Test with empty vector
+empty_data <- integer(0)
+empty_id <- integer(0)
+result_empty <- shift_bypid(empty_data, lag = 1, id = empty_id)
+expect_equal(length(result_empty), 0, info = "Empty vector produces empty result")
+expect_true(is.integer(result_empty), info = "Empty vector preserves type")
+
+# Test type conversion for lag and id
+result_convert <- shift_bypid(1:5, lag = 1.0, id = c(1.0, 1.0, 2.0, 2.0, 2.0))
+expected_convert <- c(NA, 1, NA, 3, 4)
+expect_equal(result_convert, expected_convert, info = "Automatic type conversion works")
+
+# Test with unsupported type (should error)
+expect_error(shift_bypid(list(1, 2, 3), lag = 1, id = c(1, 1, 1)), 
+            info = "Error for unsupported data type")
+
+# Test edge case: lag larger than group size
+large_lag_result <- shift_bypid(dt_test$value, lag = 10, id = dt_test$id)
+expect_true(all(is.na(large_lag_result)), info = "Large lag produces all NA values")
+
+# Test edge case: negative lag (lead) larger than group size
+large_lead_result <- shift_bypid(dt_test$value, lag = -10, id = dt_test$id)
+expect_true(all(is.na(large_lead_result)), info = "Large lead produces all NA values")
+
+# Test with unordered IDs (should still work but might be unexpected)
+unordered_data <- c(10, 20, 30, 40, 50, 60)
+unordered_id <- c(2, 1, 2, 1, 2, 1)
+result_unordered <- shift_bypid(unordered_data, lag = 1, id = unordered_id)
+# This tests that the function works but doesn't guarantee specific behavior with unsorted IDs
+expect_equal(length(result_unordered), 6, info = "Function works with unsorted IDs")
+
+# Additional comprehensive tests for lead functionality
+# Test lead = -2 with detailed expected results
+result_lead2 <- shift_bypid(dt_test$value, lag = -2, id = dt_test$id)
+expected_lead2 <- c(3, 4, NA, NA, 7, 8, NA, NA, 11, 12, NA, NA)
+expect_equal(result_lead2, expected_lead2, info = "lead (lag = -2) produces correct results")
+
+# Test with character data using lead
+char_data <- letters[1:12]
+char_id <- rep(1:3, each = 4)
+result_char_lead <- shift_bypid(char_data, lag = -1, id = char_id, replace = "missing")
+expected_char_lead <- c("b", "c", "d", "missing", "f", "g", "h", "missing", "j", "k", "l", "missing")
+expect_equal(result_char_lead, expected_char_lead, info = "Character data with lead works correctly")
+
+# Test edge case: lag equal to group size
+equal_lag_result <- shift_bypid(dt_test$value, lag = 4, id = dt_test$id)
+expect_true(all(is.na(equal_lag_result)), info = "Lag equal to group size produces all NA values")
+
+# Test edge case: lead equal to group size  
+equal_lead_result <- shift_bypid(dt_test$value, lag = -4, id = dt_test$id)
+expect_true(all(is.na(equal_lead_result)), info = "Lead equal to group size produces all NA values")
+
+# Test with single element groups
+single_elem_data <- c(1, 2, 3, 4, 5)
+single_elem_id <- c(1, 2, 3, 4, 5)
+single_elem_result <- shift_bypid(single_elem_data, lag = 1, id = single_elem_id)
+expect_true(all(is.na(single_elem_result)), info = "Single element groups produce all NA values")
+
 # cat("All misc_functions.R tests completed successfully!\n")

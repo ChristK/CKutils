@@ -17,8 +17,7 @@ Imports:
     utils,
     Rcpp,
     remotes,
-    roxygen2,
-    fst,
+    dqrng,
     data.table (>= 1.17.4)
 Suggests: 
     spelling,
@@ -29,9 +28,12 @@ Suggests:
     matrixStats,
     reldist,
     tinytest,
+    roxygen2,
     knitr
 LinkingTo: 
     Rcpp,
+    dqrng,
+    sitmo,
     data.table
 RoxygenNote: 7.3.2
 SystemRequirements: GNU make

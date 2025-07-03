@@ -1243,5 +1243,118 @@ gnrt_folder_structure <- function(path = getwd()) {
   NULL
 }
 
-# remotes::install_github("ChristK/CKutils", force = TRUE)
-# Rscript -e 'remotes::install_github("ChristK/CKutils")'
+
+#' Shift Values by Groups (Panel Data Lag/Lead)
+#'
+#' `shift_bypid` performs a lag or lead operation on a vector while respecting 
+#' group boundaries defined by an ID variable. This is particularly useful for 
+#' panel data where you want to shift values within each individual/group but 
+#' not across different groups.
+#'
+#' @param x A vector to be shifted. Can be numeric (double), integer, logical, 
+#'   character, or factor.
+#' @param lag An integer specifying the number of periods to shift. Positive 
+#'   values create lags (shift backward), negative values create leads (shift forward).
+#' @param id An integer vector of the same length as `x` that defines the groups. 
+#'   This should be sorted to ensure proper functionality.
+#' @param replace The value used to replace positions where no valid shifted 
+#'   value exists (e.g., first `lag` observations in each group). Defaults to `NA`. 
+#'   The type should be compatible with the type of `x`.
+#'
+#' @details
+#' The function dispatches to different C++ implementations based on the type of `x`:
+#' \itemize{
+#'   \item For `double` vectors: uses `shift_bypidNum`
+#'   \item For `integer` vectors (non-factor): uses `shift_bypidInt`
+#'   \item For `factor` vectors: uses `shift_bypidInt` and preserves factor levels
+#'   \item For `logical` vectors: uses `shift_bypidBool`
+#'   \item For `character` vectors: uses `shift_bypidStr`
+#' }
+#'
+#' The algorithm works by:
+#' 1. For the first `lag` positions of each group, filling with `replace` value
+#' 2. For subsequent positions, checking if the current ID matches the ID at position `i-lag`
+#' 3. If IDs match (same group), copying the value from `x[i-lag]`
+#' 4. If IDs don't match (different group), using the `replace` value
+#'
+#' **Important**: The `id` vector should be sorted to ensure correct behavior. 
+#' Unsorted IDs may lead to unexpected results.
+#'
+#' @return A vector of the same type and length as `x`, with values shifted 
+#'   according to the specified lag and group structure. Factor attributes 
+#'   are preserved for factor inputs.
+#'
+#' @examples
+#' library(data.table)
+#' 
+#' # Create sample panel data
+#' dt <- data.table(
+#'   id = rep(1:3, each = 4),
+#'   time = rep(1:4, 3),
+#'   value = 1:12
+#' )
+#' 
+#' # Add lagged values (lag = 1)
+#' dt[, value_lag1 := shift_bypid(value, lag = 1, id = id)]
+#' 
+#' # Add leading values (lag = -1)  
+#' dt[, value_lead1 := shift_bypid(value, lag = -1, id = id)]
+#' 
+#' # Works with different data types
+#' dt[, char_var := letters[1:12]]
+#' dt[, char_lag1 := shift_bypid(char_var, lag = 1, id = id, replace = "missing")]
+#' 
+#' # Factor example
+#' dt[, factor_var := factor(c("A", "B", "A", "B"), levels = c("A", "B", "C"))]
+#' dt[, factor_lag1 := shift_bypid(factor_var, lag = 1, id = id)]
+#' 
+#' print(dt)
+#' @export
+shift_bypid <-
+  function(x, lag, id, replace = NA) {
+    # Input validation
+    if (!is.vector(x) && !is.factor(x)) {
+      stop("Argument 'x' must be a vector or factor")
+    }
+    if (!is.numeric(lag)) {
+      stop("Argument 'lag' must be numeric")
+    }
+    if (length(lag) != 1L) {
+      stop("Argument 'lag' must be a single value (scalar)")
+    }
+    if (!is.vector(id)) {
+      stop("Argument 'id' must be a vector")
+    }
+    if (!is.numeric(id)) {
+      stop("Argument 'id' must be numeric")
+    }
+    if (length(x) != length(id)) {
+      stop("Arguments 'x' and 'id' must have the same length")
+    }
+    
+    # Convert lag to integer
+    lag <- as.integer(lag)
+    
+    # Convert id to integer if not already
+    if (!is.integer(id)) {
+      id <- as.integer(id)
+    }
+    
+    if (lag == 0L) return(x)
+    if (typeof(x) == "integer" && !inherits(x, "factor")) {
+      return(shift_bypidInt(x, lag, replace, id))
+    } else if (typeof(x) == "integer" && inherits(x, "factor")) {
+      int_result <- shift_bypidInt(as.integer(x), lag, replace, id)
+      return(factor(int_result, levels = seq_along(levels(x)), labels = levels(x)))
+    } else if (typeof(x) == "logical") {
+      return(shift_bypidBool(x, lag, replace, id))
+    } else if (typeof(x) == "double") {
+      return(shift_bypidNum(x, lag, replace, id))
+    } else if (typeof(x) == "character") {
+      return(shift_bypidStr(x, lag, replace, id))
+    } else
+      stop("type of x not supported")
+  }
+
+
+
