@@ -29,13 +29,15 @@ remotes::install_github("ChristK/CKutils")
 
 ```r
 library(CKutils)
-
+library(data.table)
 # Fast data.table operations
-dt <- data.table(x = 1:1000, y = rnorm(1000))
-lookup_dt(dt, x = c(1, 5, 10))  # Fast lookup by key
+lookup_table <- data.table(x = 1:1000, y = rnorm(1000), key = "x")
+dtb <- data.table(x = c(1L, 5L, 10L))
+lookup_dt(dtb, lookup_table)  # Fast lookup by key
+dtb[]
 
 # Statistical distributions
-fdBCPEo(x = 1:5, mu = 2, sigma = 0.5, nu = 1, tau = 2)  # BCPEo density
+fdBCPEo(x = 1:5, mu = rep(2, 5), sigma = rep(0.5, 5), nu = rep(1, 5), tau = rep(2, 5))  # BCPEo density
 
 # Utility functions
 normalise(c(1, 2, 3, 4, 5))  # Normalize to [0,1]

@@ -64,7 +64,7 @@ jobs:
           
           # Additional compatibility testing
           - {os: ubuntu-22.04,   r: 'release'}    # Ubuntu 22.04 LTS for broader compatibility
-          - {os: macos-12,       r: 'release'}    # Intel Mac specifically
+          # - {os: macos-12,       r: 'release'}    # Intel Mac specifically (ddisabled for now due to slow execution)
 
     # Environment variables for authentication and debugging
     env:
