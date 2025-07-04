@@ -1,8 +1,8 @@
 Package: CKutils
 Type: Package
 Title: Some Utility Functions I Use Regularly
-Version: 0.1.7
-Date: 2025-06-29
+Version: 0.1.8
+Date: 2025-07-04
 Authors@R: c(
     person("Chris", "Kypridemos", email = "christodoulosk@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0746-9229")),
     person("Amandine", "Robert", email = "amandine.rob.26@gmail.com", role = "ctb"),
@@ -18,6 +18,8 @@ Imports:
     Rcpp,
     remotes,
     dqrng,
+    fst,
+    roxygen2,
     data.table (>= 1.17.4)
 Suggests: 
     spelling,
@@ -28,7 +30,6 @@ Suggests:
     matrixStats,
     reldist,
     tinytest,
-    roxygen2,
     knitr
 LinkingTo: 
     Rcpp,

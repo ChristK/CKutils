@@ -1,12 +1,16 @@
 ^src/.*\.o$
 ^src/.*\.so$
 ^\.git$
+^\.github$
+^\.vscode$
 ^\.history$
 ^\.Rcheck$
 ^LICENSE\.md$
 ^check-before-push\.sh$
+^benchmark_BCT\.R$
 ^\.gitignore$
 ^\.github/.*$
+^\.vscode/.*$
 ^\.history/.*$
 ^\.\.Rcheck$
 ^CKutils\.Rcheck$

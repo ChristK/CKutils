@@ -90,7 +90,7 @@ if (getRversion() >= "2.15.1") {
 # Rscript -e 'remotes::install_github("ChristK/CKutils")'
 
 # cd /home/ckyprid/GH_projects/CKutils && Rscript -e "roxygen2::roxygenise(); tinytest::build_install_test()"
-# cd /home/ckyprid/GH_projects/CKutils && Rscript -e "tinytest::build_install_test()"
+# cd /home/ckyprid/GH_projects/CKutils && Rscript -e "roxygen2::roxygenise()"
 # cd /home/ckyprid/GH_projects/CKutils && R CMD INSTALL --preclean .
 # cd /home/ckyprid/GH_projects/CKutils && R CMD check --as-cran .
 

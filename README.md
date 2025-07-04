@@ -5,7 +5,7 @@
 [![Tests](https://github.com/ChristK/CKutils/workflows/Tests/badge.svg)](https://github.com/ChristK/CKutils/actions)
 [![rchk](https://github.com/ChristK/CKutils/workflows/rchk/badge.svg)](https://github.com/ChristK/CKutils/actions)
 [![test-coverage](https://github.com/ChristK/CKutils/workflows/test-coverage/badge.svg)](https://github.com/ChristK/CKutils/actions)
-[![Codecov test coverage](https://codecov.io/gh/ChristK/CKutils/branch/master/graph/badge.svg)](https://codecov.io/gh/ChristK/CKutils?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/ChristK/CKutils/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ChristK/CKutils?branch=master)
 <!-- badges: end -->
 
 A collection of utility functions for R data analysis and simulation modelling, featuring high-performance implementations for common data manipulation tasks, statistical distributions, and package management operations.

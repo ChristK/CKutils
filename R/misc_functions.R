@@ -1288,27 +1288,22 @@ gnrt_folder_structure <- function(path = getwd()) {
 #' library(data.table)
 #' 
 #' # Create sample panel data
-#' dt <- data.table(
+#' dtb <- data.table(
 #'   id = rep(1:3, each = 4),
 #'   time = rep(1:4, 3),
 #'   value = 1:12
 #' )
 #' 
 #' # Add lagged values (lag = 1)
-#' dt[, value_lag1 := shift_bypid(value, lag = 1, id = id)]
+#' dtb[, value_lag1 := shift_bypid(value, lag = 1, id = id)]
 #' 
 #' # Add leading values (lag = -1)  
-#' dt[, value_lead1 := shift_bypid(value, lag = -1, id = id)]
+#' dtb[, value_lead1 := shift_bypid(value, lag = -1, id = id)]
 #' 
 #' # Works with different data types
-#' dt[, char_var := letters[1:12]]
-#' dt[, char_lag1 := shift_bypid(char_var, lag = 1, id = id, replace = "missing")]
+#' dtb[, char_var := letters[1:12]]
+#' dtb[, char_lag1 := shift_bypid(char_var, lag = 1, id = id, replace = "missing")]
 #' 
-#' # Factor example
-#' dt[, factor_var := factor(c("A", "B", "A", "B"), levels = c("A", "B", "C"))]
-#' dt[, factor_lag1 := shift_bypid(factor_var, lag = 1, id = id)]
-#' 
-#' print(dt)
 #' @export
 shift_bypid <-
   function(x, lag, id, replace = NA) {
