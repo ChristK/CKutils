@@ -2,31 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-my_dBNB <- function(x, mu, sigma, nu, log = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_dBNB`, x, mu, sigma, nu, log, n_cpu)
-}
-
-#' @export
-my_pBNB <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_pBNB`, q, mu, sigma, nu, lower_tail, log_p, n_cpu)
-}
-
-#' @export
-my_qBNB <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_qBNB`, p, mu, sigma, nu, lower_tail, log_p, n_cpu)
-}
-
-#' @export
-my_qZIBNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_qZIBNB`, p, mu, sigma, nu, tau, lower_tail, log_p, n_cpu)
-}
-
-#' @export
-my_qZABNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_qZABNB`, p, mu, sigma, nu, tau, lower_tail, log_p, n_cpu)
-}
-
-#' @export
 my_dDEL <- function(x, mu, sigma, nu, log_ = FALSE, n_cpu = 1L) {
     .Call(`_CKutils_my_dDEL`, x, mu, sigma, nu, log_, n_cpu)
 }
@@ -451,32 +426,32 @@ fqBCPEo <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' # Vectorized operations
 #' x <- c(0.5, 1.0, 2.0, 3.0)
 #' mu <- c(1.0, 1.2, 1.5, 1.8)
-#' fdBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4))
+#' fdBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5)
 #'
 #' # Log densities
-#' fdBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4), log_ = TRUE)
+#' fdBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5, log_ = TRUE)
 #'
 #' # Upper tail probabilities
-#' fpBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4), lower_tail = FALSE)
+#' fpBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5, lower_tail = FALSE)
 #'
 #' # Different parameter combinations
 #' # Symmetric case (nu = 0)
-#' fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0, 3), tau = rep(4, 3))
+#' fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0, tau = 4)
 #'
 #' # Heavy-tailed case (small tau)
-#' fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0.5, 3), tau = rep(2.1, 3))
+#' fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0.5, tau = 2.1)
 #'
 #' # Light-tailed case (large tau, approaches normal)
-#' fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0.5, 3), tau = rep(100, 3))
+#' fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0.5, tau = 100)
 #'
 #' \dontrun{
 #' # Comparison with gamlss.dist (requires gamlss.dist package)
 #' library(gamlss.dist)
 #' x <- c(1, 2, 3)
-#' mu <- rep(2, 3)
-#' sigma <- rep(0.5, 3)
-#' nu <- rep(0.3, 3)
-#' tau <- rep(5, 3)
+#' mu <- 2
+#' sigma <- 0.5
+#' nu <- 0.3
+#' tau <- 5
 #'
 #' # Results should be numerically identical
 #' all.equal(fdBCT(x, mu, sigma, nu, tau), dBCT(x, mu, sigma, nu, tau))
@@ -529,14 +504,14 @@ fdBCT <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
 #'
 #' @examples
 #' # Basic CDF evaluation
-#' fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3))
+#' fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 #'
 #' # Upper tail probabilities
-#' fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+#' fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
 #'       lower_tail = FALSE)
 #'
 #' # Log probabilities
-#' fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+#' fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
 #'       log_p = TRUE)
 #'
 #' @rdname fdBCT
@@ -573,26 +548,203 @@ fpBCT <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' @examples
 #' # Basic quantile calculation
-#' fqBCT(c(0.1, 0.5, 0.9), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3))
+#' fqBCT(c(0.1, 0.5, 0.9), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 #'
 #' # Median (50th percentile)
 #' fqBCT(0.5, mu = 2, sigma = 0.5, nu = 0.3, tau = 5)  # Should equal mu
 #'
 #' # Extreme quantiles
-#' fqBCT(c(0.001, 0.999), mu = rep(2, 2), sigma = rep(0.5, 2), nu = rep(0.3, 2), tau = rep(5, 2))
+#' fqBCT(c(0.001, 0.999), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 #'
 #' # Upper tail quantiles
-#' fqBCT(c(0.1, 0.5, 0.9), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+#' fqBCT(c(0.1, 0.5, 0.9), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
 #'       lower_tail = FALSE)
 #'
 #' # Log probability scale
-#' fqBCT(log(c(0.1, 0.5, 0.9)), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+#' fqBCT(log(c(0.1, 0.5, 0.9)), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
 #'       log_p = TRUE)
 #'
 #' @rdname fdBCT
 #' @export
 fqBCT <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqBCT`, p, mu, sigma, nu, tau, lower_tail, log_p)
+}
+
+#' Beta Negative Binomial Distribution Density
+#'
+#' Probability density function for the Beta Negative Binomial (BNB) distribution
+#' with parameters mu (mean), sigma (dispersion), and nu (shape).
+#'
+#' @param x vector of (non-negative integer) quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of positive shape parameters.
+#' @param log logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The probability mass function of the BNB distribution is:
+#' \deqn{f(y|\mu,\sigma,\nu) = \frac{\Gamma(y+1/\nu)\mathrm{B}(y+(\mu\nu)/\sigma, 1/\sigma+1/\nu+1)}{\Gamma(y+1)\Gamma(1/\nu)\mathrm{B}((\mu\nu)/\sigma, 1/\sigma+1)}}
+#' for \eqn{y = 0, 1, 2, \ldots}, \eqn{\mu > 0}, \eqn{\sigma > 0}, and \eqn{\nu > 0}.
+#'
+#' @return A numeric vector of density values.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fdBNB(c(0,1,2,3), mu=2, sigma=1, nu=1)
+#' 
+#' # Vector inputs with recycling
+#' fdBNB(0:5, mu=c(1,2), sigma=0.5, nu=c(1,1.5,2))
+#'
+#' @export
+fdBNB <- function(x, mu, sigma, nu, log = FALSE) {
+    .Call(`_CKutils_fdBNB`, x, mu, sigma, nu, log)
+}
+
+#' Beta Negative Binomial Distribution Function
+#'
+#' Cumulative distribution function for the Beta Negative Binomial (BNB) distribution
+#' with parameters mu (mean), sigma (dispersion), and nu (shape).
+#'
+#' @param q vector of (non-negative integer) quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of positive shape parameters.
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The cumulative distribution function is computed by summing the probability mass
+#' function from 0 to q.
+#'
+#' @return A numeric vector of cumulative probabilities.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fpBNB(c(0,1,2,3), mu=2, sigma=1, nu=1)
+#' 
+#' # Vector inputs with recycling
+#' fpBNB(0:5, mu=c(1,2), sigma=0.5, nu=c(1,1.5,2))
+#'
+#' @export
+fpBNB <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpBNB`, q, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Beta Negative Binomial Quantile Function
+#'
+#' Quantile function for the Beta Negative Binomial (BNB) distribution
+#' with parameters mu (mean), sigma (dispersion), and nu (shape).
+#'
+#' @param p vector of probabilities.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of positive shape parameters.
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The quantile function uses a fast divide-and-conquer algorithm to find
+#' the quantiles efficiently.
+#'
+#' @return An integer vector of quantiles.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fqBNB(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=1)
+#' 
+#' # Vector inputs with recycling
+#' fqBNB(c(0.25, 0.75), mu=c(1,2), sigma=0.5, nu=c(1,1.5,2))
+#'
+#' @export
+fqBNB <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqBNB`, p, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Zero Inflated Beta Negative Binomial Quantile Function
+#'
+#' Quantile function for the Zero Inflated Beta Negative Binomial (ZIBNB) distribution
+#' with parameters mu (mean), sigma (dispersion), nu (shape), and tau (zero inflation).
+#'
+#' @param p vector of probabilities.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of positive shape parameters.
+#' @param tau vector of zero inflation probabilities (0 < tau < 1).
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The zero inflated beta negative binomial distribution allows for excess zeros
+#' beyond what the BNB distribution would predict.
+#'
+#' @return An integer vector of quantiles.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fqZIBNB(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=1, tau=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fqZIBNB(c(0.25, 0.75), mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+#'
+#' @export
+fqZIBNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqZIBNB`, p, mu, sigma, nu, tau, lower_tail, log_p)
+}
+
+#' Zero Adjusted Beta Negative Binomial Quantile Function
+#'
+#' Quantile function for the Zero Adjusted (Hurdle) Beta Negative Binomial (ZABNB) distribution
+#' with parameters mu (mean), sigma (dispersion), nu (shape), and tau (hurdle probability).
+#'
+#' @param p vector of probabilities.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of positive shape parameters.
+#' @param tau vector of hurdle probabilities (0 < tau < 1).
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The zero adjusted (hurdle) beta negative binomial distribution has two parts:
+#' a point mass at zero and a truncated BNB distribution for positive values.
+#'
+#' @return An integer vector of quantiles.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fqZABNB(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=1, tau=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fqZABNB(c(0.25, 0.75), mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+#'
+#' @export
+fqZABNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqZABNB`, p, mu, sigma, nu, tau, lower_tail, log_p)
 }
 
 #' Convert Factor to Integer (C++ Version)
@@ -926,9 +1078,14 @@ NULL
 #' Efficiently shifts numeric values within groups defined by ID variables.
 #' Optimized for panel data and time series analysis.
 #' 
-#' @inheritParams shift_bypid
 #' @param x Numeric vector of values to be shifted.
+#' @param lag Integer specifying the lag amount. Positive values create standard lags 
+#'   (shift values forward in time), negative values create leads (shift values 
+#'   backward in time).
 #' @param replace Numeric replacement value for positions that cannot be filled.
+#' @param id Integer vector of group identifiers. Must be the same length as x. 
+#'   Should be sorted for optimal performance. Values are only shifted within 
+#'   the same ID group.
 #' 
 #' @return Numeric vector of the same length as input, with values shifted 
 #'   according to the specified lag and group structure.
@@ -945,9 +1102,14 @@ shift_bypidNum <- function(x, lag, replace, id) {
 #' Efficiently shifts integer values within groups defined by ID variables.
 #' Preserves factor attributes when present, making it suitable for categorical data.
 #' 
-#' @inheritParams shift_bypid
 #' @param x Integer vector of values to be shifted. Factor attributes are preserved.
+#' @param lag Integer specifying the lag amount. Positive values create standard lags 
+#'   (shift values forward in time), negative values create leads (shift values 
+#'   backward in time).
 #' @param replace Integer replacement value for positions that cannot be filled.
+#' @param id Integer vector of group identifiers. Must be the same length as x. 
+#'   Should be sorted for optimal performance. Values are only shifted within 
+#'   the same ID group.
 #' 
 #' @details
 #' This function automatically detects and preserves factor attributes including
@@ -970,10 +1132,15 @@ shift_bypidInt <- function(x, lag, replace, id) {
 #' Efficiently shifts logical (boolean) values within groups defined by ID variables.
 #' Designed for binary indicators and flag variables in panel data.
 #' 
-#' @inheritParams shift_bypid
 #' @param x Logical vector of values to be shifted.
+#' @param lag Integer specifying the lag amount. Positive values create standard lags 
+#'   (shift values forward in time), negative values create leads (shift values 
+#'   backward in time).
 #' @param replace Logical vector with one element specifying the replacement value 
 #'   for positions that cannot be filled.
+#' @param id Integer vector of group identifiers. Must be the same length as x. 
+#'   Should be sorted for optimal performance. Values are only shifted within 
+#'   the same ID group.
 #' 
 #' @details
 #' The replacement parameter must be a logical vector (even with just one element)
@@ -995,9 +1162,14 @@ shift_bypidBool <- function(x, lag, replace, id) {
 #' Efficiently shifts character (string) values within groups defined by ID variables.
 #' Ideal for text data, labels, and categorical variables in panel data analysis.
 #' 
-#' @inheritParams shift_bypid
 #' @param x Character vector of values to be shifted.
+#' @param lag Integer specifying the lag amount. Positive values create standard lags 
+#'   (shift values forward in time), negative values create leads (shift values 
+#'   backward in time).
 #' @param replace String replacement value for positions that cannot be filled.
+#' @param id Integer vector of group identifiers. Must be the same length as x. 
+#'   Should be sorted for optimal performance. Values are only shifted within 
+#'   the same ID group.
 #' 
 #' @details
 #' This function handles character data efficiently by converting the replacement

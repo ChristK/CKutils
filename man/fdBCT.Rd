@@ -125,32 +125,32 @@ fqBCT(0.5, mu = 1, sigma = 0.5, nu = 0.3, tau = 5)
 # Vectorized operations
 x <- c(0.5, 1.0, 2.0, 3.0)
 mu <- c(1.0, 1.2, 1.5, 1.8)
-fdBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4))
+fdBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5)
 
 # Log densities
-fdBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4), log_ = TRUE)
+fdBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5, log_ = TRUE)
 
 # Upper tail probabilities
-fpBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4), lower_tail = FALSE)
+fpBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5, lower_tail = FALSE)
 
 # Different parameter combinations
 # Symmetric case (nu = 0)
-fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0, 3), tau = rep(4, 3))
+fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0, tau = 4)
 
 # Heavy-tailed case (small tau)
-fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0.5, 3), tau = rep(2.1, 3))
+fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0.5, tau = 2.1)
 
 # Light-tailed case (large tau, approaches normal)
-fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0.5, 3), tau = rep(100, 3))
+fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0.5, tau = 100)
 
 \dontrun{
 # Comparison with gamlss.dist (requires gamlss.dist package)
 library(gamlss.dist)
 x <- c(1, 2, 3)
-mu <- rep(2, 3)
-sigma <- rep(0.5, 3)
-nu <- rep(0.3, 3)
-tau <- rep(5, 3)
+mu <- 2
+sigma <- 0.5
+nu <- 0.3
+tau <- 5
 
 # Results should be numerically identical
 all.equal(fdBCT(x, mu, sigma, nu, tau), dBCT(x, mu, sigma, nu, tau))
@@ -168,31 +168,31 @@ microbenchmark(
 }
 
 # Basic CDF evaluation
-fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3))
+fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 
 # Upper tail probabilities
-fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
       lower_tail = FALSE)
 
 # Log probabilities
-fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
       log_p = TRUE)
 
 # Basic quantile calculation
-fqBCT(c(0.1, 0.5, 0.9), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3))
+fqBCT(c(0.1, 0.5, 0.9), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 
 # Median (50th percentile)
 fqBCT(0.5, mu = 2, sigma = 0.5, nu = 0.3, tau = 5)  # Should equal mu
 
 # Extreme quantiles
-fqBCT(c(0.001, 0.999), mu = rep(2, 2), sigma = rep(0.5, 2), nu = rep(0.3, 2), tau = rep(5, 2))
+fqBCT(c(0.001, 0.999), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 
 # Upper tail quantiles
-fqBCT(c(0.1, 0.5, 0.9), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+fqBCT(c(0.1, 0.5, 0.9), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
       lower_tail = FALSE)
 
 # Log probability scale
-fqBCT(log(c(0.1, 0.5, 0.9)), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+fqBCT(log(c(0.1, 0.5, 0.9)), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
       log_p = TRUE)
 
 }

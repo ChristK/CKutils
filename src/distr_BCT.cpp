@@ -19,6 +19,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <Rcpp.h>
 #include <math.h>
 #include <Rmath.h>
+#include "recycling_helpers.h"
 // [[Rcpp::plugins(cpp17)]]
 
 // Enable vectorization hints for modern compilers
@@ -146,32 +147,32 @@ inline double fdBCT_t_cdf(const double z, const double tau) {
 //' # Vectorized operations
 //' x <- c(0.5, 1.0, 2.0, 3.0)
 //' mu <- c(1.0, 1.2, 1.5, 1.8)
-//' fdBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4))
+//' fdBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5)
 //'
 //' # Log densities
-//' fdBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4), log_ = TRUE)
+//' fdBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5, log_ = TRUE)
 //'
 //' # Upper tail probabilities
-//' fpBCT(x, mu = mu, sigma = rep(0.5, 4), nu = rep(0.3, 4), tau = rep(5, 4), lower_tail = FALSE)
+//' fpBCT(x, mu = mu, sigma = 0.5, nu = 0.3, tau = 5, lower_tail = FALSE)
 //'
 //' # Different parameter combinations
 //' # Symmetric case (nu = 0)
-//' fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0, 3), tau = rep(4, 3))
+//' fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0, tau = 4)
 //'
 //' # Heavy-tailed case (small tau)
-//' fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0.5, 3), tau = rep(2.1, 3))
+//' fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0.5, tau = 2.1)
 //'
 //' # Light-tailed case (large tau, approaches normal)
-//' fdBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.3, 3), nu = rep(0.5, 3), tau = rep(100, 3))
+//' fdBCT(c(1, 2, 3), mu = 2, sigma = 0.3, nu = 0.5, tau = 100)
 //'
 //' \dontrun{
 //' # Comparison with gamlss.dist (requires gamlss.dist package)
 //' library(gamlss.dist)
 //' x <- c(1, 2, 3)
-//' mu <- rep(2, 3)
-//' sigma <- rep(0.5, 3)
-//' nu <- rep(0.3, 3)
-//' tau <- rep(5, 3)
+//' mu <- 2
+//' sigma <- 0.5
+//' nu <- 0.3
+//' tau <- 5
 //'
 //' # Results should be numerically identical
 //' all.equal(fdBCT(x, mu, sigma, nu, tau), dBCT(x, mu, sigma, nu, tau))
@@ -206,43 +207,42 @@ NumericVector fdBCT(const NumericVector& x,
                         const NumericVector& tau,
                         const bool& log_ = false)
 {
-  if (x.length() != mu.length() || mu.length() != sigma.length() ||
-      sigma.length() != nu.length() || nu.length() != tau.length()
-  ) stop("Distribution parameters must be of same length");
-
-  const int n = x.length();
+  // Use recycling helper for parameter vectors
+  auto recycled = recycle_vectors(x, mu, sigma, nu, tau);
+  const int n = recycled.n;
+  
   NumericVector loglik(n);
 
   // Input validation
   for (int i = 0; i < n; i++) {
-    if (x[i] < 0.0) stop("x must be >=0");
-    if (mu[i] <= 0.0) stop("mu must be positive");
-    if (sigma[i] <= 0.0) stop("sigma must be positive");
-    if (tau[i] <= 0.0) stop("tau must be positive");
+    if (recycled.vec1[i] < 0.0) stop("x must be >=0");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be positive");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be positive");
+    if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
   // SIMD-optimized main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Use normal approximation for very large tau
-    if (tau[i] > 1000000.0) {
-      loglik[i] = fdBCT_normal_approx(x[i], mu[i], sigma[i], nu[i], true);
+    if (recycled.vec5[i] > 1000000.0) {
+      loglik[i] = fdBCT_normal_approx(recycled.vec1[i], recycled.vec2[i], recycled.vec3[i], recycled.vec4[i], true);
       continue;
     }
 
     // Compute z transformation
     double z;
-    const double x_over_mu = x[i] / mu[i];
-    if (nu[i] != 0.0) {
-      z = (std::pow(x_over_mu, nu[i]) - 1.0) / (nu[i] * sigma[i]);
+    const double x_over_mu = recycled.vec1[i] / recycled.vec2[i];
+    if (recycled.vec4[i] != 0.0) {
+      z = (std::pow(x_over_mu, recycled.vec4[i]) - 1.0) / (recycled.vec4[i] * recycled.vec3[i]);
     } else {
-      z = log(x_over_mu) / sigma[i];
+      z = log(x_over_mu) / recycled.vec3[i];
     }
 
     // Compute log-likelihood components efficiently
-    const double logder = (nu[i] - 1.0) * log(x[i]) - nu[i] * log(mu[i]) - log(sigma[i]);
-    const double fTz = fdBCT_t_logdens(z, tau[i]);
-    const double normalization = log(fdBCT_t_cdf(1.0 / (sigma[i] * std::abs(nu[i])), tau[i]));
+    const double logder = (recycled.vec4[i] - 1.0) * log(recycled.vec1[i]) - recycled.vec4[i] * log(recycled.vec2[i]) - log(recycled.vec3[i]);
+    const double fTz = fdBCT_t_logdens(z, recycled.vec5[i]);
+    const double normalization = log(fdBCT_t_cdf(1.0 / (recycled.vec3[i] * std::abs(recycled.vec4[i])), recycled.vec5[i]));
     
     loglik[i] = logder + fTz - normalization;
   }
@@ -280,14 +280,14 @@ NumericVector fdBCT(const NumericVector& x,
 //'
 //' @examples
 //' # Basic CDF evaluation
-//' fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3))
+//' fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 //'
 //' # Upper tail probabilities
-//' fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+//' fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
 //'       lower_tail = FALSE)
 //'
 //' # Log probabilities
-//' fpBCT(c(1, 2, 3), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+//' fpBCT(c(1, 2, 3), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
 //'       log_p = TRUE)
 //'
 //' @rdname fdBCT
@@ -301,19 +301,18 @@ NumericVector fpBCT(const NumericVector& q,
                       const bool& lower_tail = true,
                       const bool& log_p = false)
 {
-  if (q.length() != mu.length() || mu.length() != sigma.length() ||
-      sigma.length() != nu.length() || nu.length() != tau.length()
-  ) stop("Distribution parameters must be of same length");
-
-  const int n = q.length();
+  // Use recycling helper for parameter vectors
+  auto recycled = recycle_vectors(q, mu, sigma, nu, tau);
+  const int n = recycled.n;
+  
   NumericVector out(n);
 
   // Input validation
   for (int i = 0; i < n; i++) {
-    if (q[i] < 0.0) stop("q must be >=0");
-    if (mu[i] <= 0.0) stop("mu must be positive");
-    if (sigma[i] <= 0.0) stop("sigma must be positive");
-    if (tau[i] <= 0.0) stop("tau must be positive");
+    if (recycled.vec1[i] < 0.0) stop("q must be >=0");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be positive");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be positive");
+    if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
   // SIMD-optimized main computation loop
@@ -321,20 +320,20 @@ NumericVector fpBCT(const NumericVector& q,
   for (int i = 0; i < n; i++) {
     // Compute z transformation
     double z;
-    const double q_over_mu = q[i] / mu[i];
-    if (nu[i] != 0.0) {
-      z = (std::pow(q_over_mu, nu[i]) - 1.0) / (nu[i] * sigma[i]);
+    const double q_over_mu = recycled.vec1[i] / recycled.vec2[i];
+    if (recycled.vec4[i] != 0.0) {
+      z = (std::pow(q_over_mu, recycled.vec4[i]) - 1.0) / (recycled.vec4[i] * recycled.vec3[i]);
     } else {
-      z = log(q_over_mu) / sigma[i];
+      z = log(q_over_mu) / recycled.vec3[i];
     }
 
     // Compute CDF components efficiently
-    const double FYy1 = fdBCT_t_cdf(z, tau[i]);
-    const double FYy3 = fdBCT_t_cdf(1.0 / (sigma[i] * std::abs(nu[i])), tau[i]);
+    const double FYy1 = fdBCT_t_cdf(z, recycled.vec5[i]);
+    const double FYy3 = fdBCT_t_cdf(1.0 / (recycled.vec3[i] * std::abs(recycled.vec4[i])), recycled.vec5[i]);
     
     double FYy2 = 0.0;
-    if (nu[i] > 0.0) {
-      FYy2 = fdBCT_t_cdf(-1.0 / (sigma[i] * std::abs(nu[i])), tau[i]);
+    if (recycled.vec4[i] > 0.0) {
+      FYy2 = fdBCT_t_cdf(-1.0 / (recycled.vec3[i] * std::abs(recycled.vec4[i])), recycled.vec5[i]);
     }
     
     out[i] = (FYy1 - FYy2) / FYy3;
@@ -386,20 +385,20 @@ NumericVector fpBCT(const NumericVector& q,
 //'
 //' @examples
 //' # Basic quantile calculation
-//' fqBCT(c(0.1, 0.5, 0.9), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3))
+//' fqBCT(c(0.1, 0.5, 0.9), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 //'
 //' # Median (50th percentile)
 //' fqBCT(0.5, mu = 2, sigma = 0.5, nu = 0.3, tau = 5)  # Should equal mu
 //'
 //' # Extreme quantiles
-//' fqBCT(c(0.001, 0.999), mu = rep(2, 2), sigma = rep(0.5, 2), nu = rep(0.3, 2), tau = rep(5, 2))
+//' fqBCT(c(0.001, 0.999), mu = 2, sigma = 0.5, nu = 0.3, tau = 5)
 //'
 //' # Upper tail quantiles
-//' fqBCT(c(0.1, 0.5, 0.9), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+//' fqBCT(c(0.1, 0.5, 0.9), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
 //'       lower_tail = FALSE)
 //'
 //' # Log probability scale
-//' fqBCT(log(c(0.1, 0.5, 0.9)), mu = rep(2, 3), sigma = rep(0.5, 3), nu = rep(0.3, 3), tau = rep(5, 3),
+//' fqBCT(log(c(0.1, 0.5, 0.9)), mu = 2, sigma = 0.5, nu = 0.3, tau = 5,
 //'       log_p = TRUE)
 //'
 //' @rdname fdBCT
@@ -413,15 +412,14 @@ NumericVector fqBCT(const NumericVector& p,
                       const bool& lower_tail = true,
                       const bool& log_p = false)
 {
-  if (p.length() != mu.length() || mu.length() != sigma.length() ||
-      sigma.length() != nu.length() || nu.length() != tau.length()
-  ) stop("Distribution parameters must be of same length");
-
-  const int n = p.length();
+  // Use recycling helper for parameter vectors
+  auto recycled = recycle_vectors(p, mu, sigma, nu, tau);
+  const int n = recycled.n;
+  
   NumericVector out(n);
   
   // Make a copy of p to avoid modifying the input
-  NumericVector p_cloned = clone(p);
+  NumericVector p_cloned = clone(recycled.vec1);
   
   if (log_p) {
     SIMD_HINT
@@ -440,35 +438,35 @@ NumericVector fqBCT(const NumericVector& p,
   // Input validation
   for (int i = 0; i < n; i++) {
     if (p_cloned[i] <= 0.0 || p_cloned[i] >= 1.0) stop("p must be between 0 and 1");
-    if (mu[i] <= 0.0) stop("mu must be positive");
-    if (sigma[i] <= 0.0) stop("sigma must be positive");
-    if (tau[i] <= 0.0) stop("tau must be positive");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be positive");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be positive");
+    if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
   // SIMD-optimized main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Compute quantile transformation
-    const double abs_nu_sigma = sigma[i] * std::abs(nu[i]);
-    const double pt_term = fdBCT_t_cdf(1.0 / abs_nu_sigma, tau[i]);
+    const double abs_nu_sigma = recycled.vec3[i] * std::abs(recycled.vec4[i]);
+    const double pt_term = fdBCT_t_cdf(1.0 / abs_nu_sigma, recycled.vec5[i]);
     
     double z;
-    if (nu[i] <= 0.0) {
-      z = R::qt(p_cloned[i] * pt_term, tau[i], true, false);
+    if (recycled.vec4[i] <= 0.0) {
+      z = R::qt(p_cloned[i] * pt_term, recycled.vec5[i], true, false);
     } else {
-      z = R::qt(1.0 - (1.0 - p_cloned[i]) * pt_term, tau[i], true, false);
+      z = R::qt(1.0 - (1.0 - p_cloned[i]) * pt_term, recycled.vec5[i], true, false);
     }
     
     // Transform back to original scale
-    if (nu[i] != 0.0) {
-      const double term = nu[i] * sigma[i] * z + 1.0;
+    if (recycled.vec4[i] != 0.0) {
+      const double term = recycled.vec4[i] * recycled.vec3[i] * z + 1.0;
       if (term > 0.0) {
-        out[i] = mu[i] * pow(term, 1.0 / nu[i]);
+        out[i] = recycled.vec2[i] * pow(term, 1.0 / recycled.vec4[i]);
       } else {
         out[i] = R_NaN;
       }
     } else {
-      out[i] = mu[i] * exp(sigma[i] * z);
+      out[i] = recycled.vec2[i] * exp(recycled.vec3[i] * z);
     }
   }
 

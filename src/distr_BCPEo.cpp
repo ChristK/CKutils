@@ -19,6 +19,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <Rcpp.h>
 #include <math.h>
 #include <Rmath.h>
+#include "recycling_helpers.h"
 // [[Rcpp::plugins(cpp17)]]
 
 // Enable vectorization hints for modern compilers
@@ -155,19 +156,18 @@ NumericVector fdBCPEo(const NumericVector& x,
                       const NumericVector& tau,
                       const bool& log_ = false)
 {
-  if (x.length() != mu.length() || mu.length() != sigma.length() ||
-      sigma.length() != nu.length() || nu.length() != tau.length()
-        ) stop("Distribution parameters must be of same length");
-
-  const int n = x.length();
+  // Use recycling helper for parameter vectors
+  auto recycled = recycle_vectors(x, mu, sigma, nu, tau);
+  const int n = recycled.n;
+  
   NumericVector loglik(n);
 
   // Input validation
   for (int i = 0; i < n; i++) {
-    if (x[i] < 0.0) stop("x must be >=0");
-    if (mu[i] <= 0.0) stop("mu must be positive");
-    if (sigma[i] <= 0.0) stop("sigma must be positive");  
-    if (tau[i] <= 0.0) stop("tau must be positive");
+    if (recycled.vec1[i] < 0.0) stop("x must be >=0");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be positive");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be positive");  
+    if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
   // SIMD-optimized main computation loop without caching
@@ -175,19 +175,19 @@ NumericVector fdBCPEo(const NumericVector& x,
   for (int i = 0; i < n; i++) {
     // Compute z transformation - equivalent to gamlss.dist logic
     double z;
-    const double x_over_mu = x[i] / mu[i];
-    if (nu[i] != 0.0) {
-      z = (std::pow(x_over_mu, nu[i]) - 1.0) / (nu[i] * sigma[i]);
+    const double x_over_mu = recycled.vec1[i] / recycled.vec2[i];
+    if (recycled.vec4[i] != 0.0) {
+      z = (std::pow(x_over_mu, recycled.vec4[i]) - 1.0) / (recycled.vec4[i] * recycled.vec3[i]);
     } else {
-      z = log(x_over_mu) / sigma[i];
+      z = log(x_over_mu) / recycled.vec3[i];
     }
 
     // Compute log-likelihood using per-element helpers
     // Use abs(nu) directly to match gamlss.dist exactly
-    const double logfZ = fdBCPEo_hlp_f_T(z, tau[i], true) -
-      log(fdBCPEo_hlp_F_T(1.0 / (sigma[i] * std::abs(nu[i])), tau[i]));
+    const double logfZ = fdBCPEo_hlp_f_T(z, recycled.vec5[i], true) -
+      log(fdBCPEo_hlp_F_T(1.0 / (recycled.vec3[i] * std::abs(recycled.vec4[i])), recycled.vec5[i]));
     
-    const double logder = (nu[i] - 1.0) * log(x[i]) - nu[i] * log(mu[i]) - log(sigma[i]);
+    const double logder = (recycled.vec4[i] - 1.0) * log(recycled.vec1[i]) - recycled.vec4[i] * log(recycled.vec2[i]) - log(recycled.vec3[i]);
     loglik[i] = logder + logfZ;
   }
 
@@ -273,19 +273,18 @@ NumericVector fpBCPEo(const NumericVector& q,
                         const bool& lower_tail = true,
                         const bool& log_p = false)
 {
-  if (q.length() != mu.length() || mu.length() != sigma.length() ||
-      sigma.length() != nu.length() || nu.length() != tau.length()
-  ) stop("Distribution parameters must be of same length");
-
-  const int n = q.length();
+  // Use recycling helper for parameter vectors
+  auto recycled = recycle_vectors(q, mu, sigma, nu, tau);
+  const int n = recycled.n;
+  
   NumericVector out(n);
 
   // Input validation
   for (int i = 0; i < n; i++) {
-    if (q[i] < 0.0) stop("q must be positive");
-    if (mu[i] <= 0.0) stop("mu must be positive");
-    if (sigma[i] <= 0.0) stop("sigma must be positive");
-    if (tau[i] <= 0.0) stop("tau must be positive");
+    if (recycled.vec1[i] < 0.0) stop("q must be positive");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be positive");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be positive");
+    if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
   // SIMD-optimized main computation loop without caching
@@ -293,20 +292,20 @@ NumericVector fpBCPEo(const NumericVector& q,
   for (int i = 0; i < n; i++) {
     // Compute z transformation - equivalent to gamlss.dist logic
     double z;
-    const double q_over_mu = q[i] / mu[i];
-    if (nu[i] != 0.0) {
-      z = (std::pow(q_over_mu, nu[i]) - 1.0) / (nu[i] * sigma[i]);
+    const double q_over_mu = recycled.vec1[i] / recycled.vec2[i];
+    if (recycled.vec4[i] != 0.0) {
+      z = (std::pow(q_over_mu, recycled.vec4[i]) - 1.0) / (recycled.vec4[i] * recycled.vec3[i]);
     } else {
-      z = log(q_over_mu) / sigma[i];
+      z = log(q_over_mu) / recycled.vec3[i];
     }
 
-    const double FYy1 = fdBCPEo_hlp_F_T(z, tau[i]);
+    const double FYy1 = fdBCPEo_hlp_F_T(z, recycled.vec5[i]);
 
     double FYy2 = 0.0;
-    if (nu[i] > 0.0) {
-      FYy2 = fdBCPEo_hlp_F_T(-1.0 / (sigma[i] * std::abs(nu[i])), tau[i]);
+    if (recycled.vec4[i] > 0.0) {
+      FYy2 = fdBCPEo_hlp_F_T(-1.0 / (recycled.vec3[i] * std::abs(recycled.vec4[i])), recycled.vec5[i]);
     }
-    const double FYy3 = fdBCPEo_hlp_F_T(1.0 / (sigma[i] * std::abs(nu[i])), tau[i]);
+    const double FYy3 = fdBCPEo_hlp_F_T(1.0 / (recycled.vec3[i] * std::abs(recycled.vec4[i])), recycled.vec5[i]);
     out[i] = (FYy1 - FYy2) / FYy3;
   }
 
@@ -403,21 +402,20 @@ NumericVector fqBCPEo(const NumericVector& p,
                         const bool& lower_tail = true,
                         const bool& log_p = false)
 {
-  if (p.length() != mu.length() || mu.length() != sigma.length() ||
-      sigma.length() != nu.length() || nu.length() != tau.length()
-  ) stop("Distribution parameters must be of same length");
-
-  const int n = p.length();
+  // Use recycling helper for parameter vectors
+  auto recycled = recycle_vectors(p, mu, sigma, nu, tau);
+  const int n = recycled.n;
+  
   NumericVector out(n);
   
   // Make a copy of p to avoid modifying the input
-  NumericVector p_cloned = clone(p);
+  NumericVector p_cloned = clone(recycled.vec1);
   
   // Input validation for parameters
   for (int i = 0; i < n; i++) {
-    if (mu[i] <= 0.0) stop("mu must be positive");
-    if (sigma[i] <= 0.0) stop("sigma must be positive");
-    if (tau[i] <= 0.0) stop("tau must be positive");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be positive");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be positive");
+    if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
   
   // Transform p values first (matching R reference order)
@@ -455,23 +453,23 @@ NumericVector fqBCPEo(const NumericVector& p,
     }
 
     double za;
-    const double sigma_abs_nu = sigma[i] * std::abs(nu[i]);
+    const double sigma_abs_nu = recycled.vec3[i] * std::abs(recycled.vec4[i]);
     
-    if (nu[i] < 0.0) {
-      const double F_bound = fdBCPEo_hlp_F_T(1.0 / sigma_abs_nu, tau[i]);
-      za = fqBCPEo_hlp_q_T(p_cloned[i] * F_bound, tau[i]);
-    } else if (nu[i] == 0.0) {
-      za = fqBCPEo_hlp_q_T(p_cloned[i], tau[i]);
+    if (recycled.vec4[i] < 0.0) {
+      const double F_bound = fdBCPEo_hlp_F_T(1.0 / sigma_abs_nu, recycled.vec5[i]);
+      za = fqBCPEo_hlp_q_T(p_cloned[i] * F_bound, recycled.vec5[i]);
+    } else if (recycled.vec4[i] == 0.0) {
+      za = fqBCPEo_hlp_q_T(p_cloned[i], recycled.vec5[i]);
     } else { // nu > 0
-      const double F_bound = fdBCPEo_hlp_F_T(1.0 / sigma_abs_nu, tau[i]);
-      za = fqBCPEo_hlp_q_T(1.0 - (1.0 - p_cloned[i]) * F_bound, tau[i]);
+      const double F_bound = fdBCPEo_hlp_F_T(1.0 / sigma_abs_nu, recycled.vec5[i]);
+      za = fqBCPEo_hlp_q_T(1.0 - (1.0 - p_cloned[i]) * F_bound, recycled.vec5[i]);
     }
 
-    if (nu[i] == 0.0) {
-      out[i] = mu[i] * exp(sigma[i] * za);
+    if (recycled.vec4[i] == 0.0) {
+      out[i] = recycled.vec2[i] * exp(recycled.vec3[i] * za);
     } else {
-      const double base = nu[i] * sigma[i] * za + 1.0;
-      out[i] = mu[i] * std::pow(base, 1.0 / nu[i]);
+      const double base = recycled.vec4[i] * recycled.vec3[i] * za + 1.0;
+      out[i] = recycled.vec2[i] * std::pow(base, 1.0 / recycled.vec4[i]);
     }
   }
   

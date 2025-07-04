@@ -294,8 +294,219 @@ expect_error(
   "p must be between 0 and 1"
 )
 
-# Test 17: Vector length mismatch
-expect_error(
-  fdBCPEo(c(1, 2), c(1), c(1, 1), c(1, 1), c(1, 1)),
-  "Distribution parameters must be of same length"
+# Test 17: Parameter recycling functionality (replaces old vector length mismatch test)
+# =============================================================================
+# PARAMETER RECYCLING TESTS
+# =============================================================================
+
+# Test 17a: Basic recycling - single parameter with multiple values
+x_vec <- c(1, 2, 3, 4)
+mu_single <- 2
+sigma_single <- 0.5
+nu_single <- 1
+tau_single <- 2
+
+pdf_recycled <- fdBCPEo(x_vec, mu_single, sigma_single, nu_single, tau_single)
+pdf_expected <- fdBCPEo(x_vec, rep(mu_single, 4), rep(sigma_single, 4), 
+                        rep(nu_single, 4), rep(tau_single, 4))
+
+expect_equal(
+  pdf_recycled,
+  pdf_expected,
+  info = "PDF: Basic parameter recycling test"
 )
+
+# Test 17b: Mixed length recycling - different parameter vector lengths
+x_vec <- c(1, 2, 3, 4, 5, 6)
+mu_vec <- c(1, 2, 3)        # length 3
+sigma_vec <- c(0.1, 0.2)    # length 2
+nu_single <- 0.5            # length 1
+tau_vec <- c(2, 3, 4, 5)    # length 4
+
+pdf_recycled <- fdBCPEo(x_vec, mu_vec, sigma_vec, nu_single, tau_vec)
+
+# Manual recycling to expected length (6)
+mu_expected <- rep(mu_vec, length.out = 6)        # [1,2,3,1,2,3]
+sigma_expected <- rep(sigma_vec, length.out = 6)  # [0.1,0.2,0.1,0.2,0.1,0.2]
+nu_expected <- rep(nu_single, length.out = 6)     # [0.5,0.5,0.5,0.5,0.5,0.5]
+tau_expected <- rep(tau_vec, length.out = 6)      # [2,3,4,5,2,3]
+
+pdf_expected <- fdBCPEo(x_vec, mu_expected, sigma_expected, nu_expected, tau_expected)
+
+expect_equal(
+  pdf_recycled,
+  pdf_expected,
+  info = "PDF: Mixed length parameter recycling test"
+)
+
+# Test 17c: CDF recycling test
+q_vec <- c(1, 2, 3, 4)
+mu_vec <- c(1, 2)
+sigma_single <- 0.3
+nu_vec <- c(0, 1, 0.5)
+tau_single <- 2.5
+
+cdf_recycled <- fpBCPEo(q_vec, mu_vec, sigma_single, nu_vec, tau_single)
+
+# Expected recycling to length 4
+mu_expected <- rep(mu_vec, length.out = 4)        # [1,2,1,2]
+sigma_expected <- rep(sigma_single, length.out = 4) # [0.3,0.3,0.3,0.3]
+nu_expected <- rep(nu_vec, length.out = 4)        # [0,1,0.5,0]
+tau_expected <- rep(tau_single, length.out = 4)   # [2.5,2.5,2.5,2.5]
+
+cdf_expected <- fpBCPEo(q_vec, mu_expected, sigma_expected, nu_expected, tau_expected)
+
+expect_equal(
+  cdf_recycled,
+  cdf_expected,
+  info = "CDF: Parameter recycling test"
+)
+
+# Test 17d: Quantile recycling test with options
+p_vec <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+mu_vec <- c(1, 2)
+sigma_vec <- c(0.2, 0.4, 0.6)
+nu_single <- 1.5
+tau_vec <- c(2, 3)
+
+quantile_recycled <- fqBCPEo(p_vec, mu_vec, sigma_vec, nu_single, tau_vec, 
+                             lower_tail = FALSE, log_p = FALSE)
+
+# Expected recycling to length 5
+mu_expected <- rep(mu_vec, length.out = 5)        # [1,2,1,2,1]
+sigma_expected <- rep(sigma_vec, length.out = 5)  # [0.2,0.4,0.6,0.2,0.4]
+nu_expected <- rep(nu_single, length.out = 5)     # [1.5,1.5,1.5,1.5,1.5]
+tau_expected <- rep(tau_vec, length.out = 5)      # [2,3,2,3,2]
+
+quantile_expected <- fqBCPEo(p_vec, mu_expected, sigma_expected, nu_expected, tau_expected,
+                             lower_tail = FALSE, log_p = FALSE)
+
+expect_equal(
+  quantile_recycled,
+  quantile_expected,
+  info = "Quantile: Parameter recycling with options test"
+)
+
+# Test 17e: Recycling consistency across all functions
+# Test that all three functions (PDF, CDF, Quantile) handle recycling consistently
+set.seed(789)
+x_test <- rgamma(6, 2, 1)
+mu_vec <- c(1, 2, 3)
+sigma_vec <- c(0.1, 0.2)
+nu_single <- 0.8
+tau_vec <- c(2, 3, 4, 5)
+
+# All functions should use the same recycling logic
+pdf_result <- fdBCPEo(x_test, mu_vec, sigma_vec, nu_single, tau_vec)
+cdf_result <- fpBCPEo(x_test, mu_vec, sigma_vec, nu_single, tau_vec)
+
+# Compute probabilities and then quantiles
+p_from_cdf <- fpBCPEo(x_test, mu_vec, sigma_vec, nu_single, tau_vec)
+# Filter out extreme values for quantile consistency
+valid_p <- p_from_cdf[p_from_cdf > 0.001 & p_from_cdf < 0.999]
+if (length(valid_p) > 0) {
+  x_recovered <- fqBCPEo(valid_p, rep(mu_vec, length.out = length(valid_p)), 
+                         rep(sigma_vec, length.out = length(valid_p)),
+                         rep(nu_single, length.out = length(valid_p)),
+                         rep(tau_vec, length.out = length(valid_p)))
+  
+  # The recovered x should be close to original (within recycled parameter context)
+  expect_true(
+    all(is.finite(x_recovered)) && all(x_recovered > 0),
+    info = "Recycling consistency: quantiles should be finite and positive"
+  )
+}
+
+expect_true(
+  all(is.finite(pdf_result)) && all(pdf_result >= 0),
+  info = "Recycling consistency: PDF values should be finite and non-negative"
+)
+
+expect_true(
+  all(is.finite(cdf_result)) && all(cdf_result >= 0) && all(cdf_result <= 1),
+  info = "Recycling consistency: CDF values should be valid probabilities"
+)
+
+# Test 17f: Edge case - all parameters same length (should work without recycling)
+n <- 5
+x_vec <- rgamma(n, 2, 1)
+mu_vec <- runif(n, 1, 3)
+sigma_vec <- runif(n, 0.1, 0.5)
+nu_vec <- runif(n, -1, 1)
+tau_vec <- runif(n, 1, 4)
+
+# These should work exactly as before (no recycling needed)
+pdf_same_length <- fdBCPEo(x_vec, mu_vec, sigma_vec, nu_vec, tau_vec)
+cdf_same_length <- fpBCPEo(x_vec, mu_vec, sigma_vec, nu_vec, tau_vec)
+
+expect_true(
+  all(is.finite(pdf_same_length)) && all(pdf_same_length >= 0),
+  info = "Equal length parameters: PDF should work without recycling"
+)
+
+expect_true(
+  all(is.finite(cdf_same_length)) && all(cdf_same_length >= 0) && all(cdf_same_length <= 1),
+  info = "Equal length parameters: CDF should work without recycling"
+)
+
+# Test 17g: Extreme recycling - length 1 to length 100
+n_large <- 100
+x_large <- rgamma(n_large, 2, 1)
+mu_single <- 2.5
+sigma_single <- 0.3
+nu_single <- 1.2
+tau_single <- 3.0
+
+pdf_large_recycled <- fdBCPEo(x_large, mu_single, sigma_single, nu_single, tau_single)
+
+# Should be equivalent to manually expanded parameters
+pdf_large_expected <- fdBCPEo(x_large, rep(mu_single, n_large), rep(sigma_single, n_large),
+                              rep(nu_single, n_large), rep(tau_single, n_large))
+
+expect_equal(
+  pdf_large_recycled,
+  pdf_large_expected,
+  info = "Large scale parameter recycling test"
+)
+
+# Test 17h: Recycling with special parameter values
+# Test recycling works correctly with edge case parameter values
+x_edge <- c(1, 2, 3, 4)
+mu_vec <- c(0.5, 2)      # Small and normal mu
+sigma_vec <- c(0.01, 1)  # Very small and normal sigma  
+nu_vec <- c(-1, 0, 1)    # Negative, zero, and positive nu
+tau_vec <- c(0.5, 10)    # Small and large tau
+
+pdf_edge_recycled <- fdBCPEo(x_edge, mu_vec, sigma_vec, nu_vec, tau_vec)
+
+expect_true(
+  all(is.finite(pdf_edge_recycled)) && all(pdf_edge_recycled >= 0),
+  info = "Edge case parameter recycling: PDF should handle extreme parameter values"
+)
+
+cdf_edge_recycled <- fpBCPEo(x_edge, mu_vec, sigma_vec, nu_vec, tau_vec)
+
+expect_true(
+  all(is.finite(cdf_edge_recycled)) && all(cdf_edge_recycled >= 0) && all(cdf_edge_recycled <= 1),
+  info = "Edge case parameter recycling: CDF should handle extreme parameter values"
+)
+
+# Test 17i: Verify recycling matches gamlss.dist behavior when available
+if (requireNamespace("gamlss.dist", quietly = TRUE)) {
+  # Test that our recycling matches R's built-in recycling used by gamlss.dist
+  x_test <- c(1, 2, 3)
+  mu_test <- c(1, 2)
+  sigma_test <- 0.5
+  nu_test <- c(0.5, 1.5, -0.5)
+  tau_test <- c(2, 3)
+  
+  # Both should handle recycling the same way
+  pdf_ck_recycled <- fdBCPEo(x_test, mu_test, sigma_test, nu_test, tau_test)
+  pdf_ref_recycled <- suppressWarnings(gamlss.dist::dBCPEo(x_test, mu_test, sigma_test, nu_test, tau_test))
+  
+  expect_equal(
+    pdf_ck_recycled,
+    pdf_ref_recycled,
+    info = "Recycling compatibility with gamlss.dist reference"
+  )
+}

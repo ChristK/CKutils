@@ -175,3 +175,226 @@ result_ours_q_neg <- fqBCT(p_test_vec, mu_test_vec, sigma_test_vec, nu_neg, tau_
 result_gamlss_q_neg <- qBCT(p_test_vec, mu_test_vec, sigma_test_vec, nu_neg, tau_test_vec)
 expect_equal(result_ours_q_neg, result_gamlss_q_neg, 
              info = "fqBCT should match qBCT with negative nu values")
+
+# =============================================================================
+# PARAMETER RECYCLING TESTS FOR BCT DISTRIBUTION
+# =============================================================================
+
+# Test 9: Basic recycling - single parameter with multiple values
+x_vec <- c(1, 2, 3, 4)
+mu_single <- 2
+sigma_single <- 0.5
+nu_single <- 1
+tau_single <- 3
+
+pdf_recycled <- fdBCT(x_vec, mu_single, sigma_single, nu_single, tau_single)
+pdf_expected <- fdBCT(x_vec, rep(mu_single, 4), rep(sigma_single, 4), 
+                      rep(nu_single, 4), rep(tau_single, 4))
+
+expect_equal(
+  pdf_recycled,
+  pdf_expected,
+  info = "BCT PDF: Basic parameter recycling test"
+)
+
+# Test 10: Mixed length recycling - different parameter vector lengths
+x_vec <- c(1, 2, 3, 4, 5, 6)
+mu_vec <- c(1, 2, 3)        # length 3
+sigma_vec <- c(0.1, 0.2)    # length 2
+nu_single <- 0.5            # length 1
+tau_vec <- c(2, 3, 4, 5)    # length 4
+
+pdf_recycled <- fdBCT(x_vec, mu_vec, sigma_vec, nu_single, tau_vec)
+
+# Manual recycling to expected length (6)
+mu_expected <- rep(mu_vec, length.out = 6)        # [1,2,3,1,2,3]
+sigma_expected <- rep(sigma_vec, length.out = 6)  # [0.1,0.2,0.1,0.2,0.1,0.2]
+nu_expected <- rep(nu_single, length.out = 6)     # [0.5,0.5,0.5,0.5,0.5,0.5]
+tau_expected <- rep(tau_vec, length.out = 6)      # [2,3,4,5,2,3]
+
+pdf_expected <- fdBCT(x_vec, mu_expected, sigma_expected, nu_expected, tau_expected)
+
+expect_equal(
+  pdf_recycled,
+  pdf_expected,
+  info = "BCT PDF: Mixed length parameter recycling test"
+)
+
+# Test 11: CDF recycling test
+q_vec <- c(1, 2, 3, 4)
+mu_vec <- c(1, 2)
+sigma_single <- 0.3
+nu_vec <- c(0, 1, 0.5)
+tau_single <- 2.5
+
+cdf_recycled <- fpBCT(q_vec, mu_vec, sigma_single, nu_vec, tau_single)
+
+# Expected recycling to length 4
+mu_expected <- rep(mu_vec, length.out = 4)        # [1,2,1,2]
+sigma_expected <- rep(sigma_single, length.out = 4) # [0.3,0.3,0.3,0.3]
+nu_expected <- rep(nu_vec, length.out = 4)        # [0,1,0.5,0]
+tau_expected <- rep(tau_single, length.out = 4)   # [2.5,2.5,2.5,2.5]
+
+cdf_expected <- fpBCT(q_vec, mu_expected, sigma_expected, nu_expected, tau_expected)
+
+expect_equal(
+  cdf_recycled,
+  cdf_expected,
+  info = "BCT CDF: Parameter recycling test"
+)
+
+# Test 12: Quantile recycling test with options
+p_vec <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+mu_vec <- c(1, 2)
+sigma_vec <- c(0.2, 0.4, 0.6)
+nu_single <- 1.5
+tau_vec <- c(2, 3)
+
+quantile_recycled <- fqBCT(p_vec, mu_vec, sigma_vec, nu_single, tau_vec, 
+                           lower_tail = FALSE, log_p = FALSE)
+
+# Expected recycling to length 5
+mu_expected <- rep(mu_vec, length.out = 5)        # [1,2,1,2,1]
+sigma_expected <- rep(sigma_vec, length.out = 5)  # [0.2,0.4,0.6,0.2,0.4]
+nu_expected <- rep(nu_single, length.out = 5)     # [1.5,1.5,1.5,1.5,1.5]
+tau_expected <- rep(tau_vec, length.out = 5)      # [2,3,2,3,2]
+
+quantile_expected <- fqBCT(p_vec, mu_expected, sigma_expected, nu_expected, tau_expected,
+                           lower_tail = FALSE, log_p = FALSE)
+
+expect_equal(
+  quantile_recycled,
+  quantile_expected,
+  info = "BCT Quantile: Parameter recycling with options test"
+)
+
+# Test 13: Recycling with negative nu values
+x_test <- c(0.5, 1.2, 2.8, 0.8)
+mu_vec <- c(1.0, 1.5)
+sigma_single <- 0.4
+nu_vec <- c(-1.5, -0.8, -0.3)  # negative nu values
+tau_single <- 4
+
+pdf_neg_recycled <- fdBCT(x_test, mu_vec, sigma_single, nu_vec, tau_single)
+
+# Expected recycling
+mu_expected <- rep(mu_vec, length.out = 4)        # [1.0,1.5,1.0,1.5]
+sigma_expected <- rep(sigma_single, length.out = 4)
+nu_expected <- rep(nu_vec, length.out = 4)        # [-1.5,-0.8,-0.3,-1.5]
+tau_expected <- rep(tau_single, length.out = 4)
+
+pdf_neg_expected <- fdBCT(x_test, mu_expected, sigma_expected, nu_expected, tau_expected)
+
+expect_equal(
+  pdf_neg_recycled,
+  pdf_neg_expected,
+  info = "BCT PDF: Recycling with negative nu values"
+)
+
+# Test 14: Large scale recycling
+n_large <- 50
+x_large <- rgamma(n_large, 2, 1)
+mu_single <- 2.5
+sigma_single <- 0.3
+nu_single <- 1.2
+tau_single <- 5.0
+
+pdf_large_recycled <- fdBCT(x_large, mu_single, sigma_single, nu_single, tau_single)
+pdf_large_expected <- fdBCT(x_large, rep(mu_single, n_large), rep(sigma_single, n_large),
+                            rep(nu_single, n_large), rep(tau_single, n_large))
+
+expect_equal(
+  pdf_large_recycled,
+  pdf_large_expected,
+  info = "BCT: Large scale parameter recycling test"
+)
+
+# Test 15: Recycling consistency across all BCT functions
+set.seed(999)
+x_test <- rgamma(6, 2, 1)
+mu_vec <- c(1, 2, 3)
+sigma_vec <- c(0.1, 0.2)
+nu_single <- 0.8
+tau_vec <- c(2, 3, 4, 5)
+
+# All functions should use the same recycling logic
+pdf_result <- fdBCT(x_test, mu_vec, sigma_vec, nu_single, tau_vec)
+cdf_result <- fpBCT(x_test, mu_vec, sigma_vec, nu_single, tau_vec)
+
+expect_true(
+  all(is.finite(pdf_result)) && all(pdf_result >= 0),
+  info = "BCT Recycling consistency: PDF values should be finite and non-negative"
+)
+
+expect_true(
+  all(is.finite(cdf_result)) && all(cdf_result >= 0) && all(cdf_result <= 1),
+  info = "BCT Recycling consistency: CDF values should be valid probabilities"
+)
+
+# Test 16: Focus on proper recycling behavior (independent of gamlss.dist quirks)
+if (requireNamespace("gamlss.dist", quietly = TRUE)) {
+  # Test 16a: Simple cases where both implementations should agree
+  # Case 1: Single value recycled to multiple values
+  x_test <- c(1, 2)
+  mu_test <- 1.5
+  sigma_test <- 0.5
+  nu_test <- 0.8
+  tau_test <- 3.0
+  
+  pdf_ck <- fdBCT(x_test, mu_test, sigma_test, nu_test, tau_test)
+  pdf_ref <- gamlss.dist::dBCT(x_test, mu_test, sigma_test, nu_test, tau_test)
+  
+  expect_equal(
+    pdf_ck,
+    pdf_ref,
+    info = "BCT: Single parameter recycling should match gamlss.dist"
+  )
+  
+  # Case 2: Same length vectors (no recycling needed)
+  x_test <- c(1, 2, 3)
+  mu_test <- c(1.5, 2.0, 1.2)
+  sigma_test <- c(0.5, 0.6, 0.4)
+  nu_test <- c(0.8, 1.2, -0.3)
+  tau_test <- c(3.0, 4.0, 2.5)
+  
+  pdf_ck <- fdBCT(x_test, mu_test, sigma_test, nu_test, tau_test)
+  pdf_ref <- gamlss.dist::dBCT(x_test, mu_test, sigma_test, nu_test, tau_test)
+  
+  expect_equal(
+    pdf_ck,
+    pdf_ref,
+    info = "BCT: Equal length parameters should match gamlss.dist exactly"
+  )
+  
+  # Case 3: CDF with simple recycling
+  cdf_ck <- fpBCT(x_test, mu_test, sigma_test, nu_test, tau_test)
+  cdf_ref <- gamlss.dist::pBCT(x_test, mu_test, sigma_test, nu_test, tau_test)
+  
+  expect_equal(
+    cdf_ck,
+    cdf_ref,
+    info = "BCT CDF: Equal length parameters should match gamlss.dist exactly"
+  )
+}
+
+# Test 17: Edge cases with recycling
+# Test recycling works correctly with extreme parameter values
+x_edge <- c(0.5, 1, 2, 3)
+mu_vec <- c(0.5, 3)       # Small and large mu
+sigma_vec <- c(0.01, 1)   # Very small and normal sigma  
+nu_vec <- c(-2, 0, 2)     # Negative, zero, and positive nu
+tau_vec <- c(1.1, 20)     # Small and large tau
+
+pdf_edge_recycled <- fdBCT(x_edge, mu_vec, sigma_vec, nu_vec, tau_vec)
+
+expect_true(
+  all(is.finite(pdf_edge_recycled)) && all(pdf_edge_recycled >= 0),
+  info = "BCT Edge case parameter recycling: PDF should handle extreme parameter values"
+)
+
+cdf_edge_recycled <- fpBCT(x_edge, mu_vec, sigma_vec, nu_vec, tau_vec)
+
+expect_true(
+  all(is.finite(cdf_edge_recycled)) && all(cdf_edge_recycled >= 0) && all(cdf_edge_recycled <= 1),
+  info = "BCT Edge case parameter recycling: CDF should handle extreme parameter values"
+)

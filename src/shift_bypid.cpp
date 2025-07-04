@@ -109,9 +109,14 @@ using namespace Rcpp;
 //' Efficiently shifts numeric values within groups defined by ID variables.
 //' Optimized for panel data and time series analysis.
 //' 
-//' @inheritParams shift_bypid
 //' @param x Numeric vector of values to be shifted.
+//' @param lag Integer specifying the lag amount. Positive values create standard lags 
+//'   (shift values forward in time), negative values create leads (shift values 
+//'   backward in time).
 //' @param replace Numeric replacement value for positions that cannot be filled.
+//' @param id Integer vector of group identifiers. Must be the same length as x. 
+//'   Should be sorted for optimal performance. Values are only shifted within 
+//'   the same ID group.
 //' 
 //' @return Numeric vector of the same length as input, with values shifted 
 //'   according to the specified lag and group structure.
@@ -160,9 +165,14 @@ NumericVector shift_bypidNum(const NumericVector& x, const int& lag,
 //' Efficiently shifts integer values within groups defined by ID variables.
 //' Preserves factor attributes when present, making it suitable for categorical data.
 //' 
-//' @inheritParams shift_bypid
 //' @param x Integer vector of values to be shifted. Factor attributes are preserved.
+//' @param lag Integer specifying the lag amount. Positive values create standard lags 
+//'   (shift values forward in time), negative values create leads (shift values 
+//'   backward in time).
 //' @param replace Integer replacement value for positions that cannot be filled.
+//' @param id Integer vector of group identifiers. Must be the same length as x. 
+//'   Should be sorted for optimal performance. Values are only shifted within 
+//'   the same ID group.
 //' 
 //' @details
 //' This function automatically detects and preserves factor attributes including
@@ -225,10 +235,15 @@ IntegerVector shift_bypidInt(const IntegerVector& x, const int& lag,
 //' Efficiently shifts logical (boolean) values within groups defined by ID variables.
 //' Designed for binary indicators and flag variables in panel data.
 //' 
-//' @inheritParams shift_bypid
 //' @param x Logical vector of values to be shifted.
+//' @param lag Integer specifying the lag amount. Positive values create standard lags 
+//'   (shift values forward in time), negative values create leads (shift values 
+//'   backward in time).
 //' @param replace Logical vector with one element specifying the replacement value 
 //'   for positions that cannot be filled.
+//' @param id Integer vector of group identifiers. Must be the same length as x. 
+//'   Should be sorted for optimal performance. Values are only shifted within 
+//'   the same ID group.
 //' 
 //' @details
 //' The replacement parameter must be a logical vector (even with just one element)
@@ -286,9 +301,14 @@ LogicalVector shift_bypidBool(const LogicalVector& x, const int& lag,
 //' Efficiently shifts character (string) values within groups defined by ID variables.
 //' Ideal for text data, labels, and categorical variables in panel data analysis.
 //' 
-//' @inheritParams shift_bypid
 //' @param x Character vector of values to be shifted.
+//' @param lag Integer specifying the lag amount. Positive values create standard lags 
+//'   (shift values forward in time), negative values create leads (shift values 
+//'   backward in time).
 //' @param replace String replacement value for positions that cannot be filled.
+//' @param id Integer vector of group identifiers. Must be the same length as x. 
+//'   Should be sorted for optimal performance. Values are only shifted within 
+//'   the same ID group.
 //' 
 //' @details
 //' This function handles character data efficiently by converting the replacement
