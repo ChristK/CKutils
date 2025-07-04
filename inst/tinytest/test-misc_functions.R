@@ -609,6 +609,8 @@ expect_error(shift_bypid(1:5, c(1, 2), c(1, 2, 3, 4, 5)), info = "Error when lag
 expect_error(shift_bypid(1:5, 1, NULL), info = "Error when id is not a vector")
 expect_error(shift_bypid(1:5, 1, c("a", "b", "c", "d", "e")), info = "Error when id is not numeric")
 expect_error(shift_bypid(1:5, 1, c(1, 2, 3)), info = "Error when x and id have different lengths")
+expect_error(shift_bypid(1:5, 1, c(1, 2, 1, 2, 2)), info = "Error when id is not sorted")
+
 
 # Test basic functionality with numeric data
 dt_test <- data.table(
@@ -701,13 +703,6 @@ expect_true(all(is.na(large_lag_result)), info = "Large lag produces all NA valu
 large_lead_result <- shift_bypid(dt_test$value, lag = -10, id = dt_test$id)
 expect_true(all(is.na(large_lead_result)), info = "Large lead produces all NA values")
 
-# Test with unordered IDs (should still work but might be unexpected)
-unordered_data <- c(10, 20, 30, 40, 50, 60)
-unordered_id <- c(2, 1, 2, 1, 2, 1)
-result_unordered <- shift_bypid(unordered_data, lag = 1, id = unordered_id)
-# This tests that the function works but doesn't guarantee specific behavior with unsorted IDs
-expect_equal(length(result_unordered), 6, info = "Function works with unsorted IDs")
-
 # Additional comprehensive tests for lead functionality
 # Test lead = -2 with detailed expected results
 result_lead2 <- shift_bypid(dt_test$value, lag = -2, id = dt_test$id)
@@ -735,4 +730,4 @@ single_elem_id <- c(1, 2, 3, 4, 5)
 single_elem_result <- shift_bypid(single_elem_data, lag = 1, id = single_elem_id)
 expect_true(all(is.na(single_elem_result)), info = "Single element groups produce all NA values")
 
-# cat("All misc_functions.R tests completed successfully!\n")
+

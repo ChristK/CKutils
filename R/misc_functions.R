@@ -1331,6 +1331,9 @@ shift_bypid <-
     if (length(x) != length(id)) {
       stop("Arguments 'x' and 'id' must have the same length")
     }
+    if (is.unsorted(id)) {
+      stop("Argument 'id' must be sorted")
+    }
     
     # Convert lag to integer
     lag <- as.integer(lag)
@@ -1355,6 +1358,8 @@ shift_bypid <-
     } else
       stop("type of x not supported")
   }
+
+
 
 
 

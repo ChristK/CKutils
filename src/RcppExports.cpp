@@ -803,7 +803,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fscramble_trajectories
-NumericVector fscramble_trajectories(NumericVector& x, const LogicalVector& pid, const double& jumpiness, const bool& inplace);
+SEXP fscramble_trajectories(NumericVector& x, const LogicalVector& pid, const double& jumpiness, const bool& inplace);
 RcppExport SEXP _CKutils_fscramble_trajectories(SEXP xSEXP, SEXP pidSEXP, SEXP jumpinessSEXP, SEXP inplaceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

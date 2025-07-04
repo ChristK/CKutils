@@ -91,7 +91,8 @@ if (getRversion() >= "2.15.1") {
 
 # cd /home/ckyprid/GH_projects/CKutils && Rscript -e "roxygen2::roxygenise(); tinytest::build_install_test()"
 # cd /home/ckyprid/GH_projects/CKutils && Rscript -e "tinytest::build_install_test()"
-# cd /home/ckyprid/GH_projects/CKutils && R CMD INSTALL --preclean --as-cran .
+# cd /home/ckyprid/GH_projects/CKutils && R CMD INSTALL --preclean .
+# cd /home/ckyprid/GH_projects/CKutils && R CMD check --as-cran .
 
 
 NULL
