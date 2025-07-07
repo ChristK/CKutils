@@ -2,21 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-my_dDEL <- function(x, mu, sigma, nu, log_ = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_dDEL`, x, mu, sigma, nu, log_, n_cpu)
-}
-
-#' @export
-my_pDEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_pDEL`, q, mu, sigma, nu, lower_tail, log_p, n_cpu)
-}
-
-#' @export
-my_qDEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_qDEL`, p, mu, sigma, nu, lower_tail, log_p, n_cpu)
-}
-
-#' @export
 my_get_C <- function(x, mu, sigma) {
     .Call(`_CKutils_my_get_C`, x, mu, sigma)
 }
@@ -745,6 +730,256 @@ fqZIBNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' @export
 fqZABNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqZABNB`, p, mu, sigma, nu, tau, lower_tail, log_p)
+}
+
+#' The Delaporte Distribution - Density Function
+#'
+#' Density function for the Delaporte distribution with parameters mu, sigma and nu.
+#' The Delaporte distribution is a discrete probability distribution that can be 
+#' expressed as a compound Poisson distribution where the intensity parameter follows
+#' a Gamma distribution.
+#'
+#' @param x vector of (non-negative integer) quantiles
+#' @param mu vector of positive means
+#' @param sigma vector of positive dispersion parameters
+#' @param nu vector of parameters between 0 and 1
+#' @param log_ logical; if TRUE, probabilities p are given as log(p)
+#'
+#' @details
+#' The Delaporte distribution has probability mass function:
+#' \deqn{P(X = x) = e^{-\mu\nu} \frac{\Gamma(x + 1/\sigma)}{\Gamma(x + 1)\Gamma(1/\sigma)} \left(\frac{\mu\sigma(1-\nu)}{1 + \mu\sigma(1-\nu)}\right)^x \left(\frac{1}{1 + \mu\sigma(1-\nu)}\right)^{1/\sigma}}
+#' 
+#' for x = 0, 1, 2, ..., mu > 0, sigma > 0, and 0 < nu < 1.
+#' 
+#' The mean is mu and the variance is mu + mu^2 * sigma * (1 - nu).
+#' 
+#' This implementation is based on the algorithms from the gamlss.dist package
+#' by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
+#' including SIMD support and improved caching.
+#'
+#' @return
+#' \code{fdDEL} gives the density
+#'
+#' @note
+#' This function is optimized for performance with chunked processing and
+#' prefetching for better cache utilization.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
+#' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
+#' 
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' 
+#' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
+#' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
+#'
+#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
+#'
+#' @seealso \code{\link{fpDEL}}, \code{\link{fqDEL}}
+#'
+#' @examples
+#' # Calculate density for single values
+#' fdDEL(0:5, mu = 2, sigma = 1, nu = 0.5)
+#' 
+#' # Calculate log density
+#' fdDEL(0:5, mu = 2, sigma = 1, nu = 0.5, log = TRUE)
+#' 
+#' # Parameter recycling
+#' fdDEL(c(0, 1, 2), mu = c(1, 2, 3), sigma = c(0.5, 1, 1.5), nu = c(0.3, 0.5, 0.7))
+#'
+#' @export
+fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
+    .Call(`_CKutils_fdDEL`, x, mu, sigma, nu, log_)
+}
+
+#' The Delaporte Distribution - Cumulative Distribution Function
+#'
+#' Distribution function for the Delaporte distribution with parameters mu, sigma and nu.
+#' Computes the cumulative distribution function (CDF) of the Delaporte distribution.
+#'
+#' @param q vector of (non-negative integer) quantiles
+#' @param mu vector of positive means
+#' @param sigma vector of positive dispersion parameters
+#' @param nu vector of parameters between 0 and 1
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x]
+#' @param log_p logical; if TRUE, probabilities p are given as log(p)
+#'
+#' @details
+#' The cumulative distribution function is computed as the sum of the probability
+#' mass function from 0 to q. For computational efficiency, this implementation
+#' uses caching to store previously computed CDF values and employs chunked
+#' processing with SIMD optimizations when available.
+#' 
+#' When sigma is very small (< 1e-04), the distribution approaches a Poisson
+#' distribution with parameter mu, and the function switches to using the
+#' more efficient Poisson CDF computation.
+#' 
+#' This implementation is based on the algorithms from the gamlss.dist package
+#' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
+#' optimizations including intelligent caching, vectorized transformations,
+#' and SIMD support for large datasets.
+#'
+#' @return
+#' \code{fpDEL} gives the cumulative distribution function
+#'
+#' @note
+#' This function implements an intelligent caching system that stores computed
+#' CDF values for reuse, significantly improving performance for repeated
+#' computations with the same parameters. The cache can be cleared using
+#' \code{clear_DEL_cache()}.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
+#' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
+#' 
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' 
+#' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
+#' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
+#'
+#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
+#'
+#' @seealso \code{\link{fdDEL}}, \code{\link{fqDEL}}, \code{\link{clear_DEL_cache}}
+#'
+#' @examples
+#' # Calculate CDF for single values
+#' fpDEL(0:5, mu = 2, sigma = 1, nu = 0.5)
+#' 
+#' # Calculate upper tail probabilities
+#' fpDEL(0:5, mu = 2, sigma = 1, nu = 0.5, lower_tail = FALSE)
+#' 
+#' # Calculate log probabilities
+#' fpDEL(0:5, mu = 2, sigma = 1, nu = 0.5, log_p = TRUE)
+#' 
+#' # Parameter recycling
+#' fpDEL(c(0, 1, 2), mu = c(1, 2, 3), sigma = c(0.5, 1, 1.5), nu = c(0.3, 0.5, 0.7))
+#'
+#' @export
+fpDEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpDEL`, q, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Quantile Function for the Delaporte Distribution
+#'
+#' Computes quantiles of the Delaporte distribution, a compound distribution of
+#' Poisson and shifted negative binomial.
+#'
+#' @param p Vector of probabilities.
+#' @param mu Vector of mu (location/mean) parameters (positive).
+#' @param sigma Vector of sigma (scale) parameters (positive).
+#' @param nu Vector of nu (shape) parameters (positive).
+#' @param lower_tail Logical; if TRUE (default), probabilities are P[X ≤ x],
+#'   otherwise P[X > x].
+#' @param log_p Logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @return Vector of quantiles corresponding to the given probabilities.
+#'
+#' @details
+#' The Delaporte distribution is a three-parameter discrete distribution
+#' defined as the convolution of a Poisson distribution with mean \code{mu}
+#' and a shifted negative binomial distribution with parameters related to
+#' \code{sigma} and \code{nu}.
+#'
+#' This implementation uses an optimized binary search algorithm with
+#' SIMD acceleration where available, and includes intelligent caching
+#' of intermediate CDF calculations for improved performance with repeated
+#' quantile computations.
+#'
+#' Parameter recycling is performed automatically - all parameter vectors
+#' are recycled to the length of the longest vector.
+#'
+#' @section Parameter Validation:
+#' - \code{p} must be in [0,1] for \code{log_p = FALSE}, or in (-Inf, 0] for \code{log_p = TRUE}
+#' - \code{mu}, \code{sigma}, \code{nu} must all be positive
+#' - Invalid parameters result in \code{NA} values in the output
+#'
+#' @note
+#' This function is based on the Delaporte distribution implementation from
+#' the \pkg{gamlss.dist} package by Mikis Stasinopoulos, Robert Rigby,
+#' Calliope Akantziliotou, Vlasios Voudouris, and Fernanda De Bastiani.
+#' The original gamlss.dist implementation is acknowledged with gratitude.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models
+#' for location, scale and shape,(with discussion), \emph{Appl. Statist.}, \bold{54}, part 3, pp 507-554.
+#'
+#' Stasinopoulos D. M., Rigby R.A., Heller G., Voudouris V., and De Bastiani F., (2017)
+#' \emph{Flexible Regression and Smoothing: Using GAMLSS in R}, Chapman and Hall/CRC.
+#'
+#' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location
+#' scale and shape (GAMLSS) in R. \emph{Journal of Statistical Software}, Vol. \bold{23}, Issue 7, Dec 2007.
+#'
+#' @author Christos Kypraios [aut, cre], based on gamlss.dist by Mikis Stasinopoulos,
+#' Robert Rigby, Calliope Akantziliotou, Vlasios Voudouris, Fernanda De Bastiani
+#'
+#' @seealso \code{\link{fdDEL}}, \code{\link{fpDEL}}, \code{\link{clear_DEL_cache}}
+#'
+#' @examples
+#' # Basic quantile computation
+#' fqDEL(c(0.25, 0.5, 0.75), mu=5, sigma=1, nu=0.2)
+#'
+#' # With parameter recycling
+#' fqDEL(0.5, mu=c(1,5,10), sigma=c(0.5,1,2), nu=c(0.1,0.2,0.9))
+#'
+#' # Using log probabilities
+#' fqDEL(log(c(0.25, 0.5, 0.75)), mu=5, sigma=1, nu=0.2, log_p=TRUE)
+#'
+#' # Upper tail probabilities
+#' fqDEL(c(0.25, 0.5, 0.75), mu=5, sigma=1, nu=0.2, lower_tail=FALSE)
+#'
+#' @export
+fqDEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqDEL`, p, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Clear Delaporte Distribution Cache
+#'
+#' Clears the internal cache used by Delaporte distribution functions to store
+#' intermediate CDF calculations for performance optimization.
+#'
+#' @details
+#' The Delaporte distribution functions (\code{\link{fdDEL}}, \code{\link{fpDEL}},
+#' \code{\link{fqDEL}}) use an internal cache to store intermediate CDF calculations,
+#' which significantly improves performance when computing multiple quantiles or
+#' probabilities with the same or similar parameter combinations.
+#'
+#' This function provides a way to manually clear the cache, which might be useful:
+#' \itemize{
+#'   \item To free memory when working with very large datasets
+#'   \item To ensure fresh calculations when parameter ranges change significantly
+#'   \item For debugging or benchmarking purposes
+#' }
+#'
+#' The cache is automatically managed and typically does not require manual clearing.
+#'
+#' @note
+#' This function is based on the Delaporte distribution implementation from
+#' the \pkg{gamlss.dist} package by Mikis Stasinopoulos, Robert Rigby,
+#' Calliope Akantziliotou, Vlasios Voudouris, and Fernanda De Bastiani.
+#'
+#' @author Christos Kypraios [aut, cre], based on gamlss.dist by Mikis Stasinopoulos,
+#' Robert Rigby, Calliope Akantziliotou, Vlasios Voudouris, Fernanda De Bastiani
+#'
+#' @seealso \code{\link{fdDEL}}, \code{\link{fpDEL}}, \code{\link{fqDEL}}
+#'
+#' @examples
+#' # Compute some quantiles (builds cache)
+#' q1 <- fqDEL(0.5, mu=5, sigma=1, nu=0.2)
+#' q2 <- fqDEL(c(0.25, 0.75), mu=5, sigma=1, nu=0.2)
+#'
+#' # Clear the cache
+#' clear_DEL_cache()
+#'
+#' # Further computations will rebuild cache as needed
+#' q3 <- fqDEL(0.9, mu=5, sigma=1, nu=0.2)
+#'
+#' @export
+clear_DEL_cache <- function() {
+    invisible(.Call(`_CKutils_clear_DEL_cache`))
 }
 
 #' Convert Factor to Integer (C++ Version)

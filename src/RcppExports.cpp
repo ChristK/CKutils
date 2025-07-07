@@ -10,56 +10,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// my_dDEL
-NumericVector my_dDEL(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log_, const int& n_cpu);
-RcppExport SEXP _CKutils_my_dDEL(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP log_SEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_(log_SEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_dDEL(x, mu, sigma, nu, log_, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_pDEL
-NumericVector my_pDEL(const IntegerVector& q, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p, const int& n_cpu);
-RcppExport SEXP _CKutils_my_pDEL(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type q(qSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_pDEL(q, mu, sigma, nu, lower_tail, log_p, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_qDEL
-IntegerVector my_qDEL(NumericVector p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p, const int& n_cpu);
-RcppExport SEXP _CKutils_my_qDEL(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_qDEL(p, mu, sigma, nu, lower_tail, log_p, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
 // my_get_C
 NumericVector my_get_C(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma);
 RcppExport SEXP _CKutils_my_get_C(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
@@ -636,6 +586,62 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fdDEL
+NumericVector fdDEL(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log_);
+RcppExport SEXP _CKutils_fdDEL(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP log_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_(log_SEXP);
+    rcpp_result_gen = Rcpp::wrap(fdDEL(x, mu, sigma, nu, log_));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fpDEL
+NumericVector fpDEL(const IntegerVector& q, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fpDEL(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fpDEL(q, mu, sigma, nu, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fqDEL
+IntegerVector fqDEL(NumericVector p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fqDEL(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fqDEL(p, mu, sigma, nu, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// clear_DEL_cache
+void clear_DEL_cache();
+RcppExport SEXP _CKutils_clear_DEL_cache() {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    clear_DEL_cache();
+    return R_NilValue;
+END_RCPP
+}
 // fct_to_int_cpp
 IntegerVector fct_to_int_cpp(SEXP x, bool inplace);
 RcppExport SEXP _CKutils_fct_to_int_cpp(SEXP xSEXP, SEXP inplaceSEXP) {
@@ -866,9 +872,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_CKutils_my_dDEL", (DL_FUNC) &_CKutils_my_dDEL, 6},
-    {"_CKutils_my_pDEL", (DL_FUNC) &_CKutils_my_pDEL, 7},
-    {"_CKutils_my_qDEL", (DL_FUNC) &_CKutils_my_qDEL, 7},
     {"_CKutils_my_get_C", (DL_FUNC) &_CKutils_my_get_C, 3},
     {"_CKutils_my_dDPO", (DL_FUNC) &_CKutils_my_dDPO, 5},
     {"_CKutils_my_pDPO", (DL_FUNC) &_CKutils_my_pDPO, 5},
@@ -907,6 +910,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fqBNB", (DL_FUNC) &_CKutils_fqBNB, 6},
     {"_CKutils_fqZIBNB", (DL_FUNC) &_CKutils_fqZIBNB, 7},
     {"_CKutils_fqZABNB", (DL_FUNC) &_CKutils_fqZABNB, 7},
+    {"_CKutils_fdDEL", (DL_FUNC) &_CKutils_fdDEL, 5},
+    {"_CKutils_fpDEL", (DL_FUNC) &_CKutils_fpDEL, 6},
+    {"_CKutils_fqDEL", (DL_FUNC) &_CKutils_fqDEL, 6},
+    {"_CKutils_clear_DEL_cache", (DL_FUNC) &_CKutils_clear_DEL_cache, 0},
     {"_CKutils_fct_to_int_cpp", (DL_FUNC) &_CKutils_fct_to_int_cpp, 2},
     {"_CKutils_starts_from_1_cpp", (DL_FUNC) &_CKutils_starts_from_1_cpp, 5},
     {"_CKutils_dtsubset", (DL_FUNC) &_CKutils_dtsubset, 3},
