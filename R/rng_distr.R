@@ -415,3 +415,219 @@ frZABNB <- function(n, mu = 1, sigma = 1, nu = 1, tau = 0.1) {
     r <- fqZABNB(p, mu = mu, sigma = sigma, nu = nu, tau = tau)
     r
 }
+
+#' Random Generation for Double Poisson (DPO) Distribution
+#' 
+#' Generates random deviates from the Double Poisson distribution using 
+#' high-quality pseudo-random number generation via the dqrng package.
+#' 
+#' @param n Number of observations to generate. If length(n) > 1, the length 
+#'   is taken to be the number required.
+#' @param mu Vector of positive mean parameters. Default is 1.
+#' @param sigma Vector of positive dispersion parameters. Default is 1.
+#' 
+#' @details
+#' This function generates random variates from the DPO distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqDPO}
+#' }
+#' 
+#' The Double Poisson distribution is a discrete distribution that extends 
+#' the Poisson distribution by adding a dispersion parameter sigma. It's 
+#' particularly useful for modeling count data that exhibits either 
+#' overdispersion (sigma > 1) or underdispersion (sigma < 1).
+#' 
+#' The probability mass function is:
+#' \deqn{f(y|\mu,\sigma) = \frac{1}{C(\mu,\sigma)} \sqrt{\frac{1}{2\pi\sigma}} e^{-\frac{\mu}{\sigma}} \frac{e^{y \log y - y}}{y!} e^{\frac{y \log \mu}{\sigma}} e^{\frac{y}{\sigma}} e^{-\frac{y \log y}{\sigma}}}
+#' for \eqn{y = 0, 1, 2, \ldots}, \eqn{\mu > 0}, and \eqn{\sigma > 0}, where 
+#' \eqn{C(\mu,\sigma)} is a normalizing constant.
+#' 
+#' Key properties:
+#' \itemize{
+#'   \item \strong{Mean}: \eqn{E[Y] = \mu}
+#'   \item \strong{Variance}: \eqn{Var[Y] = \mu/\sigma}
+#'   \item \strong{Overdispersion}: When \eqn{\sigma < 1}, variance > mean
+#'   \item \strong{Underdispersion}: When \eqn{\sigma > 1}, variance < mean
+#'   \item \strong{Poisson limit}: When \eqn{\sigma = 1}, reduces to Poisson(\eqn{\mu})
+#' }
+#' 
+#' The use of \code{dqrng::dqrunif} provides superior random number generation 
+#' compared to base R's \code{runif}, with better statistical properties and 
+#' significantly faster generation speeds.
+#' 
+#' @return Vector of random integers from the DPO distribution.
+#' 
+#' @examples
+#' # Generate 100 random values with default parameters (Poisson-like)
+#' x <- frDPO(100)
+#' table(x)
+#' mean(x)  # Should be approximately mu = 1
+#' var(x)   # Should be approximately mu/sigma = 1
+#' 
+#' # Generate with overdispersion (sigma < 1)
+#' x_over <- frDPO(1000, mu = 5, sigma = 0.5)
+#' mean(x_over)  # Should be approximately 5
+#' var(x_over)   # Should be approximately 10 (5/0.5)
+#' 
+#' # Generate with underdispersion (sigma > 1)
+#' x_under <- frDPO(1000, mu = 5, sigma = 2)
+#' mean(x_under)  # Should be approximately 5
+#' var(x_under)   # Should be approximately 2.5 (5/2)
+#' 
+#' # Compare dispersion patterns
+#' x_poisson <- rpois(1000, lambda = 5)           # Regular Poisson
+#' x_dpo_over <- frDPO(1000, mu = 5, sigma = 0.5) # Overdispersed
+#' x_dpo_under <- frDPO(1000, mu = 5, sigma = 2)  # Underdispersed
+#' 
+#' var(x_poisson)    # ≈ 5 (variance = mean)
+#' var(x_dpo_over)   # > 5 (overdispersed)
+#' var(x_dpo_under)  # < 5 (underdispersed)
+#' 
+#' # Vector of parameters (recycling applies)
+#' x <- frDPO(10, mu = c(2, 4), sigma = c(0.8, 1.2))
+#' 
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Chapman and Hall/CRC.
+#' 
+#' Efron, B. (1986). Double exponential families and their use in generalized 
+#' linear regression. Journal of the American Statistical Association, 81(395), 709-721.
+#' 
+#' @seealso 
+#' \code{\link{fdDPO}}, \code{\link{fpDPO}}, \code{\link{fqDPO}} for 
+#' other DPO distribution functions.
+#' 
+#' \code{\link[gamlss.dist]{rDPO}} for the original implementation.
+#' 
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#' 
+#' @export
+#' @importFrom dqrng dqrunif
+frDPO <- function(n, mu = 1, sigma = 1) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqDPO(p, mu = mu, sigma = sigma)
+    r
+}
+
+#' Random Generation for Delaporte Distribution
+#' 
+#' Generates random deviates from the Delaporte distribution using high-quality 
+#' pseudo-random number generation via the dqrng package.
+#' 
+#' @param n Number of observations to generate. If length(n) > 1, the length 
+#'   is taken to be the number required.
+#' @param mu Vector of positive mean parameters. Default is 1.
+#' @param sigma Vector of positive dispersion parameters. Default is 1.
+#' @param nu Vector of parameters between 0 and 1. Default is 0.5.
+#' 
+#' @details
+#' This function generates random variates from the Delaporte distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqDEL}
+#' }
+#' 
+#' The Delaporte distribution is a discrete distribution that can be expressed 
+#' as a compound Poisson distribution where the intensity parameter follows 
+#' a gamma distribution. It arises as the convolution of a Poisson distribution 
+#' with a negative binomial distribution, making it particularly useful for 
+#' modeling overdispersed count data.
+#' 
+#' The Delaporte distribution can be parameterized as the sum of:
+#' \itemize{
+#'   \item A Poisson random variable with parameter \eqn{\mu \nu}
+#'   \item A negative binomial random variable with mean \eqn{\mu(1-\nu)} and 
+#'         dispersion related to \eqn{\sigma}
+#' }
+#' 
+#' Key properties:
+#' \itemize{
+#'   \item \strong{Mean}: \eqn{E[Y] = \mu}
+#'   \item \strong{Variance}: \eqn{Var[Y] = \mu + \mu^2 \sigma (1-\nu)}
+#'   \item \strong{Flexibility}: Can model a wide range of count distributions
+#'   \item \strong{Overdispersion}: Always overdispersed relative to Poisson
+#'   \item \strong{Special cases}: 
+#'     \itemize{
+#'       \item When \eqn{\nu \to 1}: approaches Poisson(\eqn{\mu})
+#'       \item When \eqn{\nu = 0}: becomes shifted negative binomial
+#'     }
+#' }
+#' 
+#' The use of \code{dqrng::dqrunif} provides superior random number generation 
+#' compared to base R's \code{runif}, with better statistical properties and 
+#' significantly faster generation speeds.
+#' 
+#' @return Vector of random integers from the Delaporte distribution.
+#' 
+#' @examples
+#' # Generate 100 random values with default parameters
+#' x <- frDEL(100)
+#' table(x)
+#' mean(x)  # Should be approximately mu = 1
+#' 
+#' # Generate with custom parameters
+#' x <- frDEL(1000, mu = 5, sigma = 1.5, nu = 0.3)
+#' mean(x)  # Should be approximately 5
+#' var(x)   # Should be > 5 (overdispersed)
+#' 
+#' # Compare different nu values (Poisson component weight)
+#' x_high_nu <- frDEL(1000, mu = 5, sigma = 1, nu = 0.8)  # More Poisson-like
+#' x_low_nu <- frDEL(1000, mu = 5, sigma = 1, nu = 0.2)   # More NB-like
+#' 
+#' var(x_high_nu)  # Lower variance (closer to Poisson)
+#' var(x_low_nu)   # Higher variance (more overdispersed)
+#' 
+#' # Study the effect of sigma on overdispersion
+#' x_low_sigma <- frDEL(1000, mu = 5, sigma = 0.5, nu = 0.5)
+#' x_high_sigma <- frDEL(1000, mu = 5, sigma = 2, nu = 0.5)
+#' 
+#' var(x_low_sigma)   # Less overdispersion
+#' var(x_high_sigma)  # More overdispersion
+#' 
+#' # Vector of parameters (recycling applies)
+#' x <- frDEL(10, mu = c(2, 4), sigma = c(1, 1.5), nu = c(0.3, 0.7))
+#' 
+#' # Demonstrate flexibility in modeling different count patterns
+#' # Low count, high variability
+#' x_variable <- frDEL(500, mu = 2, sigma = 3, nu = 0.1)
+#' # Moderate count, moderate variability  
+#' x_moderate <- frDEL(500, mu = 5, sigma = 1, nu = 0.5)
+#' # High count, Poisson-like
+#' x_poisson_like <- frDEL(500, mu = 10, sigma = 0.1, nu = 0.9)
+#' 
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Chapman and Hall/CRC.
+#' 
+#' Delaporte, P.J. (1960). Quelques aspects de la classification automatique. 
+#' Bulletin de l'Institut International de Statistique, 38, 321-344.
+#' 
+#' Johnson, N.L., Kemp, A.W., and Kotz, S. (2005). Univariate Discrete 
+#' Distributions, 3rd Edition. Hoboken, NJ: Wiley.
+#' 
+#' @seealso 
+#' \code{\link{fdDEL}}, \code{\link{fpDEL}}, \code{\link{fqDEL}} for 
+#' other Delaporte distribution functions.
+#' 
+#' \code{\link[gamlss.dist]{rDEL}} for the original implementation.
+#' 
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#' 
+#' @export
+#' @importFrom dqrng dqrunif
+frDEL <- function(n, mu = 1, sigma = 1, nu = 0.5) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqDEL(p, mu = mu, sigma = sigma, nu = nu)
+    r
+}

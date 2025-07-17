@@ -340,25 +340,3 @@ for (i in seq_along(large_params)) {
   test_name <- paste0("Large parameter values - set ", i)
   print(expect_equal(ck_dens_large, gamlss_dens_large, tolerance = tolerance, info = test_name))
 }
-
-# =============================================================================
-# CACHE FUNCTIONALITY TESTS
-# =============================================================================
-
-# Test 23: Cache functionality
-clear_DEL_cache()
-expect_true({clear_DEL_cache(); TRUE}, info = "Cache clear function works")
-
-# Test 24: Verify results are consistent before and after cache clear
-params_cache <- list(mu = 5, sigma = 2, nu = 0.4)
-
-# Compute values (builds cache)
-result1 <- fqDEL(c(0.1, 0.5, 0.9), mu = params_cache$mu, sigma = params_cache$sigma, nu = params_cache$nu)
-
-# Clear cache
-clear_DEL_cache()
-
-# Compute same values again (rebuilds cache)
-result2 <- fqDEL(c(0.1, 0.5, 0.9), mu = params_cache$mu, sigma = params_cache$sigma, nu = params_cache$nu)
-
-expect_equal(result1, result2, tolerance = 0, info = "Results consistent after cache clear")

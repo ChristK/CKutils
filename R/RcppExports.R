@@ -2,26 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-my_get_C <- function(x, mu, sigma) {
-    .Call(`_CKutils_my_get_C`, x, mu, sigma)
-}
-
-#' @export
-my_dDPO <- function(x, mu, sigma, log_ = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_dDPO`, x, mu, sigma, log_, n_cpu)
-}
-
-#' @export
-my_pDPO <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
-    .Call(`_CKutils_my_pDPO`, q, mu, sigma, lower_tail, log_p)
-}
-
-#' @export
-my_qDPO <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE, max_value = 0L, n_cpu = 1L) {
-    .Call(`_CKutils_my_qDPO`, p, mu, sigma, lower_tail, log_p, max_value, n_cpu)
-}
-
-#' @export
 my_qMN4 <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE, n_cpu = 1L) {
     .Call(`_CKutils_my_qMN4`, p, mu, sigma, nu, lower_tail, log_p, n_cpu)
 }
@@ -755,14 +735,14 @@ fqZABNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' This implementation is based on the algorithms from the gamlss.dist package
 #' by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
-#' including SIMD support and improved caching.
+#' including SIMD support and efficient parameter recycling.
 #'
 #' @return
 #' \code{fdDEL} gives the density
 #'
 #' @note
 #' This function is optimized for performance with chunked processing and
-#' prefetching for better cache utilization.
+#' efficient memory access patterns.
 #'
 #' @references
 #' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -809,8 +789,8 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' @details
 #' The cumulative distribution function is computed as the sum of the probability
 #' mass function from 0 to q. For computational efficiency, this implementation
-#' uses caching to store previously computed CDF values and employs chunked
-#' processing with SIMD optimizations when available.
+#' employs chunked processing with SIMD optimizations when available and is
+#' optimized for scenarios with varying parameter combinations.
 #' 
 #' When sigma is very small (< 1e-04), the distribution approaches a Poisson
 #' distribution with parameter mu, and the function switches to using the
@@ -818,17 +798,16 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' 
 #' This implementation is based on the algorithms from the gamlss.dist package
 #' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
-#' optimizations including intelligent caching, vectorized transformations,
-#' and SIMD support for large datasets.
+#' optimizations including vectorized transformations and SIMD support for
+#' large datasets with diverse parameter sets.
 #'
 #' @return
 #' \code{fpDEL} gives the cumulative distribution function
 #'
 #' @note
-#' This function implements an intelligent caching system that stores computed
-#' CDF values for reuse, significantly improving performance for repeated
-#' computations with the same parameters. The cache can be cleared using
-#' \code{clear_DEL_cache()}.
+#' This function is optimized for scenarios where parameters vary between
+#' computations (e.g., random parameters). For applications with repeated
+#' parameter combinations, consider implementing application-specific caching.
 #'
 #' @references
 #' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -843,7 +822,7 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' @author Chris Kypridemos (optimized implementation), based on original work by 
 #' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 #'
-#' @seealso \code{\link{fdDEL}}, \code{\link{fqDEL}}, \code{\link{clear_DEL_cache}}
+#' @seealso \code{\link{fdDEL}}, \code{\link{fqDEL}}
 #'
 #' @examples
 #' # Calculate CDF for single values
@@ -916,7 +895,7 @@ fpDEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @author Christos Kypraios [aut, cre], based on gamlss.dist by Mikis Stasinopoulos,
 #' Robert Rigby, Calliope Akantziliotou, Vlasios Voudouris, Fernanda De Bastiani
 #'
-#' @seealso \code{\link{fdDEL}}, \code{\link{fpDEL}}, \code{\link{clear_DEL_cache}}
+#' @seealso \code{\link{fdDEL}}, \code{\link{fpDEL}}
 #'
 #' @examples
 #' # Basic quantile computation
@@ -936,50 +915,233 @@ fqDEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqDEL`, p, mu, sigma, nu, lower_tail, log_p)
 }
 
-#' Clear Delaporte Distribution Cache
+#' Get Normalizing Constant for DPO Distribution
 #'
-#' Clears the internal cache used by Delaporte distribution functions to store
-#' intermediate CDF calculations for performance optimization.
+#' Computes the logarithm of the normalizing constant for the DPO distribution.
+#' This is an internal function used by the DPO distribution functions.
+#'
+#' @param x vector of (non-negative integer) quantiles
+#' @param mu vector of positive means
+#' @param sigma vector of positive dispersion parameters
 #'
 #' @details
-#' The Delaporte distribution functions (\code{\link{fdDEL}}, \code{\link{fpDEL}},
-#' \code{\link{fqDEL}}) use an internal cache to store intermediate CDF calculations,
-#' which significantly improves performance when computing multiple quantiles or
-#' probabilities with the same or similar parameter combinations.
+#' This function computes the logarithm of the normalizing constant required
+#' for the DPO (Double Poisson) distribution. The computation follows the
+#' algorithm from gamlss.dist but with optimizations for performance.
 #'
-#' This function provides a way to manually clear the cache, which might be useful:
-#' \itemize{
-#'   \item To free memory when working with very large datasets
-#'   \item To ensure fresh calculations when parameter ranges change significantly
-#'   \item For debugging or benchmarking purposes
-#' }
-#'
-#' The cache is automatically managed and typically does not require manual clearing.
+#' @return Vector of log normalizing constants
 #'
 #' @note
-#' This function is based on the Delaporte distribution implementation from
+#' This function is based on the DPO distribution implementation from
 #' the \pkg{gamlss.dist} package by Mikis Stasinopoulos, Robert Rigby,
-#' Calliope Akantziliotou, Vlasios Voudouris, and Fernanda De Bastiani.
+#' and colleagues. The original gamlss.dist implementation is acknowledged
+#' with gratitude.
 #'
-#' @author Christos Kypraios [aut, cre], based on gamlss.dist by Mikis Stasinopoulos,
-#' Robert Rigby, Calliope Akantziliotou, Vlasios Voudouris, Fernanda De Bastiani
+#' @references
+#' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
+#' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
+#' 
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 #'
-#' @seealso \code{\link{fdDEL}}, \code{\link{fpDEL}}, \code{\link{fqDEL}}
+#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 #'
-#' @examples
-#' # Compute some quantiles (builds cache)
-#' q1 <- fqDEL(0.5, mu=5, sigma=1, nu=0.2)
-#' q2 <- fqDEL(c(0.25, 0.75), mu=5, sigma=1, nu=0.2)
-#'
-#' # Clear the cache
-#' clear_DEL_cache()
-#'
-#' # Further computations will rebuild cache as needed
-#' q3 <- fqDEL(0.9, mu=5, sigma=1, nu=0.2)
+#' @seealso \code{\link{fdDPO}}, \code{\link{fpDPO}}, \code{\link{fqDPO}}
 #'
 #' @export
-clear_DEL_cache <- function() {
-    invisible(.Call(`_CKutils_clear_DEL_cache`))
+fget_C <- function(x, mu, sigma) {
+    .Call(`_CKutils_fget_C`, x, mu, sigma)
+}
+
+#' The DPO Distribution - Density Function
+#'
+#' Density function for the DPO (Double Poisson) distribution with parameters mu and sigma.
+#' The DPO distribution is a discrete probability distribution that extends the
+#' Poisson distribution by adding an additional dispersion parameter.
+#'
+#' @param x vector of (non-negative integer) quantiles
+#' @param mu vector of positive means
+#' @param sigma vector of positive dispersion parameters
+#' @param log_ logical; if TRUE, probabilities p are given as log(p)
+#'
+#' @details
+#' The DPO distribution has probability mass function with mean mu and 
+#' dispersion controlled by sigma. When sigma = 1, it reduces to the Poisson
+#' distribution. Values of sigma > 1 indicate overdispersion, while sigma < 1
+#' indicates underdispersion.
+#' 
+#' This implementation is based on the algorithms from the gamlss.dist package
+#' by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
+#' including SIMD support and improved caching.
+#'
+#' @return
+#' \code{fdDPO} gives the density
+#'
+#' @note
+#' This function is optimized for performance with chunked processing and
+#' prefetching for better cache utilization.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
+#' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
+#' 
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' 
+#' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
+#' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
+#'
+#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
+#'
+#' @seealso \code{\link{fpDPO}}, \code{\link{fqDPO}}
+#'
+#' @examples
+#' # Calculate density for single values
+#' fdDPO(0:5, mu = 2, sigma = 1)
+#' 
+#' # Calculate log density
+#' fdDPO(0:5, mu = 2, sigma = 1, log_ = TRUE)
+#' 
+#' # Parameter recycling
+#' fdDPO(c(0, 1, 2), mu = c(1, 2, 3), sigma = c(0.5, 1, 1.5))
+#'
+#' @export
+fdDPO <- function(x, mu, sigma, log_ = FALSE) {
+    .Call(`_CKutils_fdDPO`, x, mu, sigma, log_)
+}
+
+#' The DPO Distribution - Cumulative Distribution Function
+#'
+#' Distribution function for the DPO (Double Poisson) distribution with parameters mu and sigma.
+#' Computes the cumulative distribution function (CDF) of the DPO distribution.
+#'
+#' @param q vector of (non-negative integer) quantiles
+#' @param mu vector of positive means
+#' @param sigma vector of positive dispersion parameters
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x]
+#' @param log_p logical; if TRUE, probabilities p are given as log(p)
+#'
+#' @details
+#' The cumulative distribution function is computed using the normalizing constants
+#' approach from gamlss.dist. For computational efficiency, this implementation
+#' employs chunked processing with SIMD optimizations when available and is
+#' optimized for scenarios with varying parameter combinations.
+#' 
+#' This implementation is based on the algorithms from the gamlss.dist package
+#' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
+#' optimizations including vectorized transformations and SIMD support for
+#' large datasets with diverse parameter sets.
+#'
+#' @return
+#' \code{fpDPO} gives the cumulative distribution function
+#'
+#' @note
+#' This function is optimized for scenarios where parameters vary between
+#' computations (e.g., random parameters). For applications with repeated
+#' parameter combinations, consider implementing application-specific caching.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
+#' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
+#' 
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' 
+#' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
+#' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
+#'
+#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
+#'
+#' @seealso \code{\link{fdDPO}}, \code{\link{fqDPO}}
+#'
+#' @examples
+#' # Calculate CDF for single values
+#' fpDPO(0:5, mu = 2, sigma = 1)
+#' 
+#' # Calculate upper tail probabilities
+#' fpDPO(0:5, mu = 2, sigma = 1, lower_tail = FALSE)
+#' 
+#' # Calculate log probabilities
+#' fpDPO(0:5, mu = 2, sigma = 1, log_p = TRUE)
+#' 
+#' # Parameter recycling
+#' fpDPO(c(0, 1, 2), mu = c(1, 2, 3), sigma = c(0.5, 1, 1.5))
+#'
+#' @export
+fpDPO <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpDPO`, q, mu, sigma, lower_tail, log_p)
+}
+
+#' Quantile Function for the DPO Distribution
+#'
+#' Computes quantiles of the DPO (Double Poisson) distribution, a discrete
+#' distribution that extends the Poisson distribution with a dispersion parameter.
+#'
+#' @param p Vector of probabilities.
+#' @param mu Vector of mu (location/mean) parameters (positive).
+#' @param sigma Vector of sigma (dispersion) parameters (positive).
+#' @param lower_tail Logical; if TRUE (default), probabilities are P[X ≤ x],
+#'   otherwise P[X > x].
+#' @param log_p Logical; if TRUE, probabilities p are given as log(p).
+#' @param max_value Maximum value to search for quantiles (for performance tuning).
+#'
+#' @return Vector of quantiles corresponding to the given probabilities.
+#'
+#' @details
+#' The DPO distribution is a two-parameter discrete distribution that reduces
+#' to the Poisson distribution when sigma = 1. This implementation uses an
+#' optimized search algorithm with SIMD acceleration where available, and
+#' includes intelligent caching of intermediate CDF calculations for improved
+#' performance with repeated quantile computations.
+#'
+#' Parameter recycling is performed automatically - all parameter vectors
+#' are recycled to the length of the longest vector.
+#'
+#' @section Parameter Validation:
+#' - \code{p} must be in [0,1] for \code{log_p = FALSE}, or in (-Inf, 0] for \code{log_p = TRUE}
+#' - \code{mu}, \code{sigma} must both be positive
+#' - Invalid parameters result in \code{NA} values in the output
+#'
+#' @note
+#' This function is based on the DPO distribution implementation from
+#' the \pkg{gamlss.dist} package by Mikis Stasinopoulos, Robert Rigby,
+#' and colleagues. The original gamlss.dist implementation is acknowledged
+#' with gratitude.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models
+#' for location, scale and shape,(with discussion), \emph{Appl. Statist.}, \bold{54}, part 3, pp 507-554.
+#'
+#' Stasinopoulos D. M., Rigby R.A., Heller G., Voudouris V., and De Bastiani F., (2017)
+#' \emph{Flexible Regression and Smoothing: Using GAMLSS in R}, Chapman and Hall/CRC.
+#'
+#' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location
+#' scale and shape (GAMLSS) in R. \emph{Journal of Statistical Software}, Vol. \bold{23}, Issue 7, Dec 2007.
+#'
+#' @author Chris Kypridemos [aut, cre], based on gamlss.dist by Mikis Stasinopoulos,
+#' Robert Rigby, and colleagues
+#'
+#' @seealso \code{\link{fdDPO}}, \code{\link{fpDPO}}
+#'
+#' @examples
+#' # Basic quantile computation
+#' fqDPO(c(0.25, 0.5, 0.75), mu=5, sigma=1)
+#'
+#' # With parameter recycling
+#' fqDPO(0.5, mu=c(1,5,10), sigma=c(0.5,1,2))
+#'
+#' # Using log probabilities
+#' fqDPO(log(c(0.25, 0.5, 0.75)), mu=5, sigma=1, log_p=TRUE)
+#'
+#' # Upper tail probabilities
+#' fqDPO(c(0.25, 0.5, 0.75), mu=5, sigma=1, lower_tail=FALSE)
+#'
+#' @export
+fqDPO <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE, max_value = 0L) {
+    .Call(`_CKutils_fqDPO`, p, mu, sigma, lower_tail, log_p, max_value)
 }
 
 #' Convert Factor to Integer (C++ Version)
