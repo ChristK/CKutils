@@ -1183,8 +1183,8 @@ csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
 #' It dispatches to either `fclamp` for double precision values or `fclamp_int` for integer values.
 #'
 #' @param x A numeric vector of values to be clamped.
-#' @param a A numeric value specifying the lower bound (default: 0).
-#' @param b A numeric value specifying the upper bound (default: 1).
+#' @param a A numeric vector specifying the lower bound (default: 0).
+#' @param b A numeric vector specifying the upper bound (default: 1).
 #' @param inplace Logical. If TRUE, the clamping operation is performed in-place; otherwise, a new vector is returned.
 #'
 #' @return A numeric vector with values clamped to the interval [a, b].
@@ -1197,7 +1197,7 @@ clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
   } else if (typ == "integer") {
     return(fclamp_int(x, as.integer(a), as.integer(b), inplace))
   } else {
-    stop("Only accepts doubles or integers")
+    stop("clamp() only accepts doubles or integers")
   }
 }
 

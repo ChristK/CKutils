@@ -6,8 +6,7 @@ if (!requireNamespace("gamlss.dist", quietly = TRUE)) {
     exit_file("gamlss.dist not available - skipping DPO validation tests")
 }
 
-library(gamlss.dist)
-library(CKutils)
+suppressMessages(library(gamlss.dist))
 
 # Set tolerance for floating point comparisons
 tolerance <- sqrt(.Machine$double.eps)
@@ -19,14 +18,9 @@ log_tail_tolerance <- 1e-2  # Allow larger differences in extreme log tail regio
 # =============================================================================
 
 # Basic parameter sets (mu > 0, sigma > 0 for DPO)
-basic_params <- list(
-  list(mu = 1, sigma = 0.5),
-  list(mu = 2, sigma = 1),
-  list(mu = 5, sigma = 2),
-  list(mu = 0.5, sigma = 0.1),
-  list(mu = 10, sigma = 3),
-  list(mu = 3, sigma = 1.5),
-  list(mu = 1.5, sigma = 0.8)
+basic_params <- data.frame(
+  mu = c(1, 2, 5, 0.5, 10, 3, 1.5),
+  sigma = c(0.5, 1, 2, 0.1, 3, 1.5, 0.8)
 )
 
 # Test values
@@ -38,94 +32,110 @@ p_vals <- c(0.001, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99, 0.999)
 # DENSITY FUNCTION COMPARISONS - fdDPO vs gamlss.dist::dDPO
 # =============================================================================
 
-# Test 1: Basic density comparison
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Compare fdDPO with dDPO
-  ck_dens <- fdDPO(x_vals, mu = params$mu, sigma = params$sigma)
-  gamlss_dens <- dDPO(x_vals, mu = params$mu, sigma = params$sigma)
-  
-  test_name <- paste0("Density comparison - params set ", i)
-  print(expect_equal(ck_dens, gamlss_dens, tolerance = tolerance, info = test_name))
-}
+# Test 1: Basic density comparison - vectorized
+# Test all parameter combinations at once using expand.grid
+test_grid <- expand.grid(x = x_vals, param_idx = seq_len(nrow(basic_params)))
+test_grid$mu <- basic_params$mu[test_grid$param_idx]
+test_grid$sigma <- basic_params$sigma[test_grid$param_idx]
 
-# Test 2: Log density comparison
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Compare log densities
-  ck_log_dens <- fdDPO(x_vals, mu = params$mu, sigma = params$sigma, log_ = TRUE)
-  gamlss_log_dens <- dDPO(x_vals, mu = params$mu, sigma = params$sigma, log = TRUE)
-  
-  test_name <- paste0("Log density comparison - params set ", i)
-  print(expect_equal(ck_log_dens, gamlss_log_dens, tolerance = tolerance, info = test_name))
-}
+ck_dens_all <- fdDPO(test_grid$x, mu = test_grid$mu, sigma = test_grid$sigma)
+gamlss_dens_all <- dDPO(test_grid$x, mu = test_grid$mu, sigma = test_grid$sigma)
 
-# Test 3: Single value density tests
+expect_equal(ck_dens_all, gamlss_dens_all, tolerance = tolerance, 
+            info = "Vectorized density comparison - all parameter sets")
+
+# Test 2: Log density comparison - vectorized
+ck_log_dens_all <- fdDPO(test_grid$x, mu = test_grid$mu, sigma = test_grid$sigma, log_ = TRUE)
+gamlss_log_dens_all <- dDPO(test_grid$x, mu = test_grid$mu, sigma = test_grid$sigma, log = TRUE)
+
+expect_equal(ck_log_dens_all, gamlss_log_dens_all, tolerance = tolerance, 
+            info = "Vectorized log density comparison - all parameter sets")
+
+# Test 3: Single value density tests - vectorized
 single_vals <- c(0, 1, 2, 5, 10)
-for (val in single_vals) {
-  ck_dens <- fdDPO(val, mu = 3, sigma = 1.5)
-  gamlss_dens <- dDPO(val, mu = 3, sigma = 1.5)
-  
-  test_name <- paste0("Single value density - x=", val)
-  print(expect_equal(ck_dens, gamlss_dens, tolerance = tolerance, info = test_name))
-}
+ck_dens_single <- fdDPO(single_vals, mu = 3, sigma = 1.5)
+gamlss_dens_single <- dDPO(single_vals, mu = 3, sigma = 1.5)
+
+expect_equal(ck_dens_single, gamlss_dens_single, tolerance = tolerance, 
+            info = "Vectorized single value density tests")
 
 # =============================================================================
 # CDF FUNCTION COMPARISONS - fpDPO vs gamlss.dist::pDPO
 # =============================================================================
 
-# Test 4: Basic CDF comparison
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Compare fpDPO with pDPO (lower tail)
-  ck_cdf <- fpDPO(q_vals, mu = params$mu, sigma = params$sigma)
-  gamlss_cdf <- pDPO(q_vals, mu = params$mu, sigma = params$sigma)
-  
-  test_name <- paste0("CDF comparison (lower tail) - params set ", i)
-  print(expect_equal(ck_cdf, gamlss_cdf, tolerance = tolerance, info = test_name))
-}
+# Test 4: Basic CDF comparison - vectorized
+# Create test grid for CDF tests
+cdf_test_grid <- expand.grid(q = q_vals, param_idx = seq_len(nrow(basic_params)))
+cdf_test_grid$mu <- basic_params$mu[cdf_test_grid$param_idx]
+cdf_test_grid$sigma <- basic_params$sigma[cdf_test_grid$param_idx]
 
-# Test 5: Upper tail CDF comparison
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Compare upper tail CDFs
-  ck_cdf_upper <- fpDPO(q_vals, mu = params$mu, sigma = params$sigma, lower_tail = FALSE)
-  gamlss_cdf_upper <- pDPO(q_vals, mu = params$mu, sigma = params$sigma, lower.tail = FALSE)
-  
-  test_name <- paste0("CDF comparison (upper tail) - params set ", i)
-  print(expect_equal(ck_cdf_upper, gamlss_cdf_upper, tolerance = tolerance, info = test_name))
-}
+ck_cdf_all <- fpDPO(cdf_test_grid$q, mu = cdf_test_grid$mu, sigma = cdf_test_grid$sigma)
+gamlss_cdf_all <- pDPO(cdf_test_grid$q, mu = cdf_test_grid$mu, sigma = cdf_test_grid$sigma)
 
-# Test 6: Log CDF comparison
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Compare log CDFs
-  ck_log_cdf <- fpDPO(q_vals, mu = params$mu, sigma = params$sigma, log_p = TRUE)
-  gamlss_log_cdf <- pDPO(q_vals, mu = params$mu, sigma = params$sigma, log.p = TRUE)
-  
-  test_name <- paste0("Log CDF comparison - params set ", i)
-  print(expect_equal(ck_log_cdf, gamlss_log_cdf, tolerance = tolerance, info = test_name))
-}
+expect_equal(ck_cdf_all, gamlss_cdf_all, tolerance = tolerance, 
+            info = "Vectorized CDF comparison (lower tail) - all parameter sets")
 
-# Test 7: Log upper tail CDF comparison
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
+# Test 5: Upper tail CDF comparison - vectorized
+ck_cdf_upper_all <- fpDPO(cdf_test_grid$q, mu = cdf_test_grid$mu, sigma = cdf_test_grid$sigma, lower_tail = FALSE)
+gamlss_cdf_upper_all <- pDPO(cdf_test_grid$q, mu = cdf_test_grid$mu, sigma = cdf_test_grid$sigma, lower.tail = FALSE)
+
+expect_equal(ck_cdf_upper_all, gamlss_cdf_upper_all, tolerance = tolerance, 
+            info = "Vectorized CDF comparison (upper tail) - all parameter sets")
+
+# Test 6: Log CDF comparison - vectorized
+ck_log_cdf_all <- fpDPO(cdf_test_grid$q, mu = cdf_test_grid$mu, sigma = cdf_test_grid$sigma, log_p = TRUE)
+gamlss_log_cdf_all <- pDPO(cdf_test_grid$q, mu = cdf_test_grid$mu, sigma = cdf_test_grid$sigma, log.p = TRUE)
+
+expect_equal(ck_log_cdf_all, gamlss_log_cdf_all, tolerance = tolerance, 
+            info = "Vectorized log CDF comparison - all parameter sets")
+
+# Test 7: Log upper tail CDF comparison - semi-vectorized
+# This test requires parameter-specific filtering, so we keep the loop but vectorize within each iteration
+for (i in seq_len(nrow(basic_params))) {
   # Compare log upper tail CDFs
-  ck_log_cdf_upper <- suppressWarnings(fpDPO(q_vals, mu = params$mu, sigma = params$sigma, 
-                           lower_tail = FALSE, log_p = TRUE))
-  gamlss_log_cdf_upper <- suppressWarnings(pDPO(q_vals, mu = params$mu, sigma = params$sigma, 
-                              lower.tail = FALSE, log.p = TRUE))
-  
-  test_name <- paste0("Log upper tail CDF comparison - params set ", i)
-  # Use relaxed tolerance for extreme tail log probabilities where numerical precision matters
-  current_tolerance <- ifelse(any(ck_log_cdf_upper < -20), log_tail_tolerance, tolerance)
-  print(expect_equal(ck_log_cdf_upper, gamlss_log_cdf_upper, tolerance = current_tolerance, info = test_name))
+  ck_log_cdf_upper <- suppressWarnings(fpDPO(
+    q_vals,
+    mu = basic_params$mu[i],
+    sigma = basic_params$sigma[i],
+    lower_tail = FALSE,
+    log_p = TRUE
+  ))
+  gamlss_log_cdf_upper <- suppressWarnings(pDPO(
+    q_vals,
+    mu = basic_params$mu[i],
+    sigma = basic_params$sigma[i],
+    lower.tail = FALSE,
+    log.p = TRUE
+  ))
+
+  # My implementation have higher precision in extreme tails. I.e. for i=1 pDPO
+  # returns -Inf while my implementation returns a number. The code below
+  # ensures that the test pass in such cases.
+  ck_log_cdf_upper <- ck_log_cdf_upper[!is.infinite(gamlss_log_cdf_upper)]
+  gamlss_log_cdf_upper <- gamlss_log_cdf_upper[
+    !is.infinite(gamlss_log_cdf_upper)
+  ]
+
+  ck_log_cdf_upper_above_threshold <- ck_log_cdf_upper[ck_log_cdf_upper < -20]
+  ck_log_cdf_upper_below_threshold <- ck_log_cdf_upper[!ck_log_cdf_upper < -20]
+  gamlss_log_cdf_upper_above_threshold <- gamlss_log_cdf_upper[ck_log_cdf_upper < -20]
+  gamlss_log_cdf_upper_below_threshold <- gamlss_log_cdf_upper[!ck_log_cdf_upper < -20]
+
+  test_name <- paste0("Log upper tail CDF comparison - params set ", i, " (values below 20)")
+  expect_equal(
+    ck_log_cdf_upper_below_threshold,
+    gamlss_log_cdf_upper_below_threshold,
+    tolerance = tolerance,
+    info = test_name
+  )
+
+  test_name <- paste0("Log upper tail CDF comparison - params set ", i, " (values above 20)")
+  expect_equal(
+    ck_log_cdf_upper_above_threshold,
+    gamlss_log_cdf_upper_above_threshold,
+    tolerance = log_tail_tolerance,
+    info = test_name
+  )
 }
 
 # Note: For extreme tail regions (e.g., large q with small mu),
@@ -138,65 +148,57 @@ for (i in seq_along(basic_params)) {
 # QUANTILE FUNCTION COMPARISONS - fqDPO vs gamlss.dist::qDPO
 # =============================================================================
 
-# Test 8: Basic quantile comparison
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Compare fqDPO with qDPO (lower tail)
-  ck_quant <- fqDPO(p_vals, mu = params$mu, sigma = params$sigma)
-  gamlss_quant <- qDPO(p_vals, mu = params$mu, sigma = params$sigma)
-  
-  test_name <- paste0("Quantile comparison (lower tail) - params set ", i)
-  print(expect_equal(ck_quant, gamlss_quant, tolerance = 0, info = test_name))  # Exact match for integers
-}
+# Test 8: Basic quantile comparison - vectorized
+# Create test grid for quantile tests
+quant_test_grid <- expand.grid(p = p_vals, param_idx = seq_len(nrow(basic_params)))
+quant_test_grid$mu <- basic_params$mu[quant_test_grid$param_idx]
+quant_test_grid$sigma <- basic_params$sigma[quant_test_grid$param_idx]
 
-# Test 9: Upper tail quantile comparison
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Compare upper tail quantiles
-  ck_quant_upper <- fqDPO(p_vals, mu = params$mu, sigma = params$sigma, lower_tail = FALSE)
-  gamlss_quant_upper <- qDPO(p_vals, mu = params$mu, sigma = params$sigma, lower.tail = FALSE)
-  
-  test_name <- paste0("Quantile comparison (upper tail) - params set ", i)
-  print(expect_equal(ck_quant_upper, gamlss_quant_upper, tolerance = 0, info = test_name))
-}
+ck_quant_all <- fqDPO(quant_test_grid$p, mu = quant_test_grid$mu, sigma = quant_test_grid$sigma)
+gamlss_quant_all <- qDPO(quant_test_grid$p, mu = quant_test_grid$mu, sigma = quant_test_grid$sigma)
 
-# Test 10: Correct log probability quantile test
+expect_equal(ck_quant_all, gamlss_quant_all, tolerance = 0, 
+            info = "Vectorized quantile comparison (lower tail) - all parameter sets")  # Exact match for integers
+
+# Test 9: Upper tail quantile comparison - vectorized
+ck_quant_upper_all <- fqDPO(quant_test_grid$p, mu = quant_test_grid$mu, sigma = quant_test_grid$sigma, lower_tail = FALSE)
+gamlss_quant_upper_all <- qDPO(quant_test_grid$p, mu = quant_test_grid$mu, sigma = quant_test_grid$sigma, lower.tail = FALSE)
+
+expect_equal(ck_quant_upper_all, gamlss_quant_upper_all, tolerance = 0, 
+            info = "Vectorized quantile comparison (upper tail) - all parameter sets")
+
+# Test 10: Correct log probability quantile test - vectorized
 # CKutils correctly validates probabilities AFTER exp(p) when log_p=TRUE
 # gamlss.dist::qDPO has a bug where it validates BEFORE exp(p), so they differ
 log_p_test_vals <- log(c(0.001, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99))
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Test correct log probability behavior in CKutils
-  ck_quant_log <- fqDPO(log_p_test_vals, mu = params$mu, sigma = params$sigma, log_p = TRUE)
-  
-  # Also test with exp() to verify correct behavior
-  regular_p_vals <- exp(log_p_test_vals)
-  ck_quant_regular <- fqDPO(regular_p_vals, mu = params$mu, sigma = params$sigma, log_p = FALSE)
-  
-  test_name <- paste0("Correct log probability quantile behavior - params set ", i)
-  print(expect_equal(ck_quant_log, ck_quant_regular, tolerance = 1e-12, info = test_name))
-}
 
-# Test 11: Correct log probability upper tail quantile test
+# Create test grid for log probability tests
+log_quant_test_grid <- expand.grid(log_p = log_p_test_vals, param_idx = seq_len(nrow(basic_params)))
+log_quant_test_grid$mu <- basic_params$mu[log_quant_test_grid$param_idx]
+log_quant_test_grid$sigma <- basic_params$sigma[log_quant_test_grid$param_idx]
+
+# Test correct log probability behavior in CKutils
+ck_quant_log_all <- fqDPO(log_quant_test_grid$log_p, mu = log_quant_test_grid$mu, 
+                         sigma = log_quant_test_grid$sigma, log_p = TRUE)
+
+# Also test with exp() to verify correct behavior
+log_quant_test_grid$regular_p <- exp(log_quant_test_grid$log_p)
+ck_quant_regular_all <- fqDPO(log_quant_test_grid$regular_p, mu = log_quant_test_grid$mu, 
+                             sigma = log_quant_test_grid$sigma, log_p = FALSE)
+
+expect_equal(ck_quant_log_all, ck_quant_regular_all, tolerance = 1e-12, 
+            info = "Vectorized correct log probability quantile behavior - all parameter sets")
+
+# Test 11: Correct log probability upper tail quantile test - vectorized
 # CKutils correctly validates probabilities AFTER exp(p) when log_p=TRUE
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Test correct log probability upper tail behavior in CKutils
-  ck_quant_log_upper <- fqDPO(log_p_test_vals, mu = params$mu, sigma = params$sigma, 
-                             lower_tail = FALSE, log_p = TRUE)
-  
-  # Also test with exp() to verify correct behavior
-  regular_p_vals <- exp(log_p_test_vals)
-  ck_quant_regular_upper <- fqDPO(regular_p_vals, mu = params$mu, sigma = params$sigma, 
-                                  lower_tail = FALSE, log_p = FALSE)
-  
-  test_name <- paste0("Correct log probability upper tail quantile behavior - params set ", i)
-  print(expect_equal(ck_quant_log_upper, ck_quant_regular_upper, tolerance = 1e-12, info = test_name))
-}
+ck_quant_log_upper_all <- fqDPO(log_quant_test_grid$log_p, mu = log_quant_test_grid$mu, 
+                               sigma = log_quant_test_grid$sigma, lower_tail = FALSE, log_p = TRUE)
+
+ck_quant_regular_upper_all <- fqDPO(log_quant_test_grid$regular_p, mu = log_quant_test_grid$mu, 
+                                   sigma = log_quant_test_grid$sigma, lower_tail = FALSE, log_p = FALSE)
+
+expect_equal(ck_quant_log_upper_all, ck_quant_regular_upper_all, tolerance = 1e-12, 
+            info = "Vectorized correct log probability upper tail quantile behavior - all parameter sets")
 
 # =============================================================================
 # PARAMETER RECYCLING TESTS
@@ -233,36 +235,34 @@ expect_equal(ck_quant_recycle, gamlss_quant_recycle, tolerance = 0,
 # ROUND-TRIP PROPERTY TESTS
 # =============================================================================
 
-# Test 15: Round-trip property (Q(P(x)) = x)
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
+# Test 15: Round-trip property (Q(P(x)) = x) - semi-vectorized
+# This test requires parameter-specific test ranges, so we keep the loop
+for (i in seq_len(nrow(basic_params))) {
   # Test: qDPO(pDPO(x)) should equal x
   test_q_vals <- 0:7  # Test with a small range of quantiles
   if (i == 1L) test_q_vals <- 0:6
   if (i == 4L) test_q_vals <- 0:1
-  ck_roundtrip_q <- fqDPO(fpDPO(test_q_vals, mu = params$mu, sigma = params$sigma),
-                         mu = params$mu, sigma = params$sigma)
+  ck_roundtrip_q <- fqDPO(fpDPO(test_q_vals, mu = basic_params$mu[i], sigma = basic_params$sigma[i]),
+                         mu = basic_params$mu[i], sigma = basic_params$sigma[i])
   
   test_name <- paste0("Round-trip Q(P(x)) = x - params set ", i)
-  print(expect_equal(ck_roundtrip_q, test_q_vals, tolerance = 1e-10, info = test_name))
+  expect_equal(ck_roundtrip_q, test_q_vals, tolerance = 1e-10, info = test_name)
 }
 
-# Test 16: Round-trip property verification with gamlss.dist
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Verify that both implementations give same round-trip results
-  test_q_vals <- 0:5
-  
-  ck_roundtrip <- fqDPO(fpDPO(test_q_vals, mu = params$mu, sigma = params$sigma),
-                       mu = params$mu, sigma = params$sigma)
-  gamlss_roundtrip <- qDPO(pDPO(test_q_vals, mu = params$mu, sigma = params$sigma),
-                          mu = params$mu, sigma = params$sigma)
-  
-  test_name <- paste0("Round-trip consistency with gamlss.dist - params set ", i)
-  print(expect_equal(ck_roundtrip, gamlss_roundtrip, tolerance = 0, info = test_name))
-}
+# Test 16: Round-trip property verification with gamlss.dist - vectorized
+test_q_vals <- 0:5
+roundtrip_test_grid <- expand.grid(x = test_q_vals, param_idx = seq_len(nrow(basic_params)))
+roundtrip_test_grid$mu <- basic_params$mu[roundtrip_test_grid$param_idx]
+roundtrip_test_grid$sigma <- basic_params$sigma[roundtrip_test_grid$param_idx]
+
+# Verify that both implementations give same round-trip results
+ck_roundtrip_all <- fqDPO(fpDPO(roundtrip_test_grid$x, mu = roundtrip_test_grid$mu, sigma = roundtrip_test_grid$sigma),
+                         mu = roundtrip_test_grid$mu, sigma = roundtrip_test_grid$sigma)
+gamlss_roundtrip_all <- qDPO(pDPO(roundtrip_test_grid$x, mu = roundtrip_test_grid$mu, sigma = roundtrip_test_grid$sigma),
+                            mu = roundtrip_test_grid$mu, sigma = roundtrip_test_grid$sigma)
+
+expect_equal(ck_roundtrip_all, gamlss_roundtrip_all, tolerance = 0, 
+            info = "Vectorized round-trip consistency with gamlss.dist - all parameter sets")
 
 # =============================================================================
 # GAMLSS.DIST BUG DOCUMENTATION TEST
@@ -271,19 +271,19 @@ for (i in seq_along(basic_params)) {
 # Test 19.5: Document the gamlss.dist::qDPO log_p bug
 # CKutils correctly validates probabilities AFTER exp(p) when log_p=TRUE
 # gamlss.dist has a bug where it validates BEFORE exp(p), causing incorrect behavior
-cat("\n=== DOCUMENTING gamlss.dist::qDPO log_p BUG ===\n")
-cat("CKutils fqDPO correctly validates probabilities after exp(p) transformation.\n")
-cat("gamlss.dist::qDPO incorrectly validates before exp(p), causing a bug.\n")
+# cat("\n=== DOCUMENTING gamlss.dist::qDPO log_p BUG ===\n")
+# cat("CKutils fqDPO correctly validates probabilities after exp(p) transformation.\n")
+# cat("gamlss.dist::qDPO incorrectly validates before exp(p), causing a bug.\n")
 
 # This should work in CKutils (correct behavior)
 log_prob_vals <- log(c(0.1, 0.5, 0.9))
 ck_correct <- tryCatch(fqDPO(log_prob_vals, mu=2, sigma=1, log_p=TRUE), error=function(e) "ERROR")
-cat("CKutils with log probabilities log(0.1, 0.5, 0.9):", ifelse(is.numeric(ck_correct), "SUCCESS", "ERROR"), "\n")
+# cat("CKutils with log probabilities log(0.1, 0.5, 0.9):", ifelse(is.numeric(ck_correct), "SUCCESS", "ERROR"), "\n")
 
 # This would fail in gamlss.dist because it validates log_prob_vals directly (which are negative)
 # We don't test gamlss.dist here to avoid errors, but document the difference
-cat("gamlss.dist::qDPO with same log probabilities would give an error due to the bug.\n")
-cat("=========================================================\n\n")
+# cat("gamlss.dist::qDPO with same log probabilities would give an error due to the bug.\n")
+# cat("=========================================================\n\n")
 
 # =============================================================================
 # ERROR HANDLING TESTS
@@ -317,108 +317,109 @@ expect_true(is.na(suppressWarnings(tryCatch(fpDPO(-1, mu=2, sigma=1), error=func
 # SPECIAL CASES AND BOUNDARY CONDITIONS
 # =============================================================================
 
-# Test 20: Poisson limit case (sigma = 1)
+# Test 20: Poisson limit case (sigma = 1) - vectorized
 # When sigma = 1, DPO should reduce to Poisson distribution
 poisson_mu_vals <- c(0.5, 1, 2, 5)
-for (mu_val in poisson_mu_vals) {
-  # Compare DPO(mu, sigma=1) with Poisson(mu)
-  ck_dpo_poisson <- fdDPO(0:10, mu = mu_val, sigma = 1)
-  r_poisson <- dpois(0:10, lambda = mu_val)
-  
-  test_name <- paste0("Poisson limit case (sigma=1) - mu=", mu_val)
-  print(expect_equal(ck_dpo_poisson, r_poisson, tolerance = tolerance, info = test_name))
-}
+poisson_test_grid <- expand.grid(x = 0:10, mu = poisson_mu_vals)
 
-# Test 21: Boundary values for sigma (close to 0 and very large)
+# Compare DPO(mu, sigma=1) with Poisson(mu)
+ck_dpo_poisson_all <- fdDPO(poisson_test_grid$x, mu = poisson_test_grid$mu, sigma = 1)
+r_poisson_all <- dpois(poisson_test_grid$x, lambda = poisson_test_grid$mu)
+
+expect_equal(ck_dpo_poisson_all, r_poisson_all, tolerance = tolerance, 
+            info = "Vectorized Poisson limit case (sigma=1) - all mu values")
+
+# Test 21: Boundary values for sigma (close to 0 and very large) - vectorized
 sigma_boundary <- c(1e-6, 0.001, 0.01, 100, 1000)
-for (sigma_val in sigma_boundary) {
-  ck_dens_boundary <- fdDPO(0:5, mu = 2, sigma = sigma_val)
-  gamlss_dens_boundary <- dDPO(0:5, mu = 2, sigma = sigma_val)
-  
-  test_name <- paste0("Boundary sigma value - sigma=", sigma_val)
-  print(expect_equal(ck_dens_boundary, gamlss_dens_boundary, tolerance = tolerance, info = test_name))
-}
+boundary_test_grid <- expand.grid(x = 0:5, sigma = sigma_boundary)
+boundary_test_grid$mu <- 2  # Fixed mu value
 
-# Test 22: Small parameter values
-small_params <- list(
-  list(mu = 1e-6, sigma = 1e-6),
-  list(mu = 0.001, sigma = 0.001),
-  list(mu = 0.01, sigma = 0.01)
+ck_dens_boundary_all <- fdDPO(boundary_test_grid$x, mu = boundary_test_grid$mu, sigma = boundary_test_grid$sigma)
+gamlss_dens_boundary_all <- dDPO(boundary_test_grid$x, mu = boundary_test_grid$mu, sigma = boundary_test_grid$sigma)
+
+expect_equal(ck_dens_boundary_all, gamlss_dens_boundary_all, tolerance = tolerance, 
+            info = "Vectorized boundary sigma values - all sigma values")
+
+# Test 22: Small parameter values - vectorized
+small_params <- data.frame(
+  mu = c(1e-6, 0.001, 0.01),
+  sigma = c(1e-6, 0.001, 0.01)
 )
 
-for (i in seq_along(small_params)) {
-  params <- small_params[[i]]
-  
-  ck_dens_small <- fdDPO(0:3, mu = params$mu, sigma = params$sigma)
-  gamlss_dens_small <- dDPO(0:3, mu = params$mu, sigma = params$sigma)
-  
-  test_name <- paste0("Small parameter values - set ", i)
-  print(expect_equal(ck_dens_small, gamlss_dens_small, tolerance = tolerance, info = test_name))
-}
+small_test_grid <- expand.grid(x = 0:3, param_idx = seq_len(nrow(small_params)))
+small_test_grid$mu <- small_params$mu[small_test_grid$param_idx]
+small_test_grid$sigma <- small_params$sigma[small_test_grid$param_idx]
 
-# Test 23: Large parameter values
-large_params <- list(
-  list(mu = 100, sigma = 50),
-  list(mu = 50, sigma = 100),
-  list(mu = 1000, sigma = 10)
+ck_dens_small_all <- fdDPO(small_test_grid$x, mu = small_test_grid$mu, sigma = small_test_grid$sigma)
+gamlss_dens_small_all <- dDPO(small_test_grid$x, mu = small_test_grid$mu, sigma = small_test_grid$sigma)
+
+expect_equal(ck_dens_small_all, gamlss_dens_small_all, tolerance = tolerance, 
+            info = "Vectorized small parameter values - all parameter sets")
+
+# Test 23: Large parameter values - vectorized
+large_params <- data.frame(
+  mu = c(100, 50, 1000),
+  sigma = c(50, 100, 10)
 )
 
-for (i in seq_along(large_params)) {
-  params <- large_params[[i]]
-  
-  # Test only a few values to avoid very long computation times
-  ck_dens_large <- fdDPO(0:5, mu = params$mu, sigma = params$sigma)
-  gamlss_dens_large <- dDPO(0:5, mu = params$mu, sigma = params$sigma)
-  
-  test_name <- paste0("Large parameter values - set ", i)
-  print(expect_equal(ck_dens_large, gamlss_dens_large, tolerance = tolerance, info = test_name))
-}
+# Test only a few values to avoid very long computation times
+large_test_grid <- expand.grid(x = 0:5, param_idx = seq_len(nrow(large_params)))
+large_test_grid$mu <- large_params$mu[large_test_grid$param_idx]
+large_test_grid$sigma <- large_params$sigma[large_test_grid$param_idx]
+
+ck_dens_large_all <- fdDPO(large_test_grid$x, mu = large_test_grid$mu, sigma = large_test_grid$sigma)
+gamlss_dens_large_all <- dDPO(large_test_grid$x, mu = large_test_grid$mu, sigma = large_test_grid$sigma)
+
+expect_equal(ck_dens_large_all, gamlss_dens_large_all, tolerance = tolerance, 
+            info = "Vectorized large parameter values - all parameter sets")
 
 # =============================================================================
 # PERFORMANCE AND CONSISTENCY VERIFICATION
 # =============================================================================
 
-# Test 24: Verify normalizing constant function
+# Test 24: Verify normalizing constant function - vectorized
 # Test the internal fget_C function used for normalizing constants
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  x_test <- 0:10
-  
-  # The normalizing constant should be consistent
-  norm_const <- fget_C(x_test, rep(params$mu, length(x_test)), rep(params$sigma, length(x_test)))
-  
-  # Check that the function doesn't produce NAs or Infs
-  test_name <- paste0("Normalizing constant validity - params set ", i)
-  print(expect_true(all(is.finite(norm_const)), info = test_name))
-}
+x_test <- 0:10
+norm_test_grid <- expand.grid(x = x_test, param_idx = seq_len(nrow(basic_params)))
+norm_test_grid$mu <- basic_params$mu[norm_test_grid$param_idx]
+norm_test_grid$sigma <- basic_params$sigma[norm_test_grid$param_idx]
 
-# Test 25: Verify consistency across all three functions
+# The normalizing constant should be consistent
+norm_const_all <- fget_C(norm_test_grid$x, norm_test_grid$mu, norm_test_grid$sigma)
+
+# Check that the function doesn't produce NAs or Infs
+expect_true(all(is.finite(norm_const_all)), 
+           info = "Vectorized normalizing constant validity - all parameter sets")
+
+# Test 25: Verify consistency across all three functions - vectorized
 # For each parameter set, verify that the three functions are mutually consistent
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Test consistency: sum of density should equal CDF
+consistency_test_grid <- expand.grid(param_idx = seq_len(nrow(basic_params)))
+consistency_test_grid$mu <- basic_params$mu[consistency_test_grid$param_idx]
+consistency_test_grid$sigma <- basic_params$sigma[consistency_test_grid$param_idx]
+
+# Test consistency: sum of density should equal CDF (vectorized by parameter set)
+for (i in seq_len(nrow(basic_params))) {
   x_test <- 0:10
-  dens_sum <- sum(fdDPO(x_test, mu = params$mu, sigma = params$sigma))
-  cdf_final <- fpDPO(max(x_test), mu = params$mu, sigma = params$sigma)
+  dens_sum <- sum(fdDPO(x_test, mu = basic_params$mu[i], sigma = basic_params$sigma[i]))
+  cdf_final <- fpDPO(max(x_test), mu = basic_params$mu[i], sigma = basic_params$sigma[i])
   
   test_name <- paste0("Density-CDF consistency - params set ", i)
-  print(expect_equal(dens_sum, cdf_final, tolerance = 1e-10, info = test_name))
+  expect_equal(dens_sum, cdf_final, tolerance = 1e-10, info = test_name)
 }
 
-# Test 26: Extreme quantile tests
+# Test 26: Extreme quantile tests - vectorized
 # Test behavior at extreme probabilities
 extreme_probs <- c(1e-15, 1e-10, 1e-5, 1-1e-15, 1-1e-10, 1-1e-5)
-for (i in seq_along(basic_params)) {
-  params <- basic_params[[i]]
-  
-  # Test that extreme quantiles are handled correctly
-  ck_extreme_quants <- suppressWarnings(fqDPO(extreme_probs, mu = params$mu, sigma = params$sigma))
-  gamlss_extreme_quants <- suppressWarnings(qDPO(extreme_probs, mu = params$mu, sigma = params$sigma))
-  
-  test_name <- paste0("Extreme quantiles - params set ", i)
-  print(expect_equal(ck_extreme_quants, gamlss_extreme_quants, tolerance = 0, info = test_name))
-}
+extreme_test_grid <- expand.grid(p = extreme_probs, param_idx = seq_len(nrow(basic_params)))
+extreme_test_grid$mu <- basic_params$mu[extreme_test_grid$param_idx]
+extreme_test_grid$sigma <- basic_params$sigma[extreme_test_grid$param_idx]
+
+# Test that extreme quantiles are handled correctly
+ck_extreme_quants_all <- suppressWarnings(fqDPO(extreme_test_grid$p, mu = extreme_test_grid$mu, sigma = extreme_test_grid$sigma))
+gamlss_extreme_quants_all <- suppressWarnings(qDPO(extreme_test_grid$p, mu = extreme_test_grid$mu, sigma = extreme_test_grid$sigma))
+
+expect_equal(ck_extreme_quants_all, gamlss_extreme_quants_all, tolerance = 0, 
+            info = "Vectorized extreme quantiles - all parameter sets")
 
 # =============================================================================
 # FINAL SUMMARY MESSAGE

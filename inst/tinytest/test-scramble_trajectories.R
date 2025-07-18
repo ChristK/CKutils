@@ -7,6 +7,14 @@ if (!requireNamespace("dqrng", quietly = TRUE)) {
   exit_file("dqrng package required for scramble trajectories tests")
 }
 
+if (!requireNamespace("data.table", quietly = TRUE)) {
+  exit_file("data.table package not available")
+}
+suppressMessages({
+  library(data.table)
+  library(dqrng)
+})
+
 # Test input validation
 test_data_scramble <- c(0.1, 0.2, 0.3, 0.5, 0.6, 0.7)
 test_pid_scramble <- c(TRUE, FALSE, FALSE, TRUE, FALSE, FALSE)

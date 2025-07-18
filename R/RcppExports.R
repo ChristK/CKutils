@@ -56,56 +56,6 @@ my_pZISICHEL <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE
     .Call(`_CKutils_my_pZISICHEL`, q, mu, sigma, nu, tau, lower_tail, log_p, n_cpu)
 }
 
-#' @export
-carry_forward <- function(x, pid_mrk, y, byref) {
-    .Call(`_CKutils_carry_forward`, x, pid_mrk, y, byref)
-}
-
-#' @export
-carry_forward_incr <- function(x, pid_mrk, recur, y, byref) {
-    .Call(`_CKutils_carry_forward_incr`, x, pid_mrk, recur, y, byref)
-}
-
-#' @export
-carry_backward <- function(x, pid_mrk, y) {
-    .Call(`_CKutils_carry_backward`, x, pid_mrk, y)
-}
-
-#' @export
-carry_backward_decr <- function(x, pid_mrk) {
-    .Call(`_CKutils_carry_backward_decr`, x, pid_mrk)
-}
-
-#' @export
-mk_new_simulant_markers <- function(pid) {
-    .Call(`_CKutils_mk_new_simulant_markers`, pid)
-}
-
-#' @export
-identify_longdead <- function(x, pid) {
-    .Call(`_CKutils_identify_longdead`, x, pid)
-}
-
-#' @export
-identify_invitees <- function(elig, prev_inv, prb, freq, pid) {
-    .Call(`_CKutils_identify_invitees`, elig, prev_inv, prb, freq, pid)
-}
-
-#' @export
-hc_effect <- function(x, prb_of_continuation, pid) {
-    .Call(`_CKutils_hc_effect`, x, prb_of_continuation, pid)
-}
-
-#' @export
-fbound <- function(x, a, b) {
-    .Call(`_CKutils_fbound`, x, a, b)
-}
-
-#' @export
-antilogit <- function(x) {
-    .Call(`_CKutils_antilogit`, x)
-}
-
 tableRcpp <- function(x) {
     .Call(`_CKutils_tableRcpp`, x)
 }
@@ -1234,17 +1184,18 @@ prop_if <- function(x, na_rm = FALSE) {
 #' Clamp a Numeric Vector Within a Range
 #'
 #' This function clamps (limits) the values of a numeric vector to lie within a specified range [a, b].
-#' Values below a are set to a and values above b are set to b. Optionally, the operation can be performed in-place.
+#' Values below a are set to a and values above b are set to b. Vector arguments a and b support recycling.
+#' Optionally, the operation can be performed in-place.
 #'
 #' @param x A numeric vector to be clamped.
-#' @param a The lower bound (default is 0.0).
-#' @param b The upper bound (default is 1.0).
+#' @param a A numeric vector of lower bounds (supports recycling, default is 0.0).
+#' @param b A numeric vector of upper bounds (supports recycling, default is 1.0).
 #' @param inplace Logical flag indicating whether to modify the input vector in place (default is false).
 #'
 #' @return A numeric vector with values clamped to the range [a, b].
 #'
 #' @export
-fclamp <- function(x, a = 0.0, b = 1.0, inplace = FALSE) {
+fclamp <- function(x, a = as.numeric( c(0.0)), b = as.numeric( c(1.0)), inplace = FALSE) {
     .Call(`_CKutils_fclamp`, x, a, b, inplace)
 }
 
@@ -1311,6 +1262,181 @@ fnormalise <- function(x) {
 #' @export
 lin_interpolation <- function(xp, x0, x1, y0, y1) {
     .Call(`_CKutils_lin_interpolation`, xp, x0, x1, y0, y1)
+}
+
+#' Carry Forward Values in an Integer Vector
+#'
+#' Propagates a specific value forward through an integer vector based on person ID markers.
+#' When the previous element equals the target value and the current position is not a new person,
+#' the target value is carried forward to the current position.
+#'
+#' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
+#' This ensures proper temporal ordering for the carry-forward operation.
+#'
+#' **Missing Values**: Missing values (NA) in the input vectors are handled gracefully. Positions
+#' with missing person ID markers or values are skipped during processing, preserving existing values.
+#'
+#' @param x An integer vector to process (must be sorted by year/time within person)
+#' @param pid_mrk A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
+#'   Data must be grouped by person and sorted by year/time.
+#' @param y The integer value to carry forward
+#' @param byref Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector
+#' @return An integer vector with values carried forward according to the rules
+#' @export
+carry_forward <- function(x, pid_mrk, y, byref) {
+    .Call(`_CKutils_carry_forward`, x, pid_mrk, y, byref)
+}
+
+#' Carry Forward with Incremental Values
+#'
+#' Propagates and increments values forward through an integer vector based on person ID markers.
+#' The function operates in two distinct modes controlled by the `recur` parameter:
+#'
+#' **Non-Recursive Mode (recur = FALSE):**
+#' - At each position i, if the position is not a new person AND the previous value >= y,
+#'   then set current value = previous value + 1
+#' - This creates continuously incrementing sequences (y, y+1, y+2, y+3, ...) within each person
+#' - Incrementing stops only when a new person boundary is encountered
+#'
+#' **Recursive Mode (recur = TRUE):**
+#' - At each position i, if the position is not a new person AND both current value >= y AND previous value >= y,
+#'   then set current value = previous value + 1
+#' - This requires both the current and previous positions to already be above threshold y
+#' - If the current value drops below y, incrementing stops and must be "restarted" by having both values >= y again
+#'
+#' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
+#' This ensures proper temporal ordering for the incremental carry-forward operation.
+#'
+#' **Missing Values**: Missing values (NA) in the input vectors are handled gracefully. Positions
+#' with missing person ID markers or values are skipped during processing, preserving existing values.
+#'
+#' @param x An integer vector to process (must be sorted by year/time within person)
+#' @param pid_mrk A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
+#'   Data must be grouped by person and sorted by year/time.
+#' @param recur Logical; if FALSE (non-recursive), continuously increment when previous >= y;
+#'   if TRUE (recursive), increment only when both current >= y AND previous >= y
+#' @param y The threshold value for triggering incremental carry-forward behavior
+#' @param byref Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector
+#' @return An integer vector with incremented values carried forward according to the specified mode
+#' @export
+carry_forward_incr <- function(x, pid_mrk, recur, y, byref) {
+    .Call(`_CKutils_carry_forward_incr`, x, pid_mrk, recur, y, byref)
+}
+
+#' Carry Values Backward with Decrementation
+#'
+#' Propagates values backward through an integer vector, decrementing values as it goes.
+#' The function processes the vector from end to beginning, reducing values by 1 when
+#' moving backward, respecting person ID boundaries.
+#'
+#' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
+#' This ensures proper temporal ordering for the backward propagation operation.
+#'
+#' @param x An integer vector to process (must be sorted by year/time within person)
+#' @param pid_mrk A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
+#'   Data must be grouped by person and sorted by year/time.
+#' @param y The threshold value for backward propagation
+#' @return An integer vector with values carried backward and decremented
+#' @export
+carry_backward_decr <- function(x, pid_mrk, y = 0L) {
+    .Call(`_CKutils_carry_backward_decr`, x, pid_mrk, y)
+}
+
+#' Create New Simulant Markers
+#'
+#' Creates a logical vector marking the positions where new simulants (persons) begin
+#' based on changes in person ID values. The first position is always marked as TRUE.
+#' This function is optimized for performance with minimal branching and memory access.
+#'
+#' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
+#' This ensures correct identification of person boundaries in temporal data.
+#'
+#' **Missing Values**: Missing values (NA) in person IDs are treated as new simulants.
+#' Each NA value will be marked as TRUE (start of new simulant).
+#'
+#' @param pid An integer vector of person IDs (must be grouped by person and sorted by year/time)
+#' @return A logical vector where TRUE indicates the start of a new simulant
+#' @export
+mk_new_simulant_markers <- function(pid) {
+    .Call(`_CKutils_mk_new_simulant_markers`, pid)
+}
+
+#' Identify Long Dead Individuals
+#'
+#' Identifies positions where individuals have been "long dead" based on the previous
+#' value being non-zero and the current position not being a new person ID.
+#'
+#' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
+#' This ensures proper temporal sequencing for identifying long-dead status.
+#'
+#' @param x An integer vector representing death status or similar (must be sorted by year/time within person)
+#' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
+#'   Data must be grouped by person and sorted by year/time.
+#' @return A logical vector where TRUE indicates a "long dead" individual
+#' @export
+identify_longdead <- function(x, pid) {
+    .Call(`_CKutils_identify_longdead`, x, pid)
+}
+
+#' Identify Invitees for Health Screening Programs
+#'
+#' Determines which eligible individuals should be invited to screening programs
+#' based on eligibility, invitation frequency, probabilities, and previous invitations.
+#' The function respects minimum intervals between invitations and person ID boundaries.
+#'
+#' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
+#' This ensures proper tracking of invitation intervals and temporal relationships.
+#'
+#' **Missing Values**: Missing values (NA) in any of the input vectors result in NA output
+#' for that position, ensuring data integrity in the screening process.
+#'
+#' @param elig An integer vector indicating eligibility (1 = eligible, 0 = not eligible).
+#'   Must be sorted by year/time within person.
+#' @param prev_inv An integer vector indicating previous invitations (1 = previously invited, 0 = not).
+#'   Must be sorted by year/time within person.
+#' @param prb A numeric vector of invitation probabilities for each individual.
+#'   Must be sorted by year/time within person.
+#' @param freq An integer vector of minimum years between invitations for each individual.
+#'   Must be sorted by year/time within person.
+#' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
+#'   Data must be grouped by person and sorted by year/time.
+#' @return An integer vector where 1 indicates an invitation should be sent, 0 otherwise, NA for missing inputs
+#' @export
+identify_invitees <- function(elig, prev_inv, prb, freq, pid) {
+    .Call(`_CKutils_identify_invitees`, elig, prev_inv, prb, freq, pid)
+}
+
+#' Health Care Effect with Continuation Probability
+#'
+#' Models the continuation of a health care effect based on a probability of continuation.
+#' When the previous time step had the effect (value 1) and it's not a new person,
+#' a binomial trial determines if the effect continues.
+#'
+#' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
+#' This ensures proper temporal sequencing for modeling effect continuation.
+#'
+#' @param x An integer vector representing health care effect status (1 = present, 0 = absent).
+#'   Must be sorted by year/time within person.
+#' @param prb_of_continuation A numeric value representing the probability of effect continuation
+#' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
+#'   Data must be grouped by person and sorted by year/time.
+#' @return An integer vector with updated health care effect status
+#' @export
+hc_effect <- function(x, prb_of_continuation, pid) {
+    .Call(`_CKutils_hc_effect`, x, prb_of_continuation, pid)
+}
+
+#' Anti-logit Transformation (Inverse Logit)
+#'
+#' Transforms a real number to a probability using the anti-logit (logistic) function.
+#' This is the inverse of the logit transformation, converting log-odds back to probabilities.
+#' The function computes exp(x) / (1 + exp(x)).
+#'
+#' @param x A numeric value to transform (can be any real number)
+#' @return A numeric value between 0 and 1 representing a probability
+#' @export
+antilogit <- function(x) {
+    .Call(`_CKutils_antilogit`, x)
 }
 
 #' Scramble trajectories with random walks

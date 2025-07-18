@@ -229,7 +229,7 @@ NumericVector fpBNB(const IntegerVector& q,
 
 // qBNB ----
 // fast
-int fqBNB_scalar(const double& p,
+double fqBNB_scalar(const double& p,
                     const double& mu = 1.0,
                     const double& sigma = 1.0,
                     const double& nu = 1.0,
@@ -245,7 +245,7 @@ int fqBNB_scalar(const double& p,
   if (log_p) p_ = std::exp(p_);
   if (!lower_tail) p_ = 1.0 - p_;
 
-  int QQQ = 0;
+  double QQQ = 0.0;
   double cumpro = 0.0;
   int j = 0;
 
@@ -363,7 +363,7 @@ int fqBNB_scalar(const double& p,
 //'
 //' @export
 // [[Rcpp::export]]
-IntegerVector fqBNB(const NumericVector& p,
+NumericVector fqBNB(const NumericVector& p,
                       const NumericVector& mu,
                       const NumericVector& sigma,
                       const NumericVector& nu,
@@ -383,7 +383,7 @@ IntegerVector fqBNB(const NumericVector& p,
     if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");
   }
 
-  IntegerVector out(n);
+  NumericVector out(n);
 
   SIMD_HINT
   for (int i = 0; i < n; i++)
@@ -397,7 +397,7 @@ IntegerVector fqBNB(const NumericVector& p,
 
 
 // qZIBNB ----
-int fqZIBNB_scalar(const double& p,
+double fqZIBNB_scalar(const double& p,
                      const double& mu = 1.0,
                      const double& sigma = 1.0,
                      const double& nu = 1.0,
@@ -454,7 +454,7 @@ int fqZIBNB_scalar(const double& p,
 //'
 //' @export
 // [[Rcpp::export]]
-IntegerVector fqZIBNB(const NumericVector& p,
+NumericVector fqZIBNB(const NumericVector& p,
                       const NumericVector& mu,
                       const NumericVector& sigma,
                       const NumericVector& nu,
@@ -476,7 +476,7 @@ IntegerVector fqZIBNB(const NumericVector& p,
     if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0) stop("tau must be >0 and <1");
   }
 
-  IntegerVector out(n);
+  NumericVector out(n);
 
   SIMD_HINT
   for (int i = 0; i < n; i++)
@@ -489,7 +489,7 @@ IntegerVector fqZIBNB(const NumericVector& p,
 }
 
 // qZABNB ----
-int fqZABNB_scalar(const double& p,
+double fqZABNB_scalar(const double& p,
                      const double& mu = 1.0,
                      const double& sigma = 1.0,
                      const double& nu = 1.0,
@@ -550,7 +550,7 @@ int fqZABNB_scalar(const double& p,
 //'
 //' @export
 // [[Rcpp::export]]
-IntegerVector fqZABNB(const NumericVector& p,
+NumericVector fqZABNB(const NumericVector& p,
                         const NumericVector& mu,
                         const NumericVector& sigma,
                         const NumericVector& nu,
@@ -572,7 +572,7 @@ IntegerVector fqZABNB(const NumericVector& p,
     if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0) stop("tau must be >0 and <1");
   }
 
-  IntegerVector out(n);
+  NumericVector out(n);
 
   SIMD_HINT
   for (int i = 0; i < n; i++)

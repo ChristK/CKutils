@@ -4,32 +4,7 @@
 if (!requireNamespace("data.table", quietly = TRUE)) {
   exit_file("data.table package not available")
 }
-library(data.table)
-
-# Helper to load CKutils if not already loaded (for interactive testing)
-# This assumes the package is installed or can be loaded via devtools::load_all()
-if (isNamespaceLoaded("CKutils")) {
-  # If loaded, ensure functions are accessible
-  lookup_dt <- CKutils::lookup_dt
-  is_valid_lookup_tbl <- CKutils::is_valid_lookup_tbl
-  set_lookup_tbl_key <- CKutils::set_lookup_tbl_key
-} else {
-  # Attempt to load if in an interactive session or testing environment
-  # that might not have it fully loaded.
-  # This part might need adjustment based on how tests are run.
-  if (interactive() || Sys.getenv("R_TESTS") != "") {
-    if (requireNamespace("CKutils", quietly = TRUE)) {
-      lookup_dt <- CKutils::lookup_dt
-      is_valid_lookup_tbl <- CKutils::is_valid_lookup_tbl
-      set_lookup_tbl_key <- CKutils::set_lookup_tbl_key
-    } else {
-      # Fallback if CKutils is not installed/loaded - tests will likely fail
-      # or need to source the functions directly if run standalone.
-      # For R CMD check, functions are typically available.
-      warning("CKutils namespace not loaded. Tests might not find functions.")
-    }
-  }
-}
+suppressMessages(library(data.table))
 
 
 # =============================================================================
@@ -290,7 +265,7 @@ expect_true(identical(x_inplace, c(0, 0.5, 1)), info = "Inplace modification wor
 
 # Test error for unsupported types
 expect_error(clamp(c("a", "b"), a = 0, b = 1), 
-             pattern = "Only accepts doubles or integers", 
+             pattern = "clamp\\(\\) only accepts doubles or integers", 
              info = "Error for character input")
 
 # =============================================================================
@@ -723,6 +698,340 @@ expect_true(all(is.na(equal_lag_result)), info = "Lag equal to group size produc
 # Test edge case: lead equal to group size  
 equal_lead_result <- shift_bypid(dt_test$value, lag = -4, id = dt_test$id)
 expect_true(all(is.na(equal_lead_result)), info = "Lead equal to group size produces all NA values")
+
+
+# =============================================================================
+# Tests for carry_forward function
+# =============================================================================
+
+# Test basic carry forward functionality
+x_cf <- c(1L, 0L, 2L, 0L, 1L)
+pid_mrk_cf <- c(TRUE, FALSE, FALSE, TRUE, FALSE)
+y_cf <- 1L
+
+# Test with byref = FALSE
+result_cf_false <- carry_forward(x_cf, pid_mrk_cf, y_cf, FALSE)
+expected_cf <- c(1L, 1L, 1L, 0L, 1L)
+expect_equal(result_cf_false, expected_cf, info = "carry_forward byref=FALSE works correctly")
+
+# Test with byref = TRUE (modifies in place)
+x_cf_copy <- x_cf
+carry_forward(x_cf_copy, pid_mrk_cf, y_cf, TRUE)
+expect_equal(x_cf_copy, expected_cf, info = "carry_forward byref=TRUE modifies in place")
+
+# Test carry forward with different target value
+x_cf2 <- c(2L, 0L, 2L, 0L, 3L)
+pid_mrk_cf2 <- c(TRUE, FALSE, FALSE, TRUE, FALSE)
+result_cf2 <- carry_forward(x_cf2, pid_mrk_cf2, 2L, FALSE)
+expected_cf2 <- c(2L, 2L, 2L, 0L, 3L)
+expect_equal(result_cf2, expected_cf2, info = "carry_forward with different target value works")
+
+# Test with no carry forward (no matching previous values)
+x_cf3 <- c(1L, 2L, 3L, 4L, 5L)
+pid_mrk_cf3 <- c(TRUE, FALSE, FALSE, FALSE, FALSE)
+result_cf3 <- carry_forward(x_cf3, pid_mrk_cf3, 9L, FALSE)
+expect_equal(result_cf3, x_cf3, info = "carry_forward with no matches returns unchanged")
+
+# Test with single element 1
+x_cf_single <- 5L
+pid_mrk_single <- TRUE
+result_cf_single <- carry_forward(x_cf_single, pid_mrk_single, 5L, FALSE)
+expect_equal(result_cf_single, x_cf_single, info = "carry_forward with single element works 1")
+
+# Test with single element 2
+x_cf_single <- 5L
+pid_mrk_single <- TRUE
+result_cf_single <- carry_forward(x_cf_single, pid_mrk_single, 3L, FALSE)
+expect_equal(
+  result_cf_single,
+  x_cf_single,
+  info = "carry_forward with single element works 2"
+)
+
+# =============================================================================
+# Tests for carry_forward_incr function
+# =============================================================================
+
+# Test carry forward with increment, non-recursive mode
+x_cfi <- c(0L, 0L, 1L, 0L, 1L, 1L, 0L, 1L, 1L, 0L, 1L, 1L)
+x_cfi2 <- c(0L, 0L, 5L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
+pid_mrk_cfi <- c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)
+y_cfi <- 1L
+
+result_cfi_nonrec <- carry_forward_incr(x_cfi, pid_mrk_cfi, FALSE, y_cfi, FALSE)
+expected_cfi_nonrec <- c(0L, 0L, 1L, 2L, 3L, 4L, 0L, 1L, 2L, 3L, 4L, 5L)
+expect_equal(result_cfi_nonrec, expected_cfi_nonrec, info = "carry_forward_incr non-recursive mode works 1")
+
+result_cfi_nonrec2 <- carry_forward_incr(x_cfi2, pid_mrk_cfi, FALSE, y_cfi, FALSE)
+expected_cfi_nonrec2 <- c(0L, 0L, 5L, 6L, 7L, 8L, 0L, 0L, 0L, 0L, 0L, 0L)
+expect_equal(result_cfi_nonrec2, expected_cfi_nonrec2, info = "carry_forward_incr non-recursive mode works 2")
+
+# Test carry forward with increment, recursive mode
+result_cfi_rec <- carry_forward_incr(x_cfi, pid_mrk_cfi, TRUE, y_cfi, FALSE)
+expected_cfi_rec <- c(0L, 0L, 1L, 0L, 1L, 2L, 0L, 1L, 2L, 0L, 1L, 2L)
+expect_equal(result_cfi_rec, expected_cfi_rec, info = "carry_forward_incr recursive mode works")
+
+
+# Test with byref = TRUE
+x_cfi_copy <- c(x_cfi) # forces a copy. Otherwise byref=TRUE modifies original because R does a swallow copy by default
+carry_forward_incr(x_cfi_copy, pid_mrk_cfi, FALSE, y_cfi, TRUE)
+expect_equal(x_cfi_copy, expected_cfi_nonrec, info = "carry_forward_incr byref=TRUE modifies in place")
+
+# Test with threshold not met
+x_cfi3 <- c(0L, 0L, 0L, 1L, 1L)
+result_cfi3 <- carry_forward_incr(x_cfi3, pid_mrk_cfi, FALSE, 2L, FALSE)
+expected_cfi3 <- c(0L, 0L, 0L, 1L, 1L)
+expect_equal(result_cfi3, expected_cfi3, info = "carry_forward_incr with threshold not met")
+
+# =============================================================================
+# Tests for carry_backward_decr function
+# =============================================================================
+
+# Test basic backward carry functionality
+
+# Expected: values > y_cb get decremented backward
+result_cb <- carry_backward_decr(x_cfi2, pid_mrk_cfi)
+expected_cb <- c(3L, 4L, 5L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
+expect_equal(result_cb, expected_cb, info = "carry_backward works correctly")
+
+# Test with different threshold
+result_cb2 <- carry_backward_decr(x_cfi2, pid_mrk_cfi, 6L)
+expect_equal(result_cb2, x_cfi2, info = "carry_backward with different threshold works")
+
+# Test that values don't go below 0
+x_cb3 <- c(0L, 1L, 1L, 1L, 0L)
+pid_mrk_cb3 <- c(TRUE, FALSE, FALSE, TRUE, FALSE)
+
+result_cb3 <- carry_backward_decr(x_cb3, pid_mrk_cb3)
+expected_cb3 <- c(0L, 0L, 1L, 1L, 0L)
+expect_equal(result_cb3, expected_cb3, info = "carry_backward prevents negative values")
+
+
+# =============================================================================
+# Tests for mk_new_simulant_markers function
+# =============================================================================
+
+# Test basic simulant marker creation
+pid_sm <- c(1L, 1L, 1L, 2L, 2L, 3L, 3L, 3L, 3L)
+result_sm <- mk_new_simulant_markers(pid_sm)
+expected_sm <- c(TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE)
+expect_equal(result_sm, expected_sm, info = "mk_new_simulant_markers works correctly")
+
+# Test with single person
+pid_sm_single <- c(1L, 1L, 1L)
+result_sm_single <- mk_new_simulant_markers(pid_sm_single)
+expected_sm_single <- c(TRUE, FALSE, FALSE)
+expect_equal(result_sm_single, expected_sm_single, info = "mk_new_simulant_markers single person works")
+
+# Test with each person having one record
+pid_sm_unique <- c(1L, 2L, 3L, 4L)
+result_sm_unique <- mk_new_simulant_markers(pid_sm_unique)
+expected_sm_unique <- c(TRUE, TRUE, TRUE, TRUE)
+expect_equal(result_sm_unique, expected_sm_unique, info = "mk_new_simulant_markers unique persons works")
+
+# Test with single element
+pid_sm_one <- c(1L)
+result_sm_one <- mk_new_simulant_markers(pid_sm_one)
+expect_equal(result_sm_one, c(TRUE), info = "mk_new_simulant_markers single element works")
+
+# =============================================================================
+# Tests for identify_longdead function
+# =============================================================================
+
+# Test basic longdead identification
+x_ld <- c(0L, 1L, 0L, 1L, 0L)
+pid_ld <- c(TRUE, FALSE, FALSE, TRUE, FALSE)
+
+result_ld <- identify_longdead(x_ld, pid_ld)
+expected_ld <- c(FALSE, FALSE, TRUE, FALSE, TRUE)
+expect_equal(result_ld, expected_ld, info = "identify_longdead works correctly")
+
+# Test with all zeros
+x_ld2 <- c(0L, 0L, 0L, 0L, 0L)
+result_ld2 <- identify_longdead(x_ld2, pid_ld)
+expected_ld2 <- c(FALSE, FALSE, FALSE, FALSE, FALSE)
+expect_equal(result_ld2, expected_ld2, info = "identify_longdead with all zeros")
+
+# Test with all non-zeros
+x_ld3 <- c(1L, 1L, 1L, 1L, 1L)
+result_ld3 <- identify_longdead(x_ld3, pid_ld)
+expected_ld3 <- c(FALSE, TRUE, TRUE, FALSE, TRUE)
+expect_equal(result_ld3, expected_ld3, info = "identify_longdead with all non-zeros")
+
+# Test single element
+x_ld_single <- 5L
+pid_ld_single <- TRUE
+result_ld_single <- identify_longdead(x_ld_single, pid_ld_single)
+expect_equal(result_ld_single, FALSE, info = "identify_longdead single element")
+
+# =============================================================================
+# Tests for identify_invitees function
+# =============================================================================
+
+# Set seed for reproducible random results
+set.seed(123)
+
+# Test basic invitee identification
+elig_inv <- c(1L, 1L, 1L, 1L, 1L)
+prev_inv_inv <- c(0L, 0L, 0L, 0L, 0L)
+prb_inv <- c(1.0, 1.0, 1.0, 1.0, 1.0)  # 100% probability for testing
+freq_inv <- c(1L, 1L, 1L, 1L, 1L)
+pid_inv <- c(TRUE, FALSE, FALSE, TRUE, FALSE)
+
+result_inv <- identify_invitees(elig_inv, prev_inv_inv, prb_inv, freq_inv, pid_inv)
+expect_true(is.integer(result_inv), info = "identify_invitees returns integer vector")
+expect_equal(length(result_inv), 5, info = "identify_invitees returns correct length")
+expect_true(all(result_inv %in% 0:1), info = "identify_invitees returns only 0 or 1")
+
+# Test with zero probability
+prb_inv_zero <- c(0.0, 0.0, 0.0, 0.0, 0.0)
+result_inv_zero <- identify_invitees(elig_inv, prev_inv_inv, prb_inv_zero, freq_inv, pid_inv)
+expected_inv_zero <- c(0L, 0L, 0L, 0L, 0L)
+expect_equal(result_inv_zero, expected_inv_zero, info = "identify_invitees with zero probability")
+
+# Test with ineligible participants
+elig_inv_none <- c(0L, 0L, 0L, 0L, 0L)
+result_inv_inelig <- identify_invitees(elig_inv_none, prev_inv_inv, prb_inv, freq_inv, pid_inv)
+expected_inv_inelig <- c(0L, 0L, 0L, 0L, 0L)
+expect_equal(result_inv_inelig, expected_inv_inelig, info = "identify_invitees with no eligible participants")
+
+# Test frequency constraints
+freq_inv_high <- c(10L, 10L, 10L, 10L, 10L)  # High frequency requirement
+result_inv_freq <- identify_invitees(elig_inv, prev_inv_inv, prb_inv, freq_inv_high, pid_inv)
+# Should be mostly zeros due to high frequency requirement
+expect_true(sum(result_inv_freq) <= sum(result_inv), info = "identify_invitees respects frequency constraints")
+
+# =============================================================================
+# Tests for hc_effect function
+# =============================================================================
+
+# Set seed for reproducible results
+set.seed(42)
+
+# Test basic healthcare effect continuation
+x_hc <- c(0L, 1L, 0L, 1L, 0L)
+prb_cont <- 1.0  # 100% continuation for testing
+pid_hc <- c(TRUE, FALSE, FALSE, TRUE, FALSE)
+
+result_hc <- hc_effect(x_hc, prb_cont, pid_hc)
+expected_hc <- c(0L, 1L, 1L, 1L, 1L)  # With 100% continuation
+expect_equal(result_hc, expected_hc, info = "hc_effect with 100% continuation")
+
+# Test with zero continuation probability
+result_hc_zero <- hc_effect(x_hc, 0.0, pid_hc)
+expect_equal(result_hc_zero, x_hc, info = "hc_effect with 0% continuation")
+
+# Test that it only affects positions where previous was 1 and not new person
+x_hc2 <- c(0L, 0L, 0L, 1L, 0L)
+result_hc2 <- hc_effect(x_hc2, 1.0, pid_hc)
+expected_hc2 <- c(0L, 0L, 0L, 1L, 1L)  # No previous 1s to continue
+expect_equal(result_hc2, expected_hc2, info = "hc_effect only affects appropriate positions")
+
+# Test single element
+x_hc_single <- 1
+pid_hc_single <- TRUE
+result_hc_single <- hc_effect(x_hc_single, 0.5, pid_hc_single)
+expect_equal(result_hc_single, 1L, info = "hc_effect single element unchanged")
+
+# =============================================================================
+# Tests for antilogit function
+# =============================================================================
+
+# Test basic antilogit functionality
+expect_equal(antilogit(0), 0.5, info = "antilogit(0) = 0.5")
+
+# Test extreme values
+result_large_pos <- antilogit(100)
+expect_true(result_large_pos > 0.99, info = "antilogit of large positive number close to 1")
+
+result_large_neg <- antilogit(-100)
+expect_true(result_large_neg < 0.01, info = "antilogit of large negative number close to 0")
+
+# Test moderate values
+expect_true(antilogit(1) > 0.5, info = "antilogit(1) > 0.5")
+expect_true(antilogit(-1) < 0.5, info = "antilogit(-1) < 0.5")
+
+# Test that output is always between 0 and 1
+test_values <- c(-1000, -10, -1, 0, 1, 10, 1000)
+results <- sapply(test_values, antilogit)
+expect_true(all(results >= 0 & results <= 1), info = "antilogit always returns values in [0,1]")
+
+# Test numerical stability (should not produce Inf or NaN)
+extreme_values <- c(-500, 500)
+extreme_results <- sapply(extreme_values, antilogit)
+expect_true(all(is.finite(extreme_results)), info = "antilogit is numerically stable for extreme values")
+
+# Test known mathematical relationship: antilogit(-x) = 1 - antilogit(x)
+x_test <- 2.5
+expect_equal(antilogit(-x_test), 1 - antilogit(x_test), tolerance = sqrt(.Machine$double.eps), 
+             info = "antilogit(-x) = 1 - antilogit(x)")
+
+# =============================================================================
+# Edge cases and error handling for aux functions
+# =============================================================================
+
+# Test empty vectors where applicable
+empty_int <- integer(0)
+empty_log <- logical(0)
+empty_num <- numeric(0)
+
+# Most functions should handle empty inputs gracefully
+expect_equal(length(mk_new_simulant_markers(empty_int)), 0, 
+             info = "mk_new_simulant_markers handles empty input")
+
+expect_equal(length(identify_longdead(empty_int, empty_log)), 0, 
+             info = "identify_longdead handles empty input")
+
+expect_equal(length(carry_backward_decr(empty_int, empty_log, 0L)), 0, 
+             info = "carry_backward handles empty input")
+
+expect_equal(length(carry_forward(empty_int, empty_log, 1, FALSE)), 0, 
+             info = "carry_forward handles empty input")
+
+expect_equal(length(carry_forward_incr(empty_int, empty_log, FALSE, 1, FALSE)), 0, 
+             info = "carry_forward_incr handles empty input")
+
+expect_equal(length(identify_invitees(empty_int, empty_int, empty_num, empty_int, empty_log)), 0, 
+             info = "identify_invitees handles empty input")
+
+expect_equal(length(hc_effect(empty_int, 0.5, empty_log)), 0, 
+             info = "hc_effect handles empty input")
+
+# Test functions preserve input types
+int_input <- c(1L, 2L, 3L, 4L, 5L)
+log_input <- c(TRUE, FALSE, FALSE, TRUE, FALSE)
+
+cf_result <- carry_forward(int_input, log_input, 1L, FALSE)
+expect_true(is.integer(cf_result), info = "carry_forward preserves integer type")
+
+cb_result <- carry_backward_decr(int_input, log_input, 0L)
+expect_true(is.integer(cb_result), info = "carry_backward preserves integer type")
+
+# Test with larger datasets to ensure performance
+large_n <- 1000
+large_x <- sample(0:5, large_n, replace = TRUE)
+large_pid <- c(TRUE, rep(FALSE, large_n - 1))
+
+large_result <- carry_forward(large_x, large_pid, 1, FALSE)
+expect_equal(length(large_result), large_n, info = "carry_forward works with large datasets")
+
+# Test boundary conditions for person ID markers
+# All TRUE (each element is a new person)
+all_new_pid <- rep(TRUE, 5)
+x_all_new <- c(1L, 1L, 1L, 1L, 1L)
+result_all_new <- carry_forward(x_all_new, all_new_pid, 1L, FALSE)
+expect_equal(result_all_new, x_all_new, info = "carry_forward with all new persons")
+
+# All FALSE except first (single person)
+single_person_pid <- c(TRUE, rep(FALSE, 4))
+result_single_person <- carry_forward(x_all_new, single_person_pid, 1, FALSE)
+expect_equal(result_single_person, rep(1, 5), info = "carry_forward with single person")
+
+# Test numeric precision for antilogit
+precision_test <- antilogit(log(1/999))  # Should be close to 1/1000
+expected_precision <- 1/1000
+expect_equal(precision_test, expected_precision, tolerance = sqrt(.Machine$double.eps), 
+             info = "antilogit maintains numerical precision")
 
 # Test with single element groups
 single_elem_data <- c(1, 2, 3, 4, 5)

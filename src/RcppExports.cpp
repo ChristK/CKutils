@@ -10,66 +10,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// my_get_C
-NumericVector my_get_C(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma);
-RcppExport SEXP _CKutils_my_get_C(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_get_C(x, mu, sigma));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_dDPO
-NumericVector my_dDPO(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const bool& log_, const int& n_cpu);
-RcppExport SEXP _CKutils_my_dDPO(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP log_SEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_(log_SEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_dDPO(x, mu, sigma, log_, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_pDPO
-NumericVector my_pDPO(const IntegerVector& q, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p);
-RcppExport SEXP _CKutils_my_pDPO(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type q(qSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_pDPO(q, mu, sigma, lower_tail, log_p));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_qDPO
-IntegerVector my_qDPO(NumericVector p, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p, const int& max_value, const int& n_cpu);
-RcppExport SEXP _CKutils_my_qDPO(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP max_valueSEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const int& >::type max_value(max_valueSEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_qDPO(p, mu, sigma, lower_tail, log_p, max_value, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
 // my_qMN4
 IntegerVector my_qMN4(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p, const int& n_cpu);
 RcppExport SEXP _CKutils_my_qMN4(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP n_cpuSEXP) {
@@ -254,135 +194,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// carry_forward
-IntegerVector carry_forward(IntegerVector& x, const LogicalVector& pid_mrk, const int& y, const bool& byref);
-RcppExport SEXP _CKutils_carry_forward(SEXP xSEXP, SEXP pid_mrkSEXP, SEXP ySEXP, SEXP byrefSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const LogicalVector& >::type pid_mrk(pid_mrkSEXP);
-    Rcpp::traits::input_parameter< const int& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const bool& >::type byref(byrefSEXP);
-    rcpp_result_gen = Rcpp::wrap(carry_forward(x, pid_mrk, y, byref));
-    return rcpp_result_gen;
-END_RCPP
-}
-// carry_forward_incr
-IntegerVector carry_forward_incr(IntegerVector& x, const LogicalVector& pid_mrk, const bool& recur, const int& y, const bool& byref);
-RcppExport SEXP _CKutils_carry_forward_incr(SEXP xSEXP, SEXP pid_mrkSEXP, SEXP recurSEXP, SEXP ySEXP, SEXP byrefSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const LogicalVector& >::type pid_mrk(pid_mrkSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type recur(recurSEXP);
-    Rcpp::traits::input_parameter< const int& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const bool& >::type byref(byrefSEXP);
-    rcpp_result_gen = Rcpp::wrap(carry_forward_incr(x, pid_mrk, recur, y, byref));
-    return rcpp_result_gen;
-END_RCPP
-}
-// carry_backward
-IntegerVector carry_backward(const IntegerVector& x, const LogicalVector& pid_mrk, const int& y);
-RcppExport SEXP _CKutils_carry_backward(SEXP xSEXP, SEXP pid_mrkSEXP, SEXP ySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const LogicalVector& >::type pid_mrk(pid_mrkSEXP);
-    Rcpp::traits::input_parameter< const int& >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(carry_backward(x, pid_mrk, y));
-    return rcpp_result_gen;
-END_RCPP
-}
-// carry_backward_decr
-IntegerVector carry_backward_decr(const IntegerVector& x, const LogicalVector& pid_mrk);
-RcppExport SEXP _CKutils_carry_backward_decr(SEXP xSEXP, SEXP pid_mrkSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const LogicalVector& >::type pid_mrk(pid_mrkSEXP);
-    rcpp_result_gen = Rcpp::wrap(carry_backward_decr(x, pid_mrk));
-    return rcpp_result_gen;
-END_RCPP
-}
-// mk_new_simulant_markers
-LogicalVector mk_new_simulant_markers(const IntegerVector& pid);
-RcppExport SEXP _CKutils_mk_new_simulant_markers(SEXP pidSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type pid(pidSEXP);
-    rcpp_result_gen = Rcpp::wrap(mk_new_simulant_markers(pid));
-    return rcpp_result_gen;
-END_RCPP
-}
-// identify_longdead
-LogicalVector identify_longdead(const IntegerVector& x, const LogicalVector& pid);
-RcppExport SEXP _CKutils_identify_longdead(SEXP xSEXP, SEXP pidSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const LogicalVector& >::type pid(pidSEXP);
-    rcpp_result_gen = Rcpp::wrap(identify_longdead(x, pid));
-    return rcpp_result_gen;
-END_RCPP
-}
-// identify_invitees
-IntegerVector identify_invitees(const IntegerVector& elig, const IntegerVector& prev_inv, const NumericVector& prb, const IntegerVector& freq, const LogicalVector& pid);
-RcppExport SEXP _CKutils_identify_invitees(SEXP eligSEXP, SEXP prev_invSEXP, SEXP prbSEXP, SEXP freqSEXP, SEXP pidSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type elig(eligSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type prev_inv(prev_invSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type prb(prbSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type freq(freqSEXP);
-    Rcpp::traits::input_parameter< const LogicalVector& >::type pid(pidSEXP);
-    rcpp_result_gen = Rcpp::wrap(identify_invitees(elig, prev_inv, prb, freq, pid));
-    return rcpp_result_gen;
-END_RCPP
-}
-// hc_effect
-IntegerVector hc_effect(const IntegerVector& x, const double& prb_of_continuation, const LogicalVector& pid);
-RcppExport SEXP _CKutils_hc_effect(SEXP xSEXP, SEXP prb_of_continuationSEXP, SEXP pidSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const double& >::type prb_of_continuation(prb_of_continuationSEXP);
-    Rcpp::traits::input_parameter< const LogicalVector& >::type pid(pidSEXP);
-    rcpp_result_gen = Rcpp::wrap(hc_effect(x, prb_of_continuation, pid));
-    return rcpp_result_gen;
-END_RCPP
-}
-// fbound
-NumericVector fbound(const NumericVector& x, NumericVector& a, NumericVector& b);
-RcppExport SEXP _CKutils_fbound(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< NumericVector& >::type a(aSEXP);
-    Rcpp::traits::input_parameter< NumericVector& >::type b(bSEXP);
-    rcpp_result_gen = Rcpp::wrap(fbound(x, a, b));
-    return rcpp_result_gen;
-END_RCPP
-}
-// antilogit
-double antilogit(const double& x);
-RcppExport SEXP _CKutils_antilogit(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const double& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(antilogit(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // tableRcpp
 IntegerVector tableRcpp(SEXP x);
 RcppExport SEXP _CKutils_tableRcpp(SEXP xSEXP) {
@@ -537,7 +348,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fqBNB
-IntegerVector fqBNB(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+NumericVector fqBNB(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
 RcppExport SEXP _CKutils_fqBNB(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -553,7 +364,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fqZIBNB
-IntegerVector fqZIBNB(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const NumericVector& tau, const bool& lower_tail, const bool& log_p);
+NumericVector fqZIBNB(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const NumericVector& tau, const bool& lower_tail, const bool& log_p);
 RcppExport SEXP _CKutils_fqZIBNB(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP tauSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -570,7 +381,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fqZABNB
-IntegerVector fqZABNB(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const NumericVector& tau, const bool& lower_tail, const bool& log_p);
+NumericVector fqZABNB(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const NumericVector& tau, const bool& lower_tail, const bool& log_p);
 RcppExport SEXP _CKutils_fqZABNB(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP tauSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -618,7 +429,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fqDEL
-IntegerVector fqDEL(NumericVector p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+NumericVector fqDEL(NumericVector p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
 RcppExport SEXP _CKutils_fqDEL(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -633,13 +444,62 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// clear_DEL_cache
-void clear_DEL_cache();
-RcppExport SEXP _CKutils_clear_DEL_cache() {
+// fget_C
+NumericVector fget_C(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma);
+RcppExport SEXP _CKutils_fget_C(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
 BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    clear_DEL_cache();
-    return R_NilValue;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(fget_C(x, mu, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fdDPO
+NumericVector fdDPO(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const bool& log_);
+RcppExport SEXP _CKutils_fdDPO(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP log_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_(log_SEXP);
+    rcpp_result_gen = Rcpp::wrap(fdDPO(x, mu, sigma, log_));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fpDPO
+NumericVector fpDPO(const IntegerVector& q, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fpDPO(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fpDPO(q, mu, sigma, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fqDPO
+NumericVector fqDPO(NumericVector p, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p, const int& max_value);
+RcppExport SEXP _CKutils_fqDPO(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP max_valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    Rcpp::traits::input_parameter< const int& >::type max_value(max_valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(fqDPO(p, mu, sigma, lower_tail, log_p, max_value));
+    return rcpp_result_gen;
 END_RCPP
 }
 // fct_to_int_cpp
@@ -735,14 +595,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // fclamp
-NumericVector fclamp(NumericVector& x, double a, double b, const bool& inplace);
+NumericVector fclamp(NumericVector& x, NumericVector a, NumericVector b, const bool& inplace);
 RcppExport SEXP _CKutils_fclamp(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP inplaceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type a(aSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b(bSEXP);
     Rcpp::traits::input_parameter< const bool& >::type inplace(inplaceSEXP);
     rcpp_result_gen = Rcpp::wrap(fclamp(x, a, b, inplace));
     return rcpp_result_gen;
@@ -797,6 +657,110 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const NumericVector& >::type y0(y0SEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type y1(y1SEXP);
     rcpp_result_gen = Rcpp::wrap(lin_interpolation(xp, x0, x1, y0, y1));
+    return rcpp_result_gen;
+END_RCPP
+}
+// carry_forward
+IntegerVector carry_forward(IntegerVector& x, const LogicalVector& pid_mrk, const int& y, const bool& byref);
+RcppExport SEXP _CKutils_carry_forward(SEXP xSEXP, SEXP pid_mrkSEXP, SEXP ySEXP, SEXP byrefSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const LogicalVector& >::type pid_mrk(pid_mrkSEXP);
+    Rcpp::traits::input_parameter< const int& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const bool& >::type byref(byrefSEXP);
+    rcpp_result_gen = Rcpp::wrap(carry_forward(x, pid_mrk, y, byref));
+    return rcpp_result_gen;
+END_RCPP
+}
+// carry_forward_incr
+IntegerVector carry_forward_incr(IntegerVector& x, const LogicalVector& pid_mrk, const bool& recur, const int& y, const bool& byref);
+RcppExport SEXP _CKutils_carry_forward_incr(SEXP xSEXP, SEXP pid_mrkSEXP, SEXP recurSEXP, SEXP ySEXP, SEXP byrefSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const LogicalVector& >::type pid_mrk(pid_mrkSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type recur(recurSEXP);
+    Rcpp::traits::input_parameter< const int& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const bool& >::type byref(byrefSEXP);
+    rcpp_result_gen = Rcpp::wrap(carry_forward_incr(x, pid_mrk, recur, y, byref));
+    return rcpp_result_gen;
+END_RCPP
+}
+// carry_backward_decr
+IntegerVector carry_backward_decr(const IntegerVector& x, const LogicalVector& pid_mrk, const int& y);
+RcppExport SEXP _CKutils_carry_backward_decr(SEXP xSEXP, SEXP pid_mrkSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const LogicalVector& >::type pid_mrk(pid_mrkSEXP);
+    Rcpp::traits::input_parameter< const int& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(carry_backward_decr(x, pid_mrk, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mk_new_simulant_markers
+LogicalVector mk_new_simulant_markers(const IntegerVector& pid);
+RcppExport SEXP _CKutils_mk_new_simulant_markers(SEXP pidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type pid(pidSEXP);
+    rcpp_result_gen = Rcpp::wrap(mk_new_simulant_markers(pid));
+    return rcpp_result_gen;
+END_RCPP
+}
+// identify_longdead
+LogicalVector identify_longdead(const IntegerVector& x, const LogicalVector& pid);
+RcppExport SEXP _CKutils_identify_longdead(SEXP xSEXP, SEXP pidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const LogicalVector& >::type pid(pidSEXP);
+    rcpp_result_gen = Rcpp::wrap(identify_longdead(x, pid));
+    return rcpp_result_gen;
+END_RCPP
+}
+// identify_invitees
+IntegerVector identify_invitees(const IntegerVector& elig, const IntegerVector& prev_inv, const NumericVector& prb, const IntegerVector& freq, const LogicalVector& pid);
+RcppExport SEXP _CKutils_identify_invitees(SEXP eligSEXP, SEXP prev_invSEXP, SEXP prbSEXP, SEXP freqSEXP, SEXP pidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type elig(eligSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type prev_inv(prev_invSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type prb(prbSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type freq(freqSEXP);
+    Rcpp::traits::input_parameter< const LogicalVector& >::type pid(pidSEXP);
+    rcpp_result_gen = Rcpp::wrap(identify_invitees(elig, prev_inv, prb, freq, pid));
+    return rcpp_result_gen;
+END_RCPP
+}
+// hc_effect
+IntegerVector hc_effect(const IntegerVector& x, const double& prb_of_continuation, const LogicalVector& pid);
+RcppExport SEXP _CKutils_hc_effect(SEXP xSEXP, SEXP prb_of_continuationSEXP, SEXP pidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type prb_of_continuation(prb_of_continuationSEXP);
+    Rcpp::traits::input_parameter< const LogicalVector& >::type pid(pidSEXP);
+    rcpp_result_gen = Rcpp::wrap(hc_effect(x, prb_of_continuation, pid));
+    return rcpp_result_gen;
+END_RCPP
+}
+// antilogit
+double antilogit(const double& x);
+RcppExport SEXP _CKutils_antilogit(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(antilogit(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -872,10 +836,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_CKutils_my_get_C", (DL_FUNC) &_CKutils_my_get_C, 3},
-    {"_CKutils_my_dDPO", (DL_FUNC) &_CKutils_my_dDPO, 5},
-    {"_CKutils_my_pDPO", (DL_FUNC) &_CKutils_my_pDPO, 5},
-    {"_CKutils_my_qDPO", (DL_FUNC) &_CKutils_my_qDPO, 7},
     {"_CKutils_my_qMN4", (DL_FUNC) &_CKutils_my_qMN4, 7},
     {"_CKutils_my_dNBI", (DL_FUNC) &_CKutils_my_dNBI, 5},
     {"_CKutils_my_pNBI", (DL_FUNC) &_CKutils_my_pNBI, 6},
@@ -887,16 +847,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_my_qSICHEL", (DL_FUNC) &_CKutils_my_qSICHEL, 7},
     {"_CKutils_my_qZISICHEL", (DL_FUNC) &_CKutils_my_qZISICHEL, 8},
     {"_CKutils_my_pZISICHEL", (DL_FUNC) &_CKutils_my_pZISICHEL, 8},
-    {"_CKutils_carry_forward", (DL_FUNC) &_CKutils_carry_forward, 4},
-    {"_CKutils_carry_forward_incr", (DL_FUNC) &_CKutils_carry_forward_incr, 5},
-    {"_CKutils_carry_backward", (DL_FUNC) &_CKutils_carry_backward, 3},
-    {"_CKutils_carry_backward_decr", (DL_FUNC) &_CKutils_carry_backward_decr, 2},
-    {"_CKutils_mk_new_simulant_markers", (DL_FUNC) &_CKutils_mk_new_simulant_markers, 1},
-    {"_CKutils_identify_longdead", (DL_FUNC) &_CKutils_identify_longdead, 2},
-    {"_CKutils_identify_invitees", (DL_FUNC) &_CKutils_identify_invitees, 5},
-    {"_CKutils_hc_effect", (DL_FUNC) &_CKutils_hc_effect, 3},
-    {"_CKutils_fbound", (DL_FUNC) &_CKutils_fbound, 3},
-    {"_CKutils_antilogit", (DL_FUNC) &_CKutils_antilogit, 1},
     {"_CKutils_tableRcpp", (DL_FUNC) &_CKutils_tableRcpp, 1},
     {"_CKutils_counts", (DL_FUNC) &_CKutils_counts, 1},
     {"_CKutils_fdBCPEo", (DL_FUNC) &_CKutils_fdBCPEo, 6},
@@ -913,7 +863,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fdDEL", (DL_FUNC) &_CKutils_fdDEL, 5},
     {"_CKutils_fpDEL", (DL_FUNC) &_CKutils_fpDEL, 6},
     {"_CKutils_fqDEL", (DL_FUNC) &_CKutils_fqDEL, 6},
-    {"_CKutils_clear_DEL_cache", (DL_FUNC) &_CKutils_clear_DEL_cache, 0},
+    {"_CKutils_fget_C", (DL_FUNC) &_CKutils_fget_C, 3},
+    {"_CKutils_fdDPO", (DL_FUNC) &_CKutils_fdDPO, 4},
+    {"_CKutils_fpDPO", (DL_FUNC) &_CKutils_fpDPO, 5},
+    {"_CKutils_fqDPO", (DL_FUNC) &_CKutils_fqDPO, 6},
     {"_CKutils_fct_to_int_cpp", (DL_FUNC) &_CKutils_fct_to_int_cpp, 2},
     {"_CKutils_starts_from_1_cpp", (DL_FUNC) &_CKutils_starts_from_1_cpp, 5},
     {"_CKutils_dtsubset", (DL_FUNC) &_CKutils_dtsubset, 3},
@@ -926,6 +879,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fequal", (DL_FUNC) &_CKutils_fequal, 2},
     {"_CKutils_fnormalise", (DL_FUNC) &_CKutils_fnormalise, 1},
     {"_CKutils_lin_interpolation", (DL_FUNC) &_CKutils_lin_interpolation, 5},
+    {"_CKutils_carry_forward", (DL_FUNC) &_CKutils_carry_forward, 4},
+    {"_CKutils_carry_forward_incr", (DL_FUNC) &_CKutils_carry_forward_incr, 5},
+    {"_CKutils_carry_backward_decr", (DL_FUNC) &_CKutils_carry_backward_decr, 3},
+    {"_CKutils_mk_new_simulant_markers", (DL_FUNC) &_CKutils_mk_new_simulant_markers, 1},
+    {"_CKutils_identify_longdead", (DL_FUNC) &_CKutils_identify_longdead, 2},
+    {"_CKutils_identify_invitees", (DL_FUNC) &_CKutils_identify_invitees, 5},
+    {"_CKutils_hc_effect", (DL_FUNC) &_CKutils_hc_effect, 3},
+    {"_CKutils_antilogit", (DL_FUNC) &_CKutils_antilogit, 1},
     {"_CKutils_fscramble_trajectories", (DL_FUNC) &_CKutils_fscramble_trajectories, 4},
     {"_CKutils_shift_bypidNum", (DL_FUNC) &_CKutils_shift_bypidNum, 4},
     {"_CKutils_shift_bypidInt", (DL_FUNC) &_CKutils_shift_bypidInt, 4},

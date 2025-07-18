@@ -4,14 +4,14 @@
 \alias{fclamp}
 \title{Clamp a Numeric Vector Within a Range}
 \usage{
-fclamp(x, a = 0, b = 1, inplace = FALSE)
+fclamp(x, a = as.numeric(c(0)), b = as.numeric(c(1)), inplace = FALSE)
 }
 \arguments{
 \item{x}{A numeric vector to be clamped.}
 
-\item{a}{The lower bound (default is 0.0).}
+\item{a}{A numeric vector of lower bounds (supports recycling, default is 0.0).}
 
-\item{b}{The upper bound (default is 1.0).}
+\item{b}{A numeric vector of upper bounds (supports recycling, default is 1.0).}
 
 \item{inplace}{Logical flag indicating whether to modify the input vector in place (default is false).}
 }
@@ -20,5 +20,6 @@ A numeric vector with values clamped to the range [a, b].
 }
 \description{
 This function clamps (limits) the values of a numeric vector to lie within a specified range [a, b].
-Values below a are set to a and values above b are set to b. Optionally, the operation can be performed in-place.
+Values below a are set to a and values above b are set to b. Vector arguments a and b support recycling.
+Optionally, the operation can be performed in-place.
 }

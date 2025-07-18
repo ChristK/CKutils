@@ -6,8 +6,7 @@ if (!requireNamespace("gamlss.dist", quietly = TRUE)) {
   exit_file("gamlss.dist package not available for testing")
 }
 
-library(gamlss.dist)
-library(CKutils)
+suppressMessages(library(gamlss.dist))
 
 # Test data setup
 set.seed(123)

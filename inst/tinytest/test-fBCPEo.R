@@ -7,8 +7,7 @@ if (!requireNamespace("gamlss.dist", quietly = TRUE)) {
 }
 
 # Load required libraries
-library(gamlss.dist)
-library(CKutils)
+suppressMessages(library(gamlss.dist))
 
 # Test data generators
 generate_test_data <- function(n = 100, seed = 123) {

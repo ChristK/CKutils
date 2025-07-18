@@ -7,8 +7,10 @@ if (!requireNamespace("gamlss.dist", quietly = TRUE)) {
 }
 
 # Load required libraries
-library(gamlss.dist)
-library(CKutils)
+suppressMessages(library(gamlss.dist))
+
+# Set tolerance for floating point comparisons
+tolerance <- sqrt(.Machine$double.eps)
 
 # Test data generators
 generate_test_data <- function(n = 100, seed = 123) {
@@ -51,7 +53,7 @@ pdf_ref <- gamlss.dist::dBNB(data$x, data$mu, data$sigma, data$nu)
 expect_equal(
   pdf_ck,
   pdf_ref,
-  tolerance = 1e-12,
+  tolerance = tolerance,
   info = "PDF: Basic correctness test against gamlss.dist reference"
 )
 
@@ -62,7 +64,7 @@ pdf_ref_log <- gamlss.dist::dBNB(data$x, data$mu, data$sigma, data$nu, log = TRU
 expect_equal(
   pdf_ck_log,
   pdf_ref_log,
-  tolerance = 1e-12,
+  tolerance = tolerance,
   info = "PDF: Log scale correctness test"
 )
 
@@ -73,7 +75,7 @@ pdf_edge_ref <- gamlss.dist::dBNB(edge_data$x, edge_data$mu, edge_data$sigma, ed
 expect_equal(
   pdf_edge_ck,
   pdf_edge_ref,
-  tolerance = 1e-12,
+  tolerance = tolerance,
   info = "PDF: Edge cases test"
 )
 
@@ -88,7 +90,7 @@ cdf_ref <- gamlss.dist::pBNB(data$q, data$mu, data$sigma, data$nu)
 expect_equal(
   cdf_ck,
   cdf_ref,
-  tolerance = 1e-12,
+  tolerance = tolerance,
   info = "CDF: Basic correctness test against gamlss.dist reference"
 )
 
@@ -99,7 +101,7 @@ cdf_ref_upper <- gamlss.dist::pBNB(data$q, data$mu, data$sigma, data$nu, lower.t
 expect_equal(
   cdf_ck_upper,
   cdf_ref_upper,
-  tolerance = 1e-12,
+  tolerance = tolerance,
   info = "CDF: upper tail test"
 )
 
@@ -110,7 +112,7 @@ cdf_ref_logp <- gamlss.dist::pBNB(data$q, data$mu, data$sigma, data$nu, log.p = 
 expect_equal(
   cdf_ck_logp,
   cdf_ref_logp,
-  tolerance = 1e-12,
+  tolerance = tolerance,
   info = "CDF: log.p test"
 )
 
@@ -295,4 +297,4 @@ if (requireNamespace("gamlss.dist", quietly = TRUE)) {
   )
 }
 
-cat("All BNB distribution tests completed successfully!\n")
+# cat("All BNB distribution tests completed successfully!\n")

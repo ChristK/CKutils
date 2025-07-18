@@ -16,10 +16,8 @@ along with this program; if not, see <http://www.gnu.org/licenses/>
 or write to the Free Software Foundation, Inc., 51 Franklin Street,
 Fifth Floor, Boston, MA 02110-1301  USA. */
 
-#include <Rcpp.h>
-// [[Rcpp::depends(dqrng)]]
-// for an R package use LinkingTo: dqrng and remove above
 // [[Rcpp::plugins(cpp17)]]
+#include <Rcpp.h>
 #include <dqrng.h>
 
 using namespace Rcpp;
@@ -153,10 +151,3 @@ SEXP fscramble_trajectories(NumericVector& x, const LogicalVector& pid,
   }
 }
 
-/*** R
-# Example usage:
-# dqrng::dqset.seed(42)
-# x <- c(0.1, 0.3, 0.5, 0.7)
-# pid <- c(TRUE, FALSE, TRUE, FALSE)
-# result <- fscramble_trajectories(x, pid, jumpiness = 1.0, inplace = FALSE)
-*/

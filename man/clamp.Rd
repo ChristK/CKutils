@@ -9,9 +9,9 @@ clamp(x, a = 0, b = 1, inplace = FALSE)
 \arguments{
 \item{x}{A numeric vector of values to be clamped.}
 
-\item{a}{A numeric value specifying the lower bound (default: 0).}
+\item{a}{A numeric vector specifying the lower bound (default: 0).}
 
-\item{b}{A numeric value specifying the upper bound (default: 1).}
+\item{b}{A numeric vector specifying the upper bound (default: 1).}
 
 \item{inplace}{Logical. If TRUE, the clamping operation is performed in-place; otherwise, a new vector is returned.}
 }

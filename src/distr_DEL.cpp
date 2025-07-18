@@ -23,12 +23,10 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <immintrin.h>  // AVX/SSE
 #include <xmmintrin.h>  // SSE
 #include <emmintrin.h>  // SSE2
-#include <unordered_map>
-#include <string>
-#include "recycling_helpers.h"
-// [[Rcpp::plugins(cpp17)]]
 #include <vector>
 #include <cstring>
+#include "recycling_helpers.h"
+// [[Rcpp::plugins(cpp17)]]
 using namespace Rcpp;
 
 // SIMD utility functions
@@ -129,39 +127,7 @@ double ftofydel2_scalar(const int &y, const double &mu,
     return sumT;
 }
 
-// Optimized CDF computation with caching
-class DELCDFCache {
-private:
-    std::unordered_map<std::string, std::vector<double>> cache;
-    static const int MAX_CACHE_SIZE = 1000;
-    
-public:
-    std::string make_key(double mu, double sigma, double nu, int max_q) {
-        // Create a more efficient key using rounded values
-        int mu_int = static_cast<int>(mu * 100);
-        int sigma_int = static_cast<int>(sigma * 100);
-        int nu_int = static_cast<int>(nu * 100);
-        return std::to_string(mu_int) + "_" + std::to_string(sigma_int) + "_" + 
-               std::to_string(nu_int) + "_" + std::to_string(max_q);
-    }
-    
-    std::vector<double>* get_cached_cdf(const std::string& key) {
-        auto it = cache.find(key);
-        return (it != cache.end()) ? &(it->second) : nullptr;
-    }
-    
-    void store_cdf(const std::string& key, const std::vector<double>& cdf_values) {
-        if (cache.size() < MAX_CACHE_SIZE) {
-            cache[key] = cdf_values;
-        }
-    }
-    
-    void clear() {
-        cache.clear();
-    }
-};
 
-static DELCDFCache global_cdf_cache;
 
 //' The Delaporte Distribution - Density Function
 //'
@@ -186,14 +152,14 @@ static DELCDFCache global_cdf_cache;
 //' 
 //' This implementation is based on the algorithms from the gamlss.dist package
 //' by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
-//' including SIMD support and improved caching.
+//' including SIMD support and efficient parameter recycling.
 //'
 //' @return
 //' \code{fdDEL} gives the density
 //'
 //' @note
 //' This function is optimized for performance with chunked processing and
-//' prefetching for better cache utilization.
+//' efficient memory access patterns.
 //'
 //' @references
 //' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -352,8 +318,8 @@ double fpDEL_hlp_fn(const int &q,
 //' @details
 //' The cumulative distribution function is computed as the sum of the probability
 //' mass function from 0 to q. For computational efficiency, this implementation
-//' uses caching to store previously computed CDF values and employs chunked
-//' processing with SIMD optimizations when available.
+//' employs chunked processing with SIMD optimizations when available and is
+//' optimized for scenarios with varying parameter combinations.
 //' 
 //' When sigma is very small (< 1e-04), the distribution approaches a Poisson
 //' distribution with parameter mu, and the function switches to using the
@@ -361,17 +327,16 @@ double fpDEL_hlp_fn(const int &q,
 //' 
 //' This implementation is based on the algorithms from the gamlss.dist package
 //' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
-//' optimizations including intelligent caching, vectorized transformations,
-//' and SIMD support for large datasets.
+//' optimizations including vectorized transformations and SIMD support for
+//' large datasets with diverse parameter sets.
 //'
 //' @return
 //' \code{fpDEL} gives the cumulative distribution function
 //'
 //' @note
-//' This function implements an intelligent caching system that stores computed
-//' CDF values for reuse, significantly improving performance for repeated
-//' computations with the same parameters. The cache can be cleared using
-//' \code{clear_DEL_cache()}.
+//' This function is optimized for scenarios where parameters vary between
+//' computations (e.g., random parameters). For applications with repeated
+//' parameter combinations, consider implementing application-specific caching.
 //'
 //' @references
 //' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -386,7 +351,7 @@ double fpDEL_hlp_fn(const int &q,
 //' @author Chris Kypridemos (optimized implementation), based on original work by 
 //' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 //'
-//' @seealso \code{\link{fdDEL}}, \code{\link{fqDEL}}, \code{\link{clear_DEL_cache}}
+//' @seealso \code{\link{fdDEL}}, \code{\link{fqDEL}}
 //'
 //' @examples
 //' # Calculate CDF for single values
@@ -416,7 +381,7 @@ NumericVector fpDEL(const IntegerVector &q,
   
   NumericVector cdf(n);
 
-  // Process with chunking for better cache performance
+  // Process with chunking for better performance
   const int chunk_size = 32;
   
   for (int chunk_start = 0; chunk_start < n; chunk_start += chunk_size) {
@@ -593,7 +558,7 @@ double fpDEL_scalar(const int &q,
 //' @author Christos Kypraios [aut, cre], based on gamlss.dist by Mikis Stasinopoulos,
 //' Robert Rigby, Calliope Akantziliotou, Vlasios Voudouris, Fernanda De Bastiani
 //'
-//' @seealso \code{\link{fdDEL}}, \code{\link{fpDEL}}, \code{\link{clear_DEL_cache}}
+//' @seealso \code{\link{fdDEL}}, \code{\link{fpDEL}}
 //'
 //' @examples
 //' # Basic quantile computation
@@ -610,7 +575,7 @@ double fpDEL_scalar(const int &q,
 //'
 //' @export
 // [[Rcpp::export]]
-IntegerVector fqDEL(NumericVector p,
+NumericVector fqDEL(NumericVector p,
                       const NumericVector &mu,
                       const NumericVector &sigma,
                       const NumericVector &nu,
@@ -621,7 +586,7 @@ IntegerVector fqDEL(NumericVector p,
   auto recycled = recycle_vectors(p, mu, sigma, nu);
   const int n = recycled.n;
   
-  IntegerVector QQQ(n);
+  NumericVector QQQ(n);
   
   // Process in chunks for better performance
   const int chunk_size = 16;
@@ -696,50 +661,5 @@ IntegerVector fqDEL(NumericVector p,
   return QQQ;
 }
 
-//' Clear Delaporte Distribution Cache
-//'
-//' Clears the internal cache used by Delaporte distribution functions to store
-//' intermediate CDF calculations for performance optimization.
-//'
-//' @details
-//' The Delaporte distribution functions (\code{\link{fdDEL}}, \code{\link{fpDEL}},
-//' \code{\link{fqDEL}}) use an internal cache to store intermediate CDF calculations,
-//' which significantly improves performance when computing multiple quantiles or
-//' probabilities with the same or similar parameter combinations.
-//'
-//' This function provides a way to manually clear the cache, which might be useful:
-//' \itemize{
-//'   \item To free memory when working with very large datasets
-//'   \item To ensure fresh calculations when parameter ranges change significantly
-//'   \item For debugging or benchmarking purposes
-//' }
-//'
-//' The cache is automatically managed and typically does not require manual clearing.
-//'
-//' @note
-//' This function is based on the Delaporte distribution implementation from
-//' the \pkg{gamlss.dist} package by Mikis Stasinopoulos, Robert Rigby,
-//' Calliope Akantziliotou, Vlasios Voudouris, and Fernanda De Bastiani.
-//'
-//' @author Christos Kypraios [aut, cre], based on gamlss.dist by Mikis Stasinopoulos,
-//' Robert Rigby, Calliope Akantziliotou, Vlasios Voudouris, Fernanda De Bastiani
-//'
-//' @seealso \code{\link{fdDEL}}, \code{\link{fpDEL}}, \code{\link{fqDEL}}
-//'
-//' @examples
-//' # Compute some quantiles (builds cache)
-//' q1 <- fqDEL(0.5, mu=5, sigma=1, nu=0.2)
-//' q2 <- fqDEL(c(0.25, 0.75), mu=5, sigma=1, nu=0.2)
-//'
-//' # Clear the cache
-//' clear_DEL_cache()
-//'
-//' # Further computations will rebuild cache as needed
-//' q3 <- fqDEL(0.9, mu=5, sigma=1, nu=0.2)
-//'
-//' @export
-// [[Rcpp::export]]
-void clear_DEL_cache() {
-    global_cdf_cache.clear();
-}
+
 
