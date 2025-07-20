@@ -20,7 +20,7 @@ An integer vector of random values.
 }
 \description{
 Random generation for the multinomial distribution with 4 categories,
-optimized for performance with SIMD vectorization and parameter recycling.
+optimised for performance with SIMD vectorisation and parameter recycling.
 }
 \details{
 Random values are generated using the quantile function method:
@@ -30,7 +30,7 @@ Parameters are recycled to the length n following R's standard recycling rules.
 }
 \note{
 This implementation is based on the gamlss.dist package rMN4 function
-but optimized for performance with SIMD vectorization and parameter recycling.
+but optimised for performance with SIMD vectorisation and parameter recycling.
 }
 \examples{
 # Basic usage

@@ -60,7 +60,7 @@ improved performance (typically 2x faster).
 \details{
 The Box-Cox t distribution is a four-parameter continuous distribution that
 extends the Box-Cox normal distribution by replacing the normal kernel with
-a t-distribution kernel. This provides additional flexibility for modeling
+a t-distribution kernel. This provides additional flexibility for modelling
 heavy-tailed data.
 
 The probability density function is given by:
@@ -89,13 +89,13 @@ For computational efficiency, this implementation uses:
 
 Computes the inverse cumulative distribution function (quantiles) for the
 Box-Cox t distribution. This function shows the largest performance improvement
-over the gamlss.dist implementation due to optimized t-distribution quantile
+over the gamlss.dist implementation due to optimised t-distribution quantile
 calculations and efficient parameter transformations.
 
 The quantile calculation involves:
 \itemize{
   \item Probability transformation accounting for distribution truncation
-  \item t-distribution quantile computation using optimized R math library calls
+  \item t-distribution quantile computation using optimised R math library calls
   \item Inverse Box-Cox transformation to original scale
   \item Robust handling of boundary conditions and parameter edge cases
 }
@@ -104,9 +104,9 @@ Input probabilities are automatically cloned to ensure memory safety and
 prevent unexpected side effects.
 }
 \note{
-These optimized implementations include:
+These optimised implementations include:
 \itemize{
-  \item SIMD vectorization hints for modern compilers
+  \item SIMD vectorisation hints for modern compilers
   \item Precomputed mathematical constants
   \item Efficient input validation
   \item Robust handling of edge cases and extreme parameter values
@@ -202,7 +202,7 @@ in GAMLSS to model skewness and kurtosis. Statistical Modelling, 6(3), 200.
 \doi{10.1191/1471082X06st122oa}
 
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019).
-Distributions for modeling location, scale, and shape: Using GAMLSS in R.
+Distributions for modelling location, scale, and shape: Using GAMLSS in R.
 Chapman and Hall/CRC. \doi{10.1201/9780429298547}
 
 Stasinopoulos, D.M. and Rigby, R.A. (2007). Generalized additive models for

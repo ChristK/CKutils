@@ -34,7 +34,7 @@ by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
 including SIMD support and improved caching.
 }
 \note{
-This function is optimized for performance with chunked processing and
+This function is optimised for performance with chunked processing and
 prefetching for better cache utilization.
 }
 \examples{
@@ -53,7 +53,7 @@ Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for
 location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 
 Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 
 Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
@@ -62,6 +62,6 @@ scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7
 \code{\link{fpDPO}}, \code{\link{fqDPO}}
 }
 \author{
-Chris Kypridemos (optimized implementation), based on original work by 
+Chris Kypridemos (optimised implementation), based on original work by 
 Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 }

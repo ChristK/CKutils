@@ -399,7 +399,7 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
 
 #' Set Lookup Table Key
 #'
-#' Sets the key columns of a lookup table to optimize performance for lookup operations.
+#' Sets the key columns of a lookup table to optimise performance for lookup operations.
 #' The key columns are sorted (with a priority given to "year" if present) and then set
 #' as the key for the data.table.
 #'

@@ -32,7 +32,7 @@ This function generates random variates from the Sichel distribution by:
 
 The Sichel distribution is a three-parameter discrete distribution that 
 extends the Poisson-inverse Gaussian distribution. It's particularly useful 
-for modeling count data with varying levels of overdispersion and can 
+for modelling count data with varying levels of overdispersion and can 
 accommodate a wide range of distributional shapes.
 
 The probability mass function is:
@@ -46,7 +46,7 @@ Key characteristics:
 \itemize{
   \item Support: {0, 1, 2, ...} (non-negative integers)
   \item Mean: mu
-  \item Very flexible in modeling different count patterns
+  \item Very flexible in modelling different count patterns
   \item Can handle both light and heavy-tailed distributions
   \item Special cases include Poisson-inverse Gaussian when specific parameters
 }
@@ -92,14 +92,14 @@ x_heavy <- frSICHEL(500, mu = 5, sigma = 2, nu = -2)
 # Light-tailed count data  
 x_light <- frSICHEL(500, mu = 5, sigma = 0.8, nu = 1)
 
-# Compare tail behavior
+# Compare tail behaviour
 quantile(x_heavy, c(0.9, 0.95, 0.99))
 quantile(x_light, c(0.9, 0.95, 0.99))
 
 }
 \references{
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 
 Stein, G. Z., Zucchini, W. and Juritz, J. M. (1987). Parameter

@@ -34,7 +34,7 @@ The Delaporte distribution is a discrete distribution that can be expressed
 as a compound Poisson distribution where the intensity parameter follows 
 a gamma distribution. It arises as the convolution of a Poisson distribution 
 with a negative binomial distribution, making it particularly useful for 
-modeling overdispersed count data.
+modelling overdispersed count data.
 
 The Delaporte distribution can be parameterized as the sum of:
 \itemize{
@@ -88,7 +88,7 @@ var(x_high_sigma)  # More overdispersion
 # Vector of parameters (recycling applies)
 x <- frDEL(10, mu = c(2, 4), sigma = c(1, 1.5), nu = c(0.3, 0.7))
 
-# Demonstrate flexibility in modeling different count patterns
+# Demonstrate flexibility in modelling different count patterns
 # Low count, high variability
 x_variable <- frDEL(500, mu = 2, sigma = 3, nu = 0.1)
 # Moderate count, moderate variability  
@@ -99,7 +99,7 @@ x_poisson_like <- frDEL(500, mu = 10, sigma = 0.1, nu = 0.9)
 }
 \references{
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 
 Delaporte, P.J. (1960). Quelques aspects de la classification automatique. 

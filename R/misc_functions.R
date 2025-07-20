@@ -1126,12 +1126,12 @@ identical_elements <-
   }
 
 
-#' Normalize a Vector to the 0-1 Range
+#' Normalise a Vector to the 0-1 Range
 #'
-#' This function normalizes a numeric vector so that its values are scaled to lie within the 0 to 1 range.
+#' This function normalises a numeric vector so that its values are scaled to lie within the 0 to 1 range.
 #' If all elements in the vector are identical, the function returns 1.
 #'
-#' @param x A numeric vector to be normalized.
+#' @param x A numeric vector to be normalised.
 #' @param ... Additional arguments (currently unused).
 #'
 #' @return A numeric vector with values scaled between 0 and 1, or a single value 1 if all elements are identical.
@@ -1277,7 +1277,7 @@ gnrt_folder_structure <- function(path = getwd()) {
 #' 3. If IDs match (same group), copying the value from `x[i-lag]`
 #' 4. If IDs don't match (different group), using the `replace` value
 #'
-#' **Important**: The `id` vector should be sorted to ensure correct behavior. 
+#' **Important**: The `id` vector should be sorted to ensure correct behaviour. 
 #' Unsorted IDs may lead to unexpected results.
 #'
 #' @return A vector of the same type and length as `x`, with values shifted 

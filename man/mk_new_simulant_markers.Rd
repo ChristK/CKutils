@@ -15,7 +15,7 @@ A logical vector where TRUE indicates the start of a new simulant
 \description{
 Creates a logical vector marking the positions where new simulants (persons) begin
 based on changes in person ID values. The first position is always marked as TRUE.
-This function is optimized for performance with minimal branching and memory access.
+This function is optimised for performance with minimal branching and memory access.
 }
 \details{
 **Important**: The input data must be grouped by person ID and sorted by year/time within each person.

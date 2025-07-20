@@ -275,9 +275,9 @@ double fdDPO_scalar(const int& x,
 //' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 //' 
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 //'
-//' @author Chris Kypridemos (optimized implementation), based on original work by 
+//' @author Chris Kypridemos (optimised implementation), based on original work by 
 //' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 //'
 //' @seealso \code{\link{fdDPO}}, \code{\link{fpDPO}}, \code{\link{fqDPO}}
@@ -328,7 +328,7 @@ NumericVector fget_C(const IntegerVector& x,
 //' \code{fdDPO} gives the density
 //'
 //' @note
-//' This function is optimized for performance with chunked processing and
+//' This function is optimised for performance with chunked processing and
 //' prefetching for better cache utilization.
 //'
 //' @references
@@ -336,12 +336,12 @@ NumericVector fget_C(const IntegerVector& x,
 //' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 //' 
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 //' 
 //' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 //' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
 //'
-//' @author Chris Kypridemos (optimized implementation), based on original work by 
+//' @author Chris Kypridemos (optimised implementation), based on original work by 
 //' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 //'
 //' @seealso \code{\link{fpDPO}}, \code{\link{fqDPO}}
@@ -403,7 +403,7 @@ NumericVector fdDPO(const IntegerVector &x,
   return lh;
 }
 
-// Helper function for optimized CDF computation 
+// Helper function for optimised CDF computation 
 double fpDPO_scalar(const int& q,
                       const double& mu,
                       const double& sigma,
@@ -446,7 +446,7 @@ double fpDPO_scalar(const int& q,
 //' The cumulative distribution function is computed using the normalizing constants
 //' approach from gamlss.dist. For computational efficiency, this implementation
 //' employs chunked processing with SIMD optimizations when available and is
-//' optimized for scenarios with varying parameter combinations.
+//' optimised for scenarios with varying parameter combinations.
 //' 
 //' This implementation is based on the algorithms from the gamlss.dist package
 //' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
@@ -457,7 +457,7 @@ double fpDPO_scalar(const int& q,
 //' \code{fpDPO} gives the cumulative distribution function
 //'
 //' @note
-//' This function is optimized for scenarios where parameters vary between
+//' This function is optimised for scenarios where parameters vary between
 //' computations (e.g., random parameters). For applications with repeated
 //' parameter combinations, consider implementing application-specific caching.
 //'
@@ -466,12 +466,12 @@ double fpDPO_scalar(const int& q,
 //' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 //' 
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 //' 
 //' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 //' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
 //'
-//' @author Chris Kypridemos (optimized implementation), based on original work by 
+//' @author Chris Kypridemos (optimised implementation), based on original work by 
 //' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 //'
 //' @seealso \code{\link{fdDPO}}, \code{\link{fqDPO}}
@@ -546,7 +546,7 @@ NumericVector fpDPO(const IntegerVector &q,
 //' @details
 //' The DPO distribution is a two-parameter discrete distribution that reduces
 //' to the Poisson distribution when sigma = 1. This implementation uses an
-//' optimized search algorithm with SIMD acceleration where available, and
+//' optimised search algorithm with SIMD acceleration where available, and
 //' includes intelligent caching of intermediate CDF calculations for improved
 //' performance with repeated quantile computations.
 //'

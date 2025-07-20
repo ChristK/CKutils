@@ -30,7 +30,7 @@ distribution that extends the Poisson distribution with a dispersion parameter.
 \details{
 The DPO distribution is a two-parameter discrete distribution that reduces
 to the Poisson distribution when sigma = 1. This implementation uses an
-optimized search algorithm with SIMD acceleration where available, and
+optimised search algorithm with SIMD acceleration where available, and
 includes intelligent caching of intermediate CDF calculations for improved
 performance with repeated quantile computations.
 

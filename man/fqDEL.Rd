@@ -33,7 +33,7 @@ defined as the convolution of a Poisson distribution with mean \code{mu}
 and a shifted negative binomial distribution with parameters related to
 \code{sigma} and \code{nu}.
 
-This implementation uses an optimized binary search algorithm with
+This implementation uses an optimised binary search algorithm with
 SIMD acceleration where available, and includes intelligent caching
 of intermediate CDF calculations for improved performance with repeated
 quantile computations.

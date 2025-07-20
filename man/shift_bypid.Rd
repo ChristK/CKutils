@@ -55,7 +55,7 @@ A vector of the same type and length as `x`, with values shifted
 }
 \description{
 High-performance implementations for shifting/lagging values within groups 
-defined by ID variables. These functions are optimized for panel data and 
+defined by ID variables. These functions are optimised for panel data and 
 time series analysis where values need to be shifted within groups while 
 preserving group boundaries.
 
@@ -130,7 +130,7 @@ The algorithm works by:
 3. If IDs match (same group), copying the value from `x[i-lag]`
 4. If IDs don't match (different group), using the `replace` value
 
-**Important**: The `id` vector should be sorted to ensure correct behavior. 
+**Important**: The `id` vector should be sorted to ensure correct behaviour. 
 Unsorted IDs may lead to unexpected results.
 }
 \examples{

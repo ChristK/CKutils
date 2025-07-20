@@ -25,5 +25,5 @@ a binomial trial determines if the effect continues.
 }
 \details{
 **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
-This ensures proper temporal sequencing for modeling effect continuation.
+This ensures proper temporal sequencing for modelling effect continuation.
 }

@@ -31,7 +31,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 using namespace Rcpp;
 
-// SIMD-optimized inline helper functions for BCT distribution
+// SIMD-optimised inline helper functions for BCT distribution
 // These compute constants on-the-fly for optimal vectorization
 
 // Precomputed constants to avoid repeated calculations
@@ -91,7 +91,7 @@ inline double fdBCT_t_cdf(const double z, const double tau) {
 //' @details
 //' The Box-Cox t distribution is a four-parameter continuous distribution that
 //' extends the Box-Cox normal distribution by replacing the normal kernel with
-//' a t-distribution kernel. This provides additional flexibility for modeling
+//' a t-distribution kernel. This provides additional flexibility for modelling
 //' heavy-tailed data.
 //'
 //' The probability density function is given by:
@@ -109,9 +109,9 @@ inline double fdBCT_t_cdf(const double z, const double tau) {
 //' a normal approximation for improved numerical stability and performance.
 //'
 //' @note
-//' These optimized implementations include:
+//' These optimised implementations include:
 //' \itemize{
-//'   \item SIMD vectorization hints for modern compilers
+//'   \item SIMD vectorisation hints for modern compilers
 //'   \item Precomputed mathematical constants
 //'   \item Efficient input validation
 //'   \item Robust handling of edge cases and extreme parameter values
@@ -131,7 +131,7 @@ inline double fdBCT_t_cdf(const double z, const double tau) {
 //' \doi{10.1191/1471082X06st122oa}
 //'
 //' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019).
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R.
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R.
 //' Chapman and Hall/CRC. \doi{10.1201/9780429298547}
 //'
 //' Stasinopoulos, D.M. and Rigby, R.A. (2007). Generalized additive models for
@@ -221,7 +221,7 @@ NumericVector fdBCT(const NumericVector& x,
     if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
-  // SIMD-optimized main computation loop
+  // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Use normal approximation for very large tau
@@ -315,7 +315,7 @@ NumericVector fpBCT(const NumericVector& q,
     if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
-  // SIMD-optimized main computation loop
+  // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Compute z transformation
@@ -367,13 +367,13 @@ NumericVector fpBCT(const NumericVector& q,
 //' @details
 //' Computes the inverse cumulative distribution function (quantiles) for the
 //' Box-Cox t distribution. This function shows the largest performance improvement
-//' over the gamlss.dist implementation due to optimized t-distribution quantile
+//' over the gamlss.dist implementation due to optimised t-distribution quantile
 //' calculations and efficient parameter transformations.
 //'
 //' The quantile calculation involves:
 //' \itemize{
 //'   \item Probability transformation accounting for distribution truncation
-//'   \item t-distribution quantile computation using optimized R math library calls
+//'   \item t-distribution quantile computation using optimised R math library calls
 //'   \item Inverse Box-Cox transformation to original scale
 //'   \item Robust handling of boundary conditions and parameter edge cases
 //' }
@@ -443,7 +443,7 @@ NumericVector fqBCT(const NumericVector& p,
     if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
-  // SIMD-optimized main computation loop
+  // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Compute quantile transformation

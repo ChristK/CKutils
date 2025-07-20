@@ -36,12 +36,12 @@ Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for
 location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 
 Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 }
 \seealso{
 \code{\link{fdDPO}}, \code{\link{fpDPO}}, \code{\link{fqDPO}}
 }
 \author{
-Chris Kypridemos (optimized implementation), based on original work by 
+Chris Kypridemos (optimised implementation), based on original work by 
 Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 }

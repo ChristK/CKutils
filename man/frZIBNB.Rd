@@ -36,7 +36,7 @@ This function generates random variates from the ZIBNB distribution by:
 The Zero Inflated Beta Negative Binomial distribution is a discrete distribution 
 that extends the Beta Negative Binomial distribution to handle excess zeros. 
 It's a mixture of a point mass at zero and a BNB distribution, making it 
-particularly useful for modeling count data with structural zeros.
+particularly useful for modelling count data with structural zeros.
 
 The probability mass function is:
 \deqn{f(y|\mu,\sigma,\nu,\tau) = \begin{cases}
@@ -71,7 +71,7 @@ x <- frZIBNB(10, mu = c(2, 4), sigma = 1.5, nu = 1, tau = c(0.1, 0.2))
 }
 \references{
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 }
 \seealso{

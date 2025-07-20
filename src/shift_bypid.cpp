@@ -23,7 +23,7 @@ using namespace Rcpp;
 //' Shift Values by ID Groups
 //' 
 //' High-performance implementations for shifting/lagging values within groups 
-//' defined by ID variables. These functions are optimized for panel data and 
+//' defined by ID variables. These functions are optimised for panel data and 
 //' time series analysis where values need to be shifted within groups while 
 //' preserving group boundaries.
 //' 

@@ -30,7 +30,7 @@ This function generates random variates from the DPO distribution by:
 
 The Double Poisson distribution is a discrete distribution that extends 
 the Poisson distribution by adding a dispersion parameter sigma. It's 
-particularly useful for modeling count data that exhibits either 
+particularly useful for modelling count data that exhibits either 
 overdispersion (sigma > 1) or underdispersion (sigma < 1).
 
 The probability mass function is:
@@ -83,7 +83,7 @@ x <- frDPO(10, mu = c(2, 4), sigma = c(0.8, 1.2))
 }
 \references{
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 
 Efron, B. (1986). Double exponential families and their use in generalized 

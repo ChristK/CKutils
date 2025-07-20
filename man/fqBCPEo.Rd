@@ -27,7 +27,7 @@ A numeric vector of quantiles.
 }
 \description{
 Quantile function for the Box-Cox Power Exponential distribution with log link for mu,
-optimized for SIMD vectorization and unique parameter values.
+optimised for SIMD vectorisation and unique parameter values.
 }
 \details{
 The Box-Cox Power Exponential (BCPEo) distribution is a four-parameter continuous
@@ -43,12 +43,12 @@ transforming back to the original scale.
 When \eqn{\nu = 0}: \eqn{x = \mu \exp(\sigma z_a)}
 When \eqn{\nu \neq 0}: \eqn{x = \mu (\nu\sigma z_a + 1)^{1/\nu}}
 
-This implementation is optimized for cases where tau values are rarely repeated,
-using SIMD vectorization and per-element computation without caching.
+This implementation is optimised for cases where tau values are rarely repeated,
+using SIMD vectorisation and per-element computation without caching.
 }
 \note{
 This implementation is based on the gamlss.dist package qBCPEo function
-but optimized for performance with unique parameter values and SIMD vectorization.
+but optimised for performance with unique parameter values and SIMD vectorisation.
 }
 \examples{
 # Basic usage

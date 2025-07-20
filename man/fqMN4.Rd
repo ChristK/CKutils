@@ -25,7 +25,7 @@ An integer vector of quantiles.
 }
 \description{
 Quantile function for the multinomial distribution with 4 categories,
-optimized for performance with SIMD vectorization and parameter recycling.
+optimised for performance with SIMD vectorisation and parameter recycling.
 }
 \details{
 The quantile function returns the smallest integer k such that
@@ -38,7 +38,7 @@ standard recycling rules.
 }
 \note{
 This implementation is based on the gamlss.dist package qMN4 function
-but optimized for performance with SIMD vectorization and parameter recycling.
+but optimised for performance with SIMD vectorisation and parameter recycling.
 }
 \examples{
 # Basic usage

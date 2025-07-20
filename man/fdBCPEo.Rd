@@ -24,7 +24,7 @@ A numeric vector of densities.
 }
 \description{
 Density function for the Box-Cox Power Exponential distribution with log link for mu,
-optimized for SIMD vectorization and unique parameter values.
+optimised for SIMD vectorisation and unique parameter values.
 }
 \details{
 The Box-Cox Power Exponential (BCPEo) distribution is a four-parameter continuous
@@ -37,12 +37,12 @@ where \eqn{z = (x^{\nu} - 1)/(\nu\sigma)} when \eqn{\nu \neq 0} and
 \eqn{z = \log(x)/\sigma} when \eqn{\nu = 0}, and \eqn{f_T} and \eqn{F_T} are 
 the density and distribution functions of a specific T distribution.
 
-This implementation is optimized for cases where tau values are rarely repeated,
-using SIMD vectorization and per-element computation without caching.
+This implementation is optimised for cases where tau values are rarely repeated,
+using SIMD vectorisation and per-element computation without caching.
 }
 \note{
 This implementation is based on the gamlss.dist package dBCPEo function
-but optimized for performance with unique parameter values and SIMD vectorization.
+but optimised for performance with unique parameter values and SIMD vectorisation.
 }
 \examples{
 # Basic usage

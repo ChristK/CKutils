@@ -80,7 +80,7 @@ x <- frZABNB(10, mu = c(2, 4), sigma = 1.5, nu = 1, tau = c(0.15, 0.25))
 }
 \references{
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 }
 \seealso{

@@ -43,14 +43,14 @@ inline double fdMN4_scalar(const int& x,
   if (x < 1 || x > 4) return log_ ? R_NegInf : 0.0;
   
   double logfy = R_NegInf;
-  const double normalizer = 1.0 + mu + sigma + nu;
+  const double normaliser = 1.0 + mu + sigma + nu;
   
   if (x == 1) logfy = std::log(mu);
   else if (x == 2) logfy = std::log(sigma);
   else if (x == 3) logfy = std::log(nu);
   else if (x == 4) logfy = 0.0;  // log(1) = 0
   
-  logfy -= std::log(normalizer);
+  logfy -= std::log(normaliser);
   
   return log_ ? logfy : std::exp(logfy);
 }
@@ -68,12 +68,12 @@ inline double fpMN4_scalar(const int& q,
   if (q < 1) return lower_tail ? (log_p ? R_NegInf : 0.0) : (log_p ? 0.0 : 1.0);
   if (q >= 4) return lower_tail ? (log_p ? 0.0 : 1.0) : (log_p ? R_NegInf : 0.0);
   
-  const double normalizer = 1.0 + mu + sigma + nu;
+  const double normaliser = 1.0 + mu + sigma + nu;
   double cdf = 0.0;
   
-  if (q >= 1) cdf = mu / normalizer;
-  if (q >= 2) cdf = (mu + sigma) / normalizer;
-  if (q >= 3) cdf = (mu + sigma + nu) / normalizer;
+  if (q >= 1) cdf = mu / normaliser;
+  if (q >= 2) cdf = (mu + sigma) / normaliser;
+  if (q >= 3) cdf = (mu + sigma + nu) / normaliser;
   if (q >= 4) cdf = 1.0;
   
   if (!lower_tail) cdf = 1.0 - cdf;
@@ -98,12 +98,12 @@ inline int fqMN4_scalar(const double& p,
   
   if (p_ < 0.0 || p_ > 1.0) return NA_INTEGER;
   
-  const double normalizer = 1.0 + mu + sigma + nu;
+  const double normaliser = 1.0 + mu + sigma + nu;
   int q = 1;
   
-  if (p_ >= (mu / normalizer)) q = 2;
-  if (p_ >= ((mu + sigma) / normalizer)) q = 3;
-  if (p_ >= ((mu + sigma + nu) / normalizer)) q = 4;
+  if (p_ >= (mu / normaliser)) q = 2;
+  if (p_ >= ((mu + sigma) / normaliser)) q = 3;
+  if (p_ >= ((mu + sigma + nu) / normaliser)) q = 4;
   
   return q;
 }
@@ -111,7 +111,7 @@ inline int fqMN4_scalar(const double& p,
 //' Multinomial Distribution with 4 Categories - Density Function
 //'
 //' Density function for the multinomial distribution with 4 categories,
-//' optimized for performance with SIMD vectorization and parameter recycling.
+//' optimised for performance with SIMD vectorisation and parameter recycling.
 //'
 //' @param x vector of (integer) quantiles. Must be 1, 2, 3, or 4.
 //' @param mu vector of (positive) parameters for category 1.
@@ -137,7 +137,7 @@ inline int fqMN4_scalar(const double& p,
 //'
 //' @note
 //' This implementation is based on the gamlss.dist package dMN4 function
-//' but optimized for performance with SIMD vectorization and parameter recycling.
+//' but optimised for performance with SIMD vectorisation and parameter recycling.
 //'
 //' @examples
 //' # Basic usage
@@ -177,7 +177,7 @@ NumericVector fdMN4(const IntegerVector& x,
   
   NumericVector out(n);
   
-  // SIMD-optimized main computation loop
+  // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     out[i] = fdMN4_scalar(x_int[i], recycled.vec2[i], recycled.vec3[i], recycled.vec4[i], log_);
@@ -190,7 +190,7 @@ NumericVector fdMN4(const IntegerVector& x,
 //' Multinomial Distribution with 4 Categories - Distribution Function
 //'
 //' Distribution function for the multinomial distribution with 4 categories,
-//' optimized for performance with SIMD vectorization and parameter recycling.
+//' optimised for performance with SIMD vectorisation and parameter recycling.
 //'
 //' @param q vector of (integer) quantiles. Must be 1, 2, 3, or 4.
 //' @param mu vector of (positive) parameters for category 1.
@@ -218,7 +218,7 @@ NumericVector fdMN4(const IntegerVector& x,
 //'
 //' @note
 //' This implementation is based on the gamlss.dist package pMN4 function
-//' but optimized for performance with SIMD vectorization and parameter recycling.
+//' but optimised for performance with SIMD vectorisation and parameter recycling.
 //'
 //' @examples
 //' # Basic usage
@@ -262,7 +262,7 @@ NumericVector fpMN4(const IntegerVector& q,
   
   NumericVector out(n);
   
-  // SIMD-optimized main computation loop
+  // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     out[i] = fpMN4_scalar(q_int[i], recycled.vec2[i], recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
@@ -275,7 +275,7 @@ NumericVector fpMN4(const IntegerVector& q,
 //' Multinomial Distribution with 4 Categories - Quantile Function
 //'
 //' Quantile function for the multinomial distribution with 4 categories,
-//' optimized for performance with SIMD vectorization and parameter recycling.
+//' optimised for performance with SIMD vectorisation and parameter recycling.
 //'
 //' @param p vector of probabilities (must be between 0 and 1).
 //' @param mu vector of (positive) parameters for category 1.
@@ -302,7 +302,7 @@ NumericVector fpMN4(const IntegerVector& q,
 //'
 //' @note
 //' This implementation is based on the gamlss.dist package qMN4 function
-//' but optimized for performance with SIMD vectorization and parameter recycling.
+//' but optimised for performance with SIMD vectorisation and parameter recycling.
 //'
 //' @examples
 //' # Basic usage
@@ -339,7 +339,7 @@ IntegerVector fqMN4(const NumericVector& p,
   
   IntegerVector out(n);
   
-  // SIMD-optimized main computation loop
+  // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     out[i] = fqMN4_scalar(recycled.vec1[i], recycled.vec2[i], recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
@@ -352,7 +352,7 @@ IntegerVector fqMN4(const NumericVector& p,
 //' Multinomial Distribution with 4 Categories - Random Generation
 //'
 //' Random generation for the multinomial distribution with 4 categories,
-//' optimized for performance with SIMD vectorization and parameter recycling.
+//' optimised for performance with SIMD vectorisation and parameter recycling.
 //'
 //' @param n number of random values to generate.
 //' @param mu vector of (positive) parameters for category 1.
@@ -373,7 +373,7 @@ IntegerVector fqMN4(const NumericVector& p,
 //'
 //' @note
 //' This implementation is based on the gamlss.dist package rMN4 function
-//' but optimized for performance with SIMD vectorization and parameter recycling.
+//' but optimised for performance with SIMD vectorisation and parameter recycling.
 //'
 //' @examples
 //' # Basic usage
@@ -404,7 +404,7 @@ IntegerVector frMN4(const int& n,
   
   IntegerVector out(n);
   
-  // SIMD-optimized main computation loop
+  // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     int param_idx = i % param_len;  // Cycle through parameter values

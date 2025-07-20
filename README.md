@@ -13,11 +13,11 @@ A collection of utility functions for R data analysis and simulation modelling, 
 
 ## Key Features
 
-- **🚀 Fast data operations**: Optimized data.table operations with C++ backend
+- **🚀 Fast data operations**: Optimised data.table operations with C++ backend
 - **📊 Statistical distributions**: more efficient implementation of some the distributions available in the [gamlss.dist](https://cran.r-project.org/package=gamlss.dist) package
 - **🔧 Data manipulation**: Efficient lookup tables, quantile calculations, and data transformations  
 - **📦 Package utilities**: Dependency management and local package installation helpers
-- **⚡ Performance optimized**: SIMD vectorization for numerical computations
+- **⚡ Performance optimised**: SIMD vectorisation for numerical computations
 
 ## Installation
 
@@ -42,7 +42,7 @@ dtb[]
 fdBCPEo(x = 1:5, mu = rep(2, 5), sigma = rep(0.5, 5), nu = rep(1, 5), tau = rep(2, 5))  # BCPEo density
 
 # Utility functions
-normalise(c(1, 2, 3, 4, 5))  # Normalize to [0,1]
+normalise(c(1, 2, 3, 4, 5))  # Normalise to [0,1]
 ```
 
 ## License

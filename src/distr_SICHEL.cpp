@@ -92,7 +92,7 @@ double ftofySICHEL2_scalar(const int& y, const double& mu,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //' 
 //' Stein, G. Z., Zucchini, W. and Juritz, J. M. (1987). Parameter
@@ -208,7 +208,7 @@ double fcdfSICHEL_scalar(const int& y, const double& mu, const double& sigma, co
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -292,7 +292,7 @@ double fpSICHEL_scalar(const int& q, const double& mu, const double& sigma, cons
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples

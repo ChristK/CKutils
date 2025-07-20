@@ -26,7 +26,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 using namespace Rcpp;
 
 
-// SIMD-optimized NBI density scalar function
+// SIMD-optimised NBI density scalar function
 double fdNBI_scalar(const int& x,
                     const double& mu = 1.0,
                     const double& sigma = 1.0,
@@ -68,7 +68,7 @@ double fdNBI_scalar(const int& x,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -109,7 +109,7 @@ NumericVector fdNBI(const NumericVector& x,
   return out;
 }
 
-// SIMD-optimized NBI CDF scalar function
+// SIMD-optimised NBI CDF scalar function
 double fpNBI_scalar(const int& q,
                     const double& mu = 1.0,
                     const double& sigma = 1.0,
@@ -154,7 +154,7 @@ double fpNBI_scalar(const int& q,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -196,7 +196,7 @@ NumericVector fpNBI(const NumericVector& q,
   return out;
 }
 
-// SIMD-optimized NBI quantile scalar function
+// SIMD-optimised NBI quantile scalar function
 int fqNBI_scalar(const double& p,
                  const double& mu = 1.0,
                  const double& sigma = 1.0,
@@ -240,7 +240,7 @@ int fqNBI_scalar(const double& p,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -295,7 +295,7 @@ IntegerVector fqNBI(const NumericVector& p,
   return out;
 }
 
-// SIMD-optimized NBI random generation scalar function
+// SIMD-optimised NBI random generation scalar function
 int frNBI_scalar(const double& mu = 1.0,
                  const double& sigma = 1.0) {
     // Parameter validation (uncommented for performance)
@@ -332,7 +332,7 @@ int frNBI_scalar(const double& mu = 1.0,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples

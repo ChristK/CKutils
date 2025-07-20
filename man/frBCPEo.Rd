@@ -37,7 +37,7 @@ This function generates random variates from the BCPEo distribution by:
 
 The BCPEo distribution is a four-parameter continuous distribution that 
 extends the Box-Cox normal distribution. It's particularly useful for 
-modeling positive continuous data with flexible skewness and kurtosis.
+modelling positive continuous data with flexible skewness and kurtosis.
 
 The use of \code{dqrng::dqrunif} provides superior random number generation 
 compared to base R's \code{runif}, with better statistical properties and 
@@ -58,7 +58,7 @@ x <- frBCPEo(10, mu = c(1, 2), sigma = 0.3, nu = c(-0.5, 0.5), tau = 4)
 }
 \references{
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 }
 \seealso{

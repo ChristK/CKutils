@@ -357,12 +357,12 @@ LogicalVector fequal(const NumericVector &x, const double &tol)
   return wrap(true);
 }
 
-//' Normalize a Numeric Vector to the 0-1 Range
+//' Normalise a Numeric Vector to the 0-1 Range
 //'
-//' This function normalizes a numeric vector so that its values are scaled to lie within the 0 to 1 range.
+//' This function normalises a numeric vector so that its values are scaled to lie within the 0 to 1 range.
 //' If all elements in the vector are identical, the function returns a vector of ones.
 //'
-//' @param x A numeric vector to be normalized.
+//' @param x A numeric vector to be normalised.
 //'
 //' @return A numeric vector with values scaled between 0 and 1.
 //'
@@ -494,7 +494,7 @@ IntegerVector carry_forward(IntegerVector &x,
 //'   Data must be grouped by person and sorted by year/time.
 //' @param recur Logical; if FALSE (non-recursive), continuously increment when previous >= y;
 //'   if TRUE (recursive), increment only when both current >= y AND previous >= y
-//' @param y The threshold value for triggering incremental carry-forward behavior
+//' @param y The threshold value for triggering incremental carry-forward behaviour
 //' @param byref Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector
 //' @return An integer vector with incremented values carried forward according to the specified mode
 //' @export
@@ -624,7 +624,7 @@ IntegerVector carry_backward_decr(const IntegerVector &x, const LogicalVector &p
 //'
 //' Creates a logical vector marking the positions where new simulants (persons) begin
 //' based on changes in person ID values. The first position is always marked as TRUE.
-//' This function is optimized for performance with minimal branching and memory access.
+//' This function is optimised for performance with minimal branching and memory access.
 //'
 //' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
 //' This ensures correct identification of person boundaries in temporal data.
@@ -799,7 +799,7 @@ IntegerVector identify_invitees(const IntegerVector &elig,
 //' a binomial trial determines if the effect continues.
 //'
 //' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
-//' This ensures proper temporal sequencing for modeling effect continuation.
+//' This ensures proper temporal sequencing for modelling effect continuation.
 //'
 //' @param x An integer vector representing health care effect status (1 = present, 0 = absent).
 //'   Must be sorted by year/time within person.

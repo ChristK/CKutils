@@ -22,7 +22,7 @@
 #' 
 #' The BCPEo distribution is a four-parameter continuous distribution that 
 #' extends the Box-Cox normal distribution. It's particularly useful for 
-#' modeling positive continuous data with flexible skewness and kurtosis.
+#' modelling positive continuous data with flexible skewness and kurtosis.
 #' 
 #' The use of \code{dqrng::dqrunif} provides superior random number generation 
 #' compared to base R's \code{runif}, with better statistical properties and 
@@ -44,7 +44,7 @@
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
@@ -93,7 +93,7 @@ frBCPEo <- function(n, mu = 5, sigma = 0.1, nu = 1, tau = 2) {
 #' 
 #' The BCT distribution is a four-parameter continuous distribution that extends 
 #' the Box-Cox normal distribution by replacing the normal kernel with a 
-#' t-distribution kernel. This provides additional flexibility for modeling 
+#' t-distribution kernel. This provides additional flexibility for modelling 
 #' heavy-tailed data while maintaining the Box-Cox transformation properties.
 #' 
 #' Key characteristics:
@@ -135,7 +135,7 @@ frBCPEo <- function(n, mu = 5, sigma = 0.1, nu = 1, tau = 2) {
 #' in GAMLSS to model skewness and kurtosis. Statistical Modelling, 6(3), 200.
 #' 
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
@@ -181,7 +181,7 @@ frBCT <- function(n, mu = 5, sigma = 0.1, nu = 1, tau = 2) {
 #' The Beta Negative Binomial distribution is a discrete distribution that 
 #' extends the negative binomial distribution by allowing for additional 
 #' overdispersion through a beta-distributed mixing parameter. It's particularly 
-#' useful for modeling count data with excess variability.
+#' useful for modelling count data with excess variability.
 #' 
 #' The probability mass function is:
 #' \deqn{f(y|\mu,\sigma,\nu) = \frac{\Gamma(y+1/\nu)\mathrm{B}(y+(\mu\nu)/\sigma, 1/\sigma+1/\nu+1)}{\Gamma(y+1)\Gamma(1/\nu)\mathrm{B}((\mu\nu)/\sigma, 1/\sigma+1)}}
@@ -213,7 +213,7 @@ frBCT <- function(n, mu = 5, sigma = 0.1, nu = 1, tau = 2) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
@@ -260,7 +260,7 @@ frBNB <- function(n, mu = 1, sigma = 1, nu = 1) {
 #' The Zero Inflated Beta Negative Binomial distribution is a discrete distribution 
 #' that extends the Beta Negative Binomial distribution to handle excess zeros. 
 #' It's a mixture of a point mass at zero and a BNB distribution, making it 
-#' particularly useful for modeling count data with structural zeros.
+#' particularly useful for modelling count data with structural zeros.
 #' 
 #' The probability mass function is:
 #' \deqn{f(y|\mu,\sigma,\nu,\tau) = \begin{cases}
@@ -296,7 +296,7 @@ frBNB <- function(n, mu = 1, sigma = 1, nu = 1) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
@@ -390,7 +390,7 @@ frZIBNB <- function(n, mu = 1, sigma = 1, nu = 1, tau = 0.1) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
@@ -435,7 +435,7 @@ frZABNB <- function(n, mu = 1, sigma = 1, nu = 1, tau = 0.1) {
 #' 
 #' The Double Poisson distribution is a discrete distribution that extends 
 #' the Poisson distribution by adding a dispersion parameter sigma. It's 
-#' particularly useful for modeling count data that exhibits either 
+#' particularly useful for modelling count data that exhibits either 
 #' overdispersion (sigma > 1) or underdispersion (sigma < 1).
 #' 
 #' The probability mass function is:
@@ -489,7 +489,7 @@ frZABNB <- function(n, mu = 1, sigma = 1, nu = 1, tau = 0.1) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' Efron, B. (1986). Double exponential families and their use in generalized 
@@ -537,7 +537,7 @@ frDPO <- function(n, mu = 1, sigma = 1) {
 #' as a compound Poisson distribution where the intensity parameter follows 
 #' a gamma distribution. It arises as the convolution of a Poisson distribution 
 #' with a negative binomial distribution, making it particularly useful for 
-#' modeling overdispersed count data.
+#' modelling overdispersed count data.
 #' 
 #' The Delaporte distribution can be parameterized as the sum of:
 #' \itemize{
@@ -593,7 +593,7 @@ frDPO <- function(n, mu = 1, sigma = 1) {
 #' # Vector of parameters (recycling applies)
 #' x <- frDEL(10, mu = c(2, 4), sigma = c(1, 1.5), nu = c(0.3, 0.7))
 #' 
-#' # Demonstrate flexibility in modeling different count patterns
+#' # Demonstrate flexibility in modelling different count patterns
 #' # Low count, high variability
 #' x_variable <- frDEL(500, mu = 2, sigma = 3, nu = 0.1)
 #' # Moderate count, moderate variability  
@@ -603,7 +603,7 @@ frDPO <- function(n, mu = 1, sigma = 1) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' Delaporte, P.J. (1960). Quelques aspects de la classification automatique. 
@@ -687,7 +687,7 @@ frDEL <- function(n, mu = 1, sigma = 1, nu = 0.5) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
@@ -763,7 +763,7 @@ frNBI <- function(n, mu = 1, sigma = 1) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
@@ -840,7 +840,7 @@ frZINBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
@@ -887,7 +887,7 @@ frZANBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
 #' 
 #' The Sichel distribution is a three-parameter discrete distribution that 
 #' extends the Poisson-inverse Gaussian distribution. It's particularly useful 
-#' for modeling count data with varying levels of overdispersion and can 
+#' for modelling count data with varying levels of overdispersion and can 
 #' accommodate a wide range of distributional shapes.
 #' 
 #' The probability mass function is:
@@ -901,7 +901,7 @@ frZANBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
 #' \itemize{
 #'   \item Support: {0, 1, 2, ...} (non-negative integers)
 #'   \item Mean: mu
-#'   \item Very flexible in modeling different count patterns
+#'   \item Very flexible in modelling different count patterns
 #'   \item Can handle both light and heavy-tailed distributions
 #'   \item Special cases include Poisson-inverse Gaussian when specific parameters
 #' }
@@ -949,13 +949,13 @@ frZANBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
 #' # Light-tailed count data  
 #' x_light <- frSICHEL(500, mu = 5, sigma = 0.8, nu = 1)
 #' 
-#' # Compare tail behavior
+#' # Compare tail behaviour
 #' quantile(x_heavy, c(0.9, 0.95, 0.99))
 #' quantile(x_light, c(0.9, 0.95, 0.99))
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' Stein, G. Z., Zucchini, W. and Juritz, J. M. (1987). Parameter
@@ -1006,7 +1006,7 @@ frSICHEL <- function(n, mu = 1, sigma = 1, nu = -0.5) {
 #' The Zero-Inflated Sichel distribution is a four-parameter discrete distribution 
 #' that extends the Sichel distribution to handle excess zeros. It's a mixture 
 #' of a point mass at zero and a standard Sichel distribution, making it 
-#' particularly useful for modeling count data with structural zeros.
+#' particularly useful for modelling count data with structural zeros.
 #' 
 #' The probability mass function is:
 #' \deqn{f(y|\mu,\sigma,\nu,\tau) = \begin{cases}
@@ -1020,7 +1020,7 @@ frSICHEL <- function(n, mu = 1, sigma = 1, nu = -0.5) {
 #'   \item Support: {0, 1, 2, ...} (non-negative integers)
 #'   \item Higher proportion of zeros than standard Sichel
 #'   \item Combines flexibility of Sichel with zero-inflation capability
-#'   \item Useful for modeling count processes with excess zeros
+#'   \item Useful for modelling count processes with excess zeros
 #' }
 #' 
 #' The use of \code{dqrng::dqrunif} provides superior random number generation 
@@ -1067,7 +1067,7 @@ frSICHEL <- function(n, mu = 1, sigma = 1, nu = -0.5) {
 #' 
 #' @references
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 

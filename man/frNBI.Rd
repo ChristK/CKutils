@@ -83,11 +83,11 @@ x_pois <- rpois(500, lambda = 3)
 }
 \references{
 Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 Chapman and Hall/CRC.
 
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 }
 \seealso{

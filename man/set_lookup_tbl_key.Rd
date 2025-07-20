@@ -15,7 +15,7 @@ set_lookup_tbl_key(lookup_tbl, keycols)
 The original lookup table (invisibly) with its key set for efficient subsetting.
 }
 \description{
-Sets the key columns of a lookup table to optimize performance for lookup operations.
+Sets the key columns of a lookup table to optimise performance for lookup operations.
 The key columns are sorted (with a priority given to "year" if present) and then set
 as the key for the data.table.
 }

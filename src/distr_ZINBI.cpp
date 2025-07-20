@@ -26,7 +26,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 using namespace Rcpp;
 
 // Zero-inflated NBI functions
-// SIMD-optimized ZINBI density scalar function
+// SIMD-optimised ZINBI density scalar function
 double fdZINBI_scalar(const int& x,
                       const double& mu,
                       const double& sigma,
@@ -75,7 +75,7 @@ double fdZINBI_scalar(const int& x,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -119,7 +119,7 @@ NumericVector fdZINBI(const NumericVector& x,
 }
 
 
-// SIMD-optimized ZINBI CDF scalar function
+// SIMD-optimised ZINBI CDF scalar function
 double fpZINBI_scalar(const int& q,
                       const double& mu = 1.0,
                       const double& sigma = 1.0,
@@ -170,7 +170,7 @@ double fpZINBI_scalar(const int& q,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -215,7 +215,7 @@ NumericVector fpZINBI(const NumericVector& q,
 }
 
 
-// SIMD-optimized ZINBI quantile scalar function
+// SIMD-optimised ZINBI quantile scalar function
 int fqZINBI_scalar(const double& p,
                    const double& mu,
                    const double& sigma,
@@ -264,7 +264,7 @@ int fqZINBI_scalar(const double& p,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -309,7 +309,7 @@ IntegerVector fqZINBI(const NumericVector& p,
 }
 
 
-// SIMD-optimized ZINBI random generation scalar function
+// SIMD-optimised ZINBI random generation scalar function
 int frZINBI_scalar(const double& mu,
                    const double& sigma,
                    const double& nu) {
@@ -348,7 +348,7 @@ int frZINBI_scalar(const double& mu,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples

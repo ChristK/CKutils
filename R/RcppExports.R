@@ -12,7 +12,7 @@ counts <- function(x) {
 #' Box-Cox Power Exponential Distribution (BCPEo) - Density Function
 #'
 #' Density function for the Box-Cox Power Exponential distribution with log link for mu,
-#' optimized for SIMD vectorization and unique parameter values.
+#' optimised for SIMD vectorisation and unique parameter values.
 #'
 #' @param x vector of (non-negative) quantiles.
 #' @param mu vector of (positive) location parameters.
@@ -32,8 +32,8 @@ counts <- function(x) {
 #' \eqn{z = \log(x)/\sigma} when \eqn{\nu = 0}, and \eqn{f_T} and \eqn{F_T} are 
 #' the density and distribution functions of a specific T distribution.
 #'
-#' This implementation is optimized for cases where tau values are rarely repeated,
-#' using SIMD vectorization and per-element computation without caching.
+#' This implementation is optimised for cases where tau values are rarely repeated,
+#' using SIMD vectorisation and per-element computation without caching.
 #'
 #' @return A numeric vector of densities.
 #'
@@ -47,7 +47,7 @@ counts <- function(x) {
 #'
 #' @note
 #' This implementation is based on the gamlss.dist package dBCPEo function
-#' but optimized for performance with unique parameter values and SIMD vectorization.
+#' but optimised for performance with unique parameter values and SIMD vectorisation.
 #'
 #' @examples
 #' # Basic usage
@@ -72,7 +72,7 @@ fdBCPEo <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
 #' Box-Cox Power Exponential Distribution (BCPEo) - Distribution Function
 #'
 #' Distribution function for the Box-Cox Power Exponential distribution with log link for mu,
-#' optimized for SIMD vectorization and unique parameter values.
+#' optimised for SIMD vectorisation and unique parameter values.
 #'
 #' @param q vector of (non-negative) quantiles.
 #' @param mu vector of (positive) location parameters.
@@ -94,8 +94,8 @@ fdBCPEo <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
 #' \eqn{z = \log(x)/\sigma} when \eqn{\nu = 0}, and \eqn{F_T} is the 
 #' distribution function of a specific T distribution.
 #'
-#' This implementation is optimized for cases where tau values are rarely repeated,
-#' using SIMD vectorization and per-element computation without caching.
+#' This implementation is optimised for cases where tau values are rarely repeated,
+#' using SIMD vectorisation and per-element computation without caching.
 #'
 #' @return A numeric vector of probabilities.
 #'
@@ -109,7 +109,7 @@ fdBCPEo <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
 #'
 #' @note
 #' This implementation is based on the gamlss.dist package pBCPEo function
-#' but optimized for performance with unique parameter values and SIMD vectorization.
+#' but optimised for performance with unique parameter values and SIMD vectorisation.
 #'
 #' @examples
 #' # Basic usage
@@ -138,7 +138,7 @@ fpBCPEo <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' Box-Cox Power Exponential Distribution (BCPEo) - Quantile Function
 #'
 #' Quantile function for the Box-Cox Power Exponential distribution with log link for mu,
-#' optimized for SIMD vectorization and unique parameter values.
+#' optimised for SIMD vectorisation and unique parameter values.
 #'
 #' @param p vector of probabilities (must be between 0 and 1).
 #' @param mu vector of (positive) location parameters.
@@ -163,8 +163,8 @@ fpBCPEo <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' When \eqn{\nu = 0}: \eqn{x = \mu \exp(\sigma z_a)}
 #' When \eqn{\nu \neq 0}: \eqn{x = \mu (\nu\sigma z_a + 1)^{1/\nu}}
 #'
-#' This implementation is optimized for cases where tau values are rarely repeated,
-#' using SIMD vectorization and per-element computation without caching.
+#' This implementation is optimised for cases where tau values are rarely repeated,
+#' using SIMD vectorisation and per-element computation without caching.
 #'
 #' @return A numeric vector of quantiles.
 #'
@@ -178,7 +178,7 @@ fpBCPEo <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' @note
 #' This implementation is based on the gamlss.dist package qBCPEo function
-#' but optimized for performance with unique parameter values and SIMD vectorization.
+#' but optimised for performance with unique parameter values and SIMD vectorisation.
 #'
 #' @examples
 #' # Basic usage
@@ -230,7 +230,7 @@ fqBCPEo <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' @details
 #' The Box-Cox t distribution is a four-parameter continuous distribution that
 #' extends the Box-Cox normal distribution by replacing the normal kernel with
-#' a t-distribution kernel. This provides additional flexibility for modeling
+#' a t-distribution kernel. This provides additional flexibility for modelling
 #' heavy-tailed data.
 #'
 #' The probability density function is given by:
@@ -248,9 +248,9 @@ fqBCPEo <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' a normal approximation for improved numerical stability and performance.
 #'
 #' @note
-#' These optimized implementations include:
+#' These optimised implementations include:
 #' \itemize{
-#'   \item SIMD vectorization hints for modern compilers
+#'   \item SIMD vectorisation hints for modern compilers
 #'   \item Precomputed mathematical constants
 #'   \item Efficient input validation
 #'   \item Robust handling of edge cases and extreme parameter values
@@ -270,7 +270,7 @@ fqBCPEo <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' \doi{10.1191/1471082X06st122oa}
 #'
 #' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019).
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R.
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R.
 #' Chapman and Hall/CRC. \doi{10.1201/9780429298547}
 #'
 #' Stasinopoulos, D.M. and Rigby, R.A. (2007). Generalized additive models for
@@ -390,13 +390,13 @@ fpBCT <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' @details
 #' Computes the inverse cumulative distribution function (quantiles) for the
 #' Box-Cox t distribution. This function shows the largest performance improvement
-#' over the gamlss.dist implementation due to optimized t-distribution quantile
+#' over the gamlss.dist implementation due to optimised t-distribution quantile
 #' calculations and efficient parameter transformations.
 #'
 #' The quantile calculation involves:
 #' \itemize{
 #'   \item Probability transformation accounting for distribution truncation
-#'   \item t-distribution quantile computation using optimized R math library calls
+#'   \item t-distribution quantile computation using optimised R math library calls
 #'   \item Inverse Box-Cox transformation to original scale
 #'   \item Robust handling of boundary conditions and parameter edge cases
 #' }
@@ -450,7 +450,7 @@ fqBCT <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -485,7 +485,7 @@ fdBNB <- function(x, mu, sigma, nu, log = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -520,7 +520,7 @@ fpBNB <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -564,7 +564,7 @@ fqBNB <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' \code{fdDEL} gives the density
 #'
 #' @note
-#' This function is optimized for performance with chunked processing and
+#' This function is optimised for performance with chunked processing and
 #' efficient memory access patterns.
 #'
 #' @references
@@ -572,12 +572,12 @@ fqBNB <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 #' 
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 #' 
 #' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 #' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
 #'
-#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' @author Chris Kypridemos (optimised implementation), based on original work by 
 #' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 #'
 #' @seealso \code{\link{fpDEL}}, \code{\link{fqDEL}}
@@ -613,7 +613,7 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' The cumulative distribution function is computed as the sum of the probability
 #' mass function from 0 to q. For computational efficiency, this implementation
 #' employs chunked processing with SIMD optimizations when available and is
-#' optimized for scenarios with varying parameter combinations.
+#' optimised for scenarios with varying parameter combinations.
 #' 
 #' When sigma is very small (< 1e-04), the distribution approaches a Poisson
 #' distribution with parameter mu, and the function switches to using the
@@ -628,7 +628,7 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' \code{fpDEL} gives the cumulative distribution function
 #'
 #' @note
-#' This function is optimized for scenarios where parameters vary between
+#' This function is optimised for scenarios where parameters vary between
 #' computations (e.g., random parameters). For applications with repeated
 #' parameter combinations, consider implementing application-specific caching.
 #'
@@ -637,12 +637,12 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 #' 
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 #' 
 #' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 #' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
 #'
-#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' @author Chris Kypridemos (optimised implementation), based on original work by 
 #' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 #'
 #' @seealso \code{\link{fdDEL}}, \code{\link{fqDEL}}
@@ -686,7 +686,7 @@ fpDEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' and a shifted negative binomial distribution with parameters related to
 #' \code{sigma} and \code{nu}.
 #'
-#' This implementation uses an optimized binary search algorithm with
+#' This implementation uses an optimised binary search algorithm with
 #' SIMD acceleration where available, and includes intelligent caching
 #' of intermediate CDF calculations for improved performance with repeated
 #' quantile computations.
@@ -765,9 +765,9 @@ fqDEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 #' 
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 #'
-#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' @author Chris Kypridemos (optimised implementation), based on original work by 
 #' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 #'
 #' @seealso \code{\link{fdDPO}}, \code{\link{fpDPO}}, \code{\link{fqDPO}}
@@ -802,7 +802,7 @@ fget_C <- function(x, mu, sigma) {
 #' \code{fdDPO} gives the density
 #'
 #' @note
-#' This function is optimized for performance with chunked processing and
+#' This function is optimised for performance with chunked processing and
 #' prefetching for better cache utilization.
 #'
 #' @references
@@ -810,12 +810,12 @@ fget_C <- function(x, mu, sigma) {
 #' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 #' 
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 #' 
 #' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 #' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
 #'
-#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' @author Chris Kypridemos (optimised implementation), based on original work by 
 #' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 #'
 #' @seealso \code{\link{fpDPO}}, \code{\link{fqDPO}}
@@ -850,7 +850,7 @@ fdDPO <- function(x, mu, sigma, log_ = FALSE) {
 #' The cumulative distribution function is computed using the normalizing constants
 #' approach from gamlss.dist. For computational efficiency, this implementation
 #' employs chunked processing with SIMD optimizations when available and is
-#' optimized for scenarios with varying parameter combinations.
+#' optimised for scenarios with varying parameter combinations.
 #' 
 #' This implementation is based on the algorithms from the gamlss.dist package
 #' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
@@ -861,7 +861,7 @@ fdDPO <- function(x, mu, sigma, log_ = FALSE) {
 #' \code{fpDPO} gives the cumulative distribution function
 #'
 #' @note
-#' This function is optimized for scenarios where parameters vary between
+#' This function is optimised for scenarios where parameters vary between
 #' computations (e.g., random parameters). For applications with repeated
 #' parameter combinations, consider implementing application-specific caching.
 #'
@@ -870,12 +870,12 @@ fdDPO <- function(x, mu, sigma, log_ = FALSE) {
 #' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 #' 
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 #' 
 #' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 #' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
 #'
-#' @author Chris Kypridemos (optimized implementation), based on original work by 
+#' @author Chris Kypridemos (optimised implementation), based on original work by 
 #' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 #'
 #' @seealso \code{\link{fdDPO}}, \code{\link{fqDPO}}
@@ -916,7 +916,7 @@ fpDPO <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' @details
 #' The DPO distribution is a two-parameter discrete distribution that reduces
 #' to the Poisson distribution when sigma = 1. This implementation uses an
-#' optimized search algorithm with SIMD acceleration where available, and
+#' optimised search algorithm with SIMD acceleration where available, and
 #' includes intelligent caching of intermediate CDF calculations for improved
 #' performance with repeated quantile computations.
 #'
@@ -970,7 +970,7 @@ fqDPO <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE, max_value = 0L
 #' Multinomial Distribution with 4 Categories - Density Function
 #'
 #' Density function for the multinomial distribution with 4 categories,
-#' optimized for performance with SIMD vectorization and parameter recycling.
+#' optimised for performance with SIMD vectorisation and parameter recycling.
 #'
 #' @param x vector of (integer) quantiles. Must be 1, 2, 3, or 4.
 #' @param mu vector of (positive) parameters for category 1.
@@ -996,7 +996,7 @@ fqDPO <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE, max_value = 0L
 #'
 #' @note
 #' This implementation is based on the gamlss.dist package dMN4 function
-#' but optimized for performance with SIMD vectorization and parameter recycling.
+#' but optimised for performance with SIMD vectorisation and parameter recycling.
 #'
 #' @examples
 #' # Basic usage
@@ -1023,7 +1023,7 @@ fdMN4 <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' Multinomial Distribution with 4 Categories - Distribution Function
 #'
 #' Distribution function for the multinomial distribution with 4 categories,
-#' optimized for performance with SIMD vectorization and parameter recycling.
+#' optimised for performance with SIMD vectorisation and parameter recycling.
 #'
 #' @param q vector of (integer) quantiles. Must be 1, 2, 3, or 4.
 #' @param mu vector of (positive) parameters for category 1.
@@ -1051,7 +1051,7 @@ fdMN4 <- function(x, mu, sigma, nu, log_ = FALSE) {
 #'
 #' @note
 #' This implementation is based on the gamlss.dist package pMN4 function
-#' but optimized for performance with SIMD vectorization and parameter recycling.
+#' but optimised for performance with SIMD vectorisation and parameter recycling.
 #'
 #' @examples
 #' # Basic usage
@@ -1081,7 +1081,7 @@ fpMN4 <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' Multinomial Distribution with 4 Categories - Quantile Function
 #'
 #' Quantile function for the multinomial distribution with 4 categories,
-#' optimized for performance with SIMD vectorization and parameter recycling.
+#' optimised for performance with SIMD vectorisation and parameter recycling.
 #'
 #' @param p vector of probabilities (must be between 0 and 1).
 #' @param mu vector of (positive) parameters for category 1.
@@ -1108,7 +1108,7 @@ fpMN4 <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' @note
 #' This implementation is based on the gamlss.dist package qMN4 function
-#' but optimized for performance with SIMD vectorization and parameter recycling.
+#' but optimised for performance with SIMD vectorisation and parameter recycling.
 #'
 #' @examples
 #' # Basic usage
@@ -1138,7 +1138,7 @@ fqMN4 <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' Multinomial Distribution with 4 Categories - Random Generation
 #'
 #' Random generation for the multinomial distribution with 4 categories,
-#' optimized for performance with SIMD vectorization and parameter recycling.
+#' optimised for performance with SIMD vectorisation and parameter recycling.
 #'
 #' @param n number of random values to generate.
 #' @param mu vector of (positive) parameters for category 1.
@@ -1159,7 +1159,7 @@ fqMN4 <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' @note
 #' This implementation is based on the gamlss.dist package rMN4 function
-#' but optimized for performance with SIMD vectorization and parameter recycling.
+#' but optimised for performance with SIMD vectorisation and parameter recycling.
 #'
 #' @examples
 #' # Basic usage
@@ -1198,7 +1198,7 @@ frMN4 <- function(n, mu, sigma, nu) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1236,7 +1236,7 @@ fdNBI <- function(x, mu, sigma, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1273,7 +1273,7 @@ fpNBI <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1307,7 +1307,7 @@ fqNBI <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1348,7 +1348,7 @@ frNBI <- function(n, mu, sigma) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #' 
 #' Stein, G. Z., Zucchini, W. and Juritz, J. M. (1987). Parameter
@@ -1388,7 +1388,7 @@ fdSICHEL <- function(x, mu, sigma, nu, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1424,7 +1424,7 @@ fpSICHEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1460,7 +1460,7 @@ fqSICHEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1497,7 +1497,7 @@ fqZABNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1535,7 +1535,7 @@ fdZANBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1571,7 +1571,7 @@ fpZANBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1605,7 +1605,7 @@ fqZANBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1641,7 +1641,7 @@ frZANBI <- function(n, mu, sigma, nu) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1678,7 +1678,7 @@ fqZIBNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1715,7 +1715,7 @@ fdZINBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1751,7 +1751,7 @@ fpZINBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1785,7 +1785,7 @@ fqZINBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1822,7 +1822,7 @@ frZINBI <- function(n, mu, sigma, nu) {
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -1856,7 +1856,7 @@ fqZISICHEL <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) 
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 #' Chapman and Hall/CRC.
 #'
 #' @examples
@@ -2007,12 +2007,12 @@ fequal <- function(x, tol) {
     .Call(`_CKutils_fequal`, x, tol)
 }
 
-#' Normalize a Numeric Vector to the 0-1 Range
+#' Normalise a Numeric Vector to the 0-1 Range
 #'
-#' This function normalizes a numeric vector so that its values are scaled to lie within the 0 to 1 range.
+#' This function normalises a numeric vector so that its values are scaled to lie within the 0 to 1 range.
 #' If all elements in the vector are identical, the function returns a vector of ones.
 #'
-#' @param x A numeric vector to be normalized.
+#' @param x A numeric vector to be normalised.
 #'
 #' @return A numeric vector with values scaled between 0 and 1.
 #'
@@ -2089,7 +2089,7 @@ carry_forward <- function(x, pid_mrk, y, byref) {
 #'   Data must be grouped by person and sorted by year/time.
 #' @param recur Logical; if FALSE (non-recursive), continuously increment when previous >= y;
 #'   if TRUE (recursive), increment only when both current >= y AND previous >= y
-#' @param y The threshold value for triggering incremental carry-forward behavior
+#' @param y The threshold value for triggering incremental carry-forward behaviour
 #' @param byref Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector
 #' @return An integer vector with incremented values carried forward according to the specified mode
 #' @export
@@ -2120,7 +2120,7 @@ carry_backward_decr <- function(x, pid_mrk, y = 0L) {
 #'
 #' Creates a logical vector marking the positions where new simulants (persons) begin
 #' based on changes in person ID values. The first position is always marked as TRUE.
-#' This function is optimized for performance with minimal branching and memory access.
+#' This function is optimised for performance with minimal branching and memory access.
 #'
 #' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
 #' This ensures correct identification of person boundaries in temporal data.
@@ -2187,7 +2187,7 @@ identify_invitees <- function(elig, prev_inv, prb, freq, pid) {
 #' a binomial trial determines if the effect continues.
 #'
 #' **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
-#' This ensures proper temporal sequencing for modeling effect continuation.
+#' This ensures proper temporal sequencing for modelling effect continuation.
 #'
 #' @param x An integer vector representing health care effect status (1 = present, 0 = absent).
 #'   Must be sorted by year/time within person.
@@ -2291,7 +2291,7 @@ fscramble_trajectories <- function(x, pid, jumpiness = 1.0, inplace = TRUE) {
 #' Shift Values by ID Groups
 #' 
 #' High-performance implementations for shifting/lagging values within groups 
-#' defined by ID variables. These functions are optimized for panel data and 
+#' defined by ID variables. These functions are optimised for panel data and 
 #' time series analysis where values need to be shifted within groups while 
 #' preserving group boundaries.
 #' 

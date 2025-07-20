@@ -31,7 +31,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 using namespace Rcpp;
 
-// SIMD-optimized inline helper functions without caching
+// SIMD-optimised inline helper functions without caching
 // These compute constants on-the-fly for optimal vectorization with unique tau values
 
 // Precomputed constant to avoid repeated calls to log(2)
@@ -95,7 +95,7 @@ inline double fqBCPEo_hlp_q_T(const double p, const double tau) {
 //' Box-Cox Power Exponential Distribution (BCPEo) - Density Function
 //'
 //' Density function for the Box-Cox Power Exponential distribution with log link for mu,
-//' optimized for SIMD vectorization and unique parameter values.
+//' optimised for SIMD vectorisation and unique parameter values.
 //'
 //' @param x vector of (non-negative) quantiles.
 //' @param mu vector of (positive) location parameters.
@@ -115,8 +115,8 @@ inline double fqBCPEo_hlp_q_T(const double p, const double tau) {
 //' \eqn{z = \log(x)/\sigma} when \eqn{\nu = 0}, and \eqn{f_T} and \eqn{F_T} are 
 //' the density and distribution functions of a specific T distribution.
 //'
-//' This implementation is optimized for cases where tau values are rarely repeated,
-//' using SIMD vectorization and per-element computation without caching.
+//' This implementation is optimised for cases where tau values are rarely repeated,
+//' using SIMD vectorisation and per-element computation without caching.
 //'
 //' @return A numeric vector of densities.
 //'
@@ -130,7 +130,7 @@ inline double fqBCPEo_hlp_q_T(const double p, const double tau) {
 //'
 //' @note
 //' This implementation is based on the gamlss.dist package dBCPEo function
-//' but optimized for performance with unique parameter values and SIMD vectorization.
+//' but optimised for performance with unique parameter values and SIMD vectorisation.
 //'
 //' @examples
 //' # Basic usage
@@ -170,7 +170,7 @@ NumericVector fdBCPEo(const NumericVector& x,
     if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
-  // SIMD-optimized main computation loop without caching
+  // SIMD-optimised main computation loop without caching
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Compute z transformation - equivalent to gamlss.dist logic
@@ -205,7 +205,7 @@ NumericVector fdBCPEo(const NumericVector& x,
 //' Box-Cox Power Exponential Distribution (BCPEo) - Distribution Function
 //'
 //' Distribution function for the Box-Cox Power Exponential distribution with log link for mu,
-//' optimized for SIMD vectorization and unique parameter values.
+//' optimised for SIMD vectorisation and unique parameter values.
 //'
 //' @param q vector of (non-negative) quantiles.
 //' @param mu vector of (positive) location parameters.
@@ -227,8 +227,8 @@ NumericVector fdBCPEo(const NumericVector& x,
 //' \eqn{z = \log(x)/\sigma} when \eqn{\nu = 0}, and \eqn{F_T} is the 
 //' distribution function of a specific T distribution.
 //'
-//' This implementation is optimized for cases where tau values are rarely repeated,
-//' using SIMD vectorization and per-element computation without caching.
+//' This implementation is optimised for cases where tau values are rarely repeated,
+//' using SIMD vectorisation and per-element computation without caching.
 //'
 //' @return A numeric vector of probabilities.
 //'
@@ -242,7 +242,7 @@ NumericVector fdBCPEo(const NumericVector& x,
 //'
 //' @note
 //' This implementation is based on the gamlss.dist package pBCPEo function
-//' but optimized for performance with unique parameter values and SIMD vectorization.
+//' but optimised for performance with unique parameter values and SIMD vectorisation.
 //'
 //' @examples
 //' # Basic usage
@@ -287,7 +287,7 @@ NumericVector fpBCPEo(const NumericVector& q,
     if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
   }
 
-  // SIMD-optimized main computation loop without caching
+  // SIMD-optimised main computation loop without caching
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Compute z transformation - equivalent to gamlss.dist logic
@@ -330,7 +330,7 @@ NumericVector fpBCPEo(const NumericVector& q,
 //' Box-Cox Power Exponential Distribution (BCPEo) - Quantile Function
 //'
 //' Quantile function for the Box-Cox Power Exponential distribution with log link for mu,
-//' optimized for SIMD vectorization and unique parameter values.
+//' optimised for SIMD vectorisation and unique parameter values.
 //'
 //' @param p vector of probabilities (must be between 0 and 1).
 //' @param mu vector of (positive) location parameters.
@@ -355,8 +355,8 @@ NumericVector fpBCPEo(const NumericVector& q,
 //' When \eqn{\nu = 0}: \eqn{x = \mu \exp(\sigma z_a)}
 //' When \eqn{\nu \neq 0}: \eqn{x = \mu (\nu\sigma z_a + 1)^{1/\nu}}
 //'
-//' This implementation is optimized for cases where tau values are rarely repeated,
-//' using SIMD vectorization and per-element computation without caching.
+//' This implementation is optimised for cases where tau values are rarely repeated,
+//' using SIMD vectorisation and per-element computation without caching.
 //'
 //' @return A numeric vector of quantiles.
 //'
@@ -370,7 +370,7 @@ NumericVector fpBCPEo(const NumericVector& q,
 //'
 //' @note
 //' This implementation is based on the gamlss.dist package qBCPEo function
-//' but optimized for performance with unique parameter values and SIMD vectorization.
+//' but optimised for performance with unique parameter values and SIMD vectorisation.
 //'
 //' @examples
 //' # Basic usage
@@ -437,7 +437,7 @@ NumericVector fqBCPEo(const NumericVector& p,
     }
   }
 
-  // SIMD-optimized main computation loop without caching
+  // SIMD-optimised main computation loop without caching
   SIMD_HINT
   for (int i = 0; i < n; i++) {
     // Handle edge cases for p=0 and p=1

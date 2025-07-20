@@ -2,17 +2,17 @@
 % Please edit documentation in R/RcppExports.R
 \name{fnormalise}
 \alias{fnormalise}
-\title{Normalize a Numeric Vector to the 0-1 Range}
+\title{Normalise a Numeric Vector to the 0-1 Range}
 \usage{
 fnormalise(x)
 }
 \arguments{
-\item{x}{A numeric vector to be normalized.}
+\item{x}{A numeric vector to be normalised.}
 }
 \value{
 A numeric vector with values scaled between 0 and 1.
 }
 \description{
-This function normalizes a numeric vector so that its values are scaled to lie within the 0 to 1 range.
+This function normalises a numeric vector so that its values are scaled to lie within the 0 to 1 range.
 If all elements in the vector are identical, the function returns a vector of ones.
 }

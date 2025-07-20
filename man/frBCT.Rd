@@ -39,7 +39,7 @@ This function generates random variates from the BCT distribution by:
 
 The BCT distribution is a four-parameter continuous distribution that extends 
 the Box-Cox normal distribution by replacing the normal kernel with a 
-t-distribution kernel. This provides additional flexibility for modeling 
+t-distribution kernel. This provides additional flexibility for modelling 
 heavy-tailed data while maintaining the Box-Cox transformation properties.
 
 Key characteristics:
@@ -80,7 +80,7 @@ Rigby, R.A. and Stasinopoulos, D.M. (2006). Using the Box-Cox t distribution
 in GAMLSS to model skewness and kurtosis. Statistical Modelling, 6(3), 200.
 
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 }
 \seealso{

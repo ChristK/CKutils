@@ -33,7 +33,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 using namespace Rcpp;
 
 
-// SIMD-optimized Beta Negative Binomial density scalar function
+// SIMD-optimised Beta Negative Binomial density scalar function
 double fdBNB_scalar(const int& x,
                       const double& mu = 1.0,
                       const double& sigma = 1.0,
@@ -82,7 +82,7 @@ double fdBNB_scalar(const int& x,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -125,7 +125,7 @@ NumericVector fdBNB(const NumericVector& x,
   return out;
 }
 
-// SIMD-optimized Beta Negative Binomial CDF scalar function
+// SIMD-optimised Beta Negative Binomial CDF scalar function
 double fpBNB_scalar(const int& q,
                       const double& mu = 1.0,
                       const double& sigma = 1.0,
@@ -184,7 +184,7 @@ double fpBNB_scalar(const int& q,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples
@@ -352,7 +352,7 @@ double fqBNB_scalar(const double& p,
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
 //' Chapman and Hall/CRC.
 //'
 //' @examples

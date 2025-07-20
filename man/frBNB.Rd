@@ -33,7 +33,7 @@ This function generates random variates from the BNB distribution by:
 The Beta Negative Binomial distribution is a discrete distribution that 
 extends the negative binomial distribution by allowing for additional 
 overdispersion through a beta-distributed mixing parameter. It's particularly 
-useful for modeling count data with excess variability.
+useful for modelling count data with excess variability.
 
 The probability mass function is:
 \deqn{f(y|\mu,\sigma,\nu) = \frac{\Gamma(y+1/\nu)\mathrm{B}(y+(\mu\nu)/\sigma, 1/\sigma+1/\nu+1)}{\Gamma(y+1)\Gamma(1/\nu)\mathrm{B}((\mu\nu)/\sigma, 1/\sigma+1)}}
@@ -64,7 +64,7 @@ x <- frBNB(10, mu = c(2, 4), sigma = c(1, 1.5), nu = 1)
 }
 \references{
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 }
 \seealso{

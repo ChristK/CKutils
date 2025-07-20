@@ -2,12 +2,12 @@
 % Please edit documentation in R/misc_functions.R
 \name{normalise}
 \alias{normalise}
-\title{Normalize a Vector to the 0-1 Range}
+\title{Normalise a Vector to the 0-1 Range}
 \usage{
 normalise(x, ...)
 }
 \arguments{
-\item{x}{A numeric vector to be normalized.}
+\item{x}{A numeric vector to be normalised.}
 
 \item{...}{Additional arguments (currently unused).}
 }
@@ -15,6 +15,6 @@ normalise(x, ...)
 A numeric vector with values scaled between 0 and 1, or a single value 1 if all elements are identical.
 }
 \description{
-This function normalizes a numeric vector so that its values are scaled to lie within the 0 to 1 range.
+This function normalises a numeric vector so that its values are scaled to lie within the 0 to 1 range.
 If all elements in the vector are identical, the function returns 1.
 }

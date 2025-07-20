@@ -98,7 +98,7 @@ double fdPO_scalar(const int &x, const double &mu = 1.0, const double &sigma = 1
   return fy;
 }
 
-// SIMD optimized ftofydel2 computation
+// SIMD optimised ftofydel2 computation
 double ftofydel2_scalar(const int &y, const double &mu,
                        const double &sigma, const double &nu) {
     if (y <= 0) return 0.0;
@@ -158,7 +158,7 @@ double ftofydel2_scalar(const int &y, const double &mu,
 //' \code{fdDEL} gives the density
 //'
 //' @note
-//' This function is optimized for performance with chunked processing and
+//' This function is optimised for performance with chunked processing and
 //' efficient memory access patterns.
 //'
 //' @references
@@ -166,12 +166,12 @@ double ftofydel2_scalar(const int &y, const double &mu,
 //' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 //' 
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 //' 
 //' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 //' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
 //'
-//' @author Chris Kypridemos (optimized implementation), based on original work by 
+//' @author Chris Kypridemos (optimised implementation), based on original work by 
 //' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 //'
 //' @seealso \code{\link{fpDEL}}, \code{\link{fqDEL}}
@@ -319,7 +319,7 @@ double fpDEL_hlp_fn(const int &q,
 //' The cumulative distribution function is computed as the sum of the probability
 //' mass function from 0 to q. For computational efficiency, this implementation
 //' employs chunked processing with SIMD optimizations when available and is
-//' optimized for scenarios with varying parameter combinations.
+//' optimised for scenarios with varying parameter combinations.
 //' 
 //' When sigma is very small (< 1e-04), the distribution approaches a Poisson
 //' distribution with parameter mu, and the function switches to using the
@@ -334,7 +334,7 @@ double fpDEL_hlp_fn(const int &q,
 //' \code{fpDEL} gives the cumulative distribution function
 //'
 //' @note
-//' This function is optimized for scenarios where parameters vary between
+//' This function is optimised for scenarios where parameters vary between
 //' computations (e.g., random parameters). For applications with repeated
 //' parameter combinations, consider implementing application-specific caching.
 //'
@@ -343,12 +343,12 @@ double fpDEL_hlp_fn(const int &q,
 //' location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 //' 
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-//' Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 //' 
 //' Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 //' scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
 //'
-//' @author Chris Kypridemos (optimized implementation), based on original work by 
+//' @author Chris Kypridemos (optimised implementation), based on original work by 
 //' Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 //'
 //' @seealso \code{\link{fdDEL}}, \code{\link{fqDEL}}
@@ -526,7 +526,7 @@ double fpDEL_scalar(const int &q,
 //' and a shifted negative binomial distribution with parameters related to
 //' \code{sigma} and \code{nu}.
 //'
-//' This implementation uses an optimized binary search algorithm with
+//' This implementation uses an optimised binary search algorithm with
 //' SIMD acceleration where available, and includes intelligent caching
 //' of intermediate CDF calculations for improved performance with repeated
 //' quantile computations.
@@ -637,7 +637,7 @@ NumericVector fqDEL(NumericVector p,
           iterations++;
         }
         
-        // Binary search with optimized termination
+        // Binary search with optimised termination
         while (low < high - 1) {
           int mid = low + (high - low) / 2;
           double cdf_mid = fpDEL_scalar(mid, mu_val, sigma_val, nu_val, true, false);

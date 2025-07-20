@@ -15,7 +15,7 @@ Data must be grouped by person and sorted by year/time.}
 \item{recur}{Logical; if FALSE (non-recursive), continuously increment when previous >= y;
 if TRUE (recursive), increment only when both current >= y AND previous >= y}
 
-\item{y}{The threshold value for triggering incremental carry-forward behavior}
+\item{y}{The threshold value for triggering incremental carry-forward behaviour}
 
 \item{byref}{Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector}
 }

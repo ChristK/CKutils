@@ -30,7 +30,7 @@ Computes the cumulative distribution function (CDF) of the Delaporte distributio
 The cumulative distribution function is computed as the sum of the probability
 mass function from 0 to q. For computational efficiency, this implementation
 employs chunked processing with SIMD optimizations when available and is
-optimized for scenarios with varying parameter combinations.
+optimised for scenarios with varying parameter combinations.
 
 When sigma is very small (< 1e-04), the distribution approaches a Poisson
 distribution with parameter mu, and the function switches to using the
@@ -42,7 +42,7 @@ optimizations including vectorized transformations and SIMD support for
 large datasets with diverse parameter sets.
 }
 \note{
-This function is optimized for scenarios where parameters vary between
+This function is optimised for scenarios where parameters vary between
 computations (e.g., random parameters). For applications with repeated
 parameter combinations, consider implementing application-specific caching.
 }
@@ -65,7 +65,7 @@ Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for
 location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.
 
 Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
-Distributions for modeling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
+Distributions for modelling location, scale, and shape: Using GAMLSS in R, Chapman and Hall/CRC.
 
 Stasinopoulos D. M. Rigby R.A. (2007) Generalized additive models for location 
 scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7, Dec 2007.
@@ -74,6 +74,6 @@ scale and shape (GAMLSS) in R. Journal of Statistical Software, Vol. 23, Issue 7
 \code{\link{fdDEL}}, \code{\link{fqDEL}}
 }
 \author{
-Chris Kypridemos (optimized implementation), based on original work by 
+Chris Kypridemos (optimised implementation), based on original work by 
 Bob Rigby and Mikis Stasinopoulos from gamlss.dist package
 }

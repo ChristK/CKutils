@@ -35,7 +35,7 @@ This function generates random variates from the Zero-Inflated Sichel distributi
 The Zero-Inflated Sichel distribution is a four-parameter discrete distribution 
 that extends the Sichel distribution to handle excess zeros. It's a mixture 
 of a point mass at zero and a standard Sichel distribution, making it 
-particularly useful for modeling count data with structural zeros.
+particularly useful for modelling count data with structural zeros.
 
 The probability mass function is:
 \deqn{f(y|\mu,\sigma,\nu,\tau) = \begin{cases}
@@ -49,7 +49,7 @@ Key characteristics:
   \item Support: {0, 1, 2, ...} (non-negative integers)
   \item Higher proportion of zeros than standard Sichel
   \item Combines flexibility of Sichel with zero-inflation capability
-  \item Useful for modeling count processes with excess zeros
+  \item Useful for modelling count processes with excess zeros
 }
 
 The use of \code{dqrng::dqrunif} provides superior random number generation 
@@ -95,7 +95,7 @@ mean(x[x > 0])  # Mean of non-zero part
 }
 \references{
 Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
 Chapman and Hall/CRC.
 }
 \seealso{
