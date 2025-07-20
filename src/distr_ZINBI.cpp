@@ -1,13 +1,7 @@
 /* CKutils: an R package with some utility functions I use regularly
 Copyright (C) 2025  Chris Kypridemos
 
-CKutils is fre// SIMD-optimized ZINBI CDF scalar function  
-double fpZINBI_scalar(const int& q,
-                      const double& mu,
-                      const double& sigma,
-                      const double& nu,
-                      const bool& lower_tail,
-                      const bool& log_p) {are; you can redistribute it and/or modify
+CKutils is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.

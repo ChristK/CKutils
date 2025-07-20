@@ -866,3 +866,228 @@ frZANBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
     r <- fqZANBI(p, mu = mu, sigma = sigma, nu = nu)
     r
 }
+
+#' Random Generation for Sichel Distribution
+#' 
+#' Generates random deviates from the Sichel distribution using high-quality 
+#' pseudo-random number generation via the dqrng package.
+#' 
+#' @param n Number of observations to generate. If length(n) > 1, the length 
+#'   is taken to be the number required.
+#' @param mu Vector of positive mean parameters. Default is 1.
+#' @param sigma Vector of positive dispersion parameters. Default is 1.
+#' @param nu Vector of shape parameters (real values). Default is -0.5.
+#' 
+#' @details
+#' This function generates random variates from the Sichel distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqSICHEL}
+#' }
+#' 
+#' The Sichel distribution is a three-parameter discrete distribution that 
+#' extends the Poisson-inverse Gaussian distribution. It's particularly useful 
+#' for modeling count data with varying levels of overdispersion and can 
+#' accommodate a wide range of distributional shapes.
+#' 
+#' The probability mass function is:
+#' \deqn{f(y|\mu,\sigma,\nu)= \frac{(\mu/c)^y K_{y+\nu}(\alpha)}{y!(\alpha \sigma)^{y+\nu} K_\nu(\frac{1}{\sigma})}}
+#' for \eqn{y=0,1,2,...}, \eqn{\mu>0}, \eqn{\sigma>0} and \eqn{-\infty<\nu<\infty}
+#' where \eqn{\alpha^2= 1/\sigma^2 +2*\mu/\sigma}, 
+#' \eqn{c=K_{\nu+1}(1/\sigma)/K_{\nu}(1/\sigma)}, and 
+#' \eqn{K_{\lambda}(t)} is the modified Bessel function of the third kind.
+#' 
+#' Key characteristics:
+#' \itemize{
+#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item Mean: mu
+#'   \item Very flexible in modeling different count patterns
+#'   \item Can handle both light and heavy-tailed distributions
+#'   \item Special cases include Poisson-inverse Gaussian when specific parameters
+#' }
+#' 
+#' The use of \code{dqrng::dqrunif} provides superior random number generation 
+#' compared to base R's \code{runif}, with better statistical properties and 
+#' significantly faster generation speeds.
+#' 
+#' @return Vector of random integers from the Sichel distribution.
+#' 
+#' @examples
+#' # Generate 100 random values with default parameters
+#' x <- frSICHEL(100)
+#' table(x)
+#' mean(x)  # Should be approximately mu = 1
+#' 
+#' # Generate with custom parameters
+#' x <- frSICHEL(1000, mu = 5, sigma = 1.5, nu = -0.5)
+#' summary(x)
+#' mean(x)  # Should be approximately 5
+#' 
+#' # Explore different nu values (shape parameter)
+#' x_neg <- frSICHEL(1000, mu = 3, sigma = 1, nu = -1)   # Negative nu
+#' x_zero <- frSICHEL(1000, mu = 3, sigma = 1, nu = 0)   # Zero nu
+#' x_pos <- frSICHEL(1000, mu = 3, sigma = 1, nu = 1)    # Positive nu
+#' 
+#' # Compare variance patterns
+#' var(x_neg)
+#' var(x_zero) 
+#' var(x_pos)
+#' 
+#' # Study effect of sigma on dispersion
+#' x_low_sigma <- frSICHEL(1000, mu = 4, sigma = 0.5, nu = -0.5)
+#' x_high_sigma <- frSICHEL(1000, mu = 4, sigma = 2, nu = -0.5)
+#' 
+#' var(x_low_sigma)   # Lower dispersion
+#' var(x_high_sigma)  # Higher dispersion
+#' 
+#' # Vector of parameters (recycling applies)
+#' x <- frSICHEL(10, mu = c(2, 4), sigma = c(1, 1.5), nu = c(-0.5, 0.5))
+#' 
+#' # Generate data with different distributional shapes
+#' # Heavy-tailed count data
+#' x_heavy <- frSICHEL(500, mu = 5, sigma = 2, nu = -2)
+#' # Light-tailed count data  
+#' x_light <- frSICHEL(500, mu = 5, sigma = 0.8, nu = 1)
+#' 
+#' # Compare tail behavior
+#' quantile(x_heavy, c(0.9, 0.95, 0.99))
+#' quantile(x_light, c(0.9, 0.95, 0.99))
+#' 
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Chapman and Hall/CRC.
+#' 
+#' Stein, G. Z., Zucchini, W. and Juritz, J. M. (1987). Parameter
+#' Estimation of the Sichel Distribution and its Multivariate Extension.
+#' Journal of American Statistical Association, 82, 938-944.
+#' 
+#' @seealso 
+#' \code{\link{fdSICHEL}}, \code{\link{fpSICHEL}}, \code{\link{fqSICHEL}} for 
+#' other Sichel distribution functions.
+#' 
+#' \code{\link{frZISICHEL}} for the zero-inflated version.
+#' 
+#' \code{\link[gamlss.dist]{rSICHEL}} for the original implementation.
+#' 
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#' 
+#' @export
+#' @importFrom dqrng dqrunif
+frSICHEL <- function(n, mu = 1, sigma = 1, nu = -0.5) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqSICHEL(p, mu = mu, sigma = sigma, nu = nu)
+    r
+}
+
+#' Random Generation for Zero-Inflated Sichel Distribution
+#' 
+#' Generates random deviates from the Zero-Inflated Sichel distribution using 
+#' high-quality pseudo-random number generation via the dqrng package.
+#' 
+#' @param n Number of observations to generate. If length(n) > 1, the length 
+#'   is taken to be the number required.
+#' @param mu Vector of positive mean parameters. Default is 1.
+#' @param sigma Vector of positive dispersion parameters. Default is 1.
+#' @param nu Vector of shape parameters (real values). Default is -0.5.
+#' @param tau Vector of zero-inflation probabilities (0 < tau < 1). Default is 0.1.
+#' 
+#' @details
+#' This function generates random variates from the Zero-Inflated Sichel distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqZISICHEL}
+#' }
+#' 
+#' The Zero-Inflated Sichel distribution is a four-parameter discrete distribution 
+#' that extends the Sichel distribution to handle excess zeros. It's a mixture 
+#' of a point mass at zero and a standard Sichel distribution, making it 
+#' particularly useful for modeling count data with structural zeros.
+#' 
+#' The probability mass function is:
+#' \deqn{f(y|\mu,\sigma,\nu,\tau) = \begin{cases}
+#' \tau + (1-\tau) \cdot f_{SICHEL}(0|\mu,\sigma,\nu) & \text{if } y = 0 \\
+#' (1-\tau) \cdot f_{SICHEL}(y|\mu,\sigma,\nu) & \text{if } y > 0
+#' \end{cases}}
+#' where \eqn{f_{SICHEL}} is the Sichel probability mass function.
+#' 
+#' Key characteristics:
+#' \itemize{
+#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item Higher proportion of zeros than standard Sichel
+#'   \item Combines flexibility of Sichel with zero-inflation capability
+#'   \item Useful for modeling count processes with excess zeros
+#' }
+#' 
+#' The use of \code{dqrng::dqrunif} provides superior random number generation 
+#' compared to base R's \code{runif}, with better statistical properties and 
+#' significantly faster generation speeds.
+#' 
+#' @return Vector of random integers from the Zero-Inflated Sichel distribution.
+#' 
+#' @examples
+#' # Generate 100 random values with default parameters
+#' x <- frZISICHEL(100)
+#' table(x)
+#' sum(x == 0) / length(x)  # Proportion of zeros
+#' 
+#' # Generate with custom parameters - moderate zero inflation
+#' x <- frZISICHEL(1000, mu = 5, sigma = 1.5, nu = -0.5, tau = 0.2)
+#' mean(x)  # Mean will be affected by zero inflation
+#' sum(x == 0) / length(x)  # Should be > 0.2 due to natural + inflated zeros
+#' 
+#' # Compare with regular Sichel (no zero inflation)
+#' x_sichel <- frSICHEL(1000, mu = 5, sigma = 1.5, nu = -0.5)
+#' x_zi_sichel <- frZISICHEL(1000, mu = 5, sigma = 1.5, nu = -0.5, tau = 0.3)
+#' 
+#' sum(x_sichel == 0) / length(x_sichel)       # Natural zeros only
+#' sum(x_zi_sichel == 0) / length(x_zi_sichel) # Natural + inflated zeros
+#' 
+#' # Study effect of tau on zero inflation
+#' x_low_tau <- frZISICHEL(1000, mu = 3, sigma = 1, nu = 0, tau = 0.1)
+#' x_high_tau <- frZISICHEL(1000, mu = 3, sigma = 1, nu = 0, tau = 0.4)
+#' 
+#' sum(x_low_tau == 0) / length(x_low_tau)   # Lower zero proportion
+#' sum(x_high_tau == 0) / length(x_high_tau) # Higher zero proportion
+#' 
+#' # Vector of parameters (recycling applies)
+#' x <- frZISICHEL(10, mu = c(2, 4), sigma = 1.5, nu = c(-0.5, 0.5), tau = c(0.1, 0.2))
+#' 
+#' # Model data with high zero inflation and flexible count part
+#' x <- frZISICHEL(1000, mu = 8, sigma = 2, nu = -1, tau = 0.4)
+#' 
+#' # Examine the structure
+#' table(x[x <= 10])  # Focus on lower counts
+#' sum(x == 0) / length(x)  # Zero proportion
+#' mean(x[x > 0])  # Mean of non-zero part
+#' 
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Chapman and Hall/CRC.
+#' 
+#' @seealso 
+#' \code{\link{fdZISICHEL}}, \code{\link{fpZISICHEL}}, \code{\link{fqZISICHEL}} for 
+#' other Zero-Inflated Sichel distribution functions.
+#' 
+#' \code{\link{frSICHEL}} for the standard Sichel distribution.
+#' 
+#' \code{\link[gamlss.dist]{rZISICHEL}} for the original implementation.
+#' 
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#' 
+#' @export
+#' @importFrom dqrng dqrunif
+frZISICHEL <- function(n, mu = 1, sigma = 1, nu = -0.5, tau = 0.1) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqZISICHEL(p, mu = mu, sigma = sigma, nu = nu, tau = tau)
+    r
+}
