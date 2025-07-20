@@ -41,9 +41,9 @@ for \eqn{y = 0, 1, 2, \ldots}, \eqn{\mu > 0}, and \eqn{\sigma > 0}, where
 Key properties:
 \itemize{
   \item \strong{Mean}: \eqn{E[Y] = \mu}
-  \item \strong{Variance}: \eqn{Var[Y] = \mu/\sigma}
-  \item \strong{Overdispersion}: When \eqn{\sigma < 1}, variance > mean
-  \item \strong{Underdispersion}: When \eqn{\sigma > 1}, variance < mean
+  \item \strong{Variance}: \eqn{Var[Y] = \mu \sigma}
+  \item \strong{Overdispersion}: When \eqn{\sigma > 1}, variance > mean
+  \item \strong{Underdispersion}: When \eqn{\sigma < 1}, variance < mean
   \item \strong{Poisson limit}: When \eqn{\sigma = 1}, reduces to Poisson(\eqn{\mu})
 }
 
@@ -56,22 +56,22 @@ significantly faster generation speeds.
 x <- frDPO(100)
 table(x)
 mean(x)  # Should be approximately mu = 1
-var(x)   # Should be approximately mu/sigma = 1
+var(x)   # Should be approximately mu * sigma = 1
 
-# Generate with overdispersion (sigma < 1)
-x_over <- frDPO(1000, mu = 5, sigma = 0.5)
+# Generate with overdispersion (sigma > 1)
+x_over <- frDPO(1000, mu = 5, sigma = 2)
 mean(x_over)  # Should be approximately 5
-var(x_over)   # Should be approximately 10 (5/0.5)
+var(x_over)   # Should be approximately 10 (5 * 2)
 
-# Generate with underdispersion (sigma > 1)
-x_under <- frDPO(1000, mu = 5, sigma = 2)
+# Generate with underdispersion (sigma < 1)
+x_under <- frDPO(1000, mu = 5, sigma = 0.5)
 mean(x_under)  # Should be approximately 5
-var(x_under)   # Should be approximately 2.5 (5/2)
+var(x_under)   # Should be approximately 2.5 (5 * 0.5)
 
 # Compare dispersion patterns
 x_poisson <- rpois(1000, lambda = 5)           # Regular Poisson
-x_dpo_over <- frDPO(1000, mu = 5, sigma = 0.5) # Overdispersed
-x_dpo_under <- frDPO(1000, mu = 5, sigma = 2)  # Underdispersed
+x_dpo_over <- frDPO(1000, mu = 5, sigma = 2)   # Overdispersed
+x_dpo_under <- frDPO(1000, mu = 5, sigma = 0.5)  # Underdispersed
 
 var(x_poisson)    # ≈ 5 (variance = mean)
 var(x_dpo_over)   # > 5 (overdispersed)
