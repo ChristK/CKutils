@@ -10,104 +10,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// my_qMN4
-IntegerVector my_qMN4(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p, const int& n_cpu);
-RcppExport SEXP _CKutils_my_qMN4(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_qMN4(p, mu, sigma, nu, lower_tail, log_p, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_dNBI
-NumericVector my_dNBI(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const bool& log_p, const int& n_cpu);
-RcppExport SEXP _CKutils_my_dNBI(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP log_pSEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_dNBI(x, mu, sigma, log_p, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_pNBI
-NumericVector my_pNBI(const IntegerVector& q, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p, const int& n_cpu);
-RcppExport SEXP _CKutils_my_pNBI(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type q(qSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_pNBI(q, mu, sigma, lower_tail, log_p, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_qNBI
-IntegerVector my_qNBI(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p, const int& n_cpu);
-RcppExport SEXP _CKutils_my_qNBI(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_qNBI(p, mu, sigma, lower_tail, log_p, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_qZANBI
-IntegerVector my_qZANBI(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p, const int& n_cpu);
-RcppExport SEXP _CKutils_my_qZANBI(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP n_cpuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const int& >::type n_cpu(n_cpuSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_qZANBI(p, mu, sigma, nu, lower_tail, log_p, n_cpu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// my_pZANBI_scalar
-double my_pZANBI_scalar(const int& q, const double& mu, const double& sigma, const double& nu, const bool& lower_tail, const bool& log_p, const bool& check);
-RcppExport SEXP _CKutils_my_pZANBI_scalar(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP, SEXP checkSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const int& >::type q(qSEXP);
-    Rcpp::traits::input_parameter< const double& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type check(checkSEXP);
-    rcpp_result_gen = Rcpp::wrap(my_pZANBI_scalar(q, mu, sigma, nu, lower_tail, log_p, check));
-    return rcpp_result_gen;
-END_RCPP
-}
 // my_dSICHEL
 NumericVector my_dSICHEL(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log_, const int& n_cpu);
 RcppExport SEXP _CKutils_my_dSICHEL(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP log_SEXP, SEXP n_cpuSEXP) {
@@ -502,6 +404,246 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fdMN4
+NumericVector fdMN4(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log_);
+RcppExport SEXP _CKutils_fdMN4(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP log_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_(log_SEXP);
+    rcpp_result_gen = Rcpp::wrap(fdMN4(x, mu, sigma, nu, log_));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fpMN4
+NumericVector fpMN4(const IntegerVector& q, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fpMN4(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fpMN4(q, mu, sigma, nu, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fqMN4
+IntegerVector fqMN4(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fqMN4(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fqMN4(p, mu, sigma, nu, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// frMN4
+IntegerVector frMN4(const int& n, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu);
+RcppExport SEXP _CKutils_frMN4(SEXP nSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    rcpp_result_gen = Rcpp::wrap(frMN4(n, mu, sigma, nu));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fdNBI
+NumericVector fdNBI(const NumericVector& x, const NumericVector& mu, const NumericVector& sigma, const bool& log_p);
+RcppExport SEXP _CKutils_fdNBI(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdNBI(x, mu, sigma, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fpNBI
+NumericVector fpNBI(const NumericVector& q, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fpNBI(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fpNBI(q, mu, sigma, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fqNBI
+IntegerVector fqNBI(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fqNBI(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fqNBI(p, mu, sigma, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// frNBI
+IntegerVector frNBI(const int& n, const NumericVector& mu, const NumericVector& sigma);
+RcppExport SEXP _CKutils_frNBI(SEXP nSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(frNBI(n, mu, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fdZANBI
+NumericVector fdZANBI(const NumericVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log);
+RcppExport SEXP _CKutils_fdZANBI(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdZANBI(x, mu, sigma, nu, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fpZANBI
+NumericVector fpZANBI(const NumericVector& q, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fpZANBI(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fpZANBI(q, mu, sigma, nu, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fqZANBI
+IntegerVector fqZANBI(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fqZANBI(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fqZANBI(p, mu, sigma, nu, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// frZANBI
+IntegerVector frZANBI(const int& n, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu);
+RcppExport SEXP _CKutils_frZANBI(SEXP nSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    rcpp_result_gen = Rcpp::wrap(frZANBI(n, mu, sigma, nu));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fdZINBI
+NumericVector fdZINBI(const NumericVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log);
+RcppExport SEXP _CKutils_fdZINBI(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdZINBI(x, mu, sigma, nu, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fpZINBI
+NumericVector fpZINBI(const NumericVector& q, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fpZINBI(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fpZINBI(q, mu, sigma, nu, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fqZINBI
+IntegerVector fqZINBI(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fqZINBI(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fqZINBI(p, mu, sigma, nu, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// frZINBI
+IntegerVector frZINBI(const int& n, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu);
+RcppExport SEXP _CKutils_frZINBI(SEXP nSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
+    rcpp_result_gen = Rcpp::wrap(frZINBI(n, mu, sigma, nu));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fct_to_int_cpp
 IntegerVector fct_to_int_cpp(SEXP x, bool inplace);
 RcppExport SEXP _CKutils_fct_to_int_cpp(SEXP xSEXP, SEXP inplaceSEXP) {
@@ -836,12 +978,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_CKutils_my_qMN4", (DL_FUNC) &_CKutils_my_qMN4, 7},
-    {"_CKutils_my_dNBI", (DL_FUNC) &_CKutils_my_dNBI, 5},
-    {"_CKutils_my_pNBI", (DL_FUNC) &_CKutils_my_pNBI, 6},
-    {"_CKutils_my_qNBI", (DL_FUNC) &_CKutils_my_qNBI, 6},
-    {"_CKutils_my_qZANBI", (DL_FUNC) &_CKutils_my_qZANBI, 7},
-    {"_CKutils_my_pZANBI_scalar", (DL_FUNC) &_CKutils_my_pZANBI_scalar, 7},
     {"_CKutils_my_dSICHEL", (DL_FUNC) &_CKutils_my_dSICHEL, 6},
     {"_CKutils_my_pSICHEL", (DL_FUNC) &_CKutils_my_pSICHEL, 7},
     {"_CKutils_my_qSICHEL", (DL_FUNC) &_CKutils_my_qSICHEL, 7},
@@ -867,6 +1003,22 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fdDPO", (DL_FUNC) &_CKutils_fdDPO, 4},
     {"_CKutils_fpDPO", (DL_FUNC) &_CKutils_fpDPO, 5},
     {"_CKutils_fqDPO", (DL_FUNC) &_CKutils_fqDPO, 6},
+    {"_CKutils_fdMN4", (DL_FUNC) &_CKutils_fdMN4, 5},
+    {"_CKutils_fpMN4", (DL_FUNC) &_CKutils_fpMN4, 6},
+    {"_CKutils_fqMN4", (DL_FUNC) &_CKutils_fqMN4, 6},
+    {"_CKutils_frMN4", (DL_FUNC) &_CKutils_frMN4, 4},
+    {"_CKutils_fdNBI", (DL_FUNC) &_CKutils_fdNBI, 4},
+    {"_CKutils_fpNBI", (DL_FUNC) &_CKutils_fpNBI, 5},
+    {"_CKutils_fqNBI", (DL_FUNC) &_CKutils_fqNBI, 5},
+    {"_CKutils_frNBI", (DL_FUNC) &_CKutils_frNBI, 3},
+    {"_CKutils_fdZANBI", (DL_FUNC) &_CKutils_fdZANBI, 5},
+    {"_CKutils_fpZANBI", (DL_FUNC) &_CKutils_fpZANBI, 6},
+    {"_CKutils_fqZANBI", (DL_FUNC) &_CKutils_fqZANBI, 6},
+    {"_CKutils_frZANBI", (DL_FUNC) &_CKutils_frZANBI, 4},
+    {"_CKutils_fdZINBI", (DL_FUNC) &_CKutils_fdZINBI, 5},
+    {"_CKutils_fpZINBI", (DL_FUNC) &_CKutils_fpZINBI, 6},
+    {"_CKutils_fqZINBI", (DL_FUNC) &_CKutils_fqZINBI, 6},
+    {"_CKutils_frZINBI", (DL_FUNC) &_CKutils_frZINBI, 4},
     {"_CKutils_fct_to_int_cpp", (DL_FUNC) &_CKutils_fct_to_int_cpp, 2},
     {"_CKutils_starts_from_1_cpp", (DL_FUNC) &_CKutils_starts_from_1_cpp, 5},
     {"_CKutils_dtsubset", (DL_FUNC) &_CKutils_dtsubset, 3},

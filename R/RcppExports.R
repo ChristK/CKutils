@@ -2,36 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-my_qMN4 <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE, n_cpu = 1L) {
-    .Call(`_CKutils_my_qMN4`, p, mu, sigma, nu, lower_tail, log_p, n_cpu)
-}
-
-#' @export
-my_dNBI <- function(x, mu, sigma, log_p, n_cpu) {
-    .Call(`_CKutils_my_dNBI`, x, mu, sigma, log_p, n_cpu)
-}
-
-#' @export
-my_pNBI <- function(q, mu, sigma, lower_tail, log_p, n_cpu) {
-    .Call(`_CKutils_my_pNBI`, q, mu, sigma, lower_tail, log_p, n_cpu)
-}
-
-#' @export
-my_qNBI <- function(p, mu, sigma, lower_tail, log_p, n_cpu) {
-    .Call(`_CKutils_my_qNBI`, p, mu, sigma, lower_tail, log_p, n_cpu)
-}
-
-#' @export
-my_qZANBI <- function(p, mu, sigma, nu, lower_tail, log_p, n_cpu) {
-    .Call(`_CKutils_my_qZANBI`, p, mu, sigma, nu, lower_tail, log_p, n_cpu)
-}
-
-#' @export
-my_pZANBI_scalar <- function(q, mu, sigma, nu, lower_tail, log_p, check) {
-    .Call(`_CKutils_my_pZANBI_scalar`, q, mu, sigma, nu, lower_tail, log_p, check)
-}
-
-#' @export
 my_dSICHEL <- function(x, mu, sigma, nu, log_ = FALSE, n_cpu = 1L) {
     .Call(`_CKutils_my_dSICHEL`, x, mu, sigma, nu, log_, n_cpu)
 }
@@ -1092,6 +1062,650 @@ fpDPO <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' @export
 fqDPO <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE, max_value = 0L) {
     .Call(`_CKutils_fqDPO`, p, mu, sigma, lower_tail, log_p, max_value)
+}
+
+#' Multinomial Distribution with 4 Categories - Density Function
+#'
+#' Density function for the multinomial distribution with 4 categories,
+#' optimized for performance with SIMD vectorization and parameter recycling.
+#'
+#' @param x vector of (integer) quantiles. Must be 1, 2, 3, or 4.
+#' @param mu vector of (positive) parameters for category 1.
+#' @param sigma vector of (positive) parameters for category 2.
+#' @param nu vector of (positive) parameters for category 3.
+#' @param log_ logical; if TRUE, densities are returned on the log scale.
+#'
+#' @details
+#' The multinomial distribution with 4 categories (MN4) is a discrete distribution
+#' defined on the integers {1, 2, 3, 4}. The probability mass function is:
+#' \deqn{P(X = k) = \frac{\theta_k}{1 + \mu + \sigma + \nu}}
+#' where \eqn{\theta_1 = \mu}, \eqn{\theta_2 = \sigma}, \eqn{\theta_3 = \nu},
+#' and \eqn{\theta_4 = 1}.
+#'
+#' Parameters are recycled to the length of the longest vector following R's
+#' standard recycling rules.
+#'
+#' @return A numeric vector of densities.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos, D. M. (2005). Generalized additive models
+#' for location, scale and shape. Applied Statistics, 54, 507-554.
+#'
+#' @note
+#' This implementation is based on the gamlss.dist package dMN4 function
+#' but optimized for performance with SIMD vectorization and parameter recycling.
+#'
+#' @examples
+#' # Basic usage
+#' x <- c(1, 2, 3, 4)
+#' mu <- c(1, 1, 1, 1)
+#' sigma <- c(1, 1, 1, 1)
+#' nu <- c(1, 1, 1, 1)
+#' 
+#' # Calculate densities
+#' fdMN4(x, mu, sigma, nu)
+#' 
+#' # Log densities
+#' fdMN4(x, mu, sigma, nu, log_ = TRUE)
+#' 
+#' # Parameter recycling
+#' fdMN4(c(1, 2, 3, 4), mu = 2, sigma = 1, nu = 0.5)
+#'
+#' @seealso \code{\link{fpMN4}}, \code{\link{fqMN4}}
+#' @export
+fdMN4 <- function(x, mu, sigma, nu, log_ = FALSE) {
+    .Call(`_CKutils_fdMN4`, x, mu, sigma, nu, log_)
+}
+
+#' Multinomial Distribution with 4 Categories - Distribution Function
+#'
+#' Distribution function for the multinomial distribution with 4 categories,
+#' optimized for performance with SIMD vectorization and parameter recycling.
+#'
+#' @param q vector of (integer) quantiles. Must be 1, 2, 3, or 4.
+#' @param mu vector of (positive) parameters for category 1.
+#' @param sigma vector of (positive) parameters for category 2.
+#' @param nu vector of (positive) parameters for category 3.
+#' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ q),
+#'        otherwise P(X > q).
+#' @param log_p logical; if TRUE, probabilities are returned on the log scale.
+#'
+#' @details
+#' The cumulative distribution function of the multinomial distribution with
+#' 4 categories is:
+#' \deqn{P(X \leq k) = \frac{\sum_{i=1}^{k} \theta_i}{1 + \mu + \sigma + \nu}}
+#' where \eqn{\theta_1 = \mu}, \eqn{\theta_2 = \sigma}, \eqn{\theta_3 = \nu},
+#' and \eqn{\theta_4 = 1}.
+#'
+#' Parameters are recycled to the length of the longest vector following R's
+#' standard recycling rules.
+#'
+#' @return A numeric vector of probabilities.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos, D. M. (2005). Generalized additive models
+#' for location, scale and shape. Applied Statistics, 54, 507-554.
+#'
+#' @note
+#' This implementation is based on the gamlss.dist package pMN4 function
+#' but optimized for performance with SIMD vectorization and parameter recycling.
+#'
+#' @examples
+#' # Basic usage
+#' q <- c(1, 2, 3, 4)
+#' mu <- c(1, 1, 1, 1)
+#' sigma <- c(1, 1, 1, 1)
+#' nu <- c(1, 1, 1, 1)
+#' 
+#' # Calculate probabilities
+#' fpMN4(q, mu, sigma, nu)
+#' 
+#' # Upper tail probabilities
+#' fpMN4(q, mu, sigma, nu, lower_tail = FALSE)
+#' 
+#' # Log probabilities
+#' fpMN4(q, mu, sigma, nu, log_p = TRUE)
+#' 
+#' # Parameter recycling
+#' fpMN4(c(1, 2, 3, 4), mu = 2, sigma = 1, nu = 0.5)
+#'
+#' @seealso \code{\link{fdMN4}}, \code{\link{fqMN4}}
+#' @export
+fpMN4 <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpMN4`, q, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Multinomial Distribution with 4 Categories - Quantile Function
+#'
+#' Quantile function for the multinomial distribution with 4 categories,
+#' optimized for performance with SIMD vectorization and parameter recycling.
+#'
+#' @param p vector of probabilities (must be between 0 and 1).
+#' @param mu vector of (positive) parameters for category 1.
+#' @param sigma vector of (positive) parameters for category 2.
+#' @param nu vector of (positive) parameters for category 3.
+#' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ q),
+#'        otherwise P(X > q).
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The quantile function returns the smallest integer k such that
+#' \deqn{P(X \leq k) \geq p}
+#' The quantiles are computed by comparing p with the cumulative probabilities
+#' of the multinomial distribution.
+#'
+#' Parameters are recycled to the length of the longest vector following R's
+#' standard recycling rules.
+#'
+#' @return An integer vector of quantiles.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos, D. M. (2005). Generalized additive models
+#' for location, scale and shape. Applied Statistics, 54, 507-554.
+#'
+#' @note
+#' This implementation is based on the gamlss.dist package qMN4 function
+#' but optimized for performance with SIMD vectorization and parameter recycling.
+#'
+#' @examples
+#' # Basic usage
+#' p <- c(0.1, 0.3, 0.6, 0.9)
+#' mu <- c(1, 1, 1, 1)
+#' sigma <- c(1, 1, 1, 1)
+#' nu <- c(1, 1, 1, 1)
+#' 
+#' # Calculate quantiles
+#' fqMN4(p, mu, sigma, nu)
+#' 
+#' # Upper tail quantiles
+#' fqMN4(p, mu, sigma, nu, lower_tail = FALSE)
+#' 
+#' # Log probabilities
+#' fqMN4(log(p), mu, sigma, nu, log_p = TRUE)
+#' 
+#' # Parameter recycling
+#' fqMN4(c(0.1, 0.3, 0.6, 0.9), mu = 2, sigma = 1, nu = 0.5)
+#'
+#' @seealso \code{\link{fdMN4}}, \code{\link{fpMN4}}
+#' @export
+fqMN4 <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqMN4`, p, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Multinomial Distribution with 4 Categories - Random Generation
+#'
+#' Random generation for the multinomial distribution with 4 categories,
+#' optimized for performance with SIMD vectorization and parameter recycling.
+#'
+#' @param n number of random values to generate.
+#' @param mu vector of (positive) parameters for category 1.
+#' @param sigma vector of (positive) parameters for category 2.
+#' @param nu vector of (positive) parameters for category 3.
+#'
+#' @details
+#' Random values are generated using the quantile function method:
+#' generate uniform random variables and apply the quantile function.
+#'
+#' Parameters are recycled to the length n following R's standard recycling rules.
+#'
+#' @return An integer vector of random values.
+#'
+#' @references
+#' Rigby, R. A. and Stasinopoulos, D. M. (2005). Generalized additive models
+#' for location, scale and shape. Applied Statistics, 54, 507-554.
+#'
+#' @note
+#' This implementation is based on the gamlss.dist package rMN4 function
+#' but optimized for performance with SIMD vectorization and parameter recycling.
+#'
+#' @examples
+#' # Basic usage
+#' frMN4(10, mu = 1, sigma = 1, nu = 1)
+#' 
+#' # With different parameters
+#' frMN4(10, mu = 2, sigma = 1, nu = 0.5)
+#' 
+#' # Parameter recycling
+#' frMN4(10, mu = c(1, 2), sigma = c(1, 0.5), nu = c(1, 2))
+#'
+#' @seealso \code{\link{fdMN4}}, \code{\link{fpMN4}}, \code{\link{fqMN4}}
+#' @export
+frMN4 <- function(n, mu, sigma, nu) {
+    .Call(`_CKutils_frMN4`, n, mu, sigma, nu)
+}
+
+#' Negative Binomial Type I Distribution Density
+#'
+#' Probability density function for the Negative Binomial type I (NBI) distribution
+#' with parameters mu (mean) and sigma (dispersion).
+#'
+#' @param x vector of (non-negative integer) quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The probability mass function of the NBI distribution is:
+#' \deqn{f(y|\mu,\sigma) = \frac{\Gamma(y+1/\sigma)}{\Gamma(y+1)\Gamma(1/\sigma)} \left(\frac{1}{1+\mu\sigma}\right)^{1/\sigma} \left(\frac{\mu\sigma}{1+\mu\sigma}\right)^y}
+#' for \eqn{y = 0, 1, 2, \ldots}, \eqn{\mu > 0}, and \eqn{\sigma > 0}.
+#'
+#' For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
+#'
+#' @return A numeric vector of density values.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fdNBI(c(0,1,2,3), mu=2, sigma=1)
+#' 
+#' # Vector inputs with recycling
+#' fdNBI(0:5, mu=c(1,2), sigma=0.5)
+#'
+#' @export
+fdNBI <- function(x, mu, sigma, log_p = FALSE) {
+    .Call(`_CKutils_fdNBI`, x, mu, sigma, log_p)
+}
+
+#' Negative Binomial Type I Distribution Cumulative Distribution Function
+#'
+#' Cumulative distribution function for the Negative Binomial type I (NBI) distribution
+#' with parameters mu (mean) and sigma (dispersion).
+#'
+#' @param q vector of quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#'   otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The cumulative distribution function of the NBI distribution is:
+#' \deqn{F(y|\mu,\sigma) = \sum_{i=0}^{y} f(i|\mu,\sigma)}
+#' where \eqn{f(i|\mu,\sigma)} is the probability mass function.
+#'
+#' For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
+#'
+#' @return A numeric vector of cumulative probabilities.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fpNBI(c(0,1,2,3), mu=2, sigma=1)
+#' 
+#' # Vector inputs with recycling
+#' fpNBI(0:5, mu=c(1,2), sigma=0.5)
+#'
+#' @export
+fpNBI <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpNBI`, q, mu, sigma, lower_tail, log_p)
+}
+
+#' Negative Binomial Type I Distribution Quantile Function
+#'
+#' Quantile function for the Negative Binomial type I (NBI) distribution
+#' with parameters mu (mean) and sigma (dispersion).
+#'
+#' @param p vector of probabilities.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#'   otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The quantile function returns the smallest integer \eqn{x} such that
+#' \eqn{F(x) \geq p}, where \eqn{F} is the cumulative distribution function.
+#'
+#' For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
+#'
+#' @return A numeric vector of quantiles.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fqNBI(c(0.1, 0.5, 0.9), mu=2, sigma=1)
+#' 
+#' # Vector inputs with recycling
+#' fqNBI(c(0.25, 0.5, 0.75), mu=c(1,2), sigma=0.5)
+#'
+#' @export
+fqNBI <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqNBI`, p, mu, sigma, lower_tail, log_p)
+}
+
+#' Negative Binomial Type I Distribution Random Generation
+#'
+#' Random generation for the Negative Binomial type I (NBI) distribution
+#' with parameters mu (mean) and sigma (dispersion).
+#'
+#' @param n number of observations.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#'
+#' @details
+#' Random variates are generated using the negative binomial distribution
+#' with size parameter \eqn{1/\sigma} and mean parameter \eqn{\mu}.
+#'
+#' For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
+#'
+#' @return A numeric vector of random variates.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Generate random variates
+#' frNBI(10, mu=2, sigma=1)
+#' 
+#' # Vector inputs with recycling
+#' frNBI(5, mu=c(1,2), sigma=0.5)
+#'
+#' @export
+frNBI <- function(n, mu, sigma) {
+    .Call(`_CKutils_frNBI`, n, mu, sigma)
+}
+
+#' Zero-Altered Negative Binomial Type I Distribution Density
+#'
+#' Probability density function for the Zero-Altered Negative Binomial type I (ZANBI) 
+#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
+#'
+#' @param x vector of (non-negative integer) quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of zero-alteration probabilities (0 < nu < 1).
+#' @param log logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The Zero-Altered NBI distribution is a modification of the standard NBI distribution
+#' where the probability at zero is altered. The probability mass function is:
+#' \deqn{P(Y = 0) = \nu}
+#' \deqn{P(Y = y) = (1-\nu) \frac{f_{NBI}(y|\mu,\sigma)}{1 - f_{NBI}(0|\mu,\sigma)} \quad \text{for } y > 0}
+#' where \eqn{f_{NBI}} is the NBI probability mass function.
+#'
+#' @return A numeric vector of density values.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fdZANBI(c(0,1,2,3), mu=2, sigma=1, nu=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fdZANBI(0:5, mu=c(1,2), sigma=0.5, nu=0.1)
+#'
+#' @export
+fdZANBI <- function(x, mu, sigma, nu, log = FALSE) {
+    .Call(`_CKutils_fdZANBI`, x, mu, sigma, nu, log)
+}
+
+#' Zero-Altered Negative Binomial Type I Distribution CDF
+#'
+#' Cumulative distribution function for the Zero-Altered Negative Binomial type I (ZANBI)
+#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
+#'
+#' @param q vector of quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of zero-alteration probabilities (0 < nu < 1).
+#' @param lower.tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#'   otherwise, P[X > x].
+#' @param log.p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The cumulative distribution function for the Zero-Altered NBI distribution is:
+#' \deqn{F(0) = \nu}
+#' \deqn{F(q) = \nu + (1-\nu) \frac{F_{NBI}(q|\mu,\sigma) - F_{NBI}(0|\mu,\sigma)}{1 - F_{NBI}(0|\mu,\sigma)} \quad \text{for } q > 0}
+#' where \eqn{F_{NBI}} is the NBI cumulative distribution function.
+#'
+#' @return A numeric vector of cumulative probabilities.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fpZANBI(c(0,1,2,3), mu=2, sigma=1, nu=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fpZANBI(0:5, mu=c(1,2), sigma=0.5, nu=0.1)
+#'
+#' @export
+fpZANBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpZANBI`, q, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Zero-Altered Negative Binomial Type I Distribution Quantile Function
+#'
+#' Quantile function for the Zero-Altered Negative Binomial type I (ZANBI)
+#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
+#'
+#' @param p vector of probabilities.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of zero-alteration probabilities (0 < nu < 1).
+#' @param lower.tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#'   otherwise, P[X > x].
+#' @param log.p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The quantile function returns the smallest integer \eqn{x} such that
+#' \eqn{F(x) \geq p}, where \eqn{F} is the ZANBI cumulative distribution function.
+#'
+#' @return A numeric vector of quantiles.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fqZANBI(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fqZANBI(c(0.25, 0.5, 0.75), mu=c(1,2), sigma=0.5, nu=0.1)
+#'
+#' @export
+fqZANBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqZANBI`, p, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Zero-Altered Negative Binomial Type I Distribution Random Generation
+#'
+#' Random generation for the Zero-Altered Negative Binomial type I (ZANBI)
+#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
+#'
+#' @param n number of observations.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of zero-alteration probabilities (0 < nu < 1).
+#'
+#' @details
+#' Random variates are generated using a rejection approach: with probability \eqn{\nu}
+#' the value is 0, and with probability \eqn{1-\nu} the value is drawn from the
+#' standard NBI distribution truncated at zero (i.e., excluding zero).
+#'
+#' @return A numeric vector of random variates.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Generate random variates
+#' frZANBI(10, mu=2, sigma=1, nu=0.1)
+#' 
+#' # Vector inputs with recycling
+#' frZANBI(5, mu=c(1,2), sigma=0.5, nu=0.1)
+#'
+#' @export
+frZANBI <- function(n, mu, sigma, nu) {
+    .Call(`_CKutils_frZANBI`, n, mu, sigma, nu)
+}
+
+#' Zero-Inflated Negative Binomial Type I Distribution Density
+#'
+#' Probability density function for the Zero-Inflated Negative Binomial type I (ZINBI) 
+#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
+#'
+#' @param x vector of (non-negative integer) quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of zero-inflation probabilities (0 < nu < 1).
+#' @param log logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The Zero-Inflated NBI distribution is a mixture of a degenerate distribution
+#' at zero and a standard NBI distribution. The probability mass function is:
+#' \deqn{P(Y = 0) = \nu + (1-\nu) f_{NBI}(0|\mu,\sigma)}
+#' \deqn{P(Y = y) = (1-\nu) f_{NBI}(y|\mu,\sigma) \quad \text{for } y > 0}
+#' where \eqn{f_{NBI}} is the NBI probability mass function.
+#'
+#' @return A numeric vector of density values.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fdZINBI(c(0,1,2,3), mu=2, sigma=1, nu=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fdZINBI(0:5, mu=c(1,2), sigma=0.5, nu=0.1)
+#'
+#' @export
+fdZINBI <- function(x, mu, sigma, nu, log = FALSE) {
+    .Call(`_CKutils_fdZINBI`, x, mu, sigma, nu, log)
+}
+
+#' Zero-Inflated Negative Binomial Type I Distribution CDF
+#'
+#' Cumulative distribution function for the Zero-Inflated Negative Binomial type I (ZINBI)
+#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
+#'
+#' @param q vector of quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of zero-inflation probabilities (0 < nu < 1).
+#' @param lower.tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#'   otherwise, P[X > x].
+#' @param log.p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The cumulative distribution function for the Zero-Inflated NBI distribution is:
+#' \deqn{F(q) = \nu + (1-\nu) F_{NBI}(q|\mu,\sigma)}
+#' where \eqn{F_{NBI}} is the NBI cumulative distribution function.
+#'
+#' @return A numeric vector of cumulative probabilities.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fpZINBI(c(0,1,2,3), mu=2, sigma=1, nu=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fpZINBI(0:5, mu=c(1,2), sigma=0.5, nu=0.1)
+#'
+#' @export
+fpZINBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpZINBI`, q, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Zero-Inflated Negative Binomial Type I Distribution Quantile Function
+#'
+#' Quantile function for the Zero-Inflated Negative Binomial type I (ZINBI)
+#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
+#'
+#' @param p vector of probabilities.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of zero-inflation probabilities (0 < nu < 1).
+#' @param lower.tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#'   otherwise, P[X > x].
+#' @param log.p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The quantile function returns the smallest integer \eqn{x} such that
+#' \eqn{F(x) \geq p}, where \eqn{F} is the ZINBI cumulative distribution function.
+#'
+#' @return A numeric vector of quantiles.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fqZINBI(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fqZINBI(c(0.25, 0.5, 0.75), mu=c(1,2), sigma=0.5, nu=0.1)
+#'
+#' @export
+fqZINBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqZINBI`, p, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Zero-Inflated Negative Binomial Type I Distribution Random Generation
+#'
+#' Random generation for the Zero-Inflated Negative Binomial type I (ZINBI)
+#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
+#'
+#' @param n number of observations.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of zero-inflation probabilities (0 < nu < 1).
+#'
+#' @details
+#' Random variates are generated using a mixture approach: with probability \eqn{\nu}
+#' the value is 0, and with probability \eqn{1-\nu} the value is drawn from the
+#' standard NBI distribution.
+#'
+#' @return A numeric vector of random variates.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Generate random variates
+#' frZINBI(10, mu=2, sigma=1, nu=0.1)
+#' 
+#' # Vector inputs with recycling
+#' frZINBI(5, mu=c(1,2), sigma=0.5, nu=0.1)
+#'
+#' @export
+frZINBI <- function(n, mu, sigma, nu) {
+    .Call(`_CKutils_frZINBI`, n, mu, sigma, nu)
 }
 
 #' Convert Factor to Integer (C++ Version)

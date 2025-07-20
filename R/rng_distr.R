@@ -446,9 +446,9 @@ frZABNB <- function(n, mu = 1, sigma = 1, nu = 1, tau = 0.1) {
 #' Key properties:
 #' \itemize{
 #'   \item \strong{Mean}: \eqn{E[Y] = \mu}
-#'   \item \strong{Variance}: \eqn{Var[Y] = \mu/\sigma}
-#'   \item \strong{Overdispersion}: When \eqn{\sigma < 1}, variance > mean
-#'   \item \strong{Underdispersion}: When \eqn{\sigma > 1}, variance < mean
+#'   \item \strong{Variance}: \eqn{Var[Y] = \mu \sigma}
+#'   \item \strong{Overdispersion}: When \eqn{\sigma > 1}, variance > mean
+#'   \item \strong{Underdispersion}: When \eqn{\sigma < 1}, variance < mean
 #'   \item \strong{Poisson limit}: When \eqn{\sigma = 1}, reduces to Poisson(\eqn{\mu})
 #' }
 #' 
@@ -463,22 +463,22 @@ frZABNB <- function(n, mu = 1, sigma = 1, nu = 1, tau = 0.1) {
 #' x <- frDPO(100)
 #' table(x)
 #' mean(x)  # Should be approximately mu = 1
-#' var(x)   # Should be approximately mu/sigma = 1
+#' var(x)   # Should be approximately mu * sigma = 1
 #' 
-#' # Generate with overdispersion (sigma < 1)
-#' x_over <- frDPO(1000, mu = 5, sigma = 0.5)
+#' # Generate with overdispersion (sigma > 1)
+#' x_over <- frDPO(1000, mu = 5, sigma = 2)
 #' mean(x_over)  # Should be approximately 5
-#' var(x_over)   # Should be approximately 10 (5/0.5)
+#' var(x_over)   # Should be approximately 10 (5 * 2)
 #' 
-#' # Generate with underdispersion (sigma > 1)
-#' x_under <- frDPO(1000, mu = 5, sigma = 2)
+#' # Generate with underdispersion (sigma < 1)
+#' x_under <- frDPO(1000, mu = 5, sigma = 0.5)
 #' mean(x_under)  # Should be approximately 5
-#' var(x_under)   # Should be approximately 2.5 (5/2)
+#' var(x_under)   # Should be approximately 2.5 (5 * 0.5)
 #' 
 #' # Compare dispersion patterns
 #' x_poisson <- rpois(1000, lambda = 5)           # Regular Poisson
-#' x_dpo_over <- frDPO(1000, mu = 5, sigma = 0.5) # Overdispersed
-#' x_dpo_under <- frDPO(1000, mu = 5, sigma = 2)  # Underdispersed
+#' x_dpo_over <- frDPO(1000, mu = 5, sigma = 2)   # Overdispersed
+#' x_dpo_under <- frDPO(1000, mu = 5, sigma = 0.5)  # Underdispersed
 #' 
 #' var(x_poisson)    # ≈ 5 (variance = mean)
 #' var(x_dpo_over)   # > 5 (overdispersed)
@@ -629,5 +629,240 @@ frDEL <- function(n, mu = 1, sigma = 1, nu = 0.5) {
     n <- ceiling(n)
     p <- dqrng::dqrunif(n)
     r <- fqDEL(p, mu = mu, sigma = sigma, nu = nu)
+    r
+}
+
+#' Random Generation for Negative Binomial Type I (NBI) Distribution
+#' 
+#' Generates random deviates from the Negative Binomial type I distribution 
+#' using high-quality pseudo-random number generation via the dqrng package.
+#' 
+#' @param n Number of observations to generate. If length(n) > 1, the length 
+#'   is taken to be the number required.
+#' @param mu Vector of positive mean parameters. Default is 1.
+#' @param sigma Vector of positive dispersion parameters. Default is 1. For 
+#'   sigma < 0.0001, the distribution reduces to Poisson.
+#' 
+#' @details
+#' This function generates random variates from the NBI distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqNBI}
+#' }
+#' 
+#' The NBI distribution is a two-parameter discrete distribution that models 
+#' count data with overdispersion. It's parameterized by the mean (mu) and 
+#' dispersion (sigma) parameters.
+#' 
+#' Key characteristics:
+#' \itemize{
+#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item Mean: mu
+#'   \item Variance: mu + sigma * mu^2
+#'   \item For sigma → 0, reduces to Poisson distribution
+#' }
+#' 
+#' For very small sigma values (< 0.0001), the function automatically switches 
+#' to Poisson random generation for computational efficiency and numerical 
+#' stability.
+#' 
+#' @return Vector of random deviates from the NBI distribution.
+#' 
+#' @examples
+#' # Generate 100 random values with default parameters
+#' x <- frNBI(100)
+#' hist(x, main = "NBI Random Variates")
+#' 
+#' # Generate with custom parameters
+#' x <- frNBI(1000, mu = 5, sigma = 0.5)
+#' summary(x)
+#' 
+#' # Vector of parameters (recycling applies)
+#' x <- frNBI(10, mu = c(1, 2, 3), sigma = 0.8)
+#' 
+#' # Compare with Poisson when sigma is very small
+#' x_nbi <- frNBI(500, mu = 3, sigma = 1e-6)
+#' x_pois <- rpois(500, lambda = 3)
+#' # Should be very similar
+#' 
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Chapman and Hall/CRC.
+#' 
+#' @seealso 
+#' \code{\link{fdNBI}}, \code{\link{fpNBI}}, \code{\link{fqNBI}} for 
+#' other NBI distribution functions.
+#' 
+#' \code{\link{frZINBI}} for the zero-inflated version.
+#' 
+#' \code{\link{frZANBI}} for the zero-altered version.
+#' 
+#' \code{\link[gamlss.dist]{rNBI}} for the original implementation.
+#' 
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#' 
+#' @export
+#' @importFrom dqrng dqrunif
+frNBI <- function(n, mu = 1, sigma = 1) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqNBI(p, mu = mu, sigma = sigma)
+    r
+}
+
+#' Random Generation for Zero-Inflated Negative Binomial Type I (ZINBI) Distribution
+#' 
+#' Generates random deviates from the Zero-Inflated Negative Binomial type I 
+#' distribution using high-quality pseudo-random number generation via the dqrng package.
+#' 
+#' @param n Number of observations to generate. If length(n) > 1, the length 
+#'   is taken to be the number required.
+#' @param mu Vector of positive mean parameters. Default is 1.
+#' @param sigma Vector of positive dispersion parameters. Default is 1.
+#' @param nu Vector of zero-inflation probabilities (0 < nu < 1). Default is 0.1.
+#' 
+#' @details
+#' This function generates random variates from the ZINBI distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqZINBI}
+#' }
+#' 
+#' The ZINBI distribution is a three-parameter discrete distribution that models 
+#' count data with excess zeros. It's a mixture of a point mass at zero and a 
+#' standard NBI distribution.
+#' 
+#' Key characteristics:
+#' \itemize{
+#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item P(X = 0) = nu + (1-nu) * P_NBI(0)
+#'   \item P(X = k) = (1-nu) * P_NBI(k) for k > 0
+#'   \item Higher proportion of zeros than standard NBI
+#' }
+#' 
+#' @return Vector of random deviates from the ZINBI distribution.
+#' 
+#' @examples
+#' # Generate 100 random values with default parameters
+#' x <- frZINBI(100)
+#' hist(x, main = "ZINBI Random Variates")
+#' 
+#' # Generate with custom parameters
+#' x <- frZINBI(1000, mu = 5, sigma = 0.5, nu = 0.2)
+#' summary(x)
+#' 
+#' # Compare proportion of zeros with regular NBI
+#' x_nbi <- frNBI(1000, mu = 2, sigma = 1)
+#' x_zinbi <- frZINBI(1000, mu = 2, sigma = 1, nu = 0.3)
+#' mean(x_nbi == 0)    # Proportion of zeros in NBI
+#' mean(x_zinbi == 0)  # Should be higher in ZINBI
+#' 
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Chapman and Hall/CRC.
+#' 
+#' @seealso 
+#' \code{\link{fdZINBI}}, \code{\link{fpZINBI}}, \code{\link{fqZINBI}} for 
+#' other ZINBI distribution functions.
+#' 
+#' \code{\link{frNBI}} for the standard NBI distribution.
+#' 
+#' \code{\link{frZANBI}} for the zero-altered version.
+#' 
+#' \code{\link[gamlss.dist]{rZINBI}} for the original implementation.
+#' 
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#' 
+#' @export
+#' @importFrom dqrng dqrunif
+frZINBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqZINBI(p, mu = mu, sigma = sigma, nu = nu)
+    r
+}
+
+#' Random Generation for Zero-Altered Negative Binomial Type I (ZANBI) Distribution
+#' 
+#' Generates random deviates from the Zero-Altered Negative Binomial type I 
+#' distribution using high-quality pseudo-random number generation via the dqrng package.
+#' 
+#' @param n Number of observations to generate. If length(n) > 1, the length 
+#'   is taken to be the number required.
+#' @param mu Vector of positive mean parameters. Default is 1.
+#' @param sigma Vector of positive dispersion parameters. Default is 1.
+#' @param nu Vector of zero-alteration probabilities (0 < nu < 1). Default is 0.1.
+#' 
+#' @details
+#' This function generates random variates from the ZANBI distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqZANBI}
+#' }
+#' 
+#' The ZANBI distribution is a three-parameter discrete distribution that models 
+#' count data where the probability at zero is altered. Unlike zero-inflation, 
+#' zero-alteration modifies the probability mass at zero while keeping the 
+#' remaining distribution proportional to the original.
+#' 
+#' Key characteristics:
+#' \itemize{
+#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item P(X = 0) = nu
+#'   \item P(X = k) = (1-nu) * P_NBI(k) / (1 - P_NBI(0)) for k > 0
+#'   \item Probability at zero is directly controlled by nu
+#' }
+#' 
+#' @return Vector of random deviates from the ZANBI distribution.
+#' 
+#' @examples
+#' # Generate 100 random values with default parameters
+#' x <- frZANBI(100)
+#' hist(x, main = "ZANBI Random Variates")
+#' 
+#' # Generate with custom parameters
+#' x <- frZANBI(1000, mu = 5, sigma = 0.5, nu = 0.2)
+#' summary(x)
+#' 
+#' # Compare with ZINBI and regular NBI
+#' x_nbi <- frNBI(1000, mu = 2, sigma = 1)
+#' x_zinbi <- frZINBI(1000, mu = 2, sigma = 1, nu = 0.3)
+#' x_zanbi <- frZANBI(1000, mu = 2, sigma = 1, nu = 0.3)
+#' c(mean(x_nbi == 0), mean(x_zinbi == 0), mean(x_zanbi == 0))
+#' 
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R. 
+#' Chapman and Hall/CRC.
+#' 
+#' @seealso 
+#' \code{\link{fdZANBI}}, \code{\link{fpZANBI}}, \code{\link{fqZANBI}} for 
+#' other ZANBI distribution functions.
+#' 
+#' \code{\link{frNBI}} for the standard NBI distribution.
+#' 
+#' \code{\link{frZINBI}} for the zero-inflated version.
+#' 
+#' \code{\link[gamlss.dist]{rZANBI}} for the original implementation.
+#' 
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#' 
+#' @export
+#' @importFrom dqrng dqrunif
+frZANBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqZANBI(p, mu = mu, sigma = sigma, nu = nu)
     r
 }
