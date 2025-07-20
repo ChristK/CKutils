@@ -19,6 +19,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // [[Rcpp::plugins(cpp17)]]
 #include <Rcpp.h>
 #include <dqrng.h>
+#include <random>
 
 using namespace Rcpp;
 
@@ -37,8 +38,9 @@ inline double fscramble_hlp(const double x, const double jump) {
   const double safe_lower = (lower > 0.0) ? lower : 0.0001;
   const double safe_upper = (upper < 1.0) ? upper : 0.9999;
   
-  // Generate random value in the safe range
-  const double out = dqrng::dqrunif(1, safe_lower, safe_upper)[0];
+  // Generate random value in the safe range using more efficient accessor
+  dqrng::random_64bit_accessor rng;
+  const double out = rng.variate<std::uniform_real_distribution<double>>(safe_lower, safe_upper);
   
   // Additional safety check (should be redundant with clamped bounds)
   return (out <= 0.0 || out >= 1.0) ? x : out;
@@ -128,7 +130,9 @@ SEXP fscramble_trajectories(NumericVector& x, const LogicalVector& pid,
   if (n == 0) return NumericVector(0);
   
   // Pre-generate all random jumps for efficiency
-  const NumericVector jump = dqrng::dqrexp(n, 50.0 / jumpiness);
+  dqrng::random_64bit_accessor rng;
+  NumericVector jump(n);
+  rng.generate<std::exponential_distribution<double>>(jump.begin(), jump.end(), 50.0 / jumpiness);
   
   if (inplace) {
     // In-place modification - more memory efficient
