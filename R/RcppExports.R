@@ -535,78 +535,6 @@ fqBNB <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqBNB`, p, mu, sigma, nu, lower_tail, log_p)
 }
 
-#' Zero Inflated Beta Negative Binomial Quantile Function
-#'
-#' Quantile function for the Zero Inflated Beta Negative Binomial (ZIBNB) distribution
-#' with parameters mu (mean), sigma (dispersion), nu (shape), and tau (zero inflation).
-#'
-#' @param p vector of probabilities.
-#' @param mu vector of positive means.
-#' @param sigma vector of positive dispersion parameters.
-#' @param nu vector of positive shape parameters.
-#' @param tau vector of zero inflation probabilities (0 < tau < 1).
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x].
-#' @param log_p logical; if TRUE, probabilities p are given as log(p).
-#'
-#' @details
-#' The zero inflated beta negative binomial distribution allows for excess zeros
-#' beyond what the BNB distribution would predict.
-#'
-#' @return An integer vector of quantiles.
-#' 
-#' @references
-#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
-#' Chapman and Hall/CRC.
-#'
-#' @examples
-#' # Single values
-#' fqZIBNB(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=1, tau=0.1)
-#' 
-#' # Vector inputs with recycling
-#' fqZIBNB(c(0.25, 0.75), mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
-#'
-#' @export
-fqZIBNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
-    .Call(`_CKutils_fqZIBNB`, p, mu, sigma, nu, tau, lower_tail, log_p)
-}
-
-#' Zero Adjusted Beta Negative Binomial Quantile Function
-#'
-#' Quantile function for the Zero Adjusted (Hurdle) Beta Negative Binomial (ZABNB) distribution
-#' with parameters mu (mean), sigma (dispersion), nu (shape), and tau (hurdle probability).
-#'
-#' @param p vector of probabilities.
-#' @param mu vector of positive means.
-#' @param sigma vector of positive dispersion parameters.
-#' @param nu vector of positive shape parameters.
-#' @param tau vector of hurdle probabilities (0 < tau < 1).
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x].
-#' @param log_p logical; if TRUE, probabilities p are given as log(p).
-#'
-#' @details
-#' The zero adjusted (hurdle) beta negative binomial distribution has two parts:
-#' a point mass at zero and a truncated BNB distribution for positive values.
-#'
-#' @return An integer vector of quantiles.
-#' 
-#' @references
-#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
-#' Chapman and Hall/CRC.
-#'
-#' @examples
-#' # Single values
-#' fqZABNB(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=1, tau=0.1)
-#' 
-#' # Vector inputs with recycling
-#' fqZABNB(c(0.25, 0.75), mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
-#'
-#' @export
-fqZABNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
-    .Call(`_CKutils_fqZABNB`, p, mu, sigma, nu, tau, lower_tail, log_p)
-}
-
 #' The Delaporte Distribution - Density Function
 #'
 #' Density function for the Delaporte distribution with parameters mu, sigma and nu.
@@ -1511,25 +1439,24 @@ fqSICHEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqSICHEL`, p, mu, sigma, nu, lower_tail, log_p)
 }
 
-#' Zero-Inflated Sichel Distribution Quantile Function
+#' Zero Adjusted Beta Negative Binomial Quantile Function
 #'
-#' Quantile function for the zero-inflated Sichel distribution with parameters 
-#' mu (mean), sigma (dispersion), nu (shape), and tau (zero-inflation).
+#' Quantile function for the Zero Adjusted (Hurdle) Beta Negative Binomial (ZABNB) distribution
+#' with parameters mu (mean), sigma (dispersion), nu (shape), and tau (hurdle probability).
 #'
 #' @param p vector of probabilities.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
-#' @param nu vector of shape parameters (real values).
-#' @param tau vector of zero-inflation parameters (0 < tau < 1).
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
-#'   otherwise, P[X > x].
+#' @param nu vector of positive shape parameters.
+#' @param tau vector of hurdle probabilities (0 < tau < 1).
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x].
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
 #' @details
-#' The zero-inflated Sichel distribution is a mixture of a point mass at zero 
-#' and a (truncated at zero) Sichel distribution.
+#' The zero adjusted (hurdle) beta negative binomial distribution has two parts:
+#' a point mass at zero and a truncated BNB distribution for positive values.
 #'
-#' @return A numeric vector of quantiles.
+#' @return An integer vector of quantiles.
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -1537,46 +1464,15 @@ fqSICHEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' Chapman and Hall/CRC.
 #'
 #' @examples
-#' # Vector inputs with recycling
-#' fqZISICHEL(c(0.25, 0.75), mu=c(1,2), sigma=1, nu=-0.5, tau=0.1)
-#'
-#' @export
-fqZISICHEL <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
-    .Call(`_CKutils_fqZISICHEL`, p, mu, sigma, nu, tau, lower_tail, log_p)
-}
-
-#' Zero-Inflated Sichel Distribution Cumulative Distribution Function
-#'
-#' Distribution function for the zero-inflated Sichel distribution with parameters 
-#' mu (mean), sigma (dispersion), nu (shape), and tau (zero-inflation).
-#'
-#' @param q vector of quantiles.
-#' @param mu vector of positive means.
-#' @param sigma vector of positive dispersion parameters.
-#' @param nu vector of shape parameters (real values).
-#' @param tau vector of zero-inflation parameters (0 < tau < 1).
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
-#'   otherwise, P[X > x].
-#' @param log_p logical; if TRUE, probabilities p are given as log(p).
-#'
-#' @details
-#' The zero-inflated Sichel distribution is a mixture of a point mass at zero 
-#' and a (truncated at zero) Sichel distribution.
-#'
-#' @return A numeric vector of probabilities.
+#' # Single values
+#' fqZABNB(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=1, tau=0.1)
 #' 
-#' @references
-#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
-#' Chapman and Hall/CRC.
-#'
-#' @examples
 #' # Vector inputs with recycling
-#' fpZISICHEL(0:5, mu=c(1,2), sigma=1, nu=-0.5, tau=0.1)
+#' fqZABNB(c(0.25, 0.75), mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
 #'
 #' @export
-fpZISICHEL <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
-    .Call(`_CKutils_fpZISICHEL`, q, mu, sigma, nu, tau, lower_tail, log_p)
+fqZABNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqZABNB`, p, mu, sigma, nu, tau, lower_tail, log_p)
 }
 
 #' Zero-Altered Negative Binomial Type I Distribution Density
@@ -1724,6 +1620,42 @@ frZANBI <- function(n, mu, sigma, nu) {
     .Call(`_CKutils_frZANBI`, n, mu, sigma, nu)
 }
 
+#' Zero Inflated Beta Negative Binomial Quantile Function
+#'
+#' Quantile function for the Zero Inflated Beta Negative Binomial (ZIBNB) distribution
+#' with parameters mu (mean), sigma (dispersion), nu (shape), and tau (zero inflation).
+#'
+#' @param p vector of probabilities.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of positive shape parameters.
+#' @param tau vector of zero inflation probabilities (0 < tau < 1).
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The zero inflated beta negative binomial distribution allows for excess zeros
+#' beyond what the BNB distribution would predict.
+#'
+#' @return An integer vector of quantiles.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fqZIBNB(c(0.1, 0.5, 0.9), mu=2, sigma=1, nu=1, tau=0.1)
+#' 
+#' # Vector inputs with recycling
+#' fqZIBNB(c(0.25, 0.75), mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+#'
+#' @export
+fqZIBNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqZIBNB`, p, mu, sigma, nu, tau, lower_tail, log_p)
+}
+
 #' Zero-Inflated Negative Binomial Type I Distribution Density
 #'
 #' Probability density function for the Zero-Inflated Negative Binomial type I (ZINBI) 
@@ -1866,6 +1798,74 @@ fqZINBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @export
 frZINBI <- function(n, mu, sigma, nu) {
     .Call(`_CKutils_frZINBI`, n, mu, sigma, nu)
+}
+
+#' Zero-Inflated Sichel Distribution Quantile Function
+#'
+#' Quantile function for the zero-inflated Sichel distribution with parameters 
+#' mu (mean), sigma (dispersion), nu (shape), and tau (zero-inflation).
+#'
+#' @param p vector of probabilities.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of shape parameters (real values).
+#' @param tau vector of zero-inflation parameters (0 < tau < 1).
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
+#'   otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The zero-inflated Sichel distribution is a mixture of a point mass at zero 
+#' and a (truncated at zero) Sichel distribution.
+#'
+#' @return A numeric vector of quantiles.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Vector inputs with recycling
+#' fqZISICHEL(c(0.25, 0.75), mu=c(1,2), sigma=1, nu=-0.5, tau=0.1)
+#'
+#' @export
+fqZISICHEL <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fqZISICHEL`, p, mu, sigma, nu, tau, lower_tail, log_p)
+}
+
+#' Zero-Inflated Sichel Distribution Cumulative Distribution Function
+#'
+#' Distribution function for the zero-inflated Sichel distribution with parameters 
+#' mu (mean), sigma (dispersion), nu (shape), and tau (zero-inflation).
+#'
+#' @param q vector of quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of shape parameters (real values).
+#' @param tau vector of zero-inflation parameters (0 < tau < 1).
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
+#'   otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The zero-inflated Sichel distribution is a mixture of a point mass at zero 
+#' and a (truncated at zero) Sichel distribution.
+#'
+#' @return A numeric vector of probabilities.
+#' 
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
+#' Distributions for modeling location, scale, and shape: Using GAMLSS in R, 
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Vector inputs with recycling
+#' fpZISICHEL(0:5, mu=c(1,2), sigma=1, nu=-0.5, tau=0.1)
+#'
+#' @export
+fpZISICHEL <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpZISICHEL`, q, mu, sigma, nu, tau, lower_tail, log_p)
 }
 
 #' Convert Factor to Integer (C++ Version)
