@@ -20,8 +20,14 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <math.h>
 #include <Rmath.h>
 #include "recycling_helpers.h"
-#include "distr_NBI.h"
 // [[Rcpp::plugins(cpp17)]]
+
+// Enable vectorization hints for modern compilers
+#if defined(__GNUC__) || defined(__clang__)
+#define SIMD_HINT _Pragma("GCC ivdep")
+#else
+#define SIMD_HINT
+#endif
 
 using namespace Rcpp;
 
@@ -97,7 +103,7 @@ NumericVector fdNBI(const NumericVector& x,
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
   }
 
- NumericVector out(n);
+  NumericVector out(n);
 
   SIMD_HINT
   for (int i = 0; i < n; i++)

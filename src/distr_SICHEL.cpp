@@ -22,7 +22,6 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <algorithm>
 #include "recycling_helpers.h"
 #include "distr_NBI.h"
-#include "distr_SICHEL.h"
 // [[Rcpp::plugins(cpp17)]]
 
 using namespace Rcpp;

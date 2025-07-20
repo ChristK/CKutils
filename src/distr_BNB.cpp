@@ -20,7 +20,6 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <math.h>
 #include <Rmath.h>
 #include "recycling_helpers.h"
-#include "distr_BNB.h"
 // [[Rcpp::plugins(cpp17)]]
 
 // Enable vectorization hints for modern compilers
