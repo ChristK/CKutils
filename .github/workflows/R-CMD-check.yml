@@ -115,13 +115,15 @@ jobs:
           xcode-select -p
           
           # Install Homebrew packages commonly needed for R packages
-          brew install pkg-config
-          brew install openssl
-          brew install curl
-          brew install gdal
-          brew install geos
-          brew install proj
-          brew install udunits
+          # Check and install only if not already present to reduce log noise
+          for pkg in pkg-config openssl curl gdal geos proj udunits; do
+            if ! brew list "$pkg" &>/dev/null; then
+              echo "Installing $pkg..."
+              brew install "$pkg"
+            else
+              echo "$pkg is already installed, skipping..."
+            fi
+          done
           # From https://www.mail-archive.com/r-sig-mac@r-project.org/msg06927.html
           sudo Rscript -e "source('https://mac.R-project.org/bin/install.R'); install.libs('gettext')"
 
@@ -137,7 +139,7 @@ jobs:
           echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
           
           # Verify gettext installation
-          ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
+          # ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
 
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
