@@ -7,7 +7,7 @@
 ^\.Rcheck$
 ^LICENSE\.md$
 ^check-before-push\.sh$
-^benchmark\.R$
+^benchmark_gamlss_dist\.R$
 ^\.gitignore$
 ^\.github/.*$
 ^\.vscode/.*$
