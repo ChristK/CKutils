@@ -110,12 +110,20 @@ jobs:
           brew install geos
           brew install proj
           brew install udunits
+          brew install gettext
+          
+          # Force link gettext to make libintl.h available
+          brew link --force gettext
           
           # Set environment variables for macOS compilation
           # Both Homebrew paths for Apple Silicon (/opt/homebrew) and Intel (/usr/local)
-          echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include" >> $GITHUB_ENV
-          echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
+          gettext_prefix=$(brew --prefix gettext)
+          echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include -I${gettext_prefix}/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib -L${gettext_prefix}/lib" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
+          
+          # Verify gettext installation
+          ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
 
       # Step 3: Install package dependencies and tinytest
       - name: Setup R dependencies
