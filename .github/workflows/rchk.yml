@@ -120,7 +120,7 @@ jobs:
           
           # Count different types of issues
           suspicious_calls=$(grep -Fc "Suspicious call" rchk.out || echo "0")
-          unprotected_values=$(grep -F "[UP]" rchk.out | grep -v "results will be incomplete" | wc -l)
+          unprotected_values=$(grep -F "[UP]" rchk.out | grep -v "results will be incomplete" | grep -v "ignoring variable" | wc -l || echo "0")
           protect_bugs=$(grep -Fc "[PB]" rchk.out || echo "0")
           
           echo "Analysis Summary:"
