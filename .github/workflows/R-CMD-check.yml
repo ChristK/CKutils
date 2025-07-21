@@ -100,22 +100,34 @@ jobs:
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          # From https://www.mail-archive.com/r-sig-mac@r-project.org/msg06927.html
-          brew install gdal proj
-          sudo Rscript -e "source('https://mac.R-project.org/bin/install.R'); install.libs('gettext')"
-
+          # Show system information for debugging
+          echo "System info:"
+          uname -a
+          echo "Xcode version:"
+          xcodebuild -version || echo "Xcode not found"
+          echo "Clang version:"
+          clang --version || echo "Clang not found"
           
-          ## Install system dependencies (matching data.table's approach)
-          # brew install gdal proj gettext
-          ## Force link gettext to make libintl.h available
-          # brew link --force gettext
-          ## Set environment variables for compilation
-          # gettext_prefix=$(brew --prefix gettext)
-          # echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include -I${gettext_prefix}/include" >> $GITHUB_ENV
-          # echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib -L${gettext_prefix}/lib" >> $GITHUB_ENV
-          # echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
-          ## Verify gettext installation
-          # ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
+          # Ensure we have the latest Xcode command line tools
+          xcode-select --install 2>/dev/null || echo "Command line tools already installed"
+          
+          # Verify command line tools are properly installed
+          xcode-select -p
+          
+          # Install Homebrew packages commonly needed for R packages
+          brew install pkg-config
+          brew install openssl
+          brew install curl
+          brew install gdal
+          brew install geos
+          brew install proj
+          brew install udunits
+          
+          # Set environment variables for macOS compilation
+          # Both Homebrew paths for Apple Silicon (/opt/homebrew) and Intel (/usr/local)
+          echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
 
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
@@ -129,3 +141,30 @@ jobs:
         uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true  # Upload test snapshots on failure for debugging
+
+      # Step 5.1: Upload installation logs on failure for debugging
+      - name: Upload 00install.out log
+        if: failure()  # Only runs if a previous step failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-log-${{ matrix.config.os }}-${{ matrix.config.r }}
+          path: check/CKutils.Rcheck/00install.out
+          if-no-files-found: ignore
+
+      # Step 5.2: Upload check logs on failure for comprehensive debugging
+      - name: Upload all check logs
+        if: failure()  # Only runs if a previous step failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-logs-${{ matrix.config.os }}-${{ matrix.config.r }}
+          path: check/CKutils.Rcheck/
+          if-no-files-found: ignore
+
+      # Step 6: Show installation logs on failure (macOS debugging)
+      - name: Show installation logs on failure
+        if: failure() && runner.os == 'macOS'
+        run: |
+          echo "=== Installation logs ==="
+          find . -name "00install.out" -exec echo "File: {}" \; -exec cat {} \; || echo "No install logs found"
+          echo "=== Check logs ==="
+          find . -name "00check.log" -exec echo "File: {}" \; -exec cat {} \; || echo "No check logs found"

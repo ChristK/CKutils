@@ -20,14 +20,24 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <math.h>
 #include <Rmath.h>
 #include <algorithm>
+// SIMD headers are x86/x64 specific, only include on compatible architectures
+#if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
 #include <immintrin.h>  // AVX/SSE
 #include <xmmintrin.h>  // SSE
 #include <emmintrin.h>  // SSE2
+#endif
 #include <vector>
 #include <cstring>
 #include "recycling_helpers.h"
 // [[Rcpp::plugins(cpp17)]]
 using namespace Rcpp;
+
+// Enable vectorization hints for modern compilers
+#if defined(__GNUC__) || defined(__clang__)
+#define SIMD_HINT _Pragma("GCC ivdep")
+#else
+#define SIMD_HINT
+#endif
 
 // SIMD utility functions
 inline bool is_aligned(const void* ptr, size_t alignment = 32) {
