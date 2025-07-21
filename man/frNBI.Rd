@@ -47,7 +47,7 @@ dispersion (sigma) parameters.
 
 Key characteristics:
 \itemize{
-  \item Support: {0, 1, 2, ...} (non-negative integers)
+  \item Support: 0, 1, 2, ... (non-negative integers)
   \item Mean: mu
   \item Variance: mu + sigma * mu^2
   \item For sigma → 0, reduces to Poisson distribution

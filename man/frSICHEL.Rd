@@ -44,7 +44,7 @@ where \eqn{\alpha^2= 1/\sigma^2 +2*\mu/\sigma},
 
 Key characteristics:
 \itemize{
-  \item Support: {0, 1, 2, ...} (non-negative integers)
+  \item Support: 0, 1, 2, ... (non-negative integers)
   \item Mean: mu
   \item Very flexible in modelling different count patterns
   \item Can handle both light and heavy-tailed distributions

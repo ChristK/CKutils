@@ -47,7 +47,7 @@ standard NBI distribution.
 
 Key characteristics:
 \itemize{
-  \item Support: {0, 1, 2, ...} (non-negative integers)
+  \item Support: 0, 1, 2, ... (non-negative integers)
   \item P(X = 0) = nu + (1-nu) * P_NBI(0)
   \item P(X = k) = (1-nu) * P_NBI(k) for k > 0
   \item Higher proportion of zeros than standard NBI

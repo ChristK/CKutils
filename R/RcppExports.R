@@ -980,7 +980,7 @@ fqDPO <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE, max_value = 0L
 #'
 #' @details
 #' The multinomial distribution with 4 categories (MN4) is a discrete distribution
-#' defined on the integers {1, 2, 3, 4}. The probability mass function is:
+#' defined on the integers 1, 2, 3, 4. The probability mass function is:
 #' \deqn{P(X = k) = \frac{\theta_k}{1 + \mu + \sigma + \nu}}
 #' where \eqn{\theta_1 = \mu}, \eqn{\theta_2 = \sigma}, \eqn{\theta_3 = \nu},
 #' and \eqn{\theta_4 = 1}.
@@ -1521,9 +1521,9 @@ fdZANBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-alteration probabilities (0 < nu < 1).
-#' @param lower.tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
 #'   otherwise, P[X > x].
-#' @param log.p logical; if TRUE, probabilities p are given as log(p).
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
 #' @details
 #' The cumulative distribution function for the Zero-Altered NBI distribution is:
@@ -1559,9 +1559,9 @@ fpZANBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-alteration probabilities (0 < nu < 1).
-#' @param lower.tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
 #'   otherwise, P[X > x].
-#' @param log.p logical; if TRUE, probabilities p are given as log(p).
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
 #' @details
 #' The quantile function returns the smallest integer \eqn{x} such that
@@ -1702,9 +1702,9 @@ fdZINBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-inflation probabilities (0 < nu < 1).
-#' @param lower.tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
 #'   otherwise, P[X > x].
-#' @param log.p logical; if TRUE, probabilities p are given as log(p).
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
 #' @details
 #' The cumulative distribution function for the Zero-Inflated NBI distribution is:
@@ -1739,9 +1739,9 @@ fpZINBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-inflation probabilities (0 < nu < 1).
-#' @param lower.tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
 #'   otherwise, P[X > x].
-#' @param log.p logical; if TRUE, probabilities p are given as log(p).
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
 #' @details
 #' The quantile function returns the smallest integer \eqn{x} such that

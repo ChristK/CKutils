@@ -95,4 +95,5 @@ if (getRversion() >= "2.15.1") {
 # cd /home/ckyprid/GH_projects/CKutils && R CMD check --as-cran .
 # cd /home/ckyprid/GH_projects/CKutils && Rscript -e "tinytest::test_package("CKutils")"
 # cd /home/ckyprid/GH_projects/CKutils && R --no-restore --no-save -e "source('benchmark.R'); benchmark_distribution('DPO', n_obs = 1000, n_iterations = 20)"
+# ./check-before-push.sh 2>&1 | grep -E "(WARNING|NOTE|Status:|❌|✅)"
 NULL

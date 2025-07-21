@@ -48,7 +48,7 @@ remaining distribution proportional to the original.
 
 Key characteristics:
 \itemize{
-  \item Support: {0, 1, 2, ...} (non-negative integers)
+  \item Support: 0, 1, 2, ... (non-negative integers)
   \item P(X = 0) = nu
   \item P(X = k) = (1-nu) * P_NBI(k) / (1 - P_NBI(0)) for k > 0
   \item Probability at zero is directly controlled by nu

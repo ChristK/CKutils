@@ -26,7 +26,7 @@ optimised for performance with SIMD vectorisation and parameter recycling.
 }
 \details{
 The multinomial distribution with 4 categories (MN4) is a discrete distribution
-defined on the integers {1, 2, 3, 4}. The probability mass function is:
+defined on the integers 1, 2, 3, 4. The probability mass function is:
 \deqn{P(X = k) = \frac{\theta_k}{1 + \mu + \sigma + \nu}}
 where \eqn{\theta_1 = \mu}, \eqn{\theta_2 = \sigma}, \eqn{\theta_3 = \nu},
 and \eqn{\theta_4 = 1}.

@@ -46,7 +46,7 @@ where \eqn{f_{SICHEL}} is the Sichel probability mass function.
 
 Key characteristics:
 \itemize{
-  \item Support: {0, 1, 2, ...} (non-negative integers)
+  \item Support: 0, 1, 2, ... (non-negative integers)
   \item Higher proportion of zeros than standard Sichel
   \item Combines flexibility of Sichel with zero-inflation capability
   \item Useful for modelling count processes with excess zeros
@@ -99,7 +99,7 @@ Distributions for modelling location, scale, and shape: Using GAMLSS in R.
 Chapman and Hall/CRC.
 }
 \seealso{
-\code{\link{fdZISICHEL}}, \code{\link{fpZISICHEL}}, \code{\link{fqZISICHEL}} for 
+\code{\link{fpZISICHEL}}, \code{\link{fqZISICHEL}} for 
 other Zero-Inflated Sichel distribution functions.
 
 \code{\link{frSICHEL}} for the standard Sichel distribution.

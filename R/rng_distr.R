@@ -656,7 +656,7 @@ frDEL <- function(n, mu = 1, sigma = 1, nu = 0.5) {
 #' 
 #' Key characteristics:
 #' \itemize{
-#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item Support: 0, 1, 2, ... (non-negative integers)
 #'   \item Mean: mu
 #'   \item Variance: mu + sigma * mu^2
 #'   \item For sigma → 0, reduces to Poisson distribution
@@ -738,7 +738,7 @@ frNBI <- function(n, mu = 1, sigma = 1) {
 #' 
 #' Key characteristics:
 #' \itemize{
-#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item Support: 0, 1, 2, ... (non-negative integers)
 #'   \item P(X = 0) = nu + (1-nu) * P_NBI(0)
 #'   \item P(X = k) = (1-nu) * P_NBI(k) for k > 0
 #'   \item Higher proportion of zeros than standard NBI
@@ -815,7 +815,7 @@ frZINBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
 #' 
 #' Key characteristics:
 #' \itemize{
-#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item Support: 0, 1, 2, ... (non-negative integers)
 #'   \item P(X = 0) = nu
 #'   \item P(X = k) = (1-nu) * P_NBI(k) / (1 - P_NBI(0)) for k > 0
 #'   \item Probability at zero is directly controlled by nu
@@ -899,7 +899,7 @@ frZANBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
 #' 
 #' Key characteristics:
 #' \itemize{
-#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item Support: 0, 1, 2, ... (non-negative integers)
 #'   \item Mean: mu
 #'   \item Very flexible in modelling different count patterns
 #'   \item Can handle both light and heavy-tailed distributions
@@ -1017,7 +1017,7 @@ frSICHEL <- function(n, mu = 1, sigma = 1, nu = -0.5) {
 #' 
 #' Key characteristics:
 #' \itemize{
-#'   \item Support: {0, 1, 2, ...} (non-negative integers)
+#'   \item Support: 0, 1, 2, ... (non-negative integers)
 #'   \item Higher proportion of zeros than standard Sichel
 #'   \item Combines flexibility of Sichel with zero-inflation capability
 #'   \item Useful for modelling count processes with excess zeros
@@ -1071,7 +1071,7 @@ frSICHEL <- function(n, mu = 1, sigma = 1, nu = -0.5) {
 #' Chapman and Hall/CRC.
 #' 
 #' @seealso 
-#' \code{\link{fdZISICHEL}}, \code{\link{fpZISICHEL}}, \code{\link{fqZISICHEL}} for 
+#' \code{\link{fpZISICHEL}}, \code{\link{fqZISICHEL}} for 
 #' other Zero-Inflated Sichel distribution functions.
 #' 
 #' \code{\link{frSICHEL}} for the standard Sichel distribution.
