@@ -1175,3 +1175,194 @@ expect_true(abs(observed_neg_cor[1, 2] - (-0.3)) < 0.15,
             info = "Negative correlation approximately preserved in magnitude")
 
 
+# =============================================================================
+# Tests for fwrite_safe function
+# =============================================================================
+
+# Setup test directory and cleanup function
+test_dir <- file.path(tempdir(), "fwrite_safe_tests")
+dir.create(test_dir, showWarnings = FALSE, recursive = TRUE)
+
+cleanup_test_files <- function() {
+  test_files <- list.files(test_dir, full.names = TRUE)
+  file.remove(test_files[file.exists(test_files)])
+}
+
+# Test 1: Basic write to new file (append = FALSE)
+cleanup_test_files()
+test_file1 <- file.path(test_dir, "test1.csv")
+dt1 <- data.table(a = 1:3, b = letters[1:3], c = 4:6)
+
+result1 <- fwrite_safe(dt1, test_file1, append = FALSE)
+expect_true(file.exists(test_file1), info = "New file created successfully")
+expect_identical(result1, TRUE, info = "fwrite_safe returns TRUE on success")
+
+# Verify file contents
+read_dt1 <- fread(test_file1)
+expect_equal(nrow(read_dt1), 3, info = "Correct number of rows written")
+expect_equal(ncol(read_dt1), 3, info = "Correct number of columns written")
+expect_equal(names(read_dt1), c("a", "b", "c"), info = "Column names preserved")
+
+# Test 2: Append with same column structure
+dt2 <- data.table(a = 4:5, b = letters[4:5], c = 7:8)
+result2 <- fwrite_safe(dt2, test_file1, append = TRUE)
+
+read_dt2 <- fread(test_file1)
+expect_equal(nrow(read_dt2), 5, info = "Rows appended correctly")
+expect_equal(names(read_dt2), c("a", "b", "c"), info = "Column structure maintained")
+expect_equal(read_dt2$a, 1:5, info = "Data appended in correct order")
+
+# Test 3: Append with different column order
+cleanup_test_files()
+test_file3 <- file.path(test_dir, "test3.csv")
+dt3a <- data.table(x = 1:2, y = letters[1:2], z = 3:4)
+dt3b <- data.table(z = 5:6, x = 7:8, y = letters[3:4])  # Different order
+
+fwrite_safe(dt3a, test_file3, append = FALSE)
+fwrite_safe(dt3b, test_file3, append = TRUE)
+
+read_dt3 <- fread(test_file3)
+expect_equal(names(read_dt3), c("x", "y", "z"), info = "Original column order preserved")
+expect_equal(nrow(read_dt3), 4, info = "All rows present after reordering")
+expect_equal(read_dt3$x, c(1:2, 7:8), info = "Reordered columns have correct data")
+
+# Test 4: Append with missing columns
+cleanup_test_files()
+test_file4 <- file.path(test_dir, "test4.csv")
+dt4a <- data.table(col1 = 1:2, col2 = letters[1:2], col3 = 3:4)
+dt4b <- data.table(col1 = 5:6, col2 = letters[3:4])  # Missing col3
+
+fwrite_safe(dt4a, test_file4, append = FALSE)
+fwrite_safe(dt4b, test_file4, append = TRUE)
+
+read_dt4 <- fread(test_file4)
+expect_equal(names(read_dt4), c("col1", "col2", "col3"), info = "All columns preserved")
+expect_equal(nrow(read_dt4), 4, info = "All rows present with missing columns")
+expect_true(is.na(read_dt4$col3[3]), info = "Missing column filled with NA")
+expect_true(is.na(read_dt4$col3[4]), info = "Missing column filled with NA")
+
+# Test 5: Append with extra columns (should throw error)
+cleanup_test_files()
+test_file5 <- file.path(test_dir, "test5.csv")
+dt5a <- data.table(alpha = 1:2, beta = letters[1:2])
+dt5b <- data.table(alpha = 3:4, beta = letters[3:4], gamma = 5:6)  # Extra column
+
+fwrite_safe(dt5a, test_file5, append = FALSE)
+
+# This should throw an error
+expect_error(
+  fwrite_safe(dt5b, test_file5, append = TRUE),
+  pattern = "Cannot append data with extra columns",
+  info = "Should throw error when appending data with extra columns"
+)
+
+# Verify original file is unchanged
+read_dt5 <- fread(test_file5)
+expect_equal(names(read_dt5), c("alpha", "beta"), info = "Original file structure preserved after error")
+expect_equal(nrow(read_dt5), 2, info = "Original file data unchanged after error")
+
+# Test 6: Non-data.table input types
+cleanup_test_files()
+test_file6 <- file.path(test_dir, "test6.csv")
+
+# Test with data.frame
+df6 <- data.frame(num = 1:3, char = letters[1:3], stringsAsFactors = FALSE)
+result6 <- fwrite_safe(df6, test_file6, append = FALSE)
+expect_true(file.exists(test_file6), info = "data.frame input works")
+
+read_dt6 <- fread(test_file6)
+expect_equal(nrow(read_dt6), 3, info = "data.frame converted and written correctly")
+
+# Test with matrix - use column names that match existing structure
+mat6 <- matrix(c(4:5, letters[4:5]), nrow = 2, ncol = 2)
+colnames(mat6) <- c("num", "char")  # Match existing columns
+fwrite_safe(mat6, test_file6, append = TRUE)
+
+read_dt6_after <- fread(test_file6)
+expect_equal(nrow(read_dt6_after), 5, info = "Matrix appended correctly")
+
+# Test 7: Edge case - empty data.table
+cleanup_test_files()
+test_file7 <- file.path(test_dir, "test7.csv")
+dt7_empty <- data.table(x = integer(0), y = character(0))
+dt7_data <- data.table(x = 1:2, y = letters[1:2])
+
+fwrite_safe(dt7_empty, test_file7, append = FALSE)
+expect_true(file.exists(test_file7), info = "Empty data.table creates file")
+
+fwrite_safe(dt7_data, test_file7, append = TRUE)
+read_dt7 <- fread(test_file7)
+expect_equal(nrow(read_dt7), 2, info = "Data appended to initially empty file")
+
+# Test 8: File doesn't exist with append = TRUE (should work like append = FALSE)
+cleanup_test_files()
+test_file8 <- file.path(test_dir, "test8.csv")
+dt8 <- data.table(test = 1:3, data = letters[1:3])
+
+result8 <- fwrite_safe(dt8, test_file8, append = TRUE)  # File doesn't exist
+expect_true(file.exists(test_file8), info = "New file created even with append = TRUE")
+read_dt8 <- fread(test_file8)
+expect_equal(nrow(read_dt8), 3, info = "Data written correctly to new file")
+
+# Test 9: Complex mixed column types
+cleanup_test_files()
+test_file9 <- file.path(test_dir, "test9.csv")
+dt9a <- data.table(
+  int_col = 1:2,
+  char_col = letters[1:2],
+  num_col = c(1.1, 2.2),
+  logi_col = c(TRUE, FALSE)
+)
+dt9b <- data.table(
+  char_col = letters[3:4],
+  int_col = 3:4,
+  num_col = c(3.3, 4.4),
+  logi_col = c(FALSE, TRUE)
+  # Removed new_col to avoid column mismatch issues
+)
+
+fwrite_safe(dt9a, test_file9, append = FALSE)
+fwrite_safe(dt9b, test_file9, append = TRUE)
+
+read_dt9 <- fread(test_file9)
+expect_equal(names(read_dt9), c("int_col", "char_col", "num_col", "logi_col"), 
+             info = "Mixed types maintain original column order")
+expect_equal(nrow(read_dt9), 4, info = "All mixed-type rows appended")
+
+# Test 10: Additional arguments passed to fwrite
+cleanup_test_files()
+test_file10 <- file.path(test_dir, "test10.csv")
+dt10 <- data.table(x = 1:3, y = c(1.111, 2.222, 3.333))
+
+# Test with custom separator (digits is not a valid fwrite argument)
+result10 <- fwrite_safe(dt10, test_file10, append = FALSE, sep = ";")
+expect_true(file.exists(test_file10), info = "Additional arguments passed successfully")
+
+# Read raw file to check separator
+raw_content <- readLines(test_file10)
+expect_true(grepl(";", raw_content[2]), info = "Custom separator used")
+
+# Test 11: Error handling - invalid file path
+  invalid_path <- file.path("/nonexistent/directory", "test.csv")
+  dt11 <- data.table(x = 1:2)
+  expect_error(
+    fwrite_safe(dt11, invalid_path),
+    info = "Should have thrown error for invalid path"
+  )
+
+
+# Test 12: Single row append
+cleanup_test_files()
+test_file12 <- file.path(test_dir, "test12.csv")
+dt12a <- data.table(id = 1, value = "first")
+dt12b <- data.table(id = 2, value = "second")
+
+fwrite_safe(dt12a, test_file12, append = FALSE)
+fwrite_safe(dt12b, test_file12, append = TRUE)
+
+read_dt12 <- fread(test_file12)
+expect_equal(nrow(read_dt12), 2, info = "Single rows append correctly")
+expect_equal(read_dt12$value, c("first", "second"), info = "Single row data correct")
+
+# Cleanup test directory
+cleanup_test_files()

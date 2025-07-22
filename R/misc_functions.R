@@ -1459,5 +1459,101 @@ generate_corr_unifs <- function(n, M, check_eigenvalues = FALSE) {
 }
 
 
-
+# Ensures that when fwrite appends file colnames of file to be written, match
+# those already in the file
+#' Write Data Table to File with Column Safety
+#'
+#' A safer version of \code{\link[data.table]{fwrite}} that ensures column 
+#' alignment when appending to existing files. This function automatically 
+#' handles missing columns by adding them with NA values and reorders columns 
+#' to match the existing file structure.
+#'
+#' @param x A data.table, data.frame, or matrix to write to file.
+#' @param file Character string specifying the file path. If the file exists 
+#'   and \code{append = TRUE}, the function will ensure column compatibility.
+#' @param append Logical. If \code{TRUE}, the data will be appended to an 
+#'   existing file. If \code{FALSE}, any existing file will be overwritten.
+#'   Default is \code{TRUE}.
+#' @param ... Additional arguments passed to \code{\link[data.table]{fwrite}}.
+#'
+#' @details
+#' When \code{append = TRUE} and the target file exists, this function:
+#' \itemize{
+#'   \item Reads the column names from the existing file
+#'   \item Throws an error if the new data contains columns not present in the original file
+#'   \item Identifies missing columns in the new data and adds them with \code{NA} values
+#'   \item Reorders columns to match the existing file structure
+#' }
+#' 
+#' This prevents common errors that occur when appending data with different 
+#' column structures to CSV files and ensures data integrity by not allowing
+#' accidental column additions.
+#'
+#' @return Invisibly returns \code{TRUE} on success (same as \code{fwrite}).
+#'
+#' @seealso \code{\link[data.table]{fwrite}}, \code{\link[data.table]{fread}}
+#'
+#' @examples
+#' \dontrun{
+#' # Create initial data
+#' dt1 <- data.table(a = 1:3, b = letters[1:3], c = 4:6)
+#' fwrite_safe(dt1, "test.csv", append = FALSE)
+#' 
+#' # Append data with different column order
+#' dt2 <- data.table(c = 7:8, b = letters[4:5], a = 9:10)
+#' fwrite_safe(dt2, "test.csv", append = TRUE)  # Columns automatically aligned
+#' 
+#' # Append data with missing column
+#' dt3 <- data.table(a = 11:12, b = letters[6:7])  # Missing column 'c'
+#' fwrite_safe(dt3, "test.csv", append = TRUE)     # Column 'c' added with NA
+#' 
+#' # This would throw an error (extra column):
+#' # dt4 <- data.table(a = 13:14, b = letters[8:9], d = 15:16)
+#' # fwrite_safe(dt4, "test.csv", append = TRUE)  # Error: column 'd' not in original
+#' }
+#'
+#' @export
+fwrite_safe <- function(
+  x,
+  file,
+  append = TRUE,
+  ...
+) {
+  # Ensure x is a data.table for efficient column operations
+  if (!data.table::is.data.table(x)) {
+    x <- data.table::as.data.table(x)
+  }
+  
+  if (append && file.exists(file)) {
+    # Read column names from existing file without loading data
+    col_names_disk <- names(data.table::fread(file, nrows = 0))
+    col_names_file <- names(x)
+    
+    # Check for extra columns that don't exist in the original file
+    extra_cols <- setdiff(col_names_file, col_names_disk)
+    if (length(extra_cols) > 0) {
+      stop("Cannot append data with extra columns. The following columns exist in the new data but not in the original file: ",
+           paste(extra_cols, collapse = ", "), 
+           ". Original file has columns: ", paste(col_names_disk, collapse = ", "),
+           ". New data has columns: ", paste(col_names_file, collapse = ", "),
+           call. = FALSE)
+    }
+    
+    # Find columns that exist in file but not in new data
+    missing_cols <- setdiff(col_names_disk, col_names_file)
+    
+    # Add missing columns with NA values
+    if (length(missing_cols) > 0) {
+      x[, (missing_cols) := NA]
+    }
+    
+    # Reorder columns to match existing file structure
+    data.table::setcolorder(x, col_names_disk)
+  }
+  
+  # Write the data using fwrite
+  data.table::fwrite(x, file, append = append, ...)
+  
+  return(TRUE)
+}
 

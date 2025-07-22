@@ -44,6 +44,7 @@
 #' @importFrom data.table .N
 #' @importFrom data.table .NGRP
 #' @importFrom data.table .SD
+#' @importFrom data.table fwrite
 #' @importFrom Rcpp sourceCpp
 #' @importFrom utils installed.packages
 #' @importFrom remotes install_local
