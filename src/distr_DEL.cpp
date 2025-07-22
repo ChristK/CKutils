@@ -672,5 +672,3 @@ NumericVector fqDEL(NumericVector p,
   return QQQ;
 }
 
-x
-
