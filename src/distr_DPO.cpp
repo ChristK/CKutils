@@ -62,6 +62,7 @@ inline void simd_exp_4(const double* input, double* output) {
     #ifdef __AVX2__
     if (has_avx2() && is_aligned(input) && is_aligned(output)) {
         __m256d x = _mm256_load_pd(input);
+        (void)x; // Mark as intentionally unused to suppress warning
         // Fast approximation could be added here
         for (int i = 0; i < 4; i++) {
             output[i] = exp(input[i]);
