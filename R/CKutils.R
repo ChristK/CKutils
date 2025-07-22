@@ -47,6 +47,8 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom utils installed.packages
 #' @importFrom remotes install_local
+#' @importFrom dqrng dqrunif dqrnorm
+#' @importFrom stats pnorm
 #' @importFrom roxygen2 roxygenise
 #' @useDynLib CKutils, .registration = TRUE
 

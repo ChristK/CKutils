@@ -1040,3 +1040,138 @@ single_elem_result <- shift_bypid(single_elem_data, lag = 1, id = single_elem_id
 expect_true(all(is.na(single_elem_result)), info = "Single element groups produce all NA values")
 
 
+# =============================================================================
+# Tests for generate_corr_unifs function
+# =============================================================================
+
+# Test basic functionality with 2x2 correlation matrix
+M_2x2 <- matrix(c(1, 0.5, 0.5, 1), nrow = 2)
+colnames(M_2x2) <- c("X1", "X2")
+
+# Test with small sample size
+result_small <- generate_corr_unifs(10, M_2x2)
+expect_true(is.matrix(result_small), info = "Result is a matrix")
+expect_equal(nrow(result_small), 10, info = "Correct number of rows")
+expect_equal(ncol(result_small), 2, info = "Correct number of columns")
+expect_equal(colnames(result_small), c("X1", "X2"), info = "Column names preserved")
+
+# Test that all values are between 0 and 1
+expect_true(all(result_small >= 0 & result_small <= 1), info = "All values between 0 and 1")
+
+# Test with larger sample to check correlation structure
+# Load dqrng for proper seeding
+if (!requireNamespace("dqrng", quietly = TRUE)) {
+  exit_file("dqrng package not available")
+}
+library(dqrng)
+dqset.seed(12345)  # For reproducible tests
+result_large <- generate_corr_unifs(10000, M_2x2)
+observed_cor <- cor(result_large)
+
+# Check that correlation is approximately correct (with tolerance for Monte Carlo variation)
+expect_true(abs(observed_cor[1, 2] - 0.5) < 0.1, info = "Correlation approximately preserved")
+expect_true(abs(observed_cor[2, 1] - 0.5) < 0.1, info = "Correlation matrix symmetric")
+
+# Test diagonal elements are 1
+expect_equal(diag(observed_cor), c(1, 1), tolerance = 1e-10, 
+             check.names = FALSE, info = "Diagonal correlations are 1")
+
+# Test 3x3 correlation matrix
+M_3x3 <- matrix(c(1.0, 0.3, 0.1,
+                  0.3, 1.0, 0.2,
+                  0.1, 0.2, 1.0), nrow = 3)
+colnames(M_3x3) <- c("Var1", "Var2", "Var3")
+
+result_3x3 <- generate_corr_unifs(1000, M_3x3)
+expect_equal(dim(result_3x3), c(1000, 3), info = "3x3 matrix produces correct dimensions")
+expect_equal(colnames(result_3x3), c("Var1", "Var2", "Var3"), info = "3x3 column names preserved")
+
+# Test eigenvalue checking parameter
+expect_silent(generate_corr_unifs(100, M_2x2, check_eigenvalues = FALSE), 
+              info = "No eigenvalue check runs silently")
+
+# Test with valid positive definite matrix and eigenvalue check enabled
+expect_silent(generate_corr_unifs(100, M_2x2, check_eigenvalues = TRUE), 
+              info = "Valid matrix passes eigenvalue check")
+
+# Test error cases
+# Non-matrix input
+expect_error(generate_corr_unifs(10, c(1, 0.5, 0.5, 1)), 
+             info = "Non-matrix input throws error")
+
+# Invalid eigenvalue check parameter
+expect_error(generate_corr_unifs(10, M_2x2, check_eigenvalues = "invalid"), 
+             info = "Invalid check_eigenvalues parameter throws error")
+
+expect_error(generate_corr_unifs(10, M_2x2, check_eigenvalues = c(TRUE, FALSE)), 
+             info = "Vector check_eigenvalues parameter throws error")
+
+# Test with identity matrix (perfect independence)
+M_identity <- diag(3)
+colnames(M_identity) <- c("A", "B", "C")
+result_identity <- generate_corr_unifs(1000, M_identity)
+
+# Check approximate independence
+cor_identity <- cor(result_identity)
+off_diagonal <- cor_identity[upper.tri(cor_identity)]
+expect_true(all(abs(off_diagonal) < 0.1), info = "Identity matrix produces approximately independent variables")
+
+# Test with maximum correlation
+M_max <- matrix(c(1, 0.99, 0.99, 1), nrow = 2)
+result_max <- generate_corr_unifs(1000, M_max)
+expect_true(is.matrix(result_max), info = "High correlation matrix works")
+
+# Test reproducibility with set.seed
+# Note: dqrng uses its own seeding mechanism
+library(dqrng)
+dqset.seed(98765)
+result1 <- generate_corr_unifs(100, M_2x2)
+dqset.seed(98765)
+result2 <- generate_corr_unifs(100, M_2x2)
+expect_equal(result1, result2, info = "Results are reproducible with same seed")
+
+# Test matrix without column names
+M_no_names <- matrix(c(1, 0.4, 0.4, 1), nrow = 2)
+result_no_names <- generate_corr_unifs(100, M_no_names)
+expect_true(is.null(colnames(result_no_names)), info = "No column names when input has none")
+
+# Test single variable (1x1 matrix)
+M_1x1 <- matrix(1)
+result_1x1 <- generate_corr_unifs(50, M_1x1)
+expect_equal(dim(result_1x1), c(50, 1), info = "1x1 matrix works")
+expect_true(all(result_1x1 >= 0 & result_1x1 <= 1), info = "1x1 result values valid")
+
+# Test with larger matrix (5x5) to test scalability
+M_5x5 <- matrix(0.2, 5, 5)  # All correlations 0.2
+diag(M_5x5) <- 1
+colnames(M_5x5) <- paste0("V", 1:5)
+
+result_5x5 <- generate_corr_unifs(500, M_5x5)
+expect_equal(dim(result_5x5), c(500, 5), info = "5x5 matrix produces correct dimensions")
+expect_equal(colnames(result_5x5), paste0("V", 1:5), info = "5x5 column names preserved")
+
+# Check that correlations are approximately preserved in larger matrix
+cor_5x5 <- cor(result_5x5)
+off_diagonal_5x5 <- cor_5x5[upper.tri(cor_5x5)]
+# Allow for more variation in larger correlation matrices
+expect_true(all(abs(off_diagonal_5x5 - 0.2) < 0.15), 
+            info = "5x5 correlations approximately preserved")
+
+# Test numerical stability with small correlations
+M_small_cor <- matrix(c(1, 0.01, 0.01, 1), nrow = 2)
+result_small_cor <- generate_corr_unifs(1000, M_small_cor)
+expect_true(is.matrix(result_small_cor), info = "Small correlations work")
+expect_true(all(is.finite(result_small_cor)), info = "Small correlations produce finite values")
+
+# Test numerical stability with negative correlations
+M_neg_cor <- matrix(c(1, -0.3, -0.3, 1), nrow = 2)
+result_neg_cor <- generate_corr_unifs(1000, M_neg_cor)
+expect_true(is.matrix(result_neg_cor), info = "Negative correlations work")
+expect_true(all(is.finite(result_neg_cor)), info = "Negative correlations produce finite values")
+
+observed_neg_cor <- cor(result_neg_cor)
+expect_true(observed_neg_cor[1, 2] < 0, info = "Negative correlation preserved in sign")
+expect_true(abs(observed_neg_cor[1, 2] - (-0.3)) < 0.15, 
+            info = "Negative correlation approximately preserved in magnitude")
+
+

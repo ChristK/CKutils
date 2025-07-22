@@ -1,8 +1,8 @@
 Package: CKutils
 Type: Package
 Title: Some Utility Functions I Use Regularly
-Version: 0.1.8
-Date: 2025-07-04
+Version: 0.1.9
+Date: 2025-07-23
 Authors@R: c(
     person("Chris", "Kypridemos", email = "christodoulosk@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0746-9229")),
     person("Amandine", "Robert", email = "amandine.rob.26@gmail.com", role = "ctb"),

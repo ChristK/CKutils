@@ -1355,6 +1355,109 @@ shift_bypid <-
   }
 
 
+#' Generate Correlated Uniform Random Variables
+#'
+#' `generate_corr_unifs` generates a matrix of correlated uniform random variables
+#' from a given correlation matrix. The function transforms the correlation structure
+#' to account for the uniform distribution and uses the Cholesky decomposition method
+#' to induce the desired correlations.
+#'
+#' This function implements the method described at
+#' \url{http://comisef.wikidot.com/tutorial:correlateduniformvariates}. The algorithm
+#' first adjusts the correlation matrix using the transformation \code{2 * sin(pi * r / 6)}
+#' to account for the uniform distribution, then generates correlated normal variables
+#' and transforms them to uniform variables using the normal cumulative distribution function.
+#'
+#' @param n A positive integer specifying the number of random samples to generate.
+#' @param M A square correlation matrix with values between -1 and 1. The matrix
+#'   should be positive semi-definite. Column names, if present, will be preserved
+#'   in the output matrix.
+#' @param check_eigenvalues A logical value indicating whether to perform an
+#'   eigenvalue check to verify that the correlation matrix is positive semi-definite.
+#'   Defaults to \code{FALSE} due to numerical issues that can cause crashes.
+#'   See Details for more information.
+#'
+#' @return A matrix of dimensions \code{n} x \code{ncol(M)} containing correlated
+#'   uniform random variables with values between 0 and 1. Column names from the
+#'   input correlation matrix are preserved.
+#'
+#' @details The correlation adjustment formula \code{2 * sin(pi * r / 6)} is applied
+#'   to transform the target correlations for uniform variables into the appropriate
+#'   correlations for normal variables before applying the Cholesky transformation.
+#'
+#'   The eigenvalue check (\code{check_eigenvalues = TRUE}) verifies that the
+#'   correlation matrix is positive semi-definite by ensuring all eigenvalues are
+#'   non-negative. However, this check is disabled by default due to numerical
+#'   precision issues that can cause false failures and crashes. See
+#'   \url{https://stat.ethz.ch/pipermail/r-help/2006-March/102703.html} for
+#'   workarounds and \url{https://stat.ethz.ch/pipermail/r-help/2006-March/102647.html}
+#'   for explanations of these issues.
+#'
+#' @examples
+#' # Create a simple 2x2 correlation matrix
+#' corr_matrix <- matrix(c(1, 0.5, 0.5, 1), nrow = 2)
+#' colnames(corr_matrix) <- c("X1", "X2")
+#'
+#' # Generate 1000 correlated uniform variables (default: no eigenvalue check)
+#' uniform_vars <- generate_corr_unifs(1000, corr_matrix)
+#'
+#' # Generate with eigenvalue validation (use with caution)
+#' uniform_vars_checked <- generate_corr_unifs(1000, corr_matrix, 
+#'                                             check_eigenvalues = TRUE)
+#'
+#' # Check the correlation structure
+#' cor(uniform_vars)
+#'
+#' # Larger correlation matrix example
+#' M <- matrix(c(1.0, 0.3, 0.1,
+#'               0.3, 1.0, 0.2,
+#'               0.1, 0.2, 1.0), nrow = 3)
+#' colnames(M) <- c("Var1", "Var2", "Var3")
+#' result <- generate_corr_unifs(500, M)
+#'
+#' @seealso \code{\link{rnorm}}, \code{\link{pnorm}}, \code{\link{chol}}, 
+#'   \code{\link{eigen}}
+#' 
+#' @export
+generate_corr_unifs <- function(n, M, check_eigenvalues = FALSE) {
+  # generate normals, check correlations
+  # from http://comisef.wikidot.com/tutorial:correlateduniformvariates
+  stopifnot(is.matrix(M))
+  stopifnot(is.logical(check_eigenvalues), length(check_eigenvalues) == 1L)
+  
+  # Check that matrix is semi-positive definite
+  # NOTE this check can crash frequently!! see
+  # https://stat.ethz.ch/pipermail/r-help/2006-March/102703.html for a
+  # workaround and https://stat.ethz.ch/pipermail/r-help/2006-March/102647.html
+  # for some explanation
+  if (check_eigenvalues) {
+    stopifnot(min(eigen(M, only.values = TRUE)$values) >= 0)
+  }
+
+  M_original <- M
+
+
+  # adjust correlations for uniforms
+  for (i in seq_len(dim(M)[[1L]])) {
+    for (j in seq_len(dim(M)[[2L]])) {
+      if (i != j) {
+        M[i, j] <- 2 * sin(pi * M[i, j] / 6)
+        M[j, i] <- 2 * sin(pi * M[j, i] / 6)
+      }
+    }
+  }
+
+  X <- matrix(dqrnorm(n * dim(M)[[2]]), n)
+  colnames(X) <- colnames(M)
+
+  # induce correlation, check correlations
+  Y <- pnorm(X %*% chol(M))
+
+  # message(paste0("Mean square error is: ", signif(sum((cor(Y) - M_original) ^
+  # 2), 3)))
+  return(Y)
+}
+
 
 
 
