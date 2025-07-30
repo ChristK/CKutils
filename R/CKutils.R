@@ -47,10 +47,9 @@
 #' @importFrom data.table fwrite
 #' @importFrom Rcpp sourceCpp
 #' @importFrom utils installed.packages
-#' @importFrom remotes install_local
+#' @importFrom callr rcmd rscript
 #' @importFrom dqrng dqrunif dqrnorm
 #' @importFrom stats pnorm
-#' @importFrom roxygen2 roxygenise
 #' @useDynLib CKutils, .registration = TRUE
 
 # Make sure data.table knows we know we're using it

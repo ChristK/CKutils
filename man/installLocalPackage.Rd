@@ -22,7 +22,7 @@ The function performs the following steps:
 - Generates updated documentation using \code{roxygen2::roxygenise()}.
 - Detaches the package if already loaded.
 - Deletes compiled files such as .o, .so, or .dll for a clean rebuild.
-- Installs the package using \code{remotes::install_local()}.
+- Installs the package using \code{callr::rcmd("INSTALL", ...)}.
 }
 \examples{
 \dontrun{
@@ -32,5 +32,5 @@ installLocalPackage("/path/to/custom/package_dir")
 
 }
 \seealso{
-\code{\link[remotes]{install_local}}, \code{\link[roxygen2]{roxygenise}}
+\code{\link[roxygen2]{roxygenise}}
 }

@@ -7,23 +7,31 @@
 detach_package(pkg)
 }
 \arguments{
-\item{pkg}{Character string of package name. The name of the package to detach.}
+\item{pkg}{Character string of package name. The name of the package to
+detach.}
 }
 \value{
-Invisibly returns \code{TRUE} if the package was detached, or \code{FALSE} if it was not attached.
+Invisibly returns \code{TRUE} if the package was detached, or
+\code{FALSE} if it was not attached.
 }
 \description{
-Detaches a loaded R package cleanly from the current session. This is useful
-when reinstalling or updating a package during development.
+Detaches a loaded R package cleanly from the current session.
+This is useful when reinstalling or updating a package during development.
 }
 \details{
-If the specified package is attached multiple times (e.g., via multiple `library()` calls),
-it will be fully detached. A message is displayed indicating whether the detachment occurred.
+If the specified package is attached multiple times (e.g., via
+multiple `library()` calls), it will be fully detached. A message is
+displayed indicating whether the detachment occurred. 
+
+Note that R's dynamic library loader can load a shared object once per
+session, but unloading and reloading the same library in the same process is
+not guaranteed to work. In some cases, attempting to reload a package after
+detachment may result in errors or unexpected behavior. For more details, see
+the R documentation on dynamic libraries:
+https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Dynamic-loading
 }
 \examples{
-\dontrun{
-detach_package("ggplot2")
-}
+\dontrun{ detach_package("ggplot2") }
 
 }
 \seealso{

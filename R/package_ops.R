@@ -18,22 +18,27 @@
 
 #' @title Detach a Loaded Package
 #'
-#' @description
-#' Detaches a loaded R package cleanly from the current session. This is useful
-#' when reinstalling or updating a package during development.
+#' @description Detaches a loaded R package cleanly from the current session.
+#' This is useful when reinstalling or updating a package during development.
 #'
-#' @param pkg Character string of package name. The name of the package to detach.
+#' @param pkg Character string of package name. The name of the package to
+#' detach.
 #'
-#' @return Invisibly returns \code{TRUE} if the package was detached, or \code{FALSE} if it was not attached.
+#' @return Invisibly returns \code{TRUE} if the package was detached, or
+#' \code{FALSE} if it was not attached.
 #'
-#' @details
-#' If the specified package is attached multiple times (e.g., via multiple `library()` calls),
-#' it will be fully detached. A message is displayed indicating whether the detachment occurred.
+#' @details If the specified package is attached multiple times (e.g., via
+#' multiple `library()` calls), it will be fully detached. A message is
+#' displayed indicating whether the detachment occurred. 
+#' 
+#' Note that R's dynamic library loader can load a shared object once per
+#' session, but unloading and reloading the same library in the same process is
+#' not guaranteed to work. In some cases, attempting to reload a package after
+#' detachment may result in errors or unexpected behavior. For more details, see
+#' the R documentation on dynamic libraries:
+#' https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Dynamic-loading
 #'
-#' @examples
-#' \dontrun{
-#' detach_package("ggplot2")
-#' }
+#' @examples \dontrun{ detach_package("ggplot2") }
 #'
 #' @seealso \code{\link{library}}, \code{\link{detach}}
 #'
@@ -82,7 +87,7 @@ detach_package <- function(pkg) {
 #' - Generates updated documentation using \code{roxygen2::roxygenise()}.
 #' - Detaches the package if already loaded.
 #' - Deletes compiled files such as .o, .so, or .dll for a clean rebuild.
-#' - Installs the package using \code{remotes::install_local()}.
+#' - Installs the package using \code{callr::rcmd("INSTALL", ...)}.
 #'
 #' @examples
 #' \dontrun{
@@ -90,20 +95,10 @@ detach_package <- function(pkg) {
 #' installLocalPackage("/path/to/custom/package_dir")
 #' }
 #'
-#' @seealso \code{\link[remotes]{install_local}}, \code{\link[roxygen2]{roxygenise}}
+#' @seealso \code{\link[roxygen2]{roxygenise}}
 #'
 #' @export
 installLocalPackage <- function(sPackageDirPath) {
-  # Ensure necessary tools are installed
-  if (!requireNamespace("remotes", quietly = TRUE)) {
-    install.packages("remotes")
-  }
-
-  if (!requireNamespace("roxygen2", quietly = TRUE)) {
-    install.packages("roxygen2")
-  }
-  roxygen2::roxygenise(sPackageDirPath, clean = TRUE)
-
   # Detach package if already loaded
   # Read package name from DESCRIPTION file
   desc_path <- file.path(sPackageDirPath, "DESCRIPTION")
@@ -112,6 +107,21 @@ installLocalPackage <- function(sPackageDirPath) {
   } else {
     stop("DESCRIPTION file not found in: ", sPackageDirPath)
   }
+  detach_package(pkg_name)
+
+  rscript(
+    # callr
+    c(
+      "-e",
+      sprintf(
+        "if (!require('roxygen2', quietly=TRUE)) install.packages('roxygen2'); roxygen2::roxygenise('%s', clean=TRUE)",
+        sPackageDirPath   
+      )
+    ),
+    echo = TRUE
+  )
+
+  # Detach package again because roxygenise might have reloaded it
   detach_package(pkg_name)
 
   # Remove any compiled files to ensure clean install
@@ -126,11 +136,10 @@ installLocalPackage <- function(sPackageDirPath) {
   # Install the package from local directory
   tryCatch(
     {
-      remotes::install_local(
-        sPackageDirPath,
-        build_vignettes = TRUE,
-        force = TRUE,
-        upgrade = "never"
+      callr::rcmd(
+        "INSTALL",
+        c("--preclean", sPackageDirPath),
+        echo = TRUE
       )
       message(paste0(pkg_name, " package installed successfully."))
     },
