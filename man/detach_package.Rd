@@ -21,7 +21,9 @@ This is useful when reinstalling or updating a package during development.
 \details{
 If the specified package is attached multiple times (e.g., via
 multiple `library()` calls), it will be fully detached. A message is
-displayed indicating whether the detachment occurred. 
+displayed indicating whether the detachment occurred. The function
+\code{pkgload::unload()} can also be used for this purpose and it is actually
+more sophisticated.
 
 Note that R's dynamic library loader can load a shared object once per
 session, but unloading and reloading the same library in the same process is
@@ -35,5 +37,5 @@ https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Dynamic-loading
 
 }
 \seealso{
-\code{\link{library}}, \code{\link{detach}}
+\code{\link{library}}, \code{\link{detach}}, \code{\link[pkgload]{unload()}}
 }

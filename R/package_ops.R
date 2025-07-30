@@ -29,8 +29,10 @@
 #'
 #' @details If the specified package is attached multiple times (e.g., via
 #' multiple `library()` calls), it will be fully detached. A message is
-#' displayed indicating whether the detachment occurred. 
-#' 
+#' displayed indicating whether the detachment occurred. The function
+#' \code{pkgload::unload()} can also be used for this purpose and it is actually
+#' more sophisticated.
+#'
 #' Note that R's dynamic library loader can load a shared object once per
 #' session, but unloading and reloading the same library in the same process is
 #' not guaranteed to work. In some cases, attempting to reload a package after
@@ -40,7 +42,7 @@
 #'
 #' @examples \dontrun{ detach_package("ggplot2") }
 #'
-#' @seealso \code{\link{library}}, \code{\link{detach}}
+#' @seealso \code{\link{library}}, \code{\link{detach}}, \code{\link[pkgload]{unload()}}
 #'
 #' @export
 detach_package <- function(pkg) {
@@ -71,13 +73,26 @@ detach_package <- function(pkg) {
   invisible(detached)
 }
 
+# Detaching my other packages is unsafe. I.e. the following always segfaults
+# after a couple of iterations. pkgload::unload also crashes.
+# i <- 0
+# print(i)
+# while (i < 10) {
+#   i <- i + 1
+#   library(IMPACTncdJapan)
+#   CKutils::detach_package("IMPACTncdJapan")
+# }
+
+
+
+
 #' @title Install or Reinstall a Local R Package
 #'
 #' @description
 #' Installs or reinstalls a local R package from the specified directory. Useful during
 #' development to ensure the package is rebuilt with updated source code and documentation.
 #'
-#' @param sPackageDirPath Character string. Path to the local package directory.
+#' @param pkg_path Character string. Path to the local package directory.
 #'
 #' @return Invisibly returns \code{NULL}. Prints installation progress and success/failure messages.
 #'
@@ -98,14 +113,14 @@ detach_package <- function(pkg) {
 #' @seealso \code{\link[roxygen2]{roxygenise}}
 #'
 #' @export
-installLocalPackage <- function(sPackageDirPath) {
+installLocalPackage <- function(pkg_path) {
   # Detach package if already loaded
   # Read package name from DESCRIPTION file
-  desc_path <- file.path(sPackageDirPath, "DESCRIPTION")
+  desc_path <- file.path(pkg_path, "DESCRIPTION")
   pkg_name <- if (file.exists(desc_path)) {
     read.dcf(desc_path, fields = "Package")[1]
   } else {
-    stop("DESCRIPTION file not found in: ", sPackageDirPath)
+    stop("DESCRIPTION file not found in: ", pkg_path)
   }
   detach_package(pkg_name)
 
@@ -115,18 +130,15 @@ installLocalPackage <- function(sPackageDirPath) {
       "-e",
       sprintf(
         "if (!require('roxygen2', quietly=TRUE)) install.packages('roxygen2'); roxygen2::roxygenise('%s', clean=TRUE)",
-        sPackageDirPath   
+        pkg_path   
       )
     ),
     echo = TRUE
   )
 
-  # Detach package again because roxygenise might have reloaded it
-  detach_package(pkg_name)
-
   # Remove any compiled files to ensure clean install
   compiled_files <- list.files(
-    path = sPackageDirPath,
+    path = pkg_path,
     pattern = "\\.o$|\\.dll$|\\.so$",
     recursive = TRUE,
     full.names = TRUE
@@ -138,7 +150,7 @@ installLocalPackage <- function(sPackageDirPath) {
     {
       callr::rcmd(
         "INSTALL",
-        c("--preclean", sPackageDirPath),
+        c("--preclean", pkg_path),
         echo = TRUE
       )
       message(paste0(pkg_name, " package installed successfully."))
@@ -213,3 +225,162 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path) {
 
   invisible(NULL)
 }
+
+
+#' Simplified loading and installing of packages
+#'
+#' This is a wrapper to \code{\link{require}} and \code{\link{install.packages}}.
+#' Specifically, this will first try to load the package(s) and if not found
+#' it will install then load and attach the packages. Additionally, if the
+#' \code{update=TRUE} parameter is specified it will check the currently
+#' installed package version with what is available on CRAN (or mirror) and
+#' install the newer version.
+#'
+#' The function was originally created by Jason Bryer
+#' \href{https://www.r-bloggers.com/2014/02/function-to-simplify-loading-and-installing-packages/}{here}
+#' and the source is available \href{https://gist.github.com/jbryer/9112634}{here}.
+#' Note: I renamed the function to \code{dependencies} and adapted it to attach
+#' instead of only load the packages.
+#'
+#' @param pkges a character vector with the names of the packages to load.
+#' @param install if TRUE (default), any packages not already installed will be.
+#' @param update if TRUE, this function will install a newer version of the
+#'        package if available.
+#' @param quiet if TRUE (default), package startup messages will be suppressed.
+#' @param verbose if TRUE (default), diagnostic messages will be printed.
+#' @param ... other parameters passed to \code{\link{require}},
+#'            \code{\link{install.packages}}, and
+#'            \code{\link{available.packages}}.
+#' @return a data frame with four columns and rownames corresponding to the
+#'         packages to be loaded. The four columns are: loaded (logical
+#'         indicating whether the package was successfully loaded), installed
+#'         (logical indicating that the package was installed or updated),
+#'         loaded.version (the version string of the installed package), and
+#'         available.version (the version string of the package currently
+#'         available on CRAN). Note that this only reflects packages listed in
+#'         the \code{pkges} parameter. Other packages may be loaded and/or
+#'         installed as necessary by \code{install.packages} and \code{require}.
+#'         If \code{verbose=FALSE} the data frame will be returned using
+#'         \code{\link{invisible}}.
+#' @export
+#' @examples
+#' \dontrun{
+#' dependencies(c('devtools','lattice','ggplot2','psych'))
+#' }
+dependencies <-
+  function(
+    pkges,
+    install = TRUE,
+    update = FALSE,
+    quiet = TRUE,
+    verbose = FALSE,
+    ...
+  ) {
+    myrequire <- function(package, ...) {
+      result <- FALSE
+      if (quiet) {
+        suppressMessages(suppressWarnings(
+          result <- requireNamespace(package, ...)
+        ))
+      } else {
+        result <- suppressWarnings(requireNamespace(package, ...))
+      }
+      return(result)
+    }
+    mymessage <- function(msg) {
+      if (verbose) {
+        message(msg)
+      }
+    }
+
+    installedpkgs <- installed.packages()
+    availpkgs <- available.packages()[, c('Package', 'Version')]
+    if (nrow(availpkgs) == 0) {
+      warning(
+        paste0(
+          'There appear to be no packages available from the ',
+          'repositories. Perhaps you are not connected to the ',
+          'Internet?'
+        )
+      )
+    }
+    # It appears that hyphens (-) will be replaced with dots (.) in version
+    # numbers by the packageVersion function
+    availpkgs[, 'Version'] <- gsub('-', '.', availpkgs[, 'Version'])
+    results <- data.frame(
+      loaded = rep(FALSE, length(pkges)),
+      installed = rep(FALSE, length(pkges)),
+      loaded.version = rep(as.character(NA), length(pkges)),
+      available.version = rep(as.character(NA), length(pkges)),
+      stringsAsFactors = FALSE
+    )
+    row.names(results) <- pkges
+    for (i in pkges) {
+      loadedPkgs <- search()
+      needInstall <- FALSE
+      if (i %in% row.names(installedpkgs)) {
+        v <- as.character(packageVersion(i))
+        if (i %in% row.names(availpkgs)) {
+          if (v != availpkgs[i, 'Version']) {
+            if (!update) {
+              mymessage(
+                paste0(
+                  'A different version of ',
+                  i,
+                  ' is available ',
+                  '(current=',
+                  v,
+                  '; available=',
+                  availpkgs[i, 'Version'],
+                  ')'
+                )
+              )
+            }
+            needInstall <- update
+          }
+          results[i, ]$available.version <- availpkgs[i, 'Version']
+        } else {
+          mymessage(paste0(i, ' is not available on the repositories.'))
+        }
+      } else {
+        if (i %in% row.names(availpkgs)) {
+          needInstall <- TRUE & install
+          results[i, ]$available.version <- availpkgs[i, 'Version']
+        } else {
+          warning(paste0(
+            i,
+            ' is not available on the repositories and ',
+            'is not installed locally'
+          ))
+        }
+      }
+      if (needInstall | !myrequire(i)) {
+        if (verbose) {
+          install.packages(pkgs = i, quiet = quiet)
+        } else {
+          suppressMessages(install.packages(pkgs = i, quiet = quiet))
+        }
+        if (!myrequire(i, ...)) {
+          warning(paste0('Error loading package: ', i))
+        } else {
+          results[i, ]$installed <- TRUE
+          results[i, ]$loaded <- TRUE
+          results[i, ]$loaded.version <- as.character(packageVersion(i))
+        }
+      } else {
+        results[i, ]$loaded <- TRUE
+        results[i, ]$loaded.version <- as.character(packageVersion(i))
+      }
+      loadedPkgs2 <- search()
+      for (j in loadedPkgs2[!loadedPkgs2 %in% loadedPkgs]) {
+        try(detach(j, character.only = TRUE), silent = TRUE)
+      }
+      library(i, character.only = TRUE)
+    }
+    # library(pkges, character.only	= TRUE)
+    if (verbose) {
+      return(results)
+    } else {
+      invisible(results)
+    }
+  }

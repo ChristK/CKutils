@@ -4,10 +4,10 @@
 \alias{installLocalPackage}
 \title{Install or Reinstall a Local R Package}
 \usage{
-installLocalPackage(sPackageDirPath)
+installLocalPackage(pkg_path)
 }
 \arguments{
-\item{sPackageDirPath}{Character string. Path to the local package directory.}
+\item{pkg_path}{Character string. Path to the local package directory.}
 }
 \value{
 Invisibly returns \code{NULL}. Prints installation progress and success/failure messages.
