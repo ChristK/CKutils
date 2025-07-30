@@ -37,5 +37,5 @@ https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Dynamic-loading
 
 }
 \seealso{
-\code{\link{library}}, \code{\link{detach}}, \code{\link[pkgload]{unload()}}
+\code{\link{library}}, \code{\link{detach}}, \code{\link[pkgload]{unload}}
 }

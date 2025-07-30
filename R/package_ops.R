@@ -42,7 +42,7 @@
 #'
 #' @examples \dontrun{ detach_package("ggplot2") }
 #'
-#' @seealso \code{\link{library}}, \code{\link{detach}}, \code{\link[pkgload]{unload()}}
+#' @seealso \code{\link{library}}, \code{\link{detach}}, \code{\link[pkgload]{unload}}
 #'
 #' @export
 detach_package <- function(pkg) {
