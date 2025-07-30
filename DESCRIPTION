@@ -5,10 +5,9 @@ Version: 0.1.9
 Date: 2025-07-23
 Authors@R: c(
     person("Chris", "Kypridemos", email = "christodoulosk@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0746-9229")),
-    person("Max", "Birkett", email = "pp0u8134@liverpool.ac.uk", role = c("ctb"), comment = c(ORCID = "0000-0002-6076-6820")),
+    person("Max", "Birkett", email = "pp0u8134@liverpool.ac.uk", role = "ctb", comment = c(ORCID = "0000-0002-6076-6820")),
     person("Amandine", "Robert", email = "amandine.rob.26@gmail.com", role = "ctb"),
-    person("Adithi R.", "Upadhya", role = "ctb")
-)
+    person("Adithi R.", "Upadhya", role = "ctb"))
 Maintainer: Chris Kypridemos <christodoulosk@gmail.com>
 Description: Contains utility functions for developing simulation models. 
 License: GPL (>= 3)
