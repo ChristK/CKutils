@@ -276,108 +276,147 @@ dependencies <-
     verbose = FALSE,
     ...
   ) {
+    # Input validation
+    if (missing(pkges)) {
+      stop("Argument 'pkges' is missing, with no default")
+    }
+    if (!is.character(pkges) || length(pkges) == 0) {
+      stop("'pkges' must be a non-empty character vector")
+    }
+    
+    # Remove duplicates while preserving order
+    pkges <- unique(pkges)
+    
     myrequire <- function(package, ...) {
-      result <- FALSE
       if (quiet) {
         suppressMessages(suppressWarnings(
-          result <- requireNamespace(package, ...)
+          requireNamespace(package, ...)
         ))
       } else {
-        result <- suppressWarnings(requireNamespace(package, ...))
+        suppressWarnings(requireNamespace(package, ...))
       }
-      return(result)
     }
+    
     mymessage <- function(msg) {
       if (verbose) {
         message(msg)
       }
     }
 
+    # Get package information once
     installedpkgs <- installed.packages()
-    availpkgs <- available.packages()[, c('Package', 'Version')]
-    if (nrow(availpkgs) == 0) {
+    all_available <- available.packages()
+    
+    # Handle case where no packages are available
+    if (nrow(all_available) == 0) {
       warning(
-        paste0(
-          'There appear to be no packages available from the ',
-          'repositories. Perhaps you are not connected to the ',
-          'Internet?'
-        )
+        "There appear to be no packages available from the repositories. ",
+        "Perhaps you are not connected to the Internet?"
       )
+      availpkgs <- data.frame(
+        Package = character(0), 
+        Version = character(0),
+        stringsAsFactors = FALSE
+      )
+    } else {
+      availpkgs <- all_available[, c('Package', 'Version'), drop = FALSE]
+      # Normalize version numbers (hyphens to dots for packageVersion compatibility)
+      availpkgs[, 'Version'] <- gsub('-', '.', availpkgs[, 'Version'])
     }
-    # It appears that hyphens (-) will be replaced with dots (.) in version
-    # numbers by the packageVersion function
-    availpkgs[, 'Version'] <- gsub('-', '.', availpkgs[, 'Version'])
+    # Initialize results data frame
     results <- data.frame(
-      loaded = rep(FALSE, length(pkges)),
-      installed = rep(FALSE, length(pkges)),
-      loaded.version = rep(as.character(NA), length(pkges)),
-      available.version = rep(as.character(NA), length(pkges)),
+      loaded = logical(length(pkges)),
+      installed = logical(length(pkges)),
+      loaded.version = character(length(pkges)),
+      available.version = character(length(pkges)),
       stringsAsFactors = FALSE
     )
-    row.names(results) <- pkges
-    for (i in pkges) {
-      loadedPkgs <- search()
-      needInstall <- FALSE
-      if (i %in% row.names(installedpkgs)) {
-        v <- as.character(packageVersion(i))
-        if (i %in% row.names(availpkgs)) {
-          if (v != availpkgs[i, 'Version']) {
+    rownames(results) <- pkges
+    
+    # Process each package
+    for (pkg in pkges) {
+      initial_search <- search()
+      needs_install <- FALSE
+      
+      # Check if package is already installed
+      if (pkg %in% rownames(installedpkgs)) {
+        current_version <- as.character(packageVersion(pkg))
+        
+        # Check if available on repositories
+        if (pkg %in% rownames(availpkgs)) {
+          available_version <- availpkgs[pkg, 'Version']
+          results[pkg, 'available.version'] <- available_version
+          
+          # Check for version differences
+          if (current_version != available_version) {
             if (!update) {
-              mymessage(
-                paste0(
-                  'A different version of ',
-                  i,
-                  ' is available ',
-                  '(current=',
-                  v,
-                  '; available=',
-                  availpkgs[i, 'Version'],
-                  ')'
-                )
-              )
+              mymessage(sprintf(
+                "A different version of %s is available (current=%s; available=%s)",
+                pkg, current_version, available_version
+              ))
             }
-            needInstall <- update
+            needs_install <- update
           }
-          results[i, ]$available.version <- availpkgs[i, 'Version']
         } else {
-          mymessage(paste0(i, ' is not available on the repositories.'))
+          mymessage(sprintf("%s is not available on the repositories.", pkg))
         }
       } else {
-        if (i %in% row.names(availpkgs)) {
-          needInstall <- TRUE & install
-          results[i, ]$available.version <- availpkgs[i, 'Version']
+        # Package not installed - check if available for installation
+        if (pkg %in% rownames(availpkgs)) {
+          needs_install <- isTRUE(install)
+          results[pkg, 'available.version'] <- availpkgs[pkg, 'Version']
         } else {
-          warning(paste0(
-            i,
-            ' is not available on the repositories and ',
-            'is not installed locally'
+          warning(sprintf(
+            "%s is not available on the repositories and is not installed locally",
+            pkg
           ))
         }
       }
-      if (needInstall | !myrequire(i)) {
-        if (verbose) {
-          install.packages(pkgs = i, quiet = quiet)
-        } else {
-          suppressMessages(install.packages(pkgs = i, quiet = quiet))
-        }
-        if (!myrequire(i, ...)) {
-          warning(paste0('Error loading package: ', i))
-        } else {
-          results[i, ]$installed <- TRUE
-          results[i, ]$loaded <- TRUE
-          results[i, ]$loaded.version <- as.character(packageVersion(i))
-        }
+      
+      # Install and/or load package
+      if (needs_install || !myrequire(pkg)) {
+        # Install package
+        tryCatch({
+          if (verbose) {
+            install.packages(pkgs = pkg, quiet = quiet, ...)
+          } else {
+            suppressMessages(install.packages(pkgs = pkg, quiet = quiet, ...))
+          }
+          
+          # Verify installation and loading
+          if (myrequire(pkg)) {
+            results[pkg, 'installed'] <- TRUE
+            results[pkg, 'loaded'] <- TRUE
+            results[pkg, 'loaded.version'] <- as.character(packageVersion(pkg))
+          } else {
+            warning(sprintf("Error loading package: %s", pkg))
+          }
+        }, error = function(e) {
+          warning(sprintf("Failed to install package %s: %s", pkg, e$message))
+        })
       } else {
-        results[i, ]$loaded <- TRUE
-        results[i, ]$loaded.version <- as.character(packageVersion(i))
+        # Package loaded successfully without installation
+        results[pkg, 'loaded'] <- TRUE
+        results[pkg, 'loaded.version'] <- as.character(packageVersion(pkg))
       }
-      loadedPkgs2 <- search()
-      for (j in loadedPkgs2[!loadedPkgs2 %in% loadedPkgs]) {
-        try(detach(j, character.only = TRUE), silent = TRUE)
+      
+      # Clean up any side-effect package attachments and attach the target package
+      final_search <- search()
+      side_effect_packages <- setdiff(final_search, initial_search)
+      
+      for (side_pkg in side_effect_packages) {
+        try(detach(side_pkg, character.only = TRUE), silent = TRUE)
       }
-      library(i, character.only = TRUE)
+      
+      # Attach the package we actually want
+      if (quiet) {
+        suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+      } else {
+        library(pkg, character.only = TRUE)
+      }
     }
-    # library(pkges, character.only	= TRUE)
+    
+    # Return results
     if (verbose) {
       return(results)
     } else {
