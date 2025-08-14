@@ -242,15 +242,15 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path) {
 #' Note: I renamed the function to \code{dependencies} and adapted it to attach
 #' instead of only load the packages.
 #'
-#' @param pkges a character vector with the names of the packages to load.
-#' @param install if TRUE (default), any packages not already installed will be.
-#' @param update if TRUE, this function will install a newer version of the
-#'        package if available.
-#' @param quiet if TRUE (default), package startup messages will be suppressed.
-#' @param verbose if TRUE (default), diagnostic messages will be printed.
-#' @param ... other parameters passed to \code{\link{require}},
-#'            \code{\link{install.packages}}, and
-#'            \code{\link{available.packages}}.
+#' @param ... Package names (quoted or unquoted) or a character vector of package names.
+#'            When providing unquoted names, separate them with commas.
+#'            When providing a character vector, it should be the first argument.
+#' @param pkges (Deprecated) Use \code{...} instead. A character vector with the names of the packages to load.
+#' @param install Logical. If TRUE (default), any packages not already installed will be installed.
+#' @param update Logical. If TRUE, this function will install a newer version of the
+#'        package if available. Default is FALSE.
+#' @param quiet Logical. If TRUE (default), package startup messages will be suppressed.
+#' @param verbose Logical. If TRUE, diagnostic messages will be printed. Default is FALSE.
 #' @return a data frame with four columns and rownames corresponding to the
 #'         packages to be loaded. The four columns are: loaded (logical
 #'         indicating whether the package was successfully loaded), installed
@@ -258,42 +258,83 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path) {
 #'         loaded.version (the version string of the installed package), and
 #'         available.version (the version string of the package currently
 #'         available on CRAN). Note that this only reflects packages listed in
-#'         the \code{pkges} parameter. Other packages may be loaded and/or
+#'         the \code{...} parameter. Other packages may be loaded and/or
 #'         installed as necessary by \code{install.packages} and \code{require}.
 #'         If \code{verbose=FALSE} the data frame will be returned using
 #'         \code{\link{invisible}}.
 #' @export
 #' @examples
 #' \dontrun{
+#' # Using unquoted package names
+#' dependencies(data.table, MASS, ggplot2)
+#' 
+#' # Using quoted package names (traditional way)
 #' dependencies(c('devtools','lattice','ggplot2','psych'))
+#' 
+#' # Mixed usage with options
+#' dependencies(dplyr, tidyr, install = TRUE, quiet = FALSE)
 #' }
 dependencies <-
   function(
-    pkges,
+    ...,
+    pkges = NULL,
     install = TRUE,
     update = FALSE,
     quiet = TRUE,
-    verbose = FALSE,
-    ...
+    verbose = FALSE
   ) {
-    # Input validation
-    if (missing(pkges)) {
-      stop("Argument 'pkges' is missing, with no default")
+    # Handle different input methods
+    dots <- substitute(list(...))[-1]  # Remove the 'list' part
+    
+    if (length(dots) == 0 && is.null(pkges)) {
+      stop("No packages specified. Provide package names as arguments or use 'pkges' parameter.")
     }
-    if (!is.character(pkges) || length(pkges) == 0) {
-      stop("'pkges' must be a non-empty character vector")
+    
+    # Process package names from ... (unquoted or quoted)
+    if (length(dots) > 0) {
+      # Check if first argument is a character vector (traditional usage)
+      first_arg <- tryCatch(eval(dots[[1]], parent.frame()), error = function(e) NULL)
+      
+      if (length(dots) == 1 && is.character(first_arg) && length(first_arg) > 1) {
+        # Traditional usage: dependencies(c("pkg1", "pkg2"))
+        pkg_names <- first_arg
+      } else {
+        # New usage: dependencies(pkg1, pkg2) or dependencies("pkg1", "pkg2")
+        pkg_names <- character(length(dots))
+        for (i in seq_along(dots)) {
+          arg <- dots[[i]]
+          if (is.character(arg)) {
+            # Already quoted
+            pkg_names[i] <- arg
+          } else {
+            # Unquoted - convert to character
+            pkg_names[i] <- as.character(arg)
+          }
+        }
+      }
+    } else {
+      # Fallback to pkges parameter (backward compatibility)
+      pkg_names <- pkges
+    }
+    
+    # Input validation
+    if (is.null(pkg_names) || length(pkg_names) == 0) {
+      stop("No packages specified")
+    }
+    if (!is.character(pkg_names)) {
+      stop("Package names must be character strings")
     }
     
     # Remove duplicates while preserving order
-    pkges <- unique(pkges)
+    pkges <- unique(pkg_names)
     
-    myrequire <- function(package, ...) {
+    myrequire <- function(package) {
       if (quiet) {
         suppressMessages(suppressWarnings(
-          requireNamespace(package, ...)
+          requireNamespace(package, quietly = TRUE)
         ))
       } else {
-        suppressWarnings(requireNamespace(package, ...))
+        suppressWarnings(requireNamespace(package, quietly = TRUE))
       }
     }
     
@@ -378,9 +419,9 @@ dependencies <-
         # Install package
         tryCatch({
           if (verbose) {
-            install.packages(pkgs = pkg, quiet = quiet, ...)
+            install.packages(pkgs = pkg, quiet = quiet)
           } else {
-            suppressMessages(install.packages(pkgs = pkg, quiet = quiet, ...))
+            suppressMessages(install.packages(pkgs = pkg, quiet = quiet))
           }
           
           # Verify installation and loading
