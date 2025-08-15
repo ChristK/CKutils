@@ -5,29 +5,29 @@
 \title{Simplified loading and installing of packages}
 \usage{
 dependencies(
-  pkges,
+  ...,
+  pkges = NULL,
   install = TRUE,
   update = FALSE,
   quiet = TRUE,
-  verbose = FALSE,
-  ...
+  verbose = FALSE
 )
 }
 \arguments{
-\item{pkges}{a character vector with the names of the packages to load.}
+\item{...}{Package names (quoted or unquoted) or a character vector of package names.
+When providing unquoted names, separate them with commas.
+When providing a character vector, it should be the first argument.}
 
-\item{install}{if TRUE (default), any packages not already installed will be.}
+\item{pkges}{(Deprecated) Use \code{...} instead. A character vector with the names of the packages to load.}
 
-\item{update}{if TRUE, this function will install a newer version of the
-package if available.}
+\item{install}{Logical. If TRUE (default), any packages not already installed will be installed.}
 
-\item{quiet}{if TRUE (default), package startup messages will be suppressed.}
+\item{update}{Logical. If TRUE, this function will install a newer version of the
+package if available. Default is FALSE.}
 
-\item{verbose}{if TRUE (default), diagnostic messages will be printed.}
+\item{quiet}{Logical. If TRUE (default), package startup messages will be suppressed.}
 
-\item{...}{other parameters passed to \code{\link{require}},
-\code{\link{install.packages}}, and
-\code{\link{available.packages}}.}
+\item{verbose}{Logical. If TRUE, diagnostic messages will be printed. Default is FALSE.}
 }
 \value{
 a data frame with four columns and rownames corresponding to the
@@ -37,7 +37,7 @@ a data frame with four columns and rownames corresponding to the
         loaded.version (the version string of the installed package), and
         available.version (the version string of the package currently
         available on CRAN). Note that this only reflects packages listed in
-        the \code{pkges} parameter. Other packages may be loaded and/or
+        the \code{...} parameter. Other packages may be loaded and/or
         installed as necessary by \code{install.packages} and \code{require}.
         If \code{verbose=FALSE} the data frame will be returned using
         \code{\link{invisible}}.
@@ -59,6 +59,13 @@ instead of only load the packages.
 }
 \examples{
 \dontrun{
+# Using unquoted package names
+dependencies(data.table, MASS, ggplot2)
+
+# Using quoted package names (traditional way)
 dependencies(c('devtools','lattice','ggplot2','psych'))
+
+# Mixed usage with options
+dependencies(dplyr, tidyr, install = TRUE, quiet = FALSE)
 }
 }
