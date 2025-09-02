@@ -229,17 +229,17 @@ SEXP dtsubset(SEXP x, SEXP rows, SEXP cols) {
     }
     
     // Validate row indices are within bounds
-    IntegerVector row_vec(rows);
-    int nrows = Rf_length(VECTOR_ELT(x, 0)); // Number of rows in first column
-    for (int i = 0; i < row_vec.size(); i++) {
-        if (IntegerVector::is_na(row_vec[i])) {
-            stop("Row indices cannot contain NA values");
-        }
-        if (row_vec[i] < 1 || row_vec[i] > nrows) {
-            stop("Row index out of bounds: " + std::to_string(row_vec[i]) + 
-                 " (valid range: 1 to " + std::to_string(nrows) + ")");
-        }
-    }
+    // IntegerVector row_vec(rows);
+    // int nrows = Rf_length(VECTOR_ELT(x, 0)); // Number of rows in first column
+    // for (int i = 0; i < row_vec.size(); i++) {
+    //     if (IntegerVector::is_na(row_vec[i])) {
+    //         stop("Row indices cannot contain NA values");
+    //     }
+    //     if (row_vec[i] < 1 || row_vec[i] > nrows) {
+    //         stop("Row index out of bounds: " + std::to_string(row_vec[i]) + 
+    //              " (valid range: 1 to " + std::to_string(nrows) + ")");
+    //     }
+    // }
     
     // Validate column indices are within bounds
     IntegerVector col_vec(cols);

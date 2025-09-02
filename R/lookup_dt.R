@@ -248,7 +248,7 @@ lookup_dt <- function(
   })
 
   # Additional validation of rownum before calling dtsubset
-  if (any(is.na(rownum))) {
+  if (check_lookup_tbl_validity && anyNA(rownum)) {
     warning("Some row indices are NA, results may be incomplete")
   }
   
