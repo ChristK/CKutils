@@ -35,8 +35,11 @@ inline double fscramble_hlp(const double x, const double jump) {
   if (lower >= 1.0 || upper <= 0.0) return x;
   
   // Clamp bounds to valid range before RNG call
-  const double safe_lower = (lower > 0.0) ? lower : 0.0001;
-  const double safe_upper = (upper < 1.0) ? upper : 0.9999;
+  const double safe_lower = (lower > 0.0) ? lower : 1e-10;
+  const double safe_upper = (upper < 1.0) ? upper : (1.0 - 1e-10);
+  
+  // Ensure lower <= upper after clamping
+  if (safe_lower >= safe_upper) return x;
   
   // Generate random value in the safe range using more efficient accessor
   dqrng::random_64bit_accessor rng;
