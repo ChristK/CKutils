@@ -143,10 +143,9 @@ jobs:
 
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
+        uses: r-lib/actions/setup-r-dependencies@v2-branch
         with:
           extra-packages: any::rcmdcheck  # Ensure rcmdcheck package is available
-          needs: check                    # Install all dependencies needed for R CMD check
 
       # Step 5: Run comprehensive R CMD check
       - name: Run R CMD check
