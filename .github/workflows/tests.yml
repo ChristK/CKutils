@@ -131,11 +131,12 @@ jobs:
 
       # Step 3: Install package dependencies and tinytest
       - name: Setup R dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2.9.0
+        uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
             any::tinytest
             any::devtools
+          cache: ${{ runner.os != 'macOS' }}  # Disable cache on macOS due to runner bug #13341 https://github.com/actions/runner-images/issues/13341
 
       # Step 4: Run the test suite
       - name: Run tinytest suite
