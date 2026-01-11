@@ -6,6 +6,28 @@ echo "=== CKutils Local Test Runner ==="
 echo "This simulates what GitHub Actions will run"
 echo ""
 
+# Use ccache if available to speed up compilation
+if command -v ccache >/dev/null 2>&1; then
+    echo "⚡ Using ccache for compilation"
+    export CC="ccache gcc"
+    export CXX="ccache g++"
+    export CXX11="ccache g++"
+    export CXX14="ccache g++"
+    export CXX17="ccache g++"
+    export CXX20="ccache g++"
+else
+    echo "ℹ️  ccache not found; proceeding without it"
+fi
+
+# Use portable compiler flags to avoid non-portable NOTE in R CMD check
+export CFLAGS="-O2 -pipe"
+export CXXFLAGS="-O2 -pipe"
+export CXX11FLAGS="-O2 -pipe"
+export CXX14FLAGS="-O2 -pipe"
+export CXX17FLAGS="-O2 -pipe"
+export CXX20FLAGS="-O2 -pipe"
+export _R_CHECK_COMPILATION_FLAGS_KNOWN_="-Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -march=x86-64-v2"
+
 # Check if we're in the right directory
 if [ ! -f "DESCRIPTION" ]; then
     echo "Error: Please run this script from the CKutils package root directory"
