@@ -4,12 +4,15 @@
 \alias{installLocalPackageIfChanged}
 \title{Install Local Package If Changed}
 \usage{
-installLocalPackageIfChanged(pkg_path, snapshot_path)
+installLocalPackageIfChanged(pkg_path, snapshot_path, debug = TRUE)
 }
 \arguments{
 \item{pkg_path}{Character string. Path to the local R package directory.}
 
 \item{snapshot_path}{Character string. Path to the snapshot file used for change detection.}
+
+\item{debug}{Logical. If TRUE (default), compiles with debug flags (-O0 -g -UNDEBUG).
+If FALSE, uses production/release flags from Makevars (typically -O2).}
 }
 \value{
 Invisibly returns \code{NULL}. Installs the package and updates the snapshot if needed.
@@ -29,6 +32,12 @@ snapshot is updated.
 installLocalPackageIfChanged(
   pkg_path = "./Rpackage/IMPACTncd_Engl_model_pkg/",
   snapshot_path = "./Rpackage/.IMPACTncd_Engl_model_pkg_snapshot.rds"
+)
+# Production build
+installLocalPackageIfChanged(
+  pkg_path = "./Rpackage/IMPACTncd_Engl_model_pkg/",
+  snapshot_path = "./Rpackage/.IMPACTncd_Engl_model_pkg_snapshot.rds",
+  debug = FALSE
 )
 }
 

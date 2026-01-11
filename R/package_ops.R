@@ -93,6 +93,8 @@ detach_package <- function(pkg) {
 #' development to ensure the package is rebuilt with updated source code and documentation.
 #'
 #' @param pkg_path Character string. Path to the local package directory.
+#' @param debug Logical. If TRUE (default), compiles with debug flags (-O0 -g -UNDEBUG).
+#'   If FALSE, uses production/release flags from Makevars (typically -O2).
 #'
 #' @return Invisibly returns \code{NULL}. Prints installation progress and success/failure messages.
 #'
@@ -104,16 +106,20 @@ detach_package <- function(pkg) {
 #' - Deletes compiled files such as .o, .so, or .dll for a clean rebuild.
 #' - Installs the package using \code{callr::rcmd("INSTALL", ...)}.
 #'
+#' When debug = FALSE, the function sets R_COMPILE_AND_INSTALL_PACKAGES environment
+#' variable to prevent debug compilation flags from overriding Makevars settings.
+#'
 #' @examples
 #' \dontrun{
 #' installLocalPackage()
 #' installLocalPackage("/path/to/custom/package_dir")
+#' installLocalPackage("/path/to/package", debug = FALSE)  # Production build
 #' }
 #'
 #' @seealso \code{\link[roxygen2]{roxygenise}}
 #'
 #' @export
-installLocalPackage <- function(pkg_path) {
+installLocalPackage <- function(pkg_path, debug = TRUE) {
   # Detach package if already loaded
   # Read package name from DESCRIPTION file
   desc_path <- file.path(pkg_path, "DESCRIPTION")
@@ -148,6 +154,26 @@ installLocalPackage <- function(pkg_path) {
   # Install the package from local directory
   tryCatch(
     {
+      # Set build mode based on debug parameter
+      build_msg <- if (debug) "(debug build)" else "(production build)"
+      message(paste0("Installing ", pkg_name, " ", build_msg))
+      
+      # For production builds, disable debug compilation flags
+      if (!debug) {
+        # Save current environment
+        old_env <- Sys.getenv("R_COMPILE_AND_INSTALL_PACKAGES", unset = NA)
+        Sys.setenv(R_COMPILE_AND_INSTALL_PACKAGES = "never")
+        
+        # Ensure cleanup on exit
+        on.exit({
+          if (is.na(old_env)) {
+            Sys.unsetenv("R_COMPILE_AND_INSTALL_PACKAGES")
+          } else {
+            Sys.setenv(R_COMPILE_AND_INSTALL_PACKAGES = old_env)
+          }
+        }, add = TRUE)
+      }
+      
       callr::rcmd(
         "INSTALL",
         c("--preclean", pkg_path),
@@ -170,6 +196,8 @@ installLocalPackage <- function(pkg_path) {
 #'
 #' @param pkg_path Character string. Path to the local R package directory.
 #' @param snapshot_path Character string. Path to the snapshot file used for change detection.
+#' @param debug Logical. If TRUE (default), compiles with debug flags (-O0 -g -UNDEBUG).
+#'   If FALSE, uses production/release flags from Makevars (typically -O2).
 #'
 #' @return Invisibly returns \code{NULL}. Installs the package and updates the snapshot if needed.
 #'
@@ -184,12 +212,18 @@ installLocalPackage <- function(pkg_path) {
 #'   pkg_path = "./Rpackage/IMPACTncd_Engl_model_pkg/",
 #'   snapshot_path = "./Rpackage/.IMPACTncd_Engl_model_pkg_snapshot.rds"
 #' )
+#' # Production build
+#' installLocalPackageIfChanged(
+#'   pkg_path = "./Rpackage/IMPACTncd_Engl_model_pkg/",
+#'   snapshot_path = "./Rpackage/.IMPACTncd_Engl_model_pkg_snapshot.rds",
+#'   debug = FALSE
+#' )
 #' }
 #'
 #' @seealso \code{\link{installLocalPackage}}, \code{\link{saveRDS}}
 #'
 #' @export
-installLocalPackageIfChanged <- function(pkg_path, snapshot_path) {
+installLocalPackageIfChanged <- function(pkg_path, snapshot_path, debug = TRUE) {
   snapshot <- if (file.exists(snapshot_path)) {
     changedFiles(readRDS(snapshot_path))
   } else {
@@ -208,7 +242,7 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path) {
     any(nzchar(unlist(snapshot[c("added", "deleted", "changed")])))
 
   if (needs_install) {
-    installLocalPackage(pkg_path)
+    installLocalPackage(pkg_path, debug = debug)
 
     if (!is.null(snapshot)) {
       file.remove(snapshot_path)

@@ -4,10 +4,13 @@
 \alias{installLocalPackage}
 \title{Install or Reinstall a Local R Package}
 \usage{
-installLocalPackage(pkg_path)
+installLocalPackage(pkg_path, debug = TRUE)
 }
 \arguments{
 \item{pkg_path}{Character string. Path to the local package directory.}
+
+\item{debug}{Logical. If TRUE (default), compiles with debug flags (-O0 -g -UNDEBUG).
+If FALSE, uses production/release flags from Makevars (typically -O2).}
 }
 \value{
 Invisibly returns \code{NULL}. Prints installation progress and success/failure messages.
@@ -23,11 +26,15 @@ The function performs the following steps:
 - Detaches the package if already loaded.
 - Deletes compiled files such as .o, .so, or .dll for a clean rebuild.
 - Installs the package using \code{callr::rcmd("INSTALL", ...)}.
+
+When debug = FALSE, the function sets R_COMPILE_AND_INSTALL_PACKAGES environment
+variable to prevent debug compilation flags from overriding Makevars settings.
 }
 \examples{
 \dontrun{
 installLocalPackage()
 installLocalPackage("/path/to/custom/package_dir")
+installLocalPackage("/path/to/package", debug = FALSE)  # Production build
 }
 
 }
