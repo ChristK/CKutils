@@ -189,6 +189,153 @@ expect_equal(
   info = "Quantile: nu≈0 edge case test"
 )
 
+# =============================================================================
+# ADDITIONAL EDGE CASES
+# =============================================================================
+
+# Test 13b: Negative nu values should match gamlss.dist
+neg_data <- list(
+  x = c(0.2, 1.0, 2.5, 5.0),
+  q = c(0.1, 0.5, 1.0, 3.0),
+  p = c(0.05, 0.5, 0.8, 0.95),
+  mu = c(1.2, 2.0, 1.5, 3.0),
+  sigma = c(0.3, 0.6, 0.4, 0.8),
+  nu = c(-0.5, -1.2, -0.2, -0.7),
+  tau = c(1.5, 3.0, 5.0, 2.0)
+)
+
+pdf_ck_neg <- fdBCPEo(neg_data$x, neg_data$mu, neg_data$sigma, neg_data$nu, neg_data$tau)
+pdf_ref_neg <- dBCPEo(neg_data$x, neg_data$mu, neg_data$sigma, neg_data$nu, neg_data$tau)
+
+expect_equal(
+  pdf_ck_neg,
+  pdf_ref_neg,
+  info = "PDF: negative nu values test"
+)
+
+cdf_ck_neg <- fpBCPEo(neg_data$q, neg_data$mu, neg_data$sigma, neg_data$nu, neg_data$tau)
+cdf_ref_neg <- pBCPEo(neg_data$q, neg_data$mu, neg_data$sigma, neg_data$nu, neg_data$tau)
+
+expect_equal(
+  cdf_ck_neg,
+  cdf_ref_neg,
+  info = "CDF: negative nu values test"
+)
+
+quantile_ck_neg <- fqBCPEo(neg_data$p, neg_data$mu, neg_data$sigma, neg_data$nu, neg_data$tau)
+quantile_ref_neg <- qBCPEo(neg_data$p, neg_data$mu, neg_data$sigma, neg_data$nu, neg_data$tau)
+
+expect_equal(
+  quantile_ck_neg,
+  quantile_ref_neg,
+  info = "Quantile: negative nu values test"
+)
+
+# Test 13c: log/log_p consistency for safe values
+log_params <- list(
+  x = c(0.5, 1.5, 2.5),
+  q = c(1.5, 2.0, 2.5),
+  p = c(0.2, 0.5, 0.8),
+  mu = 2.0,
+  sigma = 0.4,
+  nu = 0.7,
+  tau = 3.0
+)
+
+pdf_plain <- fdBCPEo(log_params$x, log_params$mu, log_params$sigma, log_params$nu, log_params$tau, log_ = FALSE)
+pdf_log <- fdBCPEo(log_params$x, log_params$mu, log_params$sigma, log_params$nu, log_params$tau, log_ = TRUE)
+
+expect_equal(
+  log(pdf_plain),
+  pdf_log,
+  tolerance = 1e-8,
+  info = "PDF: log_ should match log of density"
+)
+
+cdf_plain <- fpBCPEo(log_params$q, log_params$mu, log_params$sigma, log_params$nu, log_params$tau, log_p = FALSE)
+cdf_log <- fpBCPEo(log_params$q, log_params$mu, log_params$sigma, log_params$nu, log_params$tau, log_p = TRUE)
+
+expect_equal(
+  log(cdf_plain),
+  cdf_log,
+  tolerance = 1e-8,
+  info = "CDF: log_p should match log of probability"
+)
+
+quantile_plain <- fqBCPEo(log_params$p, log_params$mu, log_params$sigma, log_params$nu, log_params$tau, log_p = FALSE)
+quantile_log <- fqBCPEo(log(log_params$p), log_params$mu, log_params$sigma, log_params$nu, log_params$tau, log_p = TRUE)
+
+expect_equal(
+  quantile_log,
+  quantile_plain,
+  tolerance = 1e-8,
+  info = "Quantile: log_p should match exp(p) path"
+)
+
+cdf_upper_plain <- fpBCPEo(log_params$q, log_params$mu, log_params$sigma, log_params$nu, log_params$tau,
+                           lower_tail = FALSE, log_p = FALSE)
+cdf_upper_log <- fpBCPEo(log_params$q, log_params$mu, log_params$sigma, log_params$nu, log_params$tau,
+                         lower_tail = FALSE, log_p = TRUE)
+
+expect_equal(
+  log(cdf_upper_plain),
+  cdf_upper_log,
+  tolerance = 1e-8,
+  info = "CDF: upper tail log_p should match log of upper tail"
+)
+
+# Test 13d: Quantile bounds for p=0/1 and log_p
+bound_mu <- 2.0
+bound_sigma <- 0.5
+bound_nu <- 0.8
+bound_tau <- 3.0
+
+quantile_bounds <- fqBCPEo(c(0, 1), bound_mu, bound_sigma, bound_nu, bound_tau)
+
+expect_true(
+  quantile_bounds[1] == 0,
+  info = "Quantile: p=0 should return 0"
+)
+
+expect_true(
+  is.infinite(quantile_bounds[2]) && quantile_bounds[2] > 0,
+  info = "Quantile: p=1 should return Inf"
+)
+
+quantile_bounds_log <- fqBCPEo(c(-Inf, 0), bound_mu, bound_sigma, bound_nu, bound_tau, log_p = TRUE)
+
+expect_true(
+  quantile_bounds_log[1] == 0,
+  info = "Quantile: log_p p=-Inf should return 0"
+)
+
+expect_true(
+  is.infinite(quantile_bounds_log[2]) && quantile_bounds_log[2] > 0,
+  info = "Quantile: log_p p=0 should return Inf"
+)
+
+quantile_bounds_upper_log <- fqBCPEo(c(-Inf, 0), bound_mu, bound_sigma, bound_nu, bound_tau,
+                                     lower_tail = FALSE, log_p = TRUE)
+
+expect_true(
+  is.infinite(quantile_bounds_upper_log[1]) && quantile_bounds_upper_log[1] > 0,
+  info = "Quantile: upper tail log_p p=-Inf should return Inf"
+)
+
+expect_true(
+  quantile_bounds_upper_log[2] == 0,
+  info = "Quantile: upper tail log_p p=0 should return 0"
+)
+
+# Test 13e: CDF monotonicity
+q_grid <- seq(0.1, 5, length.out = 50)
+cdf_grid <- fpBCPEo(q_grid, 2.0, 0.4, 0.7, 3.0)
+
+expect_true(
+  all(diff(cdf_grid) >= -1e-12),
+  info = "CDF: should be non-decreasing in q"
+)
+
 
 # =============================================================================
 # CONSISTENCY TESTS
