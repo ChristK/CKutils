@@ -15,7 +15,7 @@ fqMN4(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 
 \item{nu}{vector of (positive) parameters for category 3.}
 
-\item{lower_tail}{logical; if TRUE (default), probabilities are P(X ≤ q),
+\item{lower_tail}{logical; if TRUE (default), probabilities are P(X <= q),
 otherwise P(X > q).}
 
 \item{log_p}{logical; if TRUE, probabilities p are given as log(p).}

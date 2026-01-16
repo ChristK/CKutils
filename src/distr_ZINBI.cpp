@@ -157,7 +157,7 @@ double fpZINBI_scalar(const int& q,
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of zero-inflation probabilities (0 < nu < 1).
-//' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+//' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise, P[X > x].
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'
@@ -252,7 +252,7 @@ int fqZINBI_scalar(const double& p,
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of zero-inflation probabilities (0 < nu < 1).
-//' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+//' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise, P[X > x].
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'

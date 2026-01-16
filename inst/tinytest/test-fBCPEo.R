@@ -64,14 +64,14 @@ expect_equal(
   info = "PDF: log=TRUE correctness test"
 )
 
-# Test 3: PDF edge case (nu ≈ 0)
+# Test 3: PDF edge case (nu approx  0)
 pdf_ck_edge <- fdBCPEo(edge_data$x, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
 pdf_ref_edge <- dBCPEo(edge_data$x, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
 
 expect_equal(
   pdf_ck_edge,
   pdf_ref_edge,
-  info = "PDF: nu≈0 edge case test"
+  info = "PDF: nuapprox 0 edge case test"
 )
 
 # =============================================================================
@@ -121,14 +121,14 @@ expect_equal(
 )
 
 
-# Test 8: CDF edge case (nu ≈ 0)
+# Test 8: CDF edge case (nu approx  0)
 cdf_ck_edge <- fpBCPEo(edge_data$q, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
 cdf_ref_edge <- pBCPEo(edge_data$q, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
 
 expect_equal(
   cdf_ck_edge,
   cdf_ref_edge,
-  info = "CDF: nu≈0 edge case test"
+  info = "CDF: nuapprox 0 edge case test"
 )
 
 # =============================================================================
@@ -179,14 +179,14 @@ expect_equal(
   info = "Quantile: lower_tail=FALSE + log_p=TRUE correctness test"
 )
 
-# Test 13: Quantile edge case (nu ≈ 0)
+# Test 13: Quantile edge case (nu approx  0)
 quantile_ck_edge <- fqBCPEo(edge_data$p, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
 quantile_ref_edge <- qBCPEo(edge_data$p, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
 
 expect_equal(
   quantile_ck_edge,
   quantile_ref_edge,
-  info = "Quantile: nu≈0 edge case test"
+  info = "Quantile: nuapprox 0 edge case test"
 )
 
 # =============================================================================
@@ -341,7 +341,7 @@ expect_true(
 # CONSISTENCY TESTS
 # =============================================================================
 
-# Test 14: PDF-CDF consistency (d/dx P(X ≤ x) ≈ f(x))
+# Test 14: PDF-CDF consistency (d/dx P(X <= x) approx  f(x))
 # Use numerical differentiation to check
 dx <- 1e-6
 x_test <- data$x[1:10]  # Test subset for speed
@@ -363,7 +363,7 @@ expect_equal(
 )
 
 
-# Test 15: CDF-Quantile consistency (Q(P(x)) ≈ x)
+# Test 15: CDF-Quantile consistency (Q(P(x)) approx  x)
 x_test <- data$x[1:20]  # Test subset
 mu_test <- data$mu[1:20]
 sigma_test <- data$sigma[1:20]

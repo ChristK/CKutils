@@ -196,7 +196,7 @@ NumericVector fdMN4(const IntegerVector& x,
 //' @param mu vector of (positive) parameters for category 1.
 //' @param sigma vector of (positive) parameters for category 2.
 //' @param nu vector of (positive) parameters for category 3.
-//' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ q),
+//' @param lower_tail logical; if TRUE (default), probabilities are P(X <= q),
 //'        otherwise P(X > q).
 //' @param log_p logical; if TRUE, probabilities are returned on the log scale.
 //'
@@ -281,7 +281,7 @@ NumericVector fpMN4(const IntegerVector& q,
 //' @param mu vector of (positive) parameters for category 1.
 //' @param sigma vector of (positive) parameters for category 2.
 //' @param nu vector of (positive) parameters for category 3.
-//' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ q),
+//' @param lower_tail logical; if TRUE (default), probabilities are P(X <= q),
 //'        otherwise P(X > q).
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'

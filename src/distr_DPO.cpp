@@ -547,7 +547,7 @@ NumericVector fpDPO(const IntegerVector &q,
 //' @param p Vector of probabilities.
 //' @param mu Vector of mu (location/mean) parameters (positive).
 //' @param sigma Vector of sigma (dispersion) parameters (positive).
-//' @param lower_tail Logical; if TRUE (default), probabilities are P[X ≤ x],
+//' @param lower_tail Logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise P[X > x].
 //' @param log_p Logical; if TRUE, probabilities p are given as log(p).
 //' @param max_value Maximum value to search for quantiles (for performance tuning).

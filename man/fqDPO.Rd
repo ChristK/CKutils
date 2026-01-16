@@ -13,7 +13,7 @@ fqDPO(p, mu, sigma, lower_tail = TRUE, log_p = FALSE, max_value = 0L)
 
 \item{sigma}{Vector of sigma (dispersion) parameters (positive).}
 
-\item{lower_tail}{Logical; if TRUE (default), probabilities are P[X ≤ x],
+\item{lower_tail}{Logical; if TRUE (default), probabilities are P[X <= x],
 otherwise P[X > x].}
 
 \item{log_p}{Logical; if TRUE, probabilities p are given as log(p).}

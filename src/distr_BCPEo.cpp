@@ -212,7 +212,7 @@ NumericVector fdBCPEo(const NumericVector& x,
 //' @param sigma vector of (positive) scale parameters.
 //' @param nu vector of shape parameters.
 //' @param tau vector of (positive) shape parameters.
-//' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ x), 
+//' @param lower_tail logical; if TRUE (default), probabilities are P(X <= x), 
 //'        otherwise P(X > x).
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'
@@ -337,7 +337,7 @@ NumericVector fpBCPEo(const NumericVector& q,
 //' @param sigma vector of (positive) scale parameters.
 //' @param nu vector of shape parameters.
 //' @param tau vector of (positive) shape parameters.
-//' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ x), 
+//' @param lower_tail logical; if TRUE (default), probabilities are P(X <= x), 
 //'        otherwise P(X > x).
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'

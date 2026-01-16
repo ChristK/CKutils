@@ -73,7 +73,7 @@ x_poisson <- rpois(1000, lambda = 5)           # Regular Poisson
 x_dpo_over <- frDPO(1000, mu = 5, sigma = 2)   # Overdispersed
 x_dpo_under <- frDPO(1000, mu = 5, sigma = 0.5)  # Underdispersed
 
-var(x_poisson)    # ≈ 5 (variance = mean)
+var(x_poisson)    # approx  5 (variance = mean)
 var(x_dpo_over)   # > 5 (overdispersed)
 var(x_dpo_under)  # < 5 (underdispersed)
 

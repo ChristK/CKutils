@@ -145,7 +145,7 @@ double fpNBI_scalar(const int& q,
 //' @param q vector of quantiles.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
-//' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+//' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise, P[X > x].
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'
@@ -232,7 +232,7 @@ int fqNBI_scalar(const double& p,
 //' @param p vector of probabilities.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
-//' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+//' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise, P[X > x].
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'

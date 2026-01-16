@@ -15,7 +15,7 @@ fqZANBI(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 
 \item{nu}{vector of zero-alteration probabilities (0 < nu < 1).}
 
-\item{lower_tail}{logical; if TRUE (default), probabilities are P[X ≤ x],
+\item{lower_tail}{logical; if TRUE (default), probabilities are P[X <= x],
 otherwise, P[X > x].}
 
 \item{log_p}{logical; if TRUE, probabilities p are given as log(p).}

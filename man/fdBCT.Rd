@@ -30,7 +30,7 @@ the kurtosis of the distribution.}
 
 \item{log_, log_p}{logical; if TRUE, probabilities p are given as log(p)}
 
-\item{lower_tail}{logical; if TRUE (default), probabilities are P[X ≤ x],
+\item{lower_tail}{logical; if TRUE (default), probabilities are P[X <= x],
 otherwise P[X > x]}
 
 \item{p}{vector of probabilities. Must be in (0,1).}
@@ -77,7 +77,7 @@ The distribution is truncated to ensure y > 0, with appropriate normalization.
 When tau is very large (> 1e6), these implementations automatically switch to
 a normal approximation for improved numerical stability and performance.
 
-Computes P[X ≤ q] for the Box-Cox t distribution. The CDF involves
+Computes P[X <= q] for the Box-Cox t distribution. The CDF involves
 normalization to account for the y > 0 truncation of the distribution.
 
 For computational efficiency, this implementation uses:

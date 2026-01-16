@@ -525,7 +525,7 @@ double fpDEL_scalar(const int &q,
 //' @param mu Vector of mu (location/mean) parameters (positive).
 //' @param sigma Vector of sigma (scale) parameters (positive).
 //' @param nu Vector of nu (shape) parameters (positive).
-//' @param lower_tail Logical; if TRUE (default), probabilities are P[X ≤ x],
+//' @param lower_tail Logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise P[X > x].
 //' @param log_p Logical; if TRUE, probabilities p are given as log(p).
 //'

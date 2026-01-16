@@ -15,7 +15,7 @@ fqDEL(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 
 \item{nu}{Vector of nu (shape) parameters (positive).}
 
-\item{lower_tail}{Logical; if TRUE (default), probabilities are P[X ≤ x],
+\item{lower_tail}{Logical; if TRUE (default), probabilities are P[X <= x],
 otherwise P[X > x].}
 
 \item{log_p}{Logical; if TRUE, probabilities p are given as log(p).}

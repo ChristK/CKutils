@@ -85,7 +85,7 @@ inline double fdBCT_t_cdf(const double z, const double tau) {
 //' @param tau vector of degrees of freedom parameters. Must be positive. Controls
 //'   the kurtosis of the distribution.
 //' @param log_,log_p logical; if TRUE, probabilities p are given as log(p)
-//' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+//' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise P[X > x]
 //'
 //' @details
@@ -266,7 +266,7 @@ NumericVector fdBCT(const NumericVector& x,
 //' but with improved performance.
 //'
 //' @details
-//' Computes P[X ≤ q] for the Box-Cox t distribution. The CDF involves
+//' Computes P[X <= q] for the Box-Cox t distribution. The CDF involves
 //' normalization to account for the y > 0 truncation of the distribution.
 //'
 //' For computational efficiency, this implementation uses:

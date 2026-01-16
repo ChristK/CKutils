@@ -79,7 +79,7 @@ fdBCPEo <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
 #' @param sigma vector of (positive) scale parameters.
 #' @param nu vector of shape parameters.
 #' @param tau vector of (positive) shape parameters.
-#' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ x), 
+#' @param lower_tail logical; if TRUE (default), probabilities are P(X <= x), 
 #'        otherwise P(X > x).
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -145,7 +145,7 @@ fpBCPEo <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' @param sigma vector of (positive) scale parameters.
 #' @param nu vector of shape parameters.
 #' @param tau vector of (positive) shape parameters.
-#' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ x), 
+#' @param lower_tail logical; if TRUE (default), probabilities are P(X <= x), 
 #'        otherwise P(X > x).
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -224,7 +224,7 @@ fqBCPEo <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' @param tau vector of degrees of freedom parameters. Must be positive. Controls
 #'   the kurtosis of the distribution.
 #' @param log_,log_p logical; if TRUE, probabilities p are given as log(p)
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise P[X > x]
 #'
 #' @details
@@ -350,7 +350,7 @@ fdBCT <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
 #' but with improved performance.
 #'
 #' @details
-#' Computes P[X ≤ q] for the Box-Cox t distribution. The CDF involves
+#' Computes P[X <= q] for the Box-Cox t distribution. The CDF involves
 #' normalization to account for the y > 0 truncation of the distribution.
 #'
 #' For computational efficiency, this implementation uses:
@@ -674,7 +674,7 @@ fpDEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param mu Vector of mu (location/mean) parameters (positive).
 #' @param sigma Vector of sigma (scale) parameters (positive).
 #' @param nu Vector of nu (shape) parameters (positive).
-#' @param lower_tail Logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail Logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise P[X > x].
 #' @param log_p Logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -906,7 +906,7 @@ fpDPO <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' @param p Vector of probabilities.
 #' @param mu Vector of mu (location/mean) parameters (positive).
 #' @param sigma Vector of sigma (dispersion) parameters (positive).
-#' @param lower_tail Logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail Logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise P[X > x].
 #' @param log_p Logical; if TRUE, probabilities p are given as log(p).
 #' @param max_value Maximum value to search for quantiles (for performance tuning).
@@ -1029,7 +1029,7 @@ fdMN4 <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' @param mu vector of (positive) parameters for category 1.
 #' @param sigma vector of (positive) parameters for category 2.
 #' @param nu vector of (positive) parameters for category 3.
-#' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ q),
+#' @param lower_tail logical; if TRUE (default), probabilities are P(X <= q),
 #'        otherwise P(X > q).
 #' @param log_p logical; if TRUE, probabilities are returned on the log scale.
 #'
@@ -1087,7 +1087,7 @@ fpMN4 <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param mu vector of (positive) parameters for category 1.
 #' @param sigma vector of (positive) parameters for category 2.
 #' @param nu vector of (positive) parameters for category 3.
-#' @param lower_tail logical; if TRUE (default), probabilities are P(X ≤ q),
+#' @param lower_tail logical; if TRUE (default), probabilities are P(X <= q),
 #'        otherwise P(X > q).
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -1221,7 +1221,7 @@ fdNBI <- function(x, mu, sigma, log_p = FALSE) {
 #' @param q vector of quantiles.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise, P[X > x].
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -1259,7 +1259,7 @@ fpNBI <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' @param p vector of probabilities.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise, P[X > x].
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -1521,7 +1521,7 @@ fdZANBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-alteration probabilities (0 < nu < 1).
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise, P[X > x].
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -1559,7 +1559,7 @@ fpZANBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-alteration probabilities (0 < nu < 1).
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise, P[X > x].
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -1702,7 +1702,7 @@ fdZINBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-inflation probabilities (0 < nu < 1).
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise, P[X > x].
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
@@ -1739,7 +1739,7 @@ fpZINBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-inflation probabilities (0 < nu < 1).
-#' @param lower_tail logical; if TRUE (default), probabilities are P[X ≤ x],
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise, P[X > x].
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
