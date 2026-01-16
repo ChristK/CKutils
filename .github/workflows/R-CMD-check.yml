@@ -146,7 +146,7 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck, any::dplyr  # rcmdcheck for R CMD check, dplyr for arrow
-          cache: ${{ runner.os != 'macOS' }}  # Disable cache on macOS due to runner bug #13341 https://github.com/actions/runner-images/issues/13341
+          # cache: ${{ runner.os != 'macOS' }}  # Disable cache on macOS due to runner bug #13341 https://github.com/actions/runner-images/issues/13341
 
       # Step 5: Run comprehensive R CMD check
       - name: Run R CMD check
