@@ -36,15 +36,7 @@
 #' @importFrom utils available.packages changedFiles fileSnapshot head install.packages packageVersion tail
 
 ## usethis namespace: start
-#' @importFrom data.table :=
-#' @importFrom data.table .BY
-#' @importFrom data.table .EACHI
-#' @importFrom data.table .GRP
-#' @importFrom data.table .I
-#' @importFrom data.table .N
-#' @importFrom data.table .NGRP
-#' @importFrom data.table .SD
-#' @importFrom data.table fwrite
+#' @importFrom data.table := .BY .EACHI .GRP .I .N .NGRP .SD fwrite
 #' @importFrom Rcpp sourceCpp
 #' @importFrom utils installed.packages
 #' @importFrom callr rcmd rscript
