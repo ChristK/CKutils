@@ -432,7 +432,7 @@ pctl_rank <- function(
 #'   "./inputs/exposure_distributions/smok_status_table.parquet",
 #'   filter = function(field) field("age") >= 40
 #' )
-#' @importFrom arrow open_dataset field_ref
+#' @importFrom arrow open_dataset
 #' @export
 read_parquet_dt <- function(
     path,
@@ -476,7 +476,15 @@ read_parquet_dt <- function(
       expr <- filter
     } else if (is.function(filter)) {
       # Helper so user can write: field("x") >= 1 & field("y") == "A"
-      field <- function(name) field_ref(name)
+      field <- function(name) {
+        if (exists("field_ref", where = asNamespace("arrow"), inherits = FALSE)) {
+          get("field_ref", envir = asNamespace("arrow"))(name)
+        } else if (!is.null(arrow::Expression$field_ref)) {
+          arrow::Expression$field_ref(name)
+        } else {
+          stop("arrow::field_ref is not available in this Arrow version.")
+        }
+      }
       expr <- filter(field)
       if (!inherits(expr, "Expression")) {
         stop("When 'filter' is a function, it must return an arrow::Expression.")

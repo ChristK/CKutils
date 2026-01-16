@@ -20,7 +20,7 @@ read_parquet_dt(
 \item{filter}{Optional row filter:
 - an arrow::Expression, OR
 - a function f(field) returning an Expression, where field is a helper:
-    field("colname") returns arrow::field_ref("colname").
+    field("colname") returns a column reference expression.
 Example: filter = function(field) field("year") >= 2018 & field("sex") == "F"}
 
 \item{partitioning}{Partitioning spec for datasets. Default "hive" is typical for col=value/ layouts.
