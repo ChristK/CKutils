@@ -59,7 +59,7 @@ jobs:
       - name: Setup R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr, any::dplyr  # Install covr for coverage, dplyr for arrow
+          extra-packages: any::covr
           needs: coverage                         # Install dependencies needed for coverage analysis
 
       # Step 4: Generate and upload test coverage

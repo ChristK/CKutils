@@ -1375,20 +1375,13 @@ cleanup_test_files()
 # Skip tests if arrow is not available
 if (requireNamespace("arrow", quietly = TRUE)) {
   
-  # Create temporary directory and test parquet file
-  test_parquet_dir <- tempdir()
-  test_parquet_file <- file.path(test_parquet_dir, "test_read_parquet.parquet")
+
+  # Use pre-created test parquet files distributed with the package
+  test_parquet_file <- system.file("testdata", "test_read_parquet.parquet", package = "CKutils")
+  partitioned_dir <- system.file("testdata", "partitioned_test", package = "CKutils")
   
-  # Create test data
-  test_pq_data <- data.table(
-    id = 1:100,
-    age = sample(20:80, 100, replace = TRUE),
-    sex = sample(c("M", "F"), 100, replace = TRUE),
-    value = rnorm(100)
-  )
-  
-  # Write test parquet file
-  arrow::write_parquet(test_pq_data, test_parquet_file)
+  # Skip if test files not found (e.g., during development before installation)
+  if (nzchar(test_parquet_file) && file.exists(test_parquet_file)) {
   
   # Test 1: Basic read returns data.table
   result1 <- read_parquet_dt(test_parquet_file)
@@ -1403,7 +1396,6 @@ if (requireNamespace("arrow", quietly = TRUE)) {
   expect_false("sex" %in% names(result2), info = "Unselected columns absent")
   
   # Test 3: Return as data.frame
-
   result3 <- read_parquet_dt(test_parquet_file, as_data_table = FALSE)
   expect_true(is.data.frame(result3), info = "as_data_table=FALSE returns data.frame")
   expect_false(is.data.table(result3), info = "as_data_table=FALSE does not return data.table")
@@ -1431,23 +1423,22 @@ if (requireNamespace("arrow", quietly = TRUE)) {
   # Test 8: Input validation - filter must be Expression
   expect_error(read_parquet_dt(test_parquet_file, filter = "age > 50"), info = "Error for non-Expression filter")
   
-  # Test 9: Partitioned dataset (Hive-style)
-  partitioned_dir <- file.path(test_parquet_dir, "partitioned_test")
-  if (dir.exists(partitioned_dir)) unlink(partitioned_dir, recursive = TRUE)
-  arrow::write_dataset(test_pq_data, partitioned_dir, partitioning = "sex")
-  
-  result9 <- read_parquet_dt(partitioned_dir)
-  expect_true(is.data.table(result9), info = "Partitioned dataset returns data.table")
-  expect_equal(nrow(result9), 100, info = "Partitioned dataset reads all rows")
+  # Test 9: Partitioned dataset (Hive-style) - uses pre-created partitioned data
+  if (nzchar(partitioned_dir) && dir.exists(partitioned_dir)) {
+    result9 <- read_parquet_dt(partitioned_dir)
+    expect_true(is.data.table(result9), info = "Partitioned dataset returns data.table")
+    expect_equal(nrow(result9), 100, info = "Partitioned dataset reads all rows")
+  }
   
   # Test 10: Single column selection
   result10 <- read_parquet_dt(test_parquet_file, cols = "id")
   expect_equal(ncol(result10), 1, info = "Single column selection works")
   expect_equal(names(result10), "id", info = "Single column name correct")
   
-  # Cleanup
-  unlink(test_parquet_file)
-  unlink(partitioned_dir, recursive = TRUE)
+  } else {
+    # Skip if test files not available
+    expect_true(TRUE, info = "Skipping read_parquet_dt tests - test files not found")
+  }
   
 } else {
   # Skip message if arrow not available
