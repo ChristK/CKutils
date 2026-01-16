@@ -49,6 +49,7 @@
 #' @importFrom utils installed.packages
 #' @importFrom callr rcmd rscript
 #' @importFrom dqrng dqrunif dqrnorm
+#' @importFrom arrow open_dataset field_ref
 #' @importFrom stats pnorm
 #' @useDynLib CKutils, .registration = TRUE
 

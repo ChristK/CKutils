@@ -405,6 +405,101 @@ pctl_rank <- function(
 }
 
 
+#' Read Parquet (partitioned dataset or single file) via Arrow, optionally filter/project, return data.table
+#'
+#' @param path Character scalar (directory or file) OR character vector of parquet files.
+#' @param cols Optional character vector of columns to keep (projection). NULL keeps all.
+#' @param filter Optional row filter:
+#'   - an arrow::Expression, OR
+#'   - a function f(field) returning an Expression, where field is a helper:
+#'       field("colname") returns arrow::field_ref("colname").
+#'   Example: filter = function(field) field("year") >= 2018 & field("sex") == "F"
+#' @param partitioning Partitioning spec for datasets. Default "hive" is typical for col=value/ layouts.
+#'   If opening fails with this, the function automatically retries without partitioning.
+#' @param as_data_table Logical; if TRUE returns data.table; if FALSE returns data.frame.
+#'
+#' @return data.table (default) or data.frame
+#' @examples
+#' # Partitioned dataset directory:
+#' dt <- read_parquet_dt(
+#'   "./inputs/exposure_distributions/smok_status_table",
+#'   cols   = c("patid", "year", "smoke_status"),
+#'   filter = function(field) field("year") >= 2018 & field("sex") == "F"
+#' )
+#'
+#' # Single file:
+#' dt2 <- read_parquet_dt(
+#'   "./inputs/exposure_distributions/smok_status_table.parquet",
+#'   filter = function(field) field("age") >= 40
+#' )
+#' @importFrom arrow open_dataset field_ref
+#' @export
+read_parquet_dt <- function(
+    path,
+    cols = NULL,
+    filter = NULL,
+    partitioning = "hive",
+    as_data_table = TRUE
+  ) {
+  stopifnot(is.character(path), length(path) >= 1)
+  if (!is.null(cols)) stopifnot(is.character(cols), length(cols) >= 1)
+
+  # Ensure required packages are available
+  if (!requireNamespace("arrow", quietly = TRUE)) {
+    stop("Package 'arrow' is required but not installed.")
+  }
+  if (as_data_table && !requireNamespace("data.table", quietly = TRUE)) {
+    stop("Package 'data.table' is required but not installed.")
+  }
+
+  # Open dataset (directory, file, or vector of files).
+  # Use partitioning='hive' by default for partitioned datasets, but gracefully fallback if it errors.
+  ds <- tryCatch(
+    open_dataset(path, format = "parquet", partitioning = partitioning),
+    error = function(e) {
+      open_dataset(path, format = "parquet")
+    }
+  )
+
+  scanner <- arrow::Scanner$create(ds)
+
+  # Apply projection (columns)
+  if (!is.null(cols)) {
+    scanner <- scanner$Project(cols)
+  }
+
+  # Apply filter (rows)
+  if (!is.null(filter)) {
+    expr <- NULL
+
+    if (inherits(filter, "Expression")) {
+      expr <- filter
+    } else if (is.function(filter)) {
+      # Helper so user can write: field("x") >= 1 & field("y") == "A"
+      field <- function(name) field_ref(name)
+      expr <- filter(field)
+      if (!inherits(expr, "Expression")) {
+        stop("When 'filter' is a function, it must return an arrow::Expression.")
+      }
+    } else {
+      stop("'filter' must be either an arrow::Expression or a function(field) returning an Expression.")
+    }
+
+    scanner <- scanner$Filter(expr)
+  }
+
+  # Materialise (inevitable if you want a data.table/matrix/etc.)
+  tab <- scanner$ToTable()
+  df <- as.data.frame(tab)
+
+  if (as_data_table) {
+    data.table::setDT(df)
+  }
+
+  df
+}
+
+
 #' Stochastic prediction from a gamlss object
 #'
 #' `validate_gamlss` returns a data.table with the observed and predicted
@@ -1402,4 +1497,3 @@ fwrite_safe <- function(
   
   return(TRUE)
 }
-
