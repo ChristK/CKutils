@@ -59,39 +59,40 @@ jobs:
       - name: Setup R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr  # Install covr package for coverage measurement
-          needs: coverage            # Install dependencies needed for coverage analysis
+          extra-packages: any::covr, any::dplyr  # Install covr for coverage, dplyr for arrow
+          needs: coverage                         # Install dependencies needed for coverage analysis
 
       # Step 4: Generate and upload test coverage
       - name: Measure test coverage
         run: |
-          # Run coverage analysis with detailed options
+          # Run coverage analysis with tinytest
           covr::codecov(
-            quiet = FALSE,                                                    # Show detailed output
-            clean = FALSE,                                                   # Keep intermediate files for debugging
-            install_path = file.path(Sys.getenv("RUNNER_TEMP"), "package")  # Install to temp directory
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(Sys.getenv("RUNNER_TEMP"), "package"),
+            type = "all"
           )
         shell: Rscript {0}
 
       # Step 5: Show detailed test output if available (for debugging)
-      - name: Show testthat output
+      - name: Show tinytest output
         if: always()  # Run even if previous steps failed
         run: |
           ## --------------------------------------------------------------------
           echo "=== Searching for test output files ==="
-          find ${{ runner.temp }}/package -name 'testthat.Rout*' -exec echo "Found: {}" \;
+          find ${{ runner.temp }}/package -name '*.Rout*' -exec echo "Found: {}" \; || true
           echo ""
           echo "=== Test output content ==="
-          find ${{ runner.temp }}/package -name 'testthat.Rout*' -exec cat '{}' \; || true
+          find ${{ runner.temp }}/package -name '*.Rout*' -exec cat '{}' \; || true
           echo ""
           echo "=== Coverage analysis complete ==="
         shell: bash
 
-      # Step 6: Upload test artifacts on failure (for debugging)
+      # Step 6: Upload test results on failure (for debugging)
       - name: Upload test results on failure
         if: failure()  # Only run if the workflow failed
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-test-failures
+          name: coverage-tinytest-failures
           path: ${{ runner.temp }}/package
           retention-days: 7  # Keep artifacts for 7 days

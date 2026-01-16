@@ -136,6 +136,7 @@ jobs:
           extra-packages: |
             any::tinytest
             any::devtools
+            any::dplyr
           cache: ${{ runner.os != 'macOS' }}  # Disable cache on macOS due to runner bug #13341 https://github.com/actions/runner-images/issues/13341
 
       # Step 4: Run the test suite
