@@ -182,5 +182,4 @@ dtb[, char_lag1 := shift_bypid(char_var, lag = 1, id = id, replace = "missing")]
 }
 \seealso{
 \code{\link[data.table]{shift}} for data.table's shift function,
-\code{\link[dplyr]{lag}} and \code{\link[dplyr]{lead}} for dplyr alternatives.
 }

@@ -95,7 +95,6 @@ using namespace Rcpp;
 //' 
 //' @seealso 
 //' \code{\link[data.table]{shift}} for data.table's shift function,
-//' \code{\link[dplyr]{lag}} and \code{\link[dplyr]{lead}} for dplyr alternatives.
 //' 
 //' @name shift_bypid
 //' @rdname shift_bypid
