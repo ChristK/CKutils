@@ -303,10 +303,10 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path, debug = TRUE) 
 #' dependencies(data.table, MASS, ggplot2)
 #' 
 #' # Using quoted package names (traditional way)
-#' dependencies(c('devtools','lattice','ggplot2','psych'))
+#' dependencies(c('data.table','MASS'))
 #' 
 #' # Mixed usage with options
-#' dependencies(dplyr, tidyr, install = TRUE, quiet = FALSE)
+#' dependencies(data.table, MASS, install = TRUE, quiet = FALSE)
 #' }
 dependencies <-
   function(
