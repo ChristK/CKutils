@@ -409,29 +409,31 @@ pctl_rank <- function(
 #'
 #' @param path Character scalar (directory or file) OR character vector of parquet files.
 #' @param cols Optional character vector of columns to keep (projection). NULL keeps all.
-#' @param filter Optional row filter:
-#'   - an arrow::Expression, OR
-#'   - a function f(field) returning an Expression, where field is a helper:
-#'       field("colname") returns arrow::field_ref("colname").
-#'   Example: filter = function(field) field("year") >= 2018 & field("sex") == "F"
+#' @param filter Optional row filter as an arrow::Expression.
+#'   Use `arrow::Expression$field_ref("colname")` to reference columns.
+#'   Example: `arrow::Expression$field_ref("year") >= 2018`
 #' @param partitioning Partitioning spec for datasets. Default "hive" is typical for col=value/ layouts.
 #'   If opening fails with this, the function automatically retries without partitioning.
 #' @param as_data_table Logical; if TRUE returns data.table; if FALSE returns data.frame.
 #'
 #' @return data.table (default) or data.frame
 #' @examples
-#' # Partitioned dataset directory:
+#' \dontrun{
+#' # Single file:
+#' dt <- read_parquet_dt("./data/myfile.parquet")
+#'
+#' # Partitioned dataset directory with column selection:
 #' dt <- read_parquet_dt(
 #'   "./inputs/exposure_distributions/smok_status_table",
-#'   cols   = c("patid", "year", "smoke_status"),
-#'   filter = function(field) field("year") >= 2018 & field("sex") == "F"
+#'   cols = c("patid", "year", "smoke_status")
 #' )
 #'
-#' # Single file:
-#' dt2 <- read_parquet_dt(
-#'   "./inputs/exposure_distributions/smok_status_table.parquet",
-#'   filter = function(field) field("age") >= 40
+#' # With filter (requires arrow expressions):
+#' dt <- read_parquet_dt(
+#'   "./data/myfile.parquet",
+#'   filter = arrow::Expression$field_ref("age") >= 40
 #' )
+#' }
 #' @importFrom arrow open_dataset
 #' @export
 read_parquet_dt <- function(
@@ -441,10 +443,9 @@ read_parquet_dt <- function(
     partitioning = "hive",
     as_data_table = TRUE
   ) {
-  stopifnot(is.character(path), length(path) >= 1)
-  if (!is.null(cols)) stopifnot(is.character(cols), length(cols) >= 1)
+  stopifnot(is.character(path), length(path) >= 1L)
+  if (!is.null(cols)) stopifnot(is.character(cols), length(cols) >= 1L)
 
-  # Ensure required packages are available
   if (!requireNamespace("arrow", quietly = TRUE)) {
     stop("Package 'arrow' is required but not installed.")
   }
@@ -452,51 +453,30 @@ read_parquet_dt <- function(
     stop("Package 'data.table' is required but not installed.")
   }
 
-  # Open dataset (directory, file, or vector of files).
-  # Use partitioning='hive' by default for partitioned datasets, but gracefully fallback if it errors.
+  # Open dataset (directory, file, or vector of files)
   ds <- tryCatch(
-    open_dataset(path, format = "parquet", partitioning = partitioning),
+    arrow::open_dataset(path, format = "parquet", partitioning = partitioning),
     error = function(e) {
-      open_dataset(path, format = "parquet")
+      arrow::open_dataset(path, format = "parquet")
     }
   )
 
-  scanner <- arrow::Scanner$create(ds)
+  # Use ScannerBuilder for projection and filtering
 
-  # Apply projection (columns)
+  scan_builder <- ds$NewScan()
+
   if (!is.null(cols)) {
-    scanner <- scanner$Project(cols)
+    scan_builder$Project(cols)
   }
 
-  # Apply filter (rows)
   if (!is.null(filter)) {
-    expr <- NULL
-
-    if (inherits(filter, "Expression")) {
-      expr <- filter
-    } else if (is.function(filter)) {
-      # Helper so user can write: field("x") >= 1 & field("y") == "A"
-      field <- function(name) {
-        if (exists("field_ref", where = asNamespace("arrow"), inherits = FALSE)) {
-          get("field_ref", envir = asNamespace("arrow"))(name)
-        } else if (!is.null(arrow::Expression$field_ref)) {
-          arrow::Expression$field_ref(name)
-        } else {
-          stop("arrow::field_ref is not available in this Arrow version.")
-        }
-      }
-      expr <- filter(field)
-      if (!inherits(expr, "Expression")) {
-        stop("When 'filter' is a function, it must return an arrow::Expression.")
-      }
-    } else {
-      stop("'filter' must be either an arrow::Expression or a function(field) returning an Expression.")
+    if (!inherits(filter, "Expression")) {
+      stop("'filter' must be an arrow::Expression.")
     }
-
-    scanner <- scanner$Filter(expr)
+    scan_builder$Filter(filter)
   }
 
-  # Materialise (inevitable if you want a data.table/matrix/etc.)
+  scanner <- scan_builder$Finish()
   tab <- scanner$ToTable()
   df <- as.data.frame(tab)
 

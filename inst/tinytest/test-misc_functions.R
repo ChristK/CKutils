@@ -6,6 +6,9 @@ if (!requireNamespace("data.table", quietly = TRUE)) {
 }
 suppressMessages(library(data.table))
 
+# Set seed for reproducible random results
+set.seed(123)
+
 
 # =============================================================================
 # Tests for get_dropbox_path function
@@ -868,8 +871,6 @@ expect_equal(result_ld_single, FALSE, info = "identify_longdead single element")
 # Tests for identify_invitees function
 # =============================================================================
 
-# Set seed for reproducible random results
-set.seed(123)
 
 # Test basic invitee identification
 elig_inv <- c(1L, 1L, 1L, 1L, 1L)
@@ -906,7 +907,6 @@ expect_true(sum(result_inv_freq) <= sum(result_inv), info = "identify_invitees r
 # =============================================================================
 
 # Set seed for reproducible results
-set.seed(42)
 
 # Test basic healthcare effect continuation
 x_hc <- c(0L, 1L, 0L, 1L, 0L)
@@ -1366,3 +1366,90 @@ expect_equal(read_dt12$value, c("first", "second"), info = "Single row data corr
 
 # Cleanup test directory
 cleanup_test_files()
+
+
+# =============================================================================
+# Tests for read_parquet_dt function
+# =============================================================================
+
+# Skip tests if arrow is not available
+if (requireNamespace("arrow", quietly = TRUE)) {
+  
+  # Create temporary directory and test parquet file
+  test_parquet_dir <- tempdir()
+  test_parquet_file <- file.path(test_parquet_dir, "test_read_parquet.parquet")
+  
+  # Create test data
+  test_pq_data <- data.table(
+    id = 1:100,
+    age = sample(20:80, 100, replace = TRUE),
+    sex = sample(c("M", "F"), 100, replace = TRUE),
+    value = rnorm(100)
+  )
+  
+  # Write test parquet file
+  arrow::write_parquet(test_pq_data, test_parquet_file)
+  
+  # Test 1: Basic read returns data.table
+  result1 <- read_parquet_dt(test_parquet_file)
+  expect_true(is.data.table(result1), info = "read_parquet_dt returns data.table by default")
+  expect_equal(nrow(result1), 100, info = "read_parquet_dt reads all rows")
+  expect_equal(ncol(result1), 4, info = "read_parquet_dt reads all columns")
+  
+  # Test 2: Column selection (projection)
+  result2 <- read_parquet_dt(test_parquet_file, cols = c("id", "age"))
+  expect_equal(ncol(result2), 2, info = "Column projection works")
+  expect_true(all(c("id", "age") %in% names(result2)), info = "Selected columns present")
+  expect_false("sex" %in% names(result2), info = "Unselected columns absent")
+  
+  # Test 3: Return as data.frame
+
+  result3 <- read_parquet_dt(test_parquet_file, as_data_table = FALSE)
+  expect_true(is.data.frame(result3), info = "as_data_table=FALSE returns data.frame")
+  expect_false(is.data.table(result3), info = "as_data_table=FALSE does not return data.table")
+  
+  # Test 4: Filter with arrow Expression
+  filter_expr <- arrow::Expression$field_ref("age") >= 50
+  result4 <- read_parquet_dt(test_parquet_file, filter = filter_expr)
+  expect_true(all(result4$age >= 50), info = "Filter expression works correctly")
+  
+  # Test 5: Combined projection and filter
+  result5 <- read_parquet_dt(
+    test_parquet_file,
+    cols = c("id", "age"),
+    filter = arrow::Expression$field_ref("age") < 40
+  )
+  expect_equal(ncol(result5), 2, info = "Combined projection works")
+  expect_true(all(result5$age < 40), info = "Combined filter works")
+  
+  # Test 6: Input validation - path must be character
+  expect_error(read_parquet_dt(123), info = "Error for non-character path")
+  
+  # Test 7: Input validation - cols must be character if provided
+  expect_error(read_parquet_dt(test_parquet_file, cols = 1:3), info = "Error for non-character cols")
+  
+  # Test 8: Input validation - filter must be Expression
+  expect_error(read_parquet_dt(test_parquet_file, filter = "age > 50"), info = "Error for non-Expression filter")
+  
+  # Test 9: Partitioned dataset (Hive-style)
+  partitioned_dir <- file.path(test_parquet_dir, "partitioned_test")
+  if (dir.exists(partitioned_dir)) unlink(partitioned_dir, recursive = TRUE)
+  arrow::write_dataset(test_pq_data, partitioned_dir, partitioning = "sex")
+  
+  result9 <- read_parquet_dt(partitioned_dir)
+  expect_true(is.data.table(result9), info = "Partitioned dataset returns data.table")
+  expect_equal(nrow(result9), 100, info = "Partitioned dataset reads all rows")
+  
+  # Test 10: Single column selection
+  result10 <- read_parquet_dt(test_parquet_file, cols = "id")
+  expect_equal(ncol(result10), 1, info = "Single column selection works")
+  expect_equal(names(result10), "id", info = "Single column name correct")
+  
+  # Cleanup
+  unlink(test_parquet_file)
+  unlink(partitioned_dir, recursive = TRUE)
+  
+} else {
+  # Skip message if arrow not available
+  expect_true(TRUE, info = "Skipping read_parquet_dt tests - arrow package not available")
+}

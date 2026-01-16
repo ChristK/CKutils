@@ -17,11 +17,9 @@ read_parquet_dt(
 
 \item{cols}{Optional character vector of columns to keep (projection). NULL keeps all.}
 
-\item{filter}{Optional row filter:
-- an arrow::Expression, OR
-- a function f(field) returning an Expression, where field is a helper:
-    field("colname") returns a column reference expression.
-Example: filter = function(field) field("year") >= 2018 & field("sex") == "F"}
+\item{filter}{Optional row filter as an arrow::Expression.
+Use `arrow::Expression$field_ref("colname")` to reference columns.
+Example: `arrow::Expression$field_ref("year") >= 2018`}
 
 \item{partitioning}{Partitioning spec for datasets. Default "hive" is typical for col=value/ layouts.
 If opening fails with this, the function automatically retries without partitioning.}
@@ -35,16 +33,20 @@ data.table (default) or data.frame
 Read Parquet (partitioned dataset or single file) via Arrow, optionally filter/project, return data.table
 }
 \examples{
-# Partitioned dataset directory:
+\dontrun{
+# Single file:
+dt <- read_parquet_dt("./data/myfile.parquet")
+
+# Partitioned dataset directory with column selection:
 dt <- read_parquet_dt(
   "./inputs/exposure_distributions/smok_status_table",
-  cols   = c("patid", "year", "smoke_status"),
-  filter = function(field) field("year") >= 2018 & field("sex") == "F"
+  cols = c("patid", "year", "smoke_status")
 )
 
-# Single file:
-dt2 <- read_parquet_dt(
-  "./inputs/exposure_distributions/smok_status_table.parquet",
-  filter = function(field) field("age") >= 40
+# With filter (requires arrow expressions):
+dt <- read_parquet_dt(
+  "./data/myfile.parquet",
+  filter = arrow::Expression$field_ref("age") >= 40
 )
+}
 }
