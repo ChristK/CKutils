@@ -270,6 +270,52 @@ double fpSICHEL_scalar(const int& q, const double& mu, const double& sigma, cons
     return cdf;
 }
 
+// Optimized quantile search using incremental CDF computation
+// This directly computes densities incrementally without recomputing from scratch
+int fqSICHEL_search(const double& p, const double& mu, const double& sigma, const double& nu) {
+    // Use NBI approximation for large sigma and positive nu
+    if (sigma > 10000.0 && nu > 0.0) {
+        return fqNBI_scalar(p, mu, 1.0/nu, true, false);
+    }
+    
+    // Precompute constants
+    const double cvec = compute_cvec(sigma, nu);
+    const double alpha = compute_alpha(sigma, mu, cvec);
+    const double lbes = compute_lbes(alpha, nu);
+    
+    // Initial density and CDF at y=0
+    double tynew_prev = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);
+    double lpnew_prev = -nu * log(sigma * alpha) + log(R::bessel_k(alpha, nu, 1)) - 
+                        log(R::bessel_k(1.0/sigma, nu, 1));
+    
+    double cdf = exp(lpnew_prev);
+    
+    if (cdf >= p) {
+        return 0;
+    }
+    
+    // Incremental search
+    const int max_iter = 1000000;
+    const double sigma_alpha_cvec_sq = pow(mu / (sigma * alpha * cvec), 2.0);
+    
+    for (int j = 1; j < max_iter; j++) {
+        double tynew_curr = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tynew_prev)) * 
+                           sigma_alpha_cvec_sq;
+        double lpnew_curr = lpnew_prev + log(tynew_prev) - log(static_cast<double>(j));
+        
+        cdf += exp(lpnew_curr);
+        
+        if (cdf >= p) {
+            return j;
+        }
+        
+        tynew_prev = tynew_curr;
+        lpnew_prev = lpnew_curr;
+    }
+    
+    return max_iter;
+}
+
 //' Sichel Distribution Quantile Function
 //'
 //' Quantile function for the Sichel distribution with parameters 
@@ -361,74 +407,8 @@ IntegerVector fqSICHEL(NumericVector p,
             continue;
         }
         
-        // Divide and conquer algorithm
-        int j = static_cast<int>(mui * (pi + 0.5)) + 1; // Initial guess
-        double cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-        
-        if (pi <= cumpro) {
-            // Search downward
-            while (j > 0 && pi <= cumpro) {
-                j /= 2;
-                cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-            }
-            // Linear search in the final range
-            for (int k = j; k <= (j * 2 + 1); k++) {
-                cumpro = fpSICHEL_scalar(k, mui, sigmai, nui, true, false);
-                if (pi <= cumpro) {
-                    QQQ[i] = k;
-                    break;
-                }
-            }
-        } else {
-            // Search upward
-            while (j < INT_MAX && pi > cumpro) {
-                j *= 2;
-                cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-            }
-            
-            j /= 2;
-            cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-            
-            // Coarse search with step 1000
-            if ((j * 2) > (j + 1000)) {
-                while (j < INT_MAX && pi > cumpro) {
-                    j += 1000;
-                    cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-                }
-                if (j >= 1000) {
-                    j -= 1000;
-                    cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-                }
-            }
-            
-            // Coarse search with step 100
-            while (j < INT_MAX && pi > cumpro) {
-                j += 100;
-                cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-            }
-            if (j >= 100) {
-                j -= 100;
-                cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-            }
-            
-            // Coarse search with step 10
-            while (j < INT_MAX && pi > cumpro) {
-                j += 10;
-                cumpro = fpSICHEL_scalar(j, mui, sigmai, nui, true, false);
-            }
-            if (j >= 10) {
-                j -= 10;
-            }
-            
-            // Final linear search
-            for (int k = j; k <= INT_MAX; k++) {
-                cumpro = fpSICHEL_scalar(k, mui, sigmai, nui, true, false);
-                if (pi <= cumpro) {
-                    QQQ[i] = k;
-                    break;
-                }
-            }
-        }
+        // Use optimized incremental search
+        QQQ[i] = fqSICHEL_search(pi, mui, sigmai, nui);
     }
     
     return QQQ;

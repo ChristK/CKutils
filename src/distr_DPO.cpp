@@ -442,6 +442,36 @@ double fpDPO_scalar(const int& q,
   return cdf;
 }
 
+// Optimized quantile search using incremental CDF computation
+int fqDPO_search(const double& p,
+                 const double& mu,
+                 const double& sigma)
+{
+  // Fast path for near-Poisson case
+  if (std::abs(sigma - 1.0) < 1e-6) {
+    return static_cast<int>(R::qpois(p, mu, true, false));
+  }
+  
+  // Incremental search: compute CDF incrementally by adding densities
+  double cdf = 0.0;
+  int q = 0;
+  
+  // Maximum iteration for safety
+  const int max_iter = 1000000;
+  
+  while (cdf < p && q < max_iter) {
+    double density = fdDPO_scalar(q, mu, sigma, false);
+    cdf += density;
+    
+    if (cdf >= p) {
+      return q;
+    }
+    q++;
+  }
+  
+  return q;
+}
+
 //' The DPO Distribution - Cumulative Distribution Function
 //'
 //' Distribution function for the DPO (Double Poisson) distribution with parameters mu and sigma.
@@ -612,6 +642,8 @@ NumericVector fqDPO(NumericVector p,
                       const bool &log_p = false,
                       const int &max_value = 0)
 {
+  (void)max_value; // Unused parameter kept for API compatibility
+  
   // Recycle vectors to common length
   auto recycled = recycle_vectors(p, mu, sigma);
   const int n = recycled.n;
@@ -643,72 +675,11 @@ NumericVector fqDPO(NumericVector p,
       if (p_i + 1e-09 >= 1.0) {
         QQQ[i] = R_PosInf;
       } else {
-        // Enhanced search algorithm
+        // Use optimized incremental search
         const double mu_val = recycled.vec2[i];
         const double sigma_val = recycled.vec3[i];
         
-        // Improved initial guess
-        int j = (max_value == 0) ? static_cast<int>(mu_val * (p_i + 0.5) + 1) : max_value;
-        
-        double cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-        
-        if (p_i <= cumpro) {
-          // Search downward
-          while (j > 0 && p_i <= cumpro) {
-            j /= 2;
-            cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-          }
-          // Linear search in the final range
-          for (int k = j; k <= (j * 2 + 1); k++) {
-            cumpro = fpDPO_scalar(k, mu_val, sigma_val, true, false);
-            if (p_i <= cumpro) {
-              QQQ[i] = k;
-              break;
-            }
-          }
-        } else {
-          // Search upward
-          while (j < INT_MAX && p_i > cumpro) {
-            j *= 2;
-            cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-          }
-          j /= 2;
-          cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-          
-          // Coarse search
-          if ((j*2) > (j+1000)) {
-            while (j < INT_MAX && p_i > cumpro) {
-              j += 1000;
-              cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-            }
-            if (j >= 1000) j -= 1000;
-            cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-          }
-          
-          // Medium search
-          while (j < INT_MAX && p_i > cumpro) {
-            j += 100;
-            cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-          }
-          if (j >= 100) j -= 100;
-          cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-          
-          // Fine search
-          while (j < INT_MAX && p_i > cumpro) {
-            j += 10;
-            cumpro = fpDPO_scalar(j, mu_val, sigma_val, true, false);
-          }
-          if (j >= 10) j -= 10;
-          
-          // Final linear search
-          for (int k = j; k <= INT_MAX; k++) {
-            cumpro = fpDPO_scalar(k, mu_val, sigma_val, true, false);
-            if (p_i <= cumpro) {
-              QQQ[i] = k;
-              break;
-            }
-          }
-        }
+        QQQ[i] = fqDPO_search(p_i, mu_val, sigma_val);
       }
     }
   }
@@ -717,5 +688,3 @@ NumericVector fqDPO(NumericVector p,
     warning("NaNs or NAs were produced");
   return QQQ;
 }
-
-

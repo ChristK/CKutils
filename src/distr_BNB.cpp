@@ -227,6 +227,35 @@ NumericVector fpBNB(const IntegerVector& q,
     return out;
   }
 
+// Optimized quantile search using incremental CDF computation
+int fqBNB_search(const double& p, const double& mu, const double& sigma, const double& nu) {
+    // Pre-compute common terms for density calculation
+    const double inv_sigma = 1.0 / sigma;
+    const double inv_nu = 1.0 / nu;
+    const double mu_nu_over_sigma = (mu * nu) * inv_sigma;
+    const double m = inv_sigma + 1.0;
+    const double n_param = mu_nu_over_sigma;
+    const double k = inv_nu;
+    
+    const double log_beta_n_m = R::lbeta(n_param, m);
+    const double log_gamma_k = R::lgammafn(k);
+    
+    double cdf = 0.0;
+    const int max_iter = 1000000;
+    
+    for (int i = 0; i < max_iter; i++) {
+        const double log_prob = R::lbeta(i + n_param, m + k) - log_beta_n_m - 
+                               R::lgammafn(i + 1) - log_gamma_k + R::lgammafn(i + k);
+        cdf += std::exp(log_prob);
+        
+        if (cdf >= p) {
+            return i;
+        }
+    }
+    
+    return max_iter;
+}
+
 // qBNB ----
 // fast
 double fqBNB_scalar(const double& p,
@@ -236,98 +265,16 @@ double fqBNB_scalar(const double& p,
                     const bool& lower_tail = true,
                     const bool& log_p = false)
 {
-  // if (mu    <= 0) stop("mu must be greater than 0");
-  // if (sigma <= 0) stop("sigma must be greater than 0");
-  // if (nu    <= 0) stop("nu must be greater than 0");
-  // if (p < 0.0 || p > 1.0001) stop("p must be >=0 and <=1"); //I don't like this but it comes from original function
-
   double p_ = p;
   if (log_p) p_ = std::exp(p_);
   if (!lower_tail) p_ = 1.0 - p_;
 
-  double QQQ = 0.0;
-  double cumpro = 0.0;
-  int j = 0;
-
   if (p_ + 1e-09 >= 1.0) {
-    QQQ = R_PosInf;
-  } else {
-    // Optimized divide & conquer algorithm with adaptive step sizing
-    
-    // Better initial guess using quantile approximation
-    j = std::max(1, static_cast<int>(mu * (2.0 * p_ + 0.3) + 0.5));
-    cumpro = fpBNB_scalar(j, mu, sigma, nu, true, false);
-    
-    if (p_ <= cumpro) {
-      // Search downward with exponential decay  
-      int lower_bound = 0;
-      int upper_bound = j;
-      
-      while (j > 0 && p_ <= cumpro) {
-        j /= 2;
-        cumpro = fpBNB_scalar(j, mu, sigma, nu, true, false);
-      }
-      
-      // j is now the largest value where p_ > cumpro, or 0
-      // But we need to check if j=0 satisfies p_ <= F(0)
-      if (j == 0) {
-        cumpro = fpBNB_scalar(0, mu, sigma, nu, true, false);
-        if (p_ <= cumpro) {
-          QQQ = 0;
-        } else {
-          lower_bound = 1;
-          upper_bound = std::max(upper_bound, 1);
-        }
-      } else {
-        lower_bound = j;
-      }
-      
-      // Fine-tune search in narrow range [lower_bound, upper_bound] if not already found
-      if (QQQ == 0 && lower_bound > 0) {
-        for (int k = lower_bound; k <= upper_bound; k++) {
-          cumpro = fpBNB_scalar(k, mu, sigma, nu, true, false);
-          if (p_ <= cumpro) {
-            QQQ = k;
-            break;
-          }
-        }
-      }
-    } else {
-      // Search upward with adaptive step sizing
-      const int max_reasonable = std::min(INT_MAX, static_cast<int>(mu * 50 + 10000));
-      
-      // Exponential growth phase
-      while (j < max_reasonable && p_ > cumpro) {
-        j *= 2;
-        if (j > max_reasonable) j = max_reasonable;
-        cumpro = fpBNB_scalar(j, mu, sigma, nu, true, false);
-      }
-      
-      // Binary search refinement for better precision
-      int lower = j / 2;
-      int upper = j;
-      while (upper - lower > 5 && lower < max_reasonable) {  // Continue until gap <= 5
-        const int mid = lower + (upper - lower) / 2;
-        const double mid_cdf = fpBNB_scalar(mid, mu, sigma, nu, true, false);
-        if (p_ <= mid_cdf) {
-          upper = mid;
-          cumpro = mid_cdf;
-        } else {
-          lower = mid;
-        }
-      }
-      
-      // Final linear search in small range for exact match
-      for (int k = lower; k <= std::min(upper + 5, max_reasonable); k++) {
-        cumpro = fpBNB_scalar(k, mu, sigma, nu, true, false);
-        if (p_ <= cumpro) {
-          QQQ = k;
-          break;
-        }
-      }
-    }
+    return R_PosInf;
   }
-  return QQQ;
+  
+  // Use optimized incremental search
+  return fqBNB_search(p_, mu, sigma, nu);
 }
 
 
