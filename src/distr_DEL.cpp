@@ -516,6 +516,46 @@ double fpDEL_scalar(const int &q,
   return cdf;
 }
 
+// Optimized quantile search using incremental CDF computation
+// This avoids recalculating CDF from scratch for each candidate
+int fqDEL_search(const double &p,
+                 const double &mu,
+                 const double &sigma,
+                 const double &nu)
+{
+  // For very small sigma, use Poisson distribution directly
+  if (sigma < 1e-04) {
+    return static_cast<int>(R::qpois(p, mu, true, false));
+  }
+  
+  // Incremental search: compute CDF incrementally by adding densities
+  double cdf = 0.0;
+  int q = 0;
+  
+  // Precompute constants for density calculation
+  const double one_minus_nu = 1.0 - nu;
+  const double logpy0 = -mu * nu - (1.0 / sigma) * 
+                        log(1.0 + mu * sigma * one_minus_nu);
+  
+  // Start summing densities until CDF >= p
+  // Use a maximum iteration count for safety
+  const int max_iter = 1000000;
+  
+  while (cdf < p && q < max_iter) {
+    double S = ftofydel2_scalar(q, mu, sigma, nu);
+    double log_density = logpy0 - lgamma(q + 1) + S;
+    double density = exp(log_density);
+    cdf += density;
+    
+    if (cdf >= p) {
+      return q;
+    }
+    q++;
+  }
+  
+  return q;
+}
+
 //' Quantile Function for the Delaporte Distribution
 //'
 //' Computes quantiles of the Delaporte distribution, a compound distribution of
@@ -629,40 +669,12 @@ NumericVector fqDEL(NumericVector p,
       if (p_i + 1e-09 >= 1.0) {
         QQQ[i] = R_PosInf;
       } else {
-        // Enhanced binary search with better initial bounds
+        // Use optimized incremental search
         const double mu_val = recycled.vec2[i];
         const double sigma_val = recycled.vec3[i];
         const double nu_val = recycled.vec4[i];
         
-        // Improved initial guess based on distribution properties
-        int low = 0;
-        int high = static_cast<int>(mu_val * (2.0 + 1.0/sigma_val) + 20);
-        
-        // Exponential search to find proper upper bound
-        double cdf_high = fpDEL_scalar(high, mu_val, sigma_val, nu_val, true, false);
-        int iterations = 0;
-        while (cdf_high < p_i && high < INT_MAX / 4 && iterations < 20) {
-          low = high;
-          high *= 2;
-          cdf_high = fpDEL_scalar(high, mu_val, sigma_val, nu_val, true, false);
-          iterations++;
-        }
-        
-        // Binary search with optimised termination
-        while (low < high - 1) {
-          int mid = low + (high - low) / 2;
-          double cdf_mid = fpDEL_scalar(mid, mu_val, sigma_val, nu_val, true, false);
-          
-          if (cdf_mid < p_i) {
-            low = mid;
-          } else {
-            high = mid;
-          }
-        }
-        
-        // Final verification
-        double cdf_low = fpDEL_scalar(low, mu_val, sigma_val, nu_val, true, false);
-        QQQ[i] = (cdf_low >= p_i) ? low : high;
+        QQQ[i] = fqDEL_search(p_i, mu_val, sigma_val, nu_val);
       }
     }
   }
@@ -671,4 +683,3 @@ NumericVector fqDEL(NumericVector p,
     warning("NaNs or NAs were produced");
   return QQQ;
 }
-
