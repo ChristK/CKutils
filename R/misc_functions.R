@@ -405,6 +405,43 @@ pctl_rank <- function(
 }
 
 
+#' Build Arrow Expression for membership filters
+#'
+#' @param field Character scalar column name or an arrow::Expression.
+#' @param values Vector of values to match.
+#'
+#' @return An arrow::Expression suitable for use in read_parquet_dt().
+#' @examples
+#' \dontrun{
+#' arrow_in("sex", c("men", "women"))
+#' read_parquet_dt(
+#'   "./data/myfile.parquet",
+#'   filter = arrow_in("sex", "men")
+#' )
+#' }
+#' @export
+arrow_in <- function(field, values) {
+  if (!requireNamespace("arrow", quietly = TRUE)) {
+    stop("Package 'arrow' is required but not installed.")
+  }
+
+  if (inherits(field, "Expression")) {
+    field_expr <- field
+  } else if (is.character(field) && length(field) == 1L) {
+    field_expr <- arrow::Expression$field_ref(field)
+  } else {
+    stop("'field' must be a single column name or an arrow::Expression.")
+  }
+
+  values <- as.vector(values)
+  if (length(values) < 1L) {
+    stop("'values' must be a non-empty vector.")
+  }
+
+  Reduce(`|`, lapply(values, function(val) field_expr == val))
+}
+
+
 #' Read Parquet (partitioned dataset or single file) via Arrow, optionally filter/project, return data.table
 #'
 #' @param path Character scalar (directory or file) OR character vector of parquet files.

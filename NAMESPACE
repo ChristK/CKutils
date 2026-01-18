@@ -3,6 +3,7 @@
 export(absorb_dt)
 export(agegrp_name)
 export(antilogit)
+export(arrow_in)
 export(carry_backward_decr)
 export(carry_forward)
 export(carry_forward_incr)

@@ -138,6 +138,58 @@ expect_true(ranks_ties[2] == ranks_ties[3], info = "Tied values get same rank wi
 expect_error(pctl_rank(c("a", "b", "c")), pattern = "is\\.numeric\\(x\\) is not TRUE", info = "Error for non-numeric input")
 
 # =============================================================================
+# Tests for arrow_in function
+# =============================================================================
+
+if (requireNamespace("arrow", quietly = TRUE)) {
+  test_parquet_file <- system.file(
+    "testdata",
+    "test_read_parquet.parquet",
+    package = "CKutils"
+  )
+
+  expr <- arrow_in("sex", c("M", "F"))
+  expect_true(
+    inherits(expr, "Expression"),
+    info = "arrow_in returns Expression"
+  )
+
+  out <- read_parquet_dt(test_parquet_file, filter = arrow_in("sex", "M"))
+  expect_equal(
+    nrow(out),
+    read_parquet_dt(test_parquet_file)[sex == "M", .N],
+    info = "arrow_in filters rows correctly"
+  )
+  expect_true(all(out$sex == "M"), info = "arrow_in matches value")
+
+  out2 <- read_parquet_dt(
+    test_parquet_file,
+    filter = arrow_in(arrow::Expression$field_ref("sex"), c("M", "F"))
+  )
+  expect_equal(
+    nrow(out2),
+    read_parquet_dt(test_parquet_file)[, .N],
+    info = "arrow_in accepts Expression input"
+  )
+
+  expect_error(
+    arrow_in("sex", character()),
+    info = "arrow_in errors on empty values"
+  )
+  expect_error(
+    arrow_in(c("sex", "age"), "M"),
+    info = "arrow_in errors on bad field input"
+  )
+
+  rm(test_parquet_file)
+} else {
+  expect_true(
+    TRUE,
+    info = "arrow package not available - skipping arrow_in tests"
+  )
+}
+
+# =============================================================================
 # Tests for counts function
 # =============================================================================
 
