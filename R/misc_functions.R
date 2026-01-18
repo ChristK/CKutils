@@ -440,7 +440,11 @@ arrow_in <- function(field, values) {
 
   # Use Arrow's native is_in function for O(1) lookup instead of O(n) chained ORs
   value_set <- arrow::Array$create(values)
-  arrow::Expression$create("is_in", field_expr, options = list(value_set = value_set))
+  arrow::Expression$create(
+    "is_in",
+    field_expr,
+    options = list(value_set = value_set, skip_nulls = TRUE)
+  )
 }
 
 
