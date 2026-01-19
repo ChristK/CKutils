@@ -764,6 +764,16 @@ read_parquet_dt <- function(
       jsonlite::fromJSON(ds$metadata[["r.data.table.keys"]]),
       error = function(e) NULL
     )
+    
+    # Ensure keys is a character vector (fromJSON might return list or other types)
+    if (!is.null(keys)) {
+      if (is.list(keys)) {
+        keys <- unlist(keys)
+      }
+      if (!is.character(keys) || length(keys) == 0L) {
+        keys <- NULL
+      }
+    }
 
     # Fallback if metadata not found (optional)
     if (is.null(keys) && !is.null(keys_fallback)) {
