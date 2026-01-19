@@ -244,7 +244,12 @@ lookup_dt <- function(
       }
     }
   }, error = function(e) {
-    stop("Error in C++ index calculation: ", e$message)
+    # Provide detailed diagnostic information about column types
+    col_info <- sapply(on, function(col) {
+      paste0(col, ": class=", class(tbl[[col]])[1], ", typeof=", typeof(tbl[[col]]))
+    })
+    stop("Error in C++ index calculation: ", e$message, 
+         "\nColumn types: ", paste(col_info, collapse = "; "))
   })
 
   # Additional validation of rownum before calling dtsubset
