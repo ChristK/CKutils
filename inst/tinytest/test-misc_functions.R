@@ -1486,12 +1486,295 @@ if (requireNamespace("arrow", quietly = TRUE)) {
   result10 <- read_parquet_dt(test_parquet_file, cols = "id")
   expect_equal(ncol(result10), 1, info = "Single column selection works")
   expect_equal(names(result10), "id", info = "Single column name correct")
-  
+
+  # -------------------------------------------------------------------------
+  # Tests for data.table keys restoration
+  # -------------------------------------------------------------------------
+
+  # Test 11: keys_fallback applies keys when no metadata present
+  result11 <- read_parquet_dt(test_parquet_file, keys_fallback = c("id"))
+  expect_true(is.data.table(result11), info = "keys_fallback returns data.table")
+  expect_equal(key(result11), "id", info = "keys_fallback sets key correctly")
+
+  # Test 12: keys_fallback with multiple keys
+
+  result12 <- read_parquet_dt(test_parquet_file, keys_fallback = c("id", "age"))
+  expect_equal(key(result12), c("id", "age"), info = "keys_fallback sets multiple keys")
+
+  # Test 13: keys_fallback ignored when column doesn't exist
+  result13 <- read_parquet_dt(test_parquet_file, keys_fallback = c("nonexistent_col"))
+  expect_null(key(result13), info = "keys_fallback ignored when column missing")
+
+  # Test 14: keys_fallback ignored when some columns don't exist
+  result14 <- read_parquet_dt(test_parquet_file, keys_fallback = c("id", "nonexistent"))
+  expect_null(key(result14), info = "keys_fallback ignored when any column missing")
+
+  # Test 15: keys_fallback works with column projection (cols specified)
+  result15 <- read_parquet_dt(test_parquet_file, cols = c("id", "age"), keys_fallback = c("id"))
+  expect_equal(key(result15), "id", info = "keys_fallback works with column projection")
+
+  # Test 16: keys_fallback ignored when key column not in projection
+  result16 <- read_parquet_dt(test_parquet_file, cols = c("age", "sex"), keys_fallback = c("id"))
+  expect_null(key(result16), info = "keys_fallback ignored when key not in projection")
+
+  # Test 17: No keys when as_data_table = FALSE (keys_fallback irrelevant)
+  result17 <- read_parquet_dt(test_parquet_file, as_data_table = FALSE, keys_fallback = c("id"))
+  expect_false(is.data.table(result17), info = "as_data_table=FALSE ignores keys_fallback")
+
+  # Test 18: NULL keys_fallback (default) results in no keys
+  result18 <- read_parquet_dt(test_parquet_file)
+  # Without metadata, keys should be NULL
+  expect_null(key(result18), info = "No keys when keys_fallback is NULL and no metadata")
+
+  # Test 19: Create parquet with metadata and verify keys are restored
+  temp_dir <- tempdir()
+  temp_parquet_with_keys <- file.path(temp_dir, "test_with_keys.parquet")
+  test_dt_keys <- data.table(id = 1:10, name = letters[1:10], value = rnorm(10))
+  setkey(test_dt_keys, id)
+  # Write with key metadata
+  arrow::write_parquet(
+    test_dt_keys,
+    temp_parquet_with_keys,
+    properties = arrow::ParquetWriterProperties$create(
+      arrow::schema(test_dt_keys),
+      compression = "snappy"
+    ),
+    arrow_properties = arrow::ParquetArrowWriterProperties$create(
+      store_schema = TRUE
+    )
+  )
+  # Add metadata manually for keys
+  tbl <- arrow::read_parquet(temp_parquet_with_keys, as_data_frame = FALSE)
+  tbl_with_meta <- tbl$ReplaceSchemaMetadata(
+    c(tbl$metadata, list("r.data.table.keys" = jsonlite::toJSON(c("id"))))
+  )
+  arrow::write_parquet(tbl_with_meta, temp_parquet_with_keys)
+
+  result19 <- read_parquet_dt(temp_parquet_with_keys)
+  expect_equal(key(result19), "id", info = "Keys restored from parquet metadata")
+
+  # Test 20: Metadata keys take priority over keys_fallback
+  result20 <- read_parquet_dt(temp_parquet_with_keys, keys_fallback = c("name"))
+  expect_equal(key(result20), "id", info = "Metadata keys have priority over keys_fallback")
+
+  # Cleanup temp file
+  unlink(temp_parquet_with_keys)
+
+  # =========================================================================
+  # Tests for write_parquet_dt function
+  # =========================================================================
+
+  temp_dir <- tempdir()
+
+  # Test W1: Basic write from data.table preserves keys
+  test_dt_w1 <- data.table(id = 1:20, name = letters[1:20], value = rnorm(20))
+  setkey(test_dt_w1, id)
+  temp_pq_w1 <- file.path(temp_dir, "test_write_w1.parquet")
+  write_parquet_dt(test_dt_w1, temp_pq_w1)
+  result_w1 <- read_parquet_dt(temp_pq_w1)
+  expect_true(is.data.table(result_w1), info = "write_parquet_dt creates readable parquet")
+  expect_equal(nrow(result_w1), 20, info = "write_parquet_dt preserves all rows")
+  expect_equal(key(result_w1), "id", info = "write_parquet_dt preserves keys in metadata")
+  unlink(temp_pq_w1)
+
+  # Test W2: Write with multiple keys
+  test_dt_w2 <- data.table(id = rep(1:5, 4), year = rep(2020:2023, each = 5), val = rnorm(20))
+  setkey(test_dt_w2, id, year)
+  temp_pq_w2 <- file.path(temp_dir, "test_write_w2.parquet")
+  write_parquet_dt(test_dt_w2, temp_pq_w2)
+  result_w2 <- read_parquet_dt(temp_pq_w2)
+  expect_equal(key(result_w2), c("id", "year"), info = "write_parquet_dt preserves multiple keys")
+  unlink(temp_pq_w2)
+
+  # Test W3: Write with custom keys (overrides existing)
+  test_dt_w3 <- data.table(id = 1:10, name = letters[1:10], value = rnorm(10))
+  setkey(test_dt_w3, id)
+  temp_pq_w3 <- file.path(temp_dir, "test_write_w3.parquet")
+  write_parquet_dt(test_dt_w3, temp_pq_w3, keys = c("name"))
+  result_w3 <- read_parquet_dt(temp_pq_w3)
+  expect_equal(key(result_w3), "name", info = "write_parquet_dt custom keys override existing")
+  unlink(temp_pq_w3)
+
+  # Test W4: Write unkeyed data.table (no key metadata)
+  test_dt_w4 <- data.table(a = 1:10, b = rnorm(10))
+  temp_pq_w4 <- file.path(temp_dir, "test_write_w4.parquet")
+  write_parquet_dt(test_dt_w4, temp_pq_w4)
+  result_w4 <- read_parquet_dt(temp_pq_w4)
+  expect_null(key(result_w4), info = "write_parquet_dt with no keys writes no key metadata")
+  unlink(temp_pq_w4)
+
+  # Test W5: Write from data.frame (converted to data.table)
+  test_df_w5 <- data.frame(x = 1:10, y = letters[1:10])
+  temp_pq_w5 <- file.path(temp_dir, "test_write_w5.parquet")
+  write_parquet_dt(test_df_w5, temp_pq_w5, keys = "x")
+  result_w5 <- read_parquet_dt(temp_pq_w5)
+  expect_true(is.data.table(result_w5), info = "write_parquet_dt accepts data.frame input")
+  expect_equal(key(result_w5), "x", info = "write_parquet_dt sets keys on data.frame input")
+  unlink(temp_pq_w5)
+
+  # Test W6: Write with partitioning
+  test_dt_w6 <- data.table(id = 1:20, year = rep(2020:2023, each = 5), val = rnorm(20))
+  setkey(test_dt_w6, id)
+  temp_dir_w6 <- file.path(temp_dir, "test_write_w6_partitioned")
+  write_parquet_dt(test_dt_w6, temp_dir_w6, partitioning = "year")
+  expect_true(dir.exists(temp_dir_w6), info = "write_parquet_dt creates partitioned directory")
+  result_w6 <- read_parquet_dt(temp_dir_w6)
+  expect_equal(nrow(result_w6), 20, info = "write_parquet_dt partitioned data readable")
+  expect_equal(key(result_w6), "id", info = "write_parquet_dt partitioned preserves keys")
+  unlink(temp_dir_w6, recursive = TRUE)
+
+  # Test W7: Error when keys column doesn't exist
+  test_dt_w7 <- data.table(a = 1:5, b = rnorm(5))
+  temp_pq_w7 <- file.path(temp_dir, "test_write_w7.parquet")
+  expect_error(
+    write_parquet_dt(test_dt_w7, temp_pq_w7, keys = "nonexistent"),
+    info = "write_parquet_dt errors on invalid keys"
+  )
+
+  # Test W8: Error when partitioning column doesn't exist
+  test_dt_w8 <- data.table(a = 1:5, b = rnorm(5))
+  temp_pq_w8 <- file.path(temp_dir, "test_write_w8.parquet")
+  expect_error(
+    write_parquet_dt(test_dt_w8, temp_pq_w8, partitioning = "nonexistent"),
+    info = "write_parquet_dt errors on invalid partitioning column"
+  )
+
+  # Test W9: Write returns path invisibly
+  test_dt_w9 <- data.table(a = 1:5)
+  temp_pq_w9 <- file.path(temp_dir, "test_write_w9.parquet")
+  result_path <- write_parquet_dt(test_dt_w9, temp_pq_w9)
+  expect_equal(result_path, temp_pq_w9, info = "write_parquet_dt returns path")
+  unlink(temp_pq_w9)
+
+  # Test W10: Roundtrip - verify data integrity
+  set.seed(42)
+  test_dt_w10 <- data.table(
+    id = 1:100,
+    char_col = sample(letters, 100, replace = TRUE),
+    num_col = rnorm(100),
+    int_col = sample(1:1000, 100)
+  )
+  setkey(test_dt_w10, id)
+  temp_pq_w10 <- file.path(temp_dir, "test_write_w10.parquet")
+  write_parquet_dt(test_dt_w10, temp_pq_w10)
+  result_w10 <- read_parquet_dt(temp_pq_w10)
+  expect_equal(nrow(result_w10), nrow(test_dt_w10), info = "Roundtrip preserves row count")
+  expect_equal(ncol(result_w10), ncol(test_dt_w10), info = "Roundtrip preserves column count")
+  expect_equal(names(result_w10), names(test_dt_w10), info = "Roundtrip preserves column names")
+  expect_equal(result_w10$id, test_dt_w10$id, info = "Roundtrip preserves integer data")
+  expect_equal(result_w10$char_col, test_dt_w10$char_col, info = "Roundtrip preserves character data")
+  expect_equal(result_w10$num_col, test_dt_w10$num_col, tolerance = 1e-10, info = "Roundtrip preserves numeric data")
+  unlink(temp_pq_w10)
+
+  # Test W11: Write from fst file (if fst package available)
+  if (requireNamespace("fst", quietly = TRUE)) {
+    test_dt_w11 <- data.table(id = 1:10, val = rnorm(10))
+    setkey(test_dt_w11, id)
+    temp_fst_w11 <- file.path(temp_dir, "test_write_w11.fst")
+    temp_pq_w11 <- file.path(temp_dir, "test_write_w11.parquet")
+    fst::write_fst(test_dt_w11, temp_fst_w11)
+    write_parquet_dt(temp_fst_w11, temp_pq_w11, keys = "id")
+    result_w11 <- read_parquet_dt(temp_pq_w11)
+    expect_equal(nrow(result_w11), 10, info = "write_parquet_dt reads from fst file")
+    expect_equal(key(result_w11), "id", info = "write_parquet_dt from fst preserves keys")
+    unlink(temp_fst_w11)
+    unlink(temp_pq_w11)
+  }
+
+  # -------------------------------------------------------------------------
+  # Tests for IMPACTncd key logic
+  # -------------------------------------------------------------------------
+
+  # Test W12: IMPACTncd key logic - excludes distribution parameters
+  test_dt_w12 <- data.table(
+    year = rep(2020:2022, each = 2),
+    age = rep(30:31, 3),
+    sex = rep(c("M", "F"), 3),
+    mu = rnorm(6),
+    sigma = runif(6),
+    nu = rnorm(6),
+    tau = runif(6)
+  )
+  temp_pq_w12 <- file.path(temp_dir, "test_write_w12.parquet")
+  write_parquet_dt(test_dt_w12, temp_pq_w12, keys = "impactncd")
+  result_w12 <- read_parquet_dt(temp_pq_w12)
+  # Keys should be age, sex, year (alphabetically sorted, year at end)
+  expect_equal(key(result_w12), c("age", "sex", "year"),
+               info = "IMPACTncd keys exclude mu/sigma/nu/tau and put year last")
+  expect_false("mu" %in% key(result_w12), info = "IMPACTncd keys exclude mu")
+  expect_false("sigma" %in% key(result_w12), info = "IMPACTncd keys exclude sigma")
+  unlink(temp_pq_w12)
+
+  # Test W13: IMPACTncd key logic - excludes columns ending with digits
+  test_dt_w13 <- data.table(
+    year = 2020:2024,
+    age = 30:34,
+    qimd = 1:5,
+    value1 = rnorm(5),
+    value2 = rnorm(5),
+    percentile99 = runif(5)
+  )
+  temp_pq_w13 <- file.path(temp_dir, "test_write_w13.parquet")
+  write_parquet_dt(test_dt_w13, temp_pq_w13, keys = "impactncd")
+  result_w13 <- read_parquet_dt(temp_pq_w13)
+  # Keys should exclude value1, value2, percentile99 (end with digits)
+  expect_equal(key(result_w13), c("age", "qimd", "year"),
+               info = "IMPACTncd keys exclude columns ending with digits")
+  expect_false("value1" %in% key(result_w13), info = "IMPACTncd excludes value1")
+  expect_false("percentile99" %in% key(result_w13), info = "IMPACTncd excludes percentile99")
+  unlink(temp_pq_w13)
+
+  # Test W14: IMPACTncd key logic - excludes maxq and minq
+  test_dt_w14 <- data.table(
+    year = 2020:2024,
+    age = 30:34,
+    maxq = runif(5),
+    minq = runif(5),
+    value = rnorm(5)
+  )
+  temp_pq_w14 <- file.path(temp_dir, "test_write_w14.parquet")
+  write_parquet_dt(test_dt_w14, temp_pq_w14, keys = "impactncd")
+  result_w14 <- read_parquet_dt(temp_pq_w14)
+  expect_equal(key(result_w14), c("age", "value", "year"),
+               info = "IMPACTncd keys exclude maxq and minq")
+  unlink(temp_pq_w14)
+
+  # Test W15: IMPACTncd key logic - handles table without year
+  test_dt_w15 <- data.table(
+    age = 30:34,
+    sex = c("M", "F", "M", "F", "M"),
+    mu = rnorm(5)
+  )
+  temp_pq_w15 <- file.path(temp_dir, "test_write_w15.parquet")
+  write_parquet_dt(test_dt_w15, temp_pq_w15, keys = "impactncd")
+  result_w15 <- read_parquet_dt(temp_pq_w15)
+  expect_equal(key(result_w15), c("age", "sex"),
+               info = "IMPACTncd keys work without year column")
+  unlink(temp_pq_w15)
+
+  # Test W16: partitioning = TRUE auto-partitions by year
+  test_dt_w16 <- data.table(id = 1:20, year = rep(2020:2023, each = 5), val = rnorm(20))
+  setkey(test_dt_w16, id)
+  temp_dir_w16 <- file.path(temp_dir, "test_write_w16_auto_part")
+  write_parquet_dt(test_dt_w16, temp_dir_w16, partitioning = TRUE)
+  expect_true(dir.exists(temp_dir_w16), info = "partitioning=TRUE creates directory")
+  result_w16 <- read_parquet_dt(temp_dir_w16)
+  expect_equal(nrow(result_w16), 20, info = "partitioning=TRUE reads all rows")
+  unlink(temp_dir_w16, recursive = TRUE)
+
+  # Test W17: partitioning = TRUE does nothing without year column
+  test_dt_w17 <- data.table(id = 1:10, val = rnorm(10))
+  temp_pq_w17 <- file.path(temp_dir, "test_write_w17.parquet")
+  write_parquet_dt(test_dt_w17, temp_pq_w17, partitioning = TRUE)
+  expect_true(file.exists(temp_pq_w17), info = "partitioning=TRUE without year writes file")
+  expect_false(dir.exists(temp_pq_w17), info = "partitioning=TRUE without year is not a directory")
+  unlink(temp_pq_w17)
+
   } else {
     # Skip if test files not available
     expect_true(TRUE, info = "Skipping read_parquet_dt tests - test files not found")
   }
-  
+
 } else {
   # Skip message if arrow not available
   expect_true(TRUE, info = "Skipping read_parquet_dt tests - arrow package not available")

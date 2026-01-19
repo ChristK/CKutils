@@ -448,6 +448,212 @@ arrow_in <- function(field, values) {
 }
 
 
+#' Write data.table to Parquet with key metadata preservation
+#'
+#' Writes a data.table (or reads from an fst file) to Parquet format while
+#' preserving data.table key information in the parquet metadata. The keys
+#' are stored as JSON in the `r.data.table.keys` metadata field and can be
+#' restored when reading with [read_parquet_dt()].
+#'
+#' @param x Either a data.table object OR a character path to an fst file.
+#'   If a path is provided, the fst file is read as a data.table.
+#' @param path Character scalar. The output path for the parquet file or
+#'   directory (if partitioning is used).
+#' @param keys Specifies which columns to use as data.table keys. Can be:
+#'   \itemize{
+#'     \item `NULL` (default): Uses existing keys from the data.table
+#'     \item A character vector of column names: Uses these as keys
+#'     \item `"impactncd"`: Special mode for IMPACTncd project - automatically
+#'       determines keys by excluding distribution parameters (mu, sigma, nu,
+#'       tau, maxq, minq) and columns ending with digits, then sorts
+#'       alphabetically with "year" first if present
+#'   }
+#' @param partitioning Optional character vector of column names to use for
+#'   Hive-style partitioning. If `NULL` (default), writes a single parquet file.
+#'   If specified, creates a directory structure with partition folders.
+#'   If `TRUE`, automatically partitions by "year" if that column exists.
+#' @param compression Character scalar. Compression codec to use.
+#'   Default is "snappy". Other options include "gzip", "zstd", "lz4", "uncompressed".
+#'
+#' @details
+#' The function stores data.table keys in the parquet schema metadata under
+#' the field `r.data.table.keys` as a JSON-encoded character vector. This
+#' metadata is read by [read_parquet_dt()] to automatically restore keys.
+#'
+#' When `partitioning` is specified, the data is written using
+#' `arrow::write_dataset()` which creates a Hive-style partitioned directory.
+#' Otherwise, `arrow::write_parquet()` is used for a single file.
+#'
+#' The `"impactncd"` key mode is designed for the IMPACTncd simulation project
+#' where data tables typically have distribution parameters (mu, sigma, nu, tau)
+#' and quantile columns that should not be used as keys.
+#'
+#' @return Invisibly returns the path to the written parquet file/directory.
+#'
+#' @seealso [read_parquet_dt()] for reading parquet files with key restoration.
+#'
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#'
+#' # Create a keyed data.table
+#' dt <- data.table(id = 1:100, year = rep(2020:2024, 20), value = rnorm(100))
+#' setkey(dt, id, year)
+#'
+#' # Write to parquet (keys preserved automatically)
+#' write_parquet_dt(dt, "output.parquet")
+#'
+#' # Read back with keys restored
+#' dt2 <- read_parquet_dt("output.parquet")
+#' key(dt2)  # Returns c("id", "year")
+#'
+#' # Write with custom keys
+#' write_parquet_dt(dt, "output.parquet", keys = c("id"))
+#'
+#' # Write with IMPACTncd key logic
+#' dt_impact <- data.table(
+#'   year = 2020:2024, age = 30:34, sex = "M",
+#'   mu = rnorm(5), sigma = runif(5)
+#' )
+#' write_parquet_dt(dt_impact, "output.parquet", keys = "impactncd")
+#' # Keys will be c("age", "sex", "year") - mu/sigma excluded, year moved to end
+#'
+#' # Write with partitioning by year
+#' write_parquet_dt(dt, "output_dir", partitioning = "year")
+#'
+#' # Auto-partition by year if column exists
+#' write_parquet_dt(dt, "output_dir", partitioning = TRUE)
+#'
+#' # Read from fst and write to parquet
+#' write_parquet_dt("data.fst", "output.parquet", keys = c("id", "year"))
+#' }
+#'
+#' @importFrom arrow arrow_table write_parquet write_dataset
+#' @export
+write_parquet_dt <- function(
+    x,
+    path,
+    keys = NULL,
+    partitioning = NULL,
+    compression = "snappy"
+) {
+  # Input validation
+  if (!requireNamespace("arrow", quietly = TRUE)) {
+    stop("Package 'arrow' is required but not installed.")
+  }
+
+  if (!requireNamespace("data.table", quietly = TRUE)) {
+    stop("Package 'data.table' is required but not installed.")
+  }
+  if (!requireNamespace("jsonlite", quietly = TRUE)) {
+    stop("Package 'jsonlite' is required but not installed.")
+  }
+
+  stopifnot(is.character(path), length(path) == 1L)
+
+  # Handle input: data.table or fst file path
+  if (is.character(x) && length(x) == 1L && file.exists(x)) {
+    if (!requireNamespace("fst", quietly = TRUE)) {
+      stop("Package 'fst' is required to read fst files but not installed.")
+    }
+    dt <- fst::read_fst(x, as.data.table = TRUE)
+  } else if (is.data.frame(x)) {
+    dt <- data.table::as.data.table(x)
+  } else {
+    stop("'x' must be a data.table, data.frame, or a path to an fst file.")
+  }
+
+  # Determine keys to use
+  if (is.null(keys)) {
+    # Use existing keys from the data.table
+    kc <- data.table::key(dt)
+  } else if (identical(keys, "impactncd")) {
+    # IMPACTncd special key logic:
+    # 1. Exclude distribution parameters and columns ending with digits
+    # 2. Sort alphabetically
+    # 3. Move "year" to the end if present
+    excluded_cols <- c("mu", "sigma", "nu", "tau", "maxq", "minq")
+    kc <- sort(
+      names(dt)[
+        !names(dt) %in% excluded_cols &
+          !grepl("[0-9]$", names(dt))
+      ]
+    )
+    # Move "year" to the end of keys (if present)
+    if ("year" %in% kc) {
+      kc <- c(setdiff(kc, "year"), "year")
+    }
+    # Reorder columns to match keys first
+    data.table::setcolorder(dt, c(kc, setdiff(names(dt), kc)))
+  } else if (is.character(keys)) {
+    # User-specified keys
+    missing_keys <- setdiff(keys, names(dt))
+    if (length(missing_keys) > 0L) {
+      stop(
+        "Keys not found in data: ",
+        paste(missing_keys, collapse = ", ")
+      )
+    }
+    kc <- keys
+  } else {
+    stop("'keys' must be NULL, a character vector, or 'impactncd'.")
+  }
+
+  # Set keys on the data.table
+  if (!is.null(kc) && length(kc) > 0L) {
+    data.table::setkeyv(dt, kc)
+  }
+
+  # Convert to Arrow table
+  tbl <- arrow::arrow_table(dt)
+
+  # Add key metadata if keys exist
+  if (!is.null(kc) && length(kc) > 0L) {
+    meta <- tbl$metadata
+    meta[["r.data.table.keys"]] <- jsonlite::toJSON(kc, auto_unbox = FALSE)
+    tbl <- tbl$ReplaceSchemaMetadata(meta)
+  }
+
+  # Handle partitioning argument
+  if (isTRUE(partitioning)) {
+    # Auto-partition by year if column exists
+    if ("year" %in% names(dt)) {
+      partitioning <- "year"
+    } else {
+      partitioning <- NULL
+    }
+  } else if (!is.null(partitioning) && !is.character(partitioning)) {
+    stop("'partitioning' must be NULL, TRUE, or a character vector of column names.")
+  }
+
+  # Write to parquet
+  if (!is.null(partitioning)) {
+    # Validate partitioning columns exist
+    missing_parts <- setdiff(partitioning, names(dt))
+    if (length(missing_parts) > 0L) {
+      stop(
+        "Partitioning columns not found in data: ",
+        paste(missing_parts, collapse = ", ")
+      )
+    }
+    arrow::write_dataset(
+      dataset = tbl,
+      path = path,
+      format = "parquet",
+      partitioning = partitioning
+    )
+  } else {
+    arrow::write_parquet(
+      x = tbl,
+      sink = path,
+      compression = compression
+    )
+  }
+
+  invisible(path)
+}
+
+
 #' Read Parquet (partitioned dataset or single file) via Arrow, optionally filter/project, return data.table
 #'
 #' @param path Character scalar (directory or file) OR character vector of parquet files.
@@ -458,6 +664,23 @@ arrow_in <- function(field, values) {
 #' @param partitioning Partitioning spec for datasets. Default "hive" is typical for col=value/ layouts.
 #'   If opening fails with this, the function automatically retries without partitioning.
 #' @param as_data_table Logical; if TRUE returns data.table; if FALSE returns data.frame.
+#' @param keys_fallback Optional character vector of column names to use as data.table keys
+#'   if no key metadata is found in the parquet file. This allows specifying default keys
+#'   when reading parquet files that were not written with data.table key information.
+#'   The keys are only applied if all specified columns exist in the result.
+#'
+#' @details
+#' When `as_data_table = TRUE`, the function attempts to restore data.table keys
+#' from parquet metadata. Keys are stored in the parquet file's metadata under
+#' the field `r.data.table.keys` as a JSON-encoded character vector (written by
+#' functions like `arrow::write_parquet()` when custom metadata is provided).
+#'
+#' The key restoration logic follows this priority:
+#' \enumerate{
+#'   \item Read keys from parquet metadata field `r.data.table.keys` (JSON-encoded)
+#'   \item If no metadata keys found and `keys_fallback` is provided, use `keys_fallback`
+#'   \item Keys are only applied if all key columns exist in the resulting data.table
+#' }
 #'
 #' @return data.table (default) or data.frame
 #' @examples
@@ -476,18 +699,27 @@ arrow_in <- function(field, values) {
 #'   "./data/myfile.parquet",
 #'   filter = arrow::Expression$field_ref("age") >= 40
 #' )
+#'
+#' # With fallback keys (applied if parquet has no key metadata):
+#' dt <- read_parquet_dt(
+#'   "./data/myfile.parquet",
+#'   keys_fallback = c("patid", "year")
+#' )
 #' }
 #' @importFrom arrow open_dataset
 #' @export
 read_parquet_dt <- function(
-    path,
-    cols = NULL,
-    filter = NULL,
-    partitioning = "hive",
-    as_data_table = TRUE
-  ) {
+  path,
+  cols = NULL,
+  filter = NULL,
+  partitioning = "hive",
+  as_data_table = TRUE,
+  keys_fallback = NULL
+) {
   stopifnot(is.character(path), length(path) >= 1L)
-  if (!is.null(cols)) stopifnot(is.character(cols), length(cols) >= 1L)
+  if (!is.null(cols)) {
+    stopifnot(is.character(cols), length(cols) >= 1L)
+  }
 
   if (!requireNamespace("arrow", quietly = TRUE)) {
     stop("Package 'arrow' is required but not installed.")
@@ -498,9 +730,9 @@ read_parquet_dt <- function(
 
   # Open dataset (directory, file, or vector of files)
   ds <- tryCatch(
-    arrow::open_dataset(path, format = "parquet", partitioning = partitioning),
+    open_dataset(path, format = "parquet", partitioning = partitioning),
     error = function(e) {
-      arrow::open_dataset(path, format = "parquet")
+      open_dataset(path, format = "parquet")
     }
   )
 
@@ -524,7 +756,26 @@ read_parquet_dt <- function(
   df <- as.data.frame(tab)
 
   if (as_data_table) {
-    data.table::setDT(df)
+    # Attempt to restore data.table keys from parquet metadata
+    keys <- NULL
+
+    # Try to read keys from metadata (stored as JSON-encoded character vector)
+    keys <- tryCatch(
+      jsonlite::fromJSON(ds$metadata[["r.data.table.keys"]]),
+      error = function(e) NULL
+    )
+
+    # Fallback if metadata not found (optional)
+    if (is.null(keys) && !is.null(keys_fallback)) {
+      keys <- keys_fallback
+    }
+
+    # Validate that all key columns exist in the result before applying
+    if (!is.null(keys) && length(keys) > 0L && !all(keys %in% names(df))) {
+      keys <- NULL  # Reset keys if not all columns present
+    }
+
+    setDT(df, key = keys)
   }
 
   df

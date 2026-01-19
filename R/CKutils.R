@@ -43,6 +43,7 @@
 #' @importFrom dqrng dqrunif dqrnorm
 #' @importFrom arrow open_dataset
 #' @importFrom stats pnorm
+#' @importFrom jsonlite fromJSON toJSON
 #' @useDynLib CKutils, .registration = TRUE
 
 # Make sure data.table knows we know we're using it

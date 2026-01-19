@@ -9,7 +9,8 @@ read_parquet_dt(
   cols = NULL,
   filter = NULL,
   partitioning = "hive",
-  as_data_table = TRUE
+  as_data_table = TRUE,
+  keys_fallback = NULL
 )
 }
 \arguments{
@@ -25,12 +26,30 @@ Example: `arrow::Expression$field_ref("year") >= 2018`}
 If opening fails with this, the function automatically retries without partitioning.}
 
 \item{as_data_table}{Logical; if TRUE returns data.table; if FALSE returns data.frame.}
+
+\item{keys_fallback}{Optional character vector of column names to use as data.table keys
+if no key metadata is found in the parquet file. This allows specifying default keys
+when reading parquet files that were not written with data.table key information.
+The keys are only applied if all specified columns exist in the result.}
 }
 \value{
 data.table (default) or data.frame
 }
 \description{
 Read Parquet (partitioned dataset or single file) via Arrow, optionally filter/project, return data.table
+}
+\details{
+When `as_data_table = TRUE`, the function attempts to restore data.table keys
+from parquet metadata. Keys are stored in the parquet file's metadata under
+the field `r.data.table.keys` as a JSON-encoded character vector (written by
+functions like `arrow::write_parquet()` when custom metadata is provided).
+
+The key restoration logic follows this priority:
+\enumerate{
+  \item Read keys from parquet metadata field `r.data.table.keys` (JSON-encoded)
+  \item If no metadata keys found and `keys_fallback` is provided, use `keys_fallback`
+  \item Keys are only applied if all key columns exist in the resulting data.table
+}
 }
 \examples{
 \dontrun{
@@ -47,6 +66,12 @@ dt <- read_parquet_dt(
 dt <- read_parquet_dt(
   "./data/myfile.parquet",
   filter = arrow::Expression$field_ref("age") >= 40
+)
+
+# With fallback keys (applied if parquet has no key metadata):
+dt <- read_parquet_dt(
+  "./data/myfile.parquet",
+  keys_fallback = c("patid", "year")
 )
 }
 }
