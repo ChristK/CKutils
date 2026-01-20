@@ -1528,21 +1528,12 @@ if (requireNamespace("arrow", quietly = TRUE)) {
 
   # Test 19: Create parquet with metadata and verify keys are restored
   temp_dir <- tempdir()
+
   temp_parquet_with_keys <- file.path(temp_dir, "test_with_keys.parquet")
   test_dt_keys <- data.table(id = 1:10, name = letters[1:10], value = rnorm(10))
   setkey(test_dt_keys, id)
-  # Write with key metadata
-  arrow::write_parquet(
-    test_dt_keys,
-    temp_parquet_with_keys,
-    properties = arrow::ParquetWriterProperties$create(
-      arrow::schema(test_dt_keys),
-      compression = "snappy"
-    ),
-    arrow_properties = arrow::ParquetArrowWriterProperties$create(
-      store_schema = TRUE
-    )
-  )
+  # Write initial parquet file
+  arrow::write_parquet(test_dt_keys, temp_parquet_with_keys, compression = "snappy")
   # Add metadata manually for keys
   tbl <- arrow::read_parquet(temp_parquet_with_keys, as_data_frame = FALSE)
   tbl_with_meta <- tbl$ReplaceSchemaMetadata(
