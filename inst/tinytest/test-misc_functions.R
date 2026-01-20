@@ -1532,14 +1532,22 @@ if (requireNamespace("arrow", quietly = TRUE)) {
   temp_parquet_with_keys <- file.path(temp_dir, "test_with_keys.parquet")
   test_dt_keys <- data.table(id = 1:10, name = letters[1:10], value = rnorm(10))
   setkey(test_dt_keys, id)
-  # Write initial parquet file
-  arrow::write_parquet(test_dt_keys, temp_parquet_with_keys, compression = "snappy")
+  # Write initial parquet file to a temp location, then add metadata
+  temp_parquet_initial <- file.path(temp_dir, "test_with_keys_initial.parquet")
+  arrow::write_parquet(test_dt_keys, temp_parquet_initial, compression = "snappy")
   # Add metadata manually for keys
-  tbl <- arrow::read_parquet(temp_parquet_with_keys, as_data_frame = FALSE)
+  tbl <- arrow::read_parquet(temp_parquet_initial, as_data_frame = FALSE)
   tbl_with_meta <- tbl$ReplaceSchemaMetadata(
     c(tbl$metadata, list("r.data.table.keys" = jsonlite::toJSON(c("id"))))
   )
+  # Remove references before writing to avoid Windows file locking issues
+  rm(tbl)
+  gc()
+  # Write to final location (different file to avoid memory-mapped handle conflicts)
   arrow::write_parquet(tbl_with_meta, temp_parquet_with_keys)
+  rm(tbl_with_meta)
+  gc()
+  unlink(temp_parquet_initial)
 
   result19 <- read_parquet_dt(temp_parquet_with_keys)
   expect_equal(key(result19), "id", info = "Keys restored from parquet metadata")
