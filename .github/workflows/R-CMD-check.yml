@@ -35,6 +35,11 @@ on:
 
 name: R-CMD-check
 
+# Cancel in-progress runs when a new run is triggered on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
@@ -66,11 +71,15 @@ jobs:
           - {os: ubuntu-22.04,   r: 'release'}    # Ubuntu 22.04 LTS for broader compatibility
           # - {os: macos-12,       r: 'release'}    # Intel Mac specifically (ddisabled for now due to slow execution)
 
-    # Environment variables for authentication and debugging
+    # Environment variables for authentication, debugging, and performance
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
       HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+      # Enable parallel testing in tinytest
+      CI: true
+      # Set number of CPUs for R operations
+      _R_CHECK_TESTS_NLINES_: 0
 
     steps:
       # Step 1: Checkout the repository code

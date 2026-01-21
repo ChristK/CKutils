@@ -36,6 +36,11 @@ on:
 
 name: test-coverage
 
+# Cancel in-progress runs when a new run is triggered on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-coverage:
     runs-on: ubuntu-latest  # Use Ubuntu for consistent coverage measurement
@@ -62,19 +67,35 @@ jobs:
           extra-packages: any::covr
           needs: coverage                         # Install dependencies needed for coverage analysis
 
-      # Step 4: Generate and upload test coverage
+      # Step 4: Generate test coverage report
       - name: Measure test coverage
         run: |
-          # Run coverage analysis with tinytest
-          covr::codecov(
+          # Run coverage analysis and save to file
+          cov <- covr::package_coverage(
             quiet = FALSE,
             clean = FALSE,
             install_path = file.path(Sys.getenv("RUNNER_TEMP"), "package"),
             type = "all"
           )
+          # Save coverage to Cobertura XML format for Codecov
+          covr::to_cobertura(cov, filename = "coverage.xml")
+          # Also print summary
+          print(cov)
         shell: Rscript {0}
 
-      # Step 5: Show detailed test output if available (for debugging)
+      # Step 5: Upload coverage to Codecov using official action
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      # Step 6: Show detailed test output if available (for debugging)
       - name: Show tinytest output
         if: always()  # Run even if previous steps failed
         run: |
@@ -88,7 +109,7 @@ jobs:
           echo "=== Coverage analysis complete ==="
         shell: bash
 
-      # Step 6: Upload test results on failure (for debugging)
+      # Step 7: Upload test results on failure (for debugging)
       - name: Upload test results on failure
         if: failure()  # Only run if the workflow failed
         uses: actions/upload-artifact@v4
