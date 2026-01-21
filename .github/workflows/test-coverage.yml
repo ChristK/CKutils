@@ -36,6 +36,11 @@ on:
 
 name: test-coverage
 
+# Cancel in-progress runs when a new run is triggered on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-coverage:
     runs-on: ubuntu-latest  # Use Ubuntu for consistent coverage measurement
