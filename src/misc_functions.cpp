@@ -36,14 +36,43 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 NumericVector fquantile(NumericVector x, NumericVector probs, bool na_rm = true)
 {
-  if (all(is_na(x)))
+  // Handle empty probs vector
+  if (probs.size() == 0) {
+    return NumericVector(0);
+  }
+
+  // Handle empty input
+  if (x.size() == 0)
   {
     NumericVector out(probs.size(), NA_REAL);
     return (out);
   }
+
+  // Handle all-NA input
+  if (is_true(all(is_na(x))))
+  {
+    NumericVector out(probs.size(), NA_REAL);
+    return (out);
+  }
+
   if (na_rm)
     x = na_omit(x);
+
+  // After na_omit, check if vector became empty
   const int n = x.size();
+  if (n == 0)
+  {
+    NumericVector out(probs.size(), NA_REAL);
+    return (out);
+  }
+
+  // Handle single element case - all quantiles are that single value
+  if (n == 1)
+  {
+    NumericVector out(probs.size(), x[0]);
+    return (out);
+  }
+
   NumericVector out(probs.size());
   IntegerVector ii(probs.size());
   NumericVector h(probs.size());
@@ -94,7 +123,34 @@ List fquantile_byid(NumericVector x,
                     bool na_rm = true)
 {
   const int n = x.size();
+
+  // Handle empty inputs
+  if (n == 0 || q.size() == 0) {
+    List outputList(1 + q.size());
+    outputList[0] = StringVector(0);
+    for (int i = 1; i <= q.size(); i++) {
+      outputList[i] = NumericVector(0);
+    }
+    return outputList;
+  }
+
+  // Validate lengths match
+  if (id.size() != n) {
+    stop("Length of 'x' and 'id' must match");
+  }
+
   const int m = unique(id).size();
+
+  // Safety check: m must be > 0
+  if (m == 0) {
+    List outputList(1 + q.size());
+    outputList[0] = StringVector(0);
+    for (int i = 1; i <= q.size(); i++) {
+      outputList[i] = NumericVector(0);
+    }
+    return outputList;
+  }
+
   NumericMatrix z(m, q.size());
   StringVector id_nam(m);
   int start = 0;
@@ -108,6 +164,10 @@ List fquantile_byid(NumericVector x,
       counter++;
     else
     {
+      // Bounds check before accessing matrix
+      if (counter_row >= m) {
+        stop("Internal error: counter_row exceeded expected number of groups");
+      }
       start = i - counter - 1;
       end = i - 1;
       counter = 0;
@@ -119,11 +179,21 @@ List fquantile_byid(NumericVector x,
       counter_row++;
     }
   }
+
+  // Bounds check for last group
+  if (counter_row >= m) {
+    stop("Internal error: counter_row exceeded expected number of groups");
+  }
+
   // Handle the last group regardless of its size
+  // Ensure start index is valid
+  int last_start = n - 1 - counter;
+  if (last_start < 0) last_start = 0;
+
   if (rounding)
-    z.row(counter_row) = round(fquantile(x[seq(n - 1 - counter, n - 1)], q, na_rm), 0);
+    z.row(counter_row) = round(fquantile(x[seq(last_start, n - 1)], q, na_rm), 0);
   else
-    z.row(counter_row) = fquantile(x[seq(n - 1 - counter, n - 1)], q, na_rm);
+    z.row(counter_row) = fquantile(x[seq(last_start, n - 1)], q, na_rm);
   id_nam[counter_row] = id[n - 1];
 
   const int tt = 1 + q.size();

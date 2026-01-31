@@ -1559,30 +1559,54 @@ shift_bypid <-
     if (length(x) != length(id)) {
       stop("Arguments 'x' and 'id' must have the same length")
     }
+
+    # Handle empty vectors early
+    if (length(x) == 0L) {
+      return(x)
+    }
+
+    # Check for NAs in id - this would cause undefined behavior in C++
+    if (anyNA(id)) {
+      stop("Argument 'id' must not contain NA values")
+    }
+
     if (is.unsorted(id)) {
       stop("Argument 'id' must be sorted")
     }
-    
+
+    # Validate replace parameter
+    if (length(replace) != 1L) {
+      stop("Argument 'replace' must be a single value (scalar)")
+    }
+
     # Convert lag to integer
     lag <- as.integer(lag)
-    
+
     # Convert id to integer if not already
     if (!is.integer(id)) {
       id <- as.integer(id)
     }
-    
+
     if (lag == 0L) return(x)
+
+    # Type-specific handling with proper replace coercion
     if (typeof(x) == "integer" && !inherits(x, "factor")) {
-      return(shift_bypidInt(x, lag, replace, id))
+      replace_val <- if (is.na(replace)) NA_integer_ else as.integer(replace)
+      return(shift_bypidInt(x, lag, replace_val, id))
     } else if (typeof(x) == "integer" && inherits(x, "factor")) {
-      int_result <- shift_bypidInt(as.integer(x), lag, replace, id)
+      replace_val <- if (is.na(replace)) NA_integer_ else as.integer(replace)
+      int_result <- shift_bypidInt(as.integer(x), lag, replace_val, id)
       return(factor(int_result, levels = seq_along(levels(x)), labels = levels(x)))
     } else if (typeof(x) == "logical") {
-      return(shift_bypidBool(x, lag, replace, id))
+      # For logical, replace must be logical vector (C++ expects LogicalVector)
+      replace_val <- if (is.na(replace)) NA else as.logical(replace)
+      return(shift_bypidBool(x, lag, replace_val, id))
     } else if (typeof(x) == "double") {
-      return(shift_bypidNum(x, lag, replace, id))
+      replace_val <- if (is.na(replace)) NA_real_ else as.double(replace)
+      return(shift_bypidNum(x, lag, replace_val, id))
     } else if (typeof(x) == "character") {
-      return(shift_bypidStr(x, lag, replace, id))
+      replace_val <- if (is.na(replace)) NA_character_ else as.character(replace)
+      return(shift_bypidStr(x, lag, replace_val, id))
     } else
       stop("type of x not supported")
   }

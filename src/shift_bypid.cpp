@@ -122,37 +122,49 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 NumericVector shift_bypidNum(const NumericVector& x, const int& lag,
                             const double& replace, const IntegerVector& id) {
-  // id should be sorted and same length as x
   int n = x.size();
+
+  // Handle empty vector
+  if (n == 0) {
+    return NumericVector(0);
+  }
+
+  // Validate lengths match
+  if (id.size() != n) {
+    stop("Length of 'x' and 'id' must match");
+  }
+
   NumericVector out(n);
-  
+
+  // If lag magnitude >= n, entire result is replace values
+  int abs_lag = (lag >= 0) ? lag : -lag;
+  if (abs_lag >= n) {
+    std::fill(out.begin(), out.end(), replace);
+    return out;
+  }
+
   if (lag >= 0) {
     // Positive lag (standard lag)
-    int fill_end = std::min(lag, n);
     // Fill first positions with replace value
-    std::fill(out.begin(), out.begin() + fill_end, replace);
-    
+    std::fill(out.begin(), out.begin() + lag, replace);
+
     // Copy shifted values where IDs match
     for (int i = lag; i < n; i++) {
       out[i] = (id[i] == id[i-lag]) ? x[i-lag] : replace;
     }
   } else {
     // Negative lag (lead)
-    int abs_lag = -lag;
-    int copy_end = n - abs_lag;
-    
+    int copy_end = n + lag;  // n - abs_lag
+
     // Copy shifted values where IDs match
     for (int i = 0; i < copy_end; i++) {
       out[i] = (id[i] == id[i + abs_lag]) ? x[i + abs_lag] : replace;
     }
-    
+
     // Fill last positions with replace value
     std::fill(out.begin() + copy_end, out.end(), replace);
   }
   return out;
-  // } else {
-  //   stop("This function does not work because number of ids is too small!");
-  // }
 }
 
 //' Shift Integer Values by ID Groups
@@ -184,38 +196,61 @@ NumericVector shift_bypidNum(const NumericVector& x, const int& lag,
 // [[Rcpp::export]]
 IntegerVector shift_bypidInt(const IntegerVector& x, const int& lag,
                             const int& replace, const IntegerVector& id) {
-  // id should be sorted and same length as x
   int n = x.size();
+
+  // Handle empty vector
+  if (n == 0) {
+    return IntegerVector(0);
+  }
+
+  // Validate lengths match
+  if (id.size() != n) {
+    stop("Length of 'x' and 'id' must match");
+  }
+
   IntegerVector out(n);
-  
+
+  // If lag magnitude >= n, entire result is replace values
+  int abs_lag = (lag >= 0) ? lag : -lag;
+  if (abs_lag >= n) {
+    std::fill(out.begin(), out.end(), replace);
+    // Preserve factor attributes even for all-replace case
+    if (x.hasAttribute("class")) {
+      CharacterVector tt = x.attr("class");
+      if (tt[0] == "factor") {
+        out.attr("levels") = x.attr("levels");
+        out.attr("class") = "factor";
+      }
+    }
+    return out;
+  }
+
   if (lag >= 0) {
     // Positive lag (standard lag)
-    int fill_end = std::min(lag, n);
     // Fill first positions with replace value
-    std::fill(out.begin(), out.begin() + fill_end, replace);
-    
+    std::fill(out.begin(), out.begin() + lag, replace);
+
     // Copy shifted values where IDs match
     for (int i = lag; i < n; i++) {
       out[i] = (id[i] == id[i-lag]) ? x[i-lag] : replace;
     }
   } else {
     // Negative lag (lead)
-    int abs_lag = -lag;
-    int copy_end = n - abs_lag;
-    
+    int copy_end = n + lag;  // n - abs_lag
+
     // Copy shifted values where IDs match
     for (int i = 0; i < copy_end; i++) {
       out[i] = (id[i] == id[i + abs_lag]) ? x[i + abs_lag] : replace;
     }
-    
+
     // Fill last positions with replace value
     std::fill(out.begin() + copy_end, out.end(), replace);
   }
-  
+
   // Handle factor attributes
   if (x.hasAttribute("class")) {
     CharacterVector tt = x.attr("class");
-    if (tt[0] == "factor") { // only works if factor is the first class
+    if (tt[0] == "factor") {
       out.attr("levels") = x.attr("levels");
       out.attr("class") = "factor";
     }
@@ -254,35 +289,57 @@ IntegerVector shift_bypidInt(const IntegerVector& x, const int& lag,
 // [[Rcpp::export]]
 LogicalVector shift_bypidBool(const LogicalVector& x, const int& lag,
                              const LogicalVector& replace, const IntegerVector& id) {
-  // id should be sorted and same length as x
   int n = x.size();
+
+  // Handle empty vector
+  if (n == 0) {
+    return LogicalVector(0);
+  }
+
+  // Validate lengths match
+  if (id.size() != n) {
+    stop("Length of 'x' and 'id' must match");
+  }
+
+  // Validate replace has at least one element
+  if (replace.size() == 0) {
+    stop("Argument 'replace' must have at least one element");
+  }
+
   LogicalVector out(n);
-  
+
   // Get the replacement value (first element of replace vector)
   int repl_val = replace[0];
-  
-  if (lag >= 0) {
-    // Positive lag (standard lag)
-    int fill_end = std::min(lag, n);
-    // Fill first positions with replace value
-    for (int i = 0; i < fill_end; i++) {
+
+  // If lag magnitude >= n, entire result is replace values
+  int abs_lag = (lag >= 0) ? lag : -lag;
+  if (abs_lag >= n) {
+    for (int i = 0; i < n; i++) {
       out[i] = repl_val;
     }
-    
+    return out;
+  }
+
+  if (lag >= 0) {
+    // Positive lag (standard lag)
+    // Fill first positions with replace value
+    for (int i = 0; i < lag; i++) {
+      out[i] = repl_val;
+    }
+
     // Copy shifted values where IDs match
     for (int i = lag; i < n; i++) {
       out[i] = (id[i] == id[i-lag]) ? x[i-lag] : repl_val;
     }
   } else {
     // Negative lag (lead)
-    int abs_lag = -lag;
-    int copy_end = n - abs_lag;
-    
+    int copy_end = n + lag;  // n - abs_lag
+
     // Copy shifted values where IDs match
     for (int i = 0; i < copy_end; i++) {
       out[i] = (id[i] == id[i + abs_lag]) ? x[i + abs_lag] : repl_val;
     }
-    
+
     // Fill last positions with replace value
     for (int i = copy_end; i < n; i++) {
       out[i] = repl_val;
@@ -320,33 +377,48 @@ LogicalVector shift_bypidBool(const LogicalVector& x, const int& lag,
 // [[Rcpp::export]]
 StringVector shift_bypidStr(const CharacterVector& x, const int& lag,
                              const std::string& replace, const IntegerVector& id) {
-  // id should be sorted and same length as x
   int n = x.size();
+
+  // Handle empty vector
+  if (n == 0) {
+    return StringVector(0);
+  }
+
+  // Validate lengths match
+  if (id.size() != n) {
+    stop("Length of 'x' and 'id' must match");
+  }
+
   StringVector out(n);
-  
+
   // Convert replace to Rcpp::String for compatibility with ternary operators
   Rcpp::String replace_str(replace);
-  
+
+  // If lag magnitude >= n, entire result is replace values
+  int abs_lag = (lag >= 0) ? lag : -lag;
+  if (abs_lag >= n) {
+    std::fill(out.begin(), out.end(), replace_str);
+    return out;
+  }
+
   if (lag >= 0) {
     // Positive lag (standard lag)
-    int fill_end = std::min(lag, n);
     // Fill first positions with replace value
-    std::fill(out.begin(), out.begin() + fill_end, replace_str);
-    
+    std::fill(out.begin(), out.begin() + lag, replace_str);
+
     // Copy shifted values where IDs match
     for (int i = lag; i < n; i++) {
       out[i] = (id[i] == id[i-lag]) ? x[i-lag] : replace_str;
     }
   } else {
     // Negative lag (lead)
-    int abs_lag = -lag;
-    int copy_end = n - abs_lag;
-    
+    int copy_end = n + lag;  // n - abs_lag
+
     // Copy shifted values where IDs match
     for (int i = 0; i < copy_end; i++) {
       out[i] = (id[i] == id[i + abs_lag]) ? x[i + abs_lag] : replace_str;
     }
-    
+
     // Fill last positions with replace value
     std::fill(out.begin() + copy_end, out.end(), replace_str);
   }
