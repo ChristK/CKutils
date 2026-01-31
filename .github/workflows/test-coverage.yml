@@ -68,6 +68,11 @@ jobs:
           needs: coverage                         # Install dependencies needed for coverage analysis
 
       # Step 4: Generate test coverage report
+      # Note: "NAs introduced by coercion" warnings may appear as annotations.
+      # These originate from the 'cli' package's terminal capability detection
+      # (cli::num_ansi_colors -> emacs_version), not from CKutils code.
+      # See: https://github.com/r-lib/cli/issues/689
+      # These warnings are harmless and do not affect coverage accuracy.
       - name: Measure test coverage
         run: |
           # Run coverage analysis and save to file
