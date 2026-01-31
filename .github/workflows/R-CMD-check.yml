@@ -44,6 +44,9 @@ jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    # Allow R-devel builds to fail without failing the entire workflow
+    # R-devel often has breaking changes that require upstream package updates (e.g., Rcpp)
+    continue-on-error: ${{ matrix.config.allow-failure || false }}
 
     # Comprehensive testing matrix for maximum compatibility
     # fail-fast: false ensures all configurations are tested even if some fail
@@ -53,16 +56,16 @@ jobs:
         config:
           # macOS testing (covers both Intel and Apple Silicon)
           - {os: macos-latest,   r: 'release'}    # Apple Silicon (M1/M2) - current stable
-          - {os: macos-latest,   r: 'devel', http-user-agent: 'release'}     # Apple Silicon - future compatibility
+          - {os: macos-latest,   r: 'devel', http-user-agent: 'release', allow-failure: true}  # Apple Silicon - future compatibility (allowed to fail due to R-devel breaking changes)
           - {os: macos-latest,   r: 'oldrel-1'}   # Apple Silicon - backward compatibility
-          
+
           # Windows testing (covers both 32-bit and 64-bit automatically)
           - {os: windows-latest, r: 'release'}    # Current stable Windows
-          - {os: windows-latest, r: 'devel', http-user-agent: 'release'}     # Future Windows compatibility
+          - {os: windows-latest, r: 'devel', http-user-agent: 'release', allow-failure: true}  # Future Windows compatibility (allowed to fail)
           - {os: windows-latest, r: 'oldrel-1'}   # Backward Windows compatibility
-          
+
           # Ubuntu testing (primary CRAN checking environment)
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}    # R-devel (future R version)
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release', allow-failure: true}  # R-devel (allowed to fail)
           - {os: ubuntu-latest,   r: 'release'}   # Current stable R
           - {os: ubuntu-latest,   r: 'oldrel-1'}  # Previous R version
           - {os: ubuntu-latest,   r: 'oldrel-2'}  # Two versions back
@@ -136,19 +139,11 @@ jobs:
           # From https://www.mail-archive.com/r-sig-mac@r-project.org/msg06927.html
           sudo Rscript -e "source('https://mac.R-project.org/bin/install.R'); install.libs('gettext')"
 
-          # brew install gettext
-          # Force link gettext to make libintl.h available
-          # brew link --force gettext
-          
           # Set environment variables for macOS compilation
           # Both Homebrew paths for Apple Silicon (/opt/homebrew) and Intel (/usr/local)
-          # gettext_prefix=$(brew --prefix gettext)
-          echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include -I${gettext_prefix}/include" >> $GITHUB_ENV
-          echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib -L${gettext_prefix}/lib" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=${gettext_prefix}/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
-          
-          # Verify gettext installation
-          # ls -la "${gettext_prefix}/include/libintl.h" || echo "Warning: libintl.h not found"
+          echo "CPPFLAGS=-I/opt/homebrew/include -I/usr/local/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L/opt/homebrew/lib -L/usr/local/lib" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig" >> $GITHUB_ENV
 
       # Step 4: Install package dependencies required for checking
       - name: Setup R dependencies
