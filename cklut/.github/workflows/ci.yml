@@ -14,18 +14,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install toolchain + R/data.table
+      - name: Install toolchain + R/data.table + cmake
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            g++ r-base-core r-cran-data.table
+            g++ cmake r-base-core r-cran-data.table
 
       - name: Compile examples
         run: |
-          g++ -std=c++17 -O2 -I. examples/build_csv.cpp -o /tmp/build_csv
-          g++ -std=c++17 -O2 -I. examples/query.cpp     -o /tmp/query
+          g++ -std=c++17 -O2 -I. examples/build_csv.cpp       -o /tmp/build_csv
+          g++ -std=c++17 -O2 -I. examples/query.cpp           -o /tmp/query
+          g++ -std=c++17 -O2 -I. examples/build_csv_typed.cpp -o /tmp/build_csv_typed
+          g++ -std=c++17 -O2 -I. examples/export_csv.cpp      -o /tmp/export_csv
 
-      - name: Validate against CKutils::lookup_dt (reference oracle)
+      - name: Typed-format unit tests (ctest)
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+
+      - name: Validate numeric path against CKutils::lookup_dt (reference oracle)
         run: |
           chmod +x validation/run_validation.sh
           ./validation/run_validation.sh

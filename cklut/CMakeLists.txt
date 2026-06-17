@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(cklut INTERFACE)
 target_include_directories(cklut INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Dependency-free examples.
+# Dependency-free examples (numeric + typed).
 add_executable(build_csv examples/build_csv.cpp)
 target_link_libraries(build_csv PRIVATE cklut)
 
@@ -17,6 +17,18 @@ target_link_libraries(query PRIVATE cklut)
 
 add_executable(prefetch examples/prefetch.cpp)
 target_link_libraries(prefetch PRIVATE cklut)
+
+add_executable(build_csv_typed examples/build_csv_typed.cpp)
+target_link_libraries(build_csv_typed PRIVATE cklut)
+
+add_executable(export_csv examples/export_csv.cpp)
+target_link_libraries(export_csv PRIVATE cklut)
+
+# Unit tests for the typed format (dependency-free). Run with `ctest`.
+enable_testing()
+add_executable(test_typed tests/test_typed.cpp)
+target_link_libraries(test_typed PRIVATE cklut)
+add_test(NAME test_typed COMMAND test_typed)
 
 # Optional Parquet importer (requires Apache Arrow + Parquet).
 option(CKLUT_PARQUET "Build the Parquet importer" OFF)
@@ -27,11 +39,13 @@ if(CKLUT_PARQUET)
   target_link_libraries(build_parquet PRIVATE cklut Arrow::arrow_shared Parquet::parquet_shared)
 endif()
 
-# Optional single-threaded benchmark.
+# Optional single-threaded benchmarks (numeric + typed).
 option(CKLUT_BENCH "Build the benchmark" OFF)
 if(CKLUT_BENCH)
   add_executable(bench bench/bench.cpp)
   target_link_libraries(bench PRIVATE cklut)
+  add_executable(bench_typed bench/bench_typed.cpp)
+  target_link_libraries(bench_typed PRIVATE cklut)
 endif()
 
 # Optional multi-threaded benchmark (read-only Reader, lock-free concurrent lookups).
