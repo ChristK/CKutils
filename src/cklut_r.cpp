@@ -172,6 +172,23 @@ List cklut_gather_cpp(SEXP xp, SEXP rownum) {
         }
     }
     const auto& offs = s.offsets;
+
+    // Fast path: an all-f64 table is a contiguous double[] per record, so skip
+    // the per-column type switch / offset lookup and copy doubles directly
+    // (~the same win at_f64() gives the C++ hot loop; see bench_typed.cpp).
+#ifndef CKLUT_NO_F64_FASTPATH
+    if (r->all_f64()) {
+        for (R_xlen_t i = 0; i < n; ++i) {
+            std::int64_t row = row_at(i);
+            if (row < 0) { for (std::size_t v = 0; v < NV; ++v) pf[v][i] = NA_REAL; continue; }
+            const double* d = r->row_f64((std::uint64_t)row);
+            for (std::size_t v = 0; v < NV; ++v) pf[v][i] = d[v];
+        }
+        out.attr("names") = nms;
+        return out;
+    }
+#endif
+
     for (R_xlen_t i = 0; i < n; ++i) {
         std::int64_t row = row_at(i);
         if (row < 0) {
