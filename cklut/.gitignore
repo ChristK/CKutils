@@ -10,5 +10,6 @@ cmake-build-*/
 *.ckdat
 *.lut
 
-# compiled benchmark binary
+# compiled benchmark binaries
 bench/bench
+bench/bench_mt

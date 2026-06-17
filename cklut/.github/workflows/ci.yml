@@ -34,3 +34,8 @@ jobs:
         run: |
           g++ -std=c++17 -O3 -march=native -DNDEBUG -I. bench/bench.cpp -o /tmp/bench
           /tmp/bench 200 200 50
+
+      - name: Smoke benchmark, multi-threaded (small table)
+        run: |
+          g++ -std=c++17 -O3 -march=native -DNDEBUG -pthread -I. bench/bench_mt.cpp -o /tmp/bench_mt
+          /tmp/bench_mt 200 200 50

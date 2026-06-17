@@ -34,6 +34,33 @@ Intel Xeon @ 2.8 GHz, `-O3 -march=native`:
 - **Scan** is the fastest per element and the one to prefer: walking the
   innermost dimension is a contiguous, prefetch-friendly, vectorizable stream.
 
+## Multi-threaded benchmark (optional)
+
+The `Reader` is read-only after construction (const schema/strides/divider and a
+read-only memory map), so concurrent `at()` / `scan_inner()` calls from many
+threads need **no locking**. `bench_mt.cpp` measures how throughput scales:
+
+```bash
+g++ -std=c++17 -O3 -march=native -DNDEBUG -pthread -I.. bench_mt.cpp -o bench_mt
+./bench_mt                 # default 100M rows, threads = HW concurrency
+./bench_mt 1000 1000 100 8 # explicit size + thread cap
+# or via CMake:  cmake -B build -DCKLUT_BENCH_MT=ON && cmake --build build
+```
+
+Reference scaling, 4 cores @ 2.8 GHz (speedup vs this benchmark's own 1-thread
+baseline):
+
+| Pattern | 1 thread | 4 threads | speedup |
+|---------|----------|-----------|---------|
+| Random lookups | ~11.8 M/s  | ~54 M/s  | **4.6×** |
+| Hot lookups    | ~130 M/s   | ~498 M/s | **3.8×** |
+| Sequential scan| ~5.9 GB/s  | ~21 GB/s | **3.6×** |
+
+Random lookups scale **super-linearly**: a single thread cannot keep enough
+cache misses in flight to saturate DRAM, so adding threads exposes more
+memory-level parallelism and hides latency. Hot and scan scale near-linearly
+until they hit core throughput / memory bandwidth limits.
+
 ## Optimization notes
 
 - Finding the shard for a global row index originally used a hardware

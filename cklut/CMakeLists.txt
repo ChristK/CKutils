@@ -24,6 +24,21 @@ if(CKLUT_PARQUET)
   target_link_libraries(build_parquet PRIVATE cklut Arrow::arrow_shared Parquet::parquet_shared)
 endif()
 
+# Optional single-threaded benchmark.
+option(CKLUT_BENCH "Build the benchmark" OFF)
+if(CKLUT_BENCH)
+  add_executable(bench bench/bench.cpp)
+  target_link_libraries(bench PRIVATE cklut)
+endif()
+
+# Optional multi-threaded benchmark (read-only Reader, lock-free concurrent lookups).
+option(CKLUT_BENCH_MT "Build the multi-threaded benchmark" OFF)
+if(CKLUT_BENCH_MT)
+  find_package(Threads REQUIRED)
+  add_executable(bench_mt bench/bench_mt.cpp)
+  target_link_libraries(bench_mt PRIVATE cklut Threads::Threads)
+endif()
+
 if(MSVC)
   add_compile_options(/O2 /DNDEBUG)
 else()
