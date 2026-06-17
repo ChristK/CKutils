@@ -1,0 +1,36 @@
+name: ci
+
+# This workflow assumes the cklut library is at the repository root (i.e. after
+# the cklut/ folder is migrated to its own repo). Paths are relative to root.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-validate-bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain + R/data.table
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            g++ r-base-core r-cran-data.table
+
+      - name: Compile examples
+        run: |
+          g++ -std=c++17 -O2 -I. examples/build_csv.cpp -o /tmp/build_csv
+          g++ -std=c++17 -O2 -I. examples/query.cpp     -o /tmp/query
+
+      - name: Validate against CKutils::lookup_dt (reference oracle)
+        run: |
+          chmod +x validation/run_validation.sh
+          ./validation/run_validation.sh
+
+      - name: Smoke benchmark (small table)
+        run: |
+          g++ -std=c++17 -O3 -march=native -DNDEBUG -I. bench/bench.cpp -o /tmp/bench
+          /tmp/bench 200 200 50

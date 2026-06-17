@@ -9,3 +9,6 @@ cmake-build-*/
 *.ckmeta
 *.ckdat
 *.lut
+
+# compiled benchmark binary
+bench/bench

@@ -117,6 +117,54 @@ inline void put_u64(std::vector<char>& b, std::uint64_t v){ for(int i=0;i<8;++i)
 inline std::uint32_t get_u32(const char*& p){ std::uint32_t v=0; for(int i=0;i<4;++i) v|=std::uint32_t(std::uint8_t(*p++))<<(8*i); return v; }
 inline std::uint64_t get_u64(const char*& p){ std::uint64_t v=0; for(int i=0;i<8;++i) v|=std::uint64_t(std::uint8_t(*p++))<<(8*i); return v; }
 
+// Fast unsigned division by a runtime-constant divisor (libdivide-style magic
+// multiply-shift). Replaces the per-lookup `idx / rows_per_shard` (a ~20-30
+// cycle hardware divide) with a multiply + shift. Falls back to plain division
+// on compilers without 128-bit ints (e.g. MSVC).
+struct FastDivU64 {
+    std::uint64_t magic = 0;
+    std::uint8_t  more  = 0;
+    std::uint64_t d     = 1;
+    static constexpr std::uint8_t ADD   = 0x40;
+    static constexpr std::uint8_t SHIFT = 0x3F;
+
+    void init(std::uint64_t divisor) {
+        d = divisor ? divisor : 1;
+#if defined(__SIZEOF_INT128__)
+        std::uint32_t fl = 63 - __builtin_clzll(d);
+        if ((d & (d - 1)) == 0) {                 // power of two -> pure shift
+            magic = 0; more = std::uint8_t(fl);
+        } else {
+            __uint128_t num = (__uint128_t)1 << (64 + fl);
+            std::uint64_t pm  = (std::uint64_t)(num / d);
+            std::uint64_t rem = (std::uint64_t)(num - (__uint128_t)pm * d);
+            std::uint64_t e = d - rem;
+            if (e < ((std::uint64_t)1 << fl)) {
+                more = std::uint8_t(fl);
+            } else {
+                pm += pm;
+                std::uint64_t tr = rem + rem;
+                if (tr >= d || tr < rem) pm += 1;
+                more = std::uint8_t(fl | ADD);
+            }
+            magic = pm + 1;
+        }
+#else
+        magic = 0; more = 0;                       // fallback marker: use n / d
+#endif
+    }
+    std::uint64_t div(std::uint64_t n) const {
+#if defined(__SIZEOF_INT128__)
+        if (magic == 0) return n >> more;          // power-of-two path
+        std::uint64_t q = (std::uint64_t)(((__uint128_t)magic * n) >> 64);
+        if (more & ADD) { std::uint64_t t = ((n - q) >> 1) + q; return t >> (more & SHIFT); }
+        return q >> more;
+#else
+        return n / d;
+#endif
+    }
+};
+
 inline std::string dir_of(const std::string& path){
     auto s = path.find_last_of("/\\"); return s==std::string::npos ? std::string() : path.substr(0,s);
 }
@@ -198,6 +246,9 @@ public:
         }
         sch_.compute_strides();
 
+        single_shard_ = (sch_.n_shards == 1);
+        fdiv_.init(sch_.rows_per_shard);
+
         const std::string dir = detail::dir_of(meta_path);
         shards_.reserve(sch_.n_shards); data_.reserve(sch_.n_shards);
         for (std::uint32_t i=0;i<sch_.n_shards;++i){
@@ -215,7 +266,8 @@ public:
     template <typename... K>
     const double* at(K&&... keys) const {
         std::uint64_t idx = index(std::forward<K>(keys)...);
-        std::uint64_t sh = idx / sch_.rows_per_shard, loc = idx - sh*sch_.rows_per_shard;
+        if (single_shard_) return data_[0] + idx*NV;
+        std::uint64_t sh = fdiv_.div(idx), loc = idx - sh*sch_.rows_per_shard;
         return data_[sh] + loc*NV;
     }
     std::uint64_t category_index(std::size_t dim, std::string_view s) const { return encode_str(dim, s); }
@@ -226,7 +278,8 @@ public:
     Span scan_inner(K&&... outer_keys) const {                 // pass all dims except the last
         std::uint64_t idx = 0; std::size_t d = 0;
         ( (idx += encode_one(d, std::forward<K>(outer_keys)) * sch_.strides[d], ++d), ... );
-        std::uint64_t sh = idx / sch_.rows_per_shard, loc = idx - sh*sch_.rows_per_shard;
+        std::uint64_t sh = single_shard_ ? 0 : fdiv_.div(idx);
+        std::uint64_t loc = idx - sh*sch_.rows_per_shard;
         return Span{ data_[sh] + loc*NV, std::size_t(sch_.dims.back().size), NV };  // whole run lives in one shard
     }
 
@@ -250,6 +303,8 @@ private:
     std::vector<std::unordered_map<std::string,std::uint32_t>> dict_;
     std::vector<std::unique_ptr<detail::FileMapRO>> shards_;
     std::vector<const double*> data_;
+    detail::FastDivU64 fdiv_;        // fast idx -> shard division
+    bool single_shard_ = false;
 };
 
 // ===========================================================================

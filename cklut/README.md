@@ -117,6 +117,30 @@ for (std::size_t i = 0; i < s.count; ++i) {
 - Non-contiguous numeric keys (e.g. years 2000, 2005, 2010) should be treated as
   categories so the grid stays dense.
 
+## Validation
+
+`cklut` is validated to reproduce `CKutils::lookup_dt` **exactly** (same
+direct-address algorithm). See [`validation/`](validation/):
+
+```bash
+./validation/run_validation.sh        # PASS, max_abs=0 on 5000 query rows
+```
+
+It covers mixed integer/factor keys, non-zero integer minimums, and
+non-alphabetical factor level order, on both single-shard and multi-shard
+tables. Set `USE_REAL_CKUTILS=1` to check against the real package.
+
+## Benchmarks
+
+See [`bench/`](bench/). On 100M rows × 4 doubles (3.2 GB, 31 shards), single
+thread @ 2.8 GHz:
+
+| Access pattern | Cost | Throughput |
+|----------------|------|------------|
+| Random lookups | ~117 ns | ~8.6 M/s (DRAM-latency bound) |
+| Hot lookups    | ~8.5 ns | ~118 M/s |
+| Sequential scan| ~6.9 ns/cell | ~145 M cells/s (~4.7 GB/s) |
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
