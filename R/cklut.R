@@ -38,15 +38,6 @@
   keys[order(match(keys, "year"))]
 }
 
-# internal: row-major strides (last dim innermost, stride 1) -------------------
-.cklut_strides <- function(sizes) {
-  nd <- length(sizes)
-  st <- numeric(nd)
-  s <- 1
-  for (d in seq.int(nd, 1L)) { st[d] <- s; s <- s * sizes[d] }
-  st
-}
-
 #' Build an on-disk cklut lookup table
 #'
 #' Writes a dense lookup table (every combination of the key columns present
@@ -205,7 +196,9 @@ print.cklut <- function(x, ...) {
 #' @param merge Logical. If \code{TRUE} (default) the value columns are added to
 #'   \code{tbl} (by reference if \code{tbl} is a data.table) and \code{tbl} is
 #'   returned; if \code{FALSE} only the looked-up values are returned.
-#' @param exclude_col Character vector of common columns to exclude from the join key.
+#' @param exclude_col Accepted for \code{\link{lookup_dt}} signature
+#'   compatibility. cklut's key columns are fixed at build time, so this cannot
+#'   drop a key dimension; passing a key column here is an error.
 #' @param as.data.table Logical. If \code{TRUE} (default) the result is a
 #'   \code{data.table}; if \code{FALSE} a plain named \code{list} of column
 #'   vectors is returned (cheaper if you only need the vectors).
@@ -223,8 +216,14 @@ cklut_lookup <- function(tbl, ck, merge = TRUE, exclude_col = NULL,
   if (!inherits(ck, "cklut")) stop("cklut_lookup: `ck` must be a cklut handle or .ckmeta path")
   sch <- ck$schema
 
-  need <- setdiff(sch$dim_names, exclude_col)
-  missing_keys <- setdiff(need, names(tbl))
+  # cklut's key columns are fixed at build time, so all of them must be present
+  # in tbl. `exclude_col` is accepted for lookup_dt signature compatibility but
+  # cannot drop a key dimension (doing so would make the lookup undefined).
+  if (length(intersect(exclude_col, sch$dim_names)))
+    stop("cklut_lookup: cannot exclude key column(s) ",
+         paste(intersect(exclude_col, sch$dim_names), collapse = ", "),
+         " (the table's keys are fixed at build time)")
+  missing_keys <- setdiff(sch$dim_names, names(tbl))
   if (length(missing_keys))
     stop("cklut_lookup: tbl is missing key column(s): ", paste(missing_keys, collapse = ", "))
 

@@ -17,7 +17,9 @@ cklut_lookup(tbl, ck, merge = TRUE, exclude_col = NULL,
 \code{tbl} (by reference if \code{tbl} is a data.table) and \code{tbl} is
 returned; if \code{FALSE} only the looked-up values are returned.}
 
-\item{exclude_col}{Character vector of common columns to exclude from the join key.}
+\item{exclude_col}{Accepted for \code{\link{lookup_dt}} signature
+compatibility. cklut's key columns are fixed at build time, so this cannot
+drop a key dimension; passing a key column here is an error.}
 
 \item{as.data.table}{Logical. If \code{TRUE} (default) the result is a
 \code{data.table}; if \code{FALSE} a plain named \code{list} of column
