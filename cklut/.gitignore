@@ -1,0 +1,11 @@
+# build output
+build/
+cmake-build-*/
+*.o
+*.obj
+*.exe
+
+# generated lookup-table artifacts
+*.ckmeta
+*.ckdat
+*.lut
