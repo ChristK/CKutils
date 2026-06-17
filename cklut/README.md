@@ -166,8 +166,37 @@ Warm converts those scattered random reads into a single sequential read, so:
 - **Sequential/scan access even when cold** → lazy is already fine; kernel
   readahead streams pages efficiently (no need to warm).
 
+### Larger than RAM: access-pattern hints
+
+When the table **doesn't fit in RAM** and you do sparse/random lookups, the
+enemy is OS readahead: each fault can drag in a large readahead window, so even
+scattered lookups pull in far more than they use and thrash the page cache.
+`advise_random()` disables readahead for the mapping — each lookup faults in only
+the single ~4 KB page it needs:
+
+```cpp
+cklut::Reader<4> r("dist.ckmeta");
+r.advise_random();     // larger-than-RAM, sparse access: keep the resident set small
+// ... do lookups; only touched pages stay resident ...
+```
+
+Measured effect (3.2 GB table on a host with an 8 MB readahead window, 300k
+random lookups):
+
+| | resident set (RSS) after the lookups |
+|---|---:|
+| default | **2.98 GB** (readahead pulled in ~the whole file) |
+| `advise_random()` | **0.96 GB** (only the touched pages) |
+
+Companions: `advise_sequential()` (maximise readahead + drop-behind for big
+scans, streams at bandwidth without growing the resident set) and
+`advise_normal()` (reset to the default heuristic). All are POSIX
+`madvise` hints and no-ops on Windows.
+
 Guidance:
-- **Huge table / scan or sparse access** → leave it lazy (the default).
+- **Table larger than RAM, sparse/random access** → `advise_random()`.
+- **Big sequential scans** → `advise_sequential()` (or just leave it lazy;
+  kernel readahead already streams well).
 - **Table fits in RAM and you want predictable lookup latency** → `warm=true`
   (or `prefetch(true)`) once at startup.
 - **Want to overlap warm-up with other init** → call `prefetch()` (async) early,

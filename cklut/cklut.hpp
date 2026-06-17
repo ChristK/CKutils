@@ -92,6 +92,23 @@ public:
         }
         return s;
     }
+
+    // Access-pattern hints (POSIX madvise; no-ops on Windows).
+    void advise_random() const {      // sparse access: disable readahead, 1 page/fault
+#if defined(MADV_RANDOM)
+        if (base_ && len_) ::madvise(const_cast<void*>(base_), len_, MADV_RANDOM);
+#endif
+    }
+    void advise_sequential() const {  // big scans: aggressive readahead + drop-behind
+#if defined(MADV_SEQUENTIAL)
+        if (base_ && len_) ::madvise(const_cast<void*>(base_), len_, MADV_SEQUENTIAL);
+#endif
+    }
+    void advise_normal() const {      // reset to the OS default heuristic
+#if defined(MADV_NORMAL)
+        if (base_ && len_) ::madvise(const_cast<void*>(base_), len_, MADV_NORMAL);
+#endif
+    }
 private:
     void* base_ = nullptr; std::size_t len_ = 0;
 #if defined(_WIN32)
@@ -303,6 +320,24 @@ public:
         for (const auto& m : shards_) { m->willneed(); if (blocking) s += m->populate(); }
         return s;
     }
+
+    // Access-pattern hints to the kernel (no-ops on Windows).
+    //
+    // advise_random(): for tables LARGER THAN RAM with sparse/random lookups.
+    //   Disables OS readahead so each lookup faults in only the single ~4 KB
+    //   page it needs, instead of dragging in a large readahead window. This
+    //   keeps the resident set small and avoids cache thrashing / eviction
+    //   churn when the table can't fit in memory. Do NOT combine with warm /
+    //   prefetch (those intentionally load everything).
+    //
+    // advise_sequential(): for big scans -- maximises readahead and lets the
+    //   kernel drop already-read pages, so a full sweep streams at bandwidth
+    //   without growing the resident set.
+    //
+    // advise_normal(): reset to the default heuristic.
+    void advise_random()     const { for (const auto& m : shards_) m->advise_random(); }
+    void advise_sequential() const { for (const auto& m : shards_) m->advise_sequential(); }
+    void advise_normal()     const { for (const auto& m : shards_) m->advise_normal(); }
 
     template <typename... K>
     std::uint64_t index(K&&... keys) const {

@@ -46,5 +46,14 @@ int main(int argc, char** argv) {
               << " ms (whole table in RAM before first lookup)\n";
 
     // From here, lookups on `warm`/`r` never page-fault on cold rows.
+
+    // 5) The OPPOSITE case: a table LARGER THAN RAM with sparse/random access.
+    //    Don't warm it (it won't fit) — instead disable readahead so each lookup
+    //    faults in only the single page it needs and the resident set stays
+    //    proportional to what you actually touch, not the whole file.
+    cklut::Reader<4> sparse(meta);
+    sparse.advise_random();
+    std::cout << "opened a reader with MADV_RANDOM (larger-than-RAM sparse access)\n";
+
     return 0;
 }
