@@ -5,7 +5,7 @@
 // according to each value column's declared ValType, so values may be double,
 // float, int, long, logical or string/factor.
 #pragma once
-#include "cklut_typed.hpp"
+#include "cklut_typed.h"
 #include <set>
 #include <limits>
 #include <algorithm>

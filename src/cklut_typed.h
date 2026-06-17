@@ -23,7 +23,7 @@
 // Header-only, C++17, cross-platform. Reuses the mmap / varint / fast-divide
 // helpers from cklut.hpp.
 #pragma once
-#include "cklut.hpp"     // detail::FileMapRO/RW, put/get_u32/u64, FastDivU64, shard_path, dir_of
+#include "cklut.h"     // detail::FileMapRO/RW, put/get_u32/u64, FastDivU64, shard_path, dir_of
 #include <cstring>
 #include <limits>
 #include <cmath>

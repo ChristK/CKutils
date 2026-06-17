@@ -20,7 +20,7 @@ root <- if (length(here) && !is.na(here) && nzchar(here)) {
 dt_inc <- system.file("include", package = "data.table")
 Sys.setenv(PKG_CPPFLAGS = paste0("-I", file.path(root, "cklut"), " -I\"", dt_inc, "\""))
 .cc <- tempfile("ckcc"); dir.create(.cc)
-for (f in c("cklut_r.cpp", "lookup_dt.cpp", "cklut.hpp", "cklut_typed.hpp", "cklut_build_typed.hpp"))
+for (f in c("cklut_r.cpp", "lookup_dt.cpp", "cklut.h", "cklut_typed.h", "cklut_build_typed.h"))
   file.copy(file.path(root, "src", f), file.path(.cc, f), overwrite = TRUE)
 sourceCpp(file.path(.cc, "lookup_dt.cpp"))
 sourceCpp(file.path(.cc, "cklut_r.cpp"))

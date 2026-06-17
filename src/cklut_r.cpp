@@ -14,8 +14,8 @@
 //
 // The cklut headers are vendored into src/ (canonical copies live in cklut/).
 #include <Rcpp.h>
-#include "cklut_typed.hpp"
-#include "cklut_build_typed.hpp"
+#include "cklut_typed.h"
+#include "cklut_build_typed.h"
 
 using namespace Rcpp;
 using cklut::ValType;

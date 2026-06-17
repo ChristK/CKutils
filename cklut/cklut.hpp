@@ -15,7 +15,12 @@
 #include <type_traits>
 
 #if defined(_WIN32)
-  #define WIN32_LEAN_AND_MEAN
+  #ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+  #endif
+  #ifndef NOMINMAX
+    #define NOMINMAX                 // keep <windows.h> from defining min()/max() macros
+  #endif                            // (they would break std::min/std::max below)
   #include <windows.h>
 #else
   #include <fcntl.h>
@@ -69,10 +74,12 @@ public:
     // Non-blocking; pages stream into the page cache in the background.
     void willneed() const {
 #if defined(_WIN32)
+  #if defined(_WIN32_WINNT) && _WIN32_WINNT >= 0x0602
         if (base_ && len_) {
             WIN32_MEMORY_RANGE_ENTRY e{ base_, len_ };
             ::PrefetchVirtualMemory(::GetCurrentProcess(), 1, &e, 0);
         }
+  #endif                            // pre-Win8 target: best-effort no-op
 #elif defined(MADV_WILLNEED)
         if (base_ && len_) ::madvise(const_cast<void*>(base_), len_, MADV_WILLNEED);
 #endif
