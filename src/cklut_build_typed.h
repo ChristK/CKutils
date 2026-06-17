@@ -79,7 +79,8 @@ inline TypedSchema build_lut_typed(TypedRowSource& src,
                 if (!need_dim[i]) continue;
                 if (bdims[i].is_string) dset[i].insert(dk[i]);
                 else { std::int64_t k = std::strtoll(dk[i].c_str(), nullptr, 10);
-                       nmin[i] = std::min(nmin[i], k); nmax[i] = std::max(nmax[i], k); }
+                       // parenthesised to defeat any min()/max() macros (Windows)
+                       nmin[i] = (std::min)(nmin[i], k); nmax[i] = (std::max)(nmax[i], k); }
             }
             for (std::size_t i = 0; i < NVL; ++i) {
                 if (!need_val[i]) continue;
