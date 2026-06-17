@@ -45,6 +45,23 @@ fdBCPEo(x = 1:5, mu = rep(2, 5), sigma = rep(0.5, 5), nu = rep(1, 5), tau = rep(
 normalise(c(1, 2, 3, 4, 5))  # Normalise to [0,1]
 ```
 
+## Larger-than-RAM lookups: `cklut`
+
+`cklut_*` is a memory-mapped, on-disk drop-in for `lookup_dt`. Build a dense
+lookup table once (from a `data.table`, CSV or Parquet); queries then read value
+columns straight off the memory-mapped file, so the table can exceed RAM and
+there is no per-call rebuild. Value columns may be double, integer, logical or
+factor/character — exactly like `lookup_dt` — and unmatched keys return `NA`.
+
+```r
+ck  <- cklut_build(lookup_tbl, "dist", keys = c("year", "age", "sex"))
+res <- cklut_lookup(tbl, ck)          # drop-in for lookup_dt(tbl, lookup_tbl)
+cklut_to_csv(ck, "dist.csv")          # export back out (also cklut_to_parquet)
+```
+
+The C++ engine, benchmarks and validation (against both `lookup_dt` and
+`absorb_dt`) live in [`cklut/`](cklut/).
+
 ## License
 
 GPL-3 | See [LICENSE.md](LICENSE.md) for details
