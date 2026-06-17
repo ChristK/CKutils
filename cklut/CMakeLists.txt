@@ -15,6 +15,9 @@ target_link_libraries(build_csv PRIVATE cklut)
 add_executable(query examples/query.cpp)
 target_link_libraries(query PRIVATE cklut)
 
+add_executable(prefetch examples/prefetch.cpp)
+target_link_libraries(prefetch PRIVATE cklut)
+
 # Optional Parquet importer (requires Apache Arrow + Parquet).
 option(CKLUT_PARQUET "Build the Parquet importer" OFF)
 if(CKLUT_PARQUET)

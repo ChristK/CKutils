@@ -64,6 +64,31 @@ public:
     FileMapRO(const FileMapRO&) = delete; FileMapRO& operator=(const FileMapRO&) = delete;
     const void* data() const { return base_; }
     std::size_t size() const { return len_; }
+
+    // Async, best-effort hint: ask the OS to read the whole mapping ahead.
+    // Non-blocking; pages stream into the page cache in the background.
+    void willneed() const {
+#if defined(_WIN32)
+        if (base_ && len_) {
+            WIN32_MEMORY_RANGE_ENTRY e{ base_, len_ };
+            ::PrefetchVirtualMemory(::GetCurrentProcess(), 1, &e, 0);
+        }
+#elif defined(MADV_WILLNEED)
+        if (base_ && len_) ::madvise(const_cast<void*>(base_), len_, MADV_WILLNEED);
+#endif
+    }
+    // Blocking: touch one byte per page so the whole mapping is resident on
+    // return. The returned checksum only exists to stop the loop being
+    // optimized away; ignore it.
+    std::uint64_t populate() const {
+        std::uint64_t s = 0;
+        if (base_ && len_) {
+            const unsigned char* p = static_cast<const unsigned char*>(base_);
+            for (std::size_t off = 0; off < len_; off += 4096) s += p[off];
+            s += p[len_ - 1];
+        }
+        return s;
+    }
 private:
     void* base_ = nullptr; std::size_t len_ = 0;
 #if defined(_WIN32)
@@ -217,7 +242,10 @@ inline std::uint64_t rows_per_shard(const std::vector<Dim>& dims, std::uint32_t 
 template <std::size_t NV>
 class Reader {
 public:
-    explicit Reader(const std::string& meta_path) {
+    // warm = true eagerly loads the whole table into RAM before returning
+    // (equivalent to constructing then calling prefetch(true)). Default false
+    // keeps the lazy, demand-paged behavior.
+    explicit Reader(const std::string& meta_path, bool warm = false) {
         std::ifstream f(meta_path, std::ios::binary);
         if (!f) throw std::runtime_error("cklut: open meta: " + meta_path);
         std::string buf((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
@@ -255,6 +283,22 @@ public:
             shards_.push_back(std::make_unique<detail::FileMapRO>(detail::shard_path(dir, sch_.base_name, i)));
             data_.push_back(reinterpret_cast<const double*>(shards_.back()->data()));
         }
+
+        if (warm) prefetch(/*blocking=*/true);
+    }
+
+    // Warm the page cache for the whole table (all shards). By default this is
+    // never called -- lookups are lazy and only touched pages are paged in.
+    //   blocking = false : issue an async readahead hint (MADV_WILLNEED /
+    //                      PrefetchVirtualMemory) and return immediately.
+    //   blocking = true  : touch every page so the table is fully resident in
+    //                      RAM before returning.
+    // The return value is a checksum that only prevents the touch loop being
+    // optimized away; ignore it. The method is const and thread-safe.
+    std::uint64_t prefetch(bool blocking = false) const {
+        std::uint64_t s = 0;
+        for (const auto& m : shards_) { m->willneed(); if (blocking) s += m->populate(); }
+        return s;
     }
 
     template <typename... K>

@@ -33,7 +33,7 @@ load, no hashing, no binary search, no branches.
 | `cklut.hpp`          | Core: format, `Reader`, low-level `ShardedWriter`.             |
 | `cklut_build.hpp`    | Generic two-pass streaming builder + `CsvRowSource`.          |
 | `cklut_parquet.hpp`  | `ParquetRowSource` (requires Apache Arrow + Parquet).         |
-| `examples/`          | `build_csv`, `build_parquet`, `query`.                         |
+| `examples/`          | `build_csv`, `build_parquet`, `query`, `prefetch`.             |
 
 ## On-disk format
 
@@ -107,6 +107,49 @@ for (std::size_t i = 0; i < s.count; ++i) {
     const double* r = s.ptr + i * s.stride;        // age = first_age + i
 }
 ```
+
+## Memory behaviour & prefetching
+
+By **default, reads are lazy**. The payload shards are memory-mapped, not read:
+only the ~4 KB OS page containing a row you actually touch is paged in (and then
+cached). The table can be **larger than RAM** — pages are clean and file-backed,
+so the kernel evicts them under pressure and re-reads on demand. The only thing
+read in full at open time is the tiny `.ckmeta` manifest.
+
+That is ideal for huge tables with sparse or scan-based access. But a
+latency-sensitive service that has enough RAM may prefer to pull the whole table
+in up front, so steady-state lookups never hit a cold-page fault. Two opt-in
+ways to do that, both `const` and thread-safe:
+
+```cpp
+cklut::Reader<4> r("dist.ckmeta");   // (1) lazy — default, nothing pre-loaded
+
+r.prefetch();                        // (2) async hint: background readahead,
+                                     //     returns immediately (best-effort)
+
+r.prefetch(/*blocking=*/true);       // (3) blocking: whole table resident in
+                                     //     RAM before this returns
+```
+
+Or eagerly warm at construction (equivalent to opening then `prefetch(true)`):
+
+```cpp
+cklut::Reader<4> r("dist.ckmeta", /*warm=*/true);   // fully resident on return
+```
+
+Under the hood: the async hint issues `madvise(MADV_WILLNEED)` (POSIX) /
+`PrefetchVirtualMemory` (Windows); the blocking form additionally touches one
+byte per page to force residency. Cost of a cold blocking warm is just the
+sequential read of the file — e.g. ~320 ms for a 760 MB table (~2.4 GB/s);
+a subsequent warm is a few ms (already cached). See
+[`examples/prefetch.cpp`](examples/prefetch.cpp).
+
+Guidance:
+- **Huge table / scan or sparse access** → leave it lazy (the default).
+- **Table fits in RAM and you want predictable lookup latency** → `warm=true`
+  (or `prefetch(true)`) once at startup.
+- **Want to overlap warm-up with other init** → call `prefetch()` (async) early,
+  do other work, then start querying.
 
 ## Performance notes
 
