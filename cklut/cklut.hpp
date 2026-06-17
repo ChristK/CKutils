@@ -81,7 +81,10 @@ public:
     // return. The returned checksum only exists to stop the loop being
     // optimized away; ignore it.
     std::uint64_t populate() const {
-        std::uint64_t s = 0;
+        // `volatile` accumulator: forces the per-page loads to actually happen
+        // even though the result is discarded -- otherwise the compiler elides
+        // the whole loop and blocking prefetch silently does nothing.
+        volatile std::uint64_t s = 0;
         if (base_ && len_) {
             const unsigned char* p = static_cast<const unsigned char*>(base_);
             for (std::size_t off = 0; off < len_; off += 4096) s += p[off];

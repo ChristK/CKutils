@@ -144,6 +144,28 @@ sequential read of the file — e.g. ~320 ms for a 760 MB table (~2.4 GB/s);
 a subsequent warm is a few ms (already cached). See
 [`examples/prefetch.cpp`](examples/prefetch.cpp).
 
+### How much does lazy cost vs warm?
+
+In **steady state there is no difference** — once a page is resident, lazy and
+warm both read it straight from the page cache. The gap is purely the
+**first touch of cold pages**. Measured on a 2 GB table (64M rows × 4 doubles),
+300k random lookups:
+
+| | first pass | second pass |
+|---|-----------:|------------:|
+| **Lazy** (cold) | ~3500 ns/lookup (page-faults in ~4 KB each) | ~100 ns/lookup |
+| **Warm** (`prefetch(true)` first) | ~95 ns/lookup (after a one-time ~750 ms sequential load) | ~80 ns/lookup |
+
+So a cold *random* first touch is ~35× slower than a cached one here (more on a
+real SSD/HDD, where random 4 KB reads are far slower than this host-cached VM).
+Warm converts those scattered random reads into a single sequential read, so:
+
+- **Touch most of the table, repeatedly** → warm wins (front-load one fast
+  sequential read; every lookup is then cache-speed).
+- **Touch only a few rows, once** → lazy wins (you never read the rest).
+- **Sequential/scan access even when cold** → lazy is already fine; kernel
+  readahead streams pages efficiently (no need to warm).
+
 Guidance:
 - **Huge table / scan or sparse access** → leave it lazy (the default).
 - **Table fits in RAM and you want predictable lookup latency** → `warm=true`
