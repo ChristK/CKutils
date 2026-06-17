@@ -70,13 +70,23 @@ int main(int argc, char** argv) {
         std::printf("A1 legacy Reader<4> : %.2f ns/lookup (%.1f M/s) [acc=%.0f]\n", t/Q*1e9, Q/t/1e6, acc);
     }
 
-    // ---- A2. TypedReader, all-f64 --------------------------------------------
+    // ---- A2. TypedReader, all-f64 (runtime get_f64) --------------------------
     {
         cklut::TypedReader lut(base + ".ckmeta");
         auto t0 = clk::now(); double acc=0;
         for (std::size_t i=0;i<Q;++i){ const unsigned char* r=lut.at(k0[i],k1[i],k2[i]); acc+=lut.get_f64(r,0)+lut.get_f64(r,3); }
         auto t1 = clk::now(); double t=secs(t0,t1);
         std::printf("A2 TypedReader f64  : %.2f ns/lookup (%.1f M/s) [acc=%.0f]\n", t/Q*1e9, Q/t/1e6, acc);
+    }
+
+    // ---- A3. TypedReader all-f64 FAST PATH (record viewed as double*) --------
+    {
+        cklut::TypedReader lut(base + ".ckmeta");
+        std::printf("   (all_f64=%s)\n", lut.all_f64() ? "yes" : "no");
+        auto t0 = clk::now(); double acc=0;
+        for (std::size_t i=0;i<Q;++i){ const double* r=lut.at_f64(k0[i],k1[i],k2[i]); acc+=r[0]+r[3]; }
+        auto t1 = clk::now(); double t=secs(t0,t1);
+        std::printf("A3 TypedReader f64* : %.2f ns/lookup (%.1f M/s) [acc=%.0f]  <- fast path\n", t/Q*1e9, Q/t/1e6, acc);
     }
 
     // ---- B. mixed-type record (f64,i32,lgl,str) gather -----------------------
@@ -96,6 +106,25 @@ int main(int argc, char** argv) {
             acc += lut.get_f64(r,0) + lut.get_i32(r,1) + lut.get_i32(r,2) + lut.get_code(r,3); }
         auto t1 = clk::now(); double t=secs(t0,t1);
         std::printf("B  TypedReader mixed: %.2f ns/lookup (%.1f M/s) [acc=%.0f]\n", t/Q*1e9, Q/t/1e6, acc);
+    }
+
+    // ---- C. HOT regime (cache-resident): runtime get_f64 vs f64* fast path ---
+    // Compute-bound, so the per-column offset[v] lookup + memcpy in get_f64 is
+    // visible here -- this is the fair comparison (no page-cache ordering bias).
+    {
+        cklut::TypedReader lut(base + ".ckmeta");
+        const std::size_t Q = 100'000'000, K = 4096; const std::int64_t W = 16;
+        std::mt19937_64 r2(7); std::vector<std::int64_t> h0(K),h1(K),h2(K);
+        for (std::size_t i=0;i<K;++i){ h0[i]=r2()%W; h1[i]=r2()%W; h2[i]=r2()%std::min<std::int64_t>(W,d2); }
+        double a=0,b=0;
+        auto t0=clk::now();
+        for (std::size_t i=0;i<Q;++i){ std::size_t j=i&(K-1); const unsigned char* r=lut.at(h0[j],h1[j],h2[j]); a+=lut.get_f64(r,0)+lut.get_f64(r,3); }
+        auto t1=clk::now();
+        for (std::size_t i=0;i<Q;++i){ std::size_t j=i&(K-1); const double* r=lut.at_f64(h0[j],h1[j],h2[j]); b+=r[0]+r[3]; }
+        auto t2=clk::now();
+        double tb=secs(t0,t1)/Q*1e9, tf=secs(t1,t2)/Q*1e9;
+        std::printf("C  hot get_f64 : %.2f ns   hot f64* : %.2f ns  (%+.0f%% fast path)  [%.0f %.0f]\n",
+                    tb, tf, (tf/tb-1)*100, a, b);
     }
     return 0;
 }

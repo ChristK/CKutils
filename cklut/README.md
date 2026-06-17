@@ -136,8 +136,23 @@ Each row is a fixed-width **record**; columns live at known byte offsets.
 Strings/factors are stored as `int32` dictionary codes (+ a per-column
 dictionary in the manifest), so the grid stays fixed-width and O(1). An
 **all-`f64` table is byte-identical to the numeric format**, so doubles pay
-nothing — the typed `Reader` matches the templated `Reader<NV>` within
-measurement noise (see `bench/bench_typed.cpp`).
+nothing in storage. The generic `TypedReader::get_f64()` accessor carries a
+small (~7–13%) runtime cost vs the compile-time `Reader<NV>` (a per-column
+offset lookup + `memcpy`), visible only in tight cache-resident hot loops. For
+all-`f64` tables the **fast path** recovers full `Reader<NV>` speed by viewing a
+record directly as a `double[]`:
+
+```cpp
+cklut::TypedReader r("dist.ckmeta");
+if (r.all_f64()) {
+    const double* v = r.at_f64(2019, "south");   // no per-column decode
+    double mu = v[0], sd = v[1];
+}
+```
+
+Measured (25M-row table, `bench/bench_typed.cpp`): hot lookups `get_f64()`
+3.30 ns vs `at_f64()` 2.93 ns (−11%), the latter matching the legacy
+`Reader<4>` (≈3.2 ns).
 
 ```cpp
 #include "cklut_build_typed.hpp"

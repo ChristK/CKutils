@@ -241,6 +241,23 @@ public:
     template <typename... K>
     const unsigned char* at(K&&... keys) const { return record(index(std::forward<K>(keys)...)); }
 
+    // ---- all-f64 fast path ------------------------------------------------
+    // When every value column is F64 a record is just a contiguous double[],
+    // byte-identical to the numeric format, so it can be read at compile-time
+    // Reader<NV> speed -- no per-column offset lookup or memcpy. Measured ~7-13%
+    // faster than get_f64() in the cache-resident hot regime (it matches the
+    // legacy templated reader). UB if the table is not all-f64; guard with
+    // all_f64(). Column v lives at index v of the returned array.
+    bool all_f64() const {
+        for (const auto& v : sch_.values) if (v.type != ValType::F64) return false;
+        return true;
+    }
+    const double* row_f64(std::uint64_t idx) const { return reinterpret_cast<const double*>(record(idx)); }
+    template <typename... K>
+    const double* at_f64(K&&... keys) const {
+        return reinterpret_cast<const double*>(record(index(std::forward<K>(keys)...)));
+    }
+
     // Typed scalar decoders (read value column v out of a record). Out-of-range
     // / NA-stored cells decode to the relevant R NA.
     double      get_f64(const unsigned char* rec, std::size_t v) const { double d; std::memcpy(&d, rec + sch_.offsets[v], 8); return d; }
