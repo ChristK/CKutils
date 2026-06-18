@@ -25,6 +25,25 @@
 
   The C++ engine, benchmarks, and validation harness live in `cklut/`.
 
+## Bug fixes
+
+* `guess_gamlss()` referenced an undefined `dt` (which resolved to `stats::dt`)
+  instead of its local `data.table`, so the function always errored before
+  returning. It now completes and returns the predicted variable as documented.
+
+## Testing and coverage
+
+* Greatly expanded the `tinytest` suite to systematically cover the package's
+  functions and C++ helpers: the `frXXX` random generators, parquet I/O
+  round-trips, the gamlss/polr/reldist helpers, `cklut` (build/lookup/export
+  plus the multi-shard and `warm` prefetch paths), and the compiled helpers
+  (`shift_bypid*`, `counts`/`tableRcpp`, the distribution validation/`log_p`
+  branches, parameter recycling, and clamping). Code that cannot be exercised
+  by unit tests — package load/unload hooks, real package-install machinery,
+  Windows-only and network-only paths, `requireNamespace` guards for Suggests
+  packages, and defensive guards — is marked with `# nocov`. Overall test
+  coverage rises to roughly 95%.
+
 ## Notes
 
 * CSV export preserves factor *labels* but not factor level order; rebuilding
