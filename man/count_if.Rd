@@ -17,3 +17,10 @@ An integer representing the number of TRUE values in the vector.
 \description{
 This function counts the number of TRUE values in a logical vector, with an option to remove missing values.
 }
+\examples{
+count_if(c(TRUE, FALSE, TRUE, TRUE))
+
+# NAs are not counted as TRUE; use na_rm to drop them first
+count_if(c(TRUE, FALSE, NA, TRUE), na_rm = TRUE)
+
+}

@@ -20,6 +20,15 @@ Invisibly, \code{path}.
 Writes the full table (keys + values) to Parquet via
 \code{\link{write_parquet_dt}} (Apache Arrow).
 }
-\seealso{
-\code{\link{cklut_to_dt}}, \code{\link{cklut_to_csv}}
+\examples{
+library(data.table)
+dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+dt[, value := year + (sex == "men")]
+base <- tempfile("cklut")
+ck <- cklut_build(dt, base, keys = c("year", "sex"))
+
+# export the full table to a Parquet file
+pq <- tempfile(fileext = ".parquet")
+cklut_to_parquet(ck, pq)
+file.exists(pq)
 }

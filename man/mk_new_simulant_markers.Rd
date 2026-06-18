@@ -24,3 +24,8 @@ This ensures correct identification of person boundaries in temporal data.
 **Missing Values**: Missing values (NA) in person IDs are treated as new simulants.
 Each NA value will be marked as TRUE (start of new simulant).
 }
+\examples{
+# pid must be grouped so each person's rows are contiguous
+pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+mk_new_simulant_markers(pid)  # TRUE FALSE FALSE TRUE FALSE TRUE
+}

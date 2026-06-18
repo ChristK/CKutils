@@ -10,10 +10,22 @@ gnrt_folder_structure(path = getwd())
 \item{path}{A string scalar. The root folder where the folder structure will
 be created.}
 }
+\value{
+Called for its side effect of creating the IMPACTncd folder structure
+  (the \code{inputs}, \code{processed_inputs}, \code{simulation},
+  \code{outputs}, \code{validation}, \code{gui} and \code{logs}
+  sub-directories) under \code{path}. Returns \code{NULL} invisibly.
+}
 \description{
 `gnrt_folder_structure` generates the folder structure for an IMPACTncd model
 }
 \details{
 This is an auxilliary function: It creates the expected folder structure for
 an IMPACTncd model.
+}
+\examples{
+demo_path <- file.path(tempdir(), "impactncd_demo")
+gnrt_folder_structure(demo_path)
+list.dirs(demo_path, recursive = FALSE)
+unlink(demo_path, recursive = TRUE) # clean up
 }

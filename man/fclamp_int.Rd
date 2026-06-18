@@ -22,3 +22,8 @@ An integer vector with values clamped to the range [a, b].
 This function clamps the values of an integer vector to lie within a specified range [a, b].
 Values below a are set to a and values above b are set to b. Optionally, the operation can be performed in-place.
 }
+\examples{
+# Note x must be an integer vector (use the L suffix)
+fclamp_int(c(-2L, 0L, 5L, 11L), a = 0L, b = 10L)
+
+}

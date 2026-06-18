@@ -31,6 +31,14 @@ the \pkg{gamlss.dist} package by Mikis Stasinopoulos, Robert Rigby,
 and colleagues. The original gamlss.dist implementation is acknowledged
 with gratitude.
 }
+\examples{
+# Log normalizing constants for given mu and sigma (x sets the search range)
+fget_C(x = 0:5, mu = 2, sigma = 1.5)
+
+# mu and sigma are recycled to the length of the longest argument
+fget_C(x = 0:3, mu = c(2, 4), sigma = c(1.2, 0.8))
+
+}
 \references{
 Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
 location, scale and shape,(with discussion), Appl. Statist., 54, part 3, pp 507-554.

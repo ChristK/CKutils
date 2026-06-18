@@ -34,6 +34,10 @@ using namespace Rcpp;
 //'
 //' @return An integer vector containing the underlying integer codes without factor attributes.
 //'
+//' @examples
+//' f <- factor(c("b", "a", "c", "a"), levels = c("a", "b", "c"))
+//' fct_to_int_cpp(f)  # 2 1 3 1 (the underlying integer codes, no levels)
+//'
 //' @export
 // [[Rcpp::export]]
 IntegerVector fct_to_int_cpp(SEXP x, bool inplace = false)

@@ -26,3 +26,12 @@ moving backward, respecting person ID boundaries.
 **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
 This ensures proper temporal ordering for the backward propagation operation.
 }
+\examples{
+# Data grouped by person id and sorted by time within person
+pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+mrk <- mk_new_simulant_markers(pid)
+x   <- c(0L, 0L, 3L, 0L, 0L, 2L)
+
+# Values are propagated backward within a person, decremented by 1 each step
+carry_backward_decr(x, pid_mrk = mrk, y = 0L)  # 1 2 3 0 0 2
+}

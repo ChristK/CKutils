@@ -17,3 +17,8 @@ Transforms a real number to a probability using the anti-logit (logistic) functi
 This is the inverse of the logit transformation, converting log-odds back to probabilities.
 The function computes exp(x) / (1 + exp(x)).
 }
+\examples{
+antilogit(0)        # 0.5
+antilogit(log(4))   # 0.8  (log-odds of 4:1)
+antilogit(-Inf)     # 0
+}

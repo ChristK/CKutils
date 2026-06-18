@@ -16,3 +16,7 @@ A numeric vector with values scaled between 0 and 1.
 This function normalises a numeric vector so that its values are scaled to lie within the 0 to 1 range.
 If all elements in the vector are identical, the function returns a vector of ones.
 }
+\examples{
+fnormalise(c(10, 20, 30, 40))  # 0.000 0.333 0.667 1.000
+
+}

@@ -4,8 +4,15 @@
 \alias{cklut_build}
 \title{Build an on-disk cklut lookup table}
 \usage{
-cklut_build(x, out_base, keys, values = NULL, value_types = NULL,
-  max_bytes = 100 * 1024^2, check = TRUE)
+cklut_build(
+  x,
+  out_base,
+  keys,
+  values = NULL,
+  value_types = NULL,
+  max_bytes = 100 * 1024^2,
+  check = TRUE
+)
 }
 \arguments{
 \item{x}{A \code{data.table}, or a path to a \code{.csv}/\code{.parquet} file
@@ -36,17 +43,19 @@ Invisibly, a \code{cklut} handle (as returned by \code{\link{cklut_open}}).
 Writes a dense lookup table (every combination of the key columns present
 exactly once) to a memory-mapped, sharded binary format that
 \code{\link{cklut_lookup}} can query. The source may be a \code{data.table},
-or a path to a CSV or Parquet file. Value columns may be of any type
-(double, integer, logical, factor/character), exactly like \code{lookup_dt}.
+or a path to a CSV or Parquet file.
 }
 \examples{
 library(data.table)
-lt <- CJ(year = 2018:2020, sex = factor(c("men", "women")))
-lt[, mu := year + as.integer(sex) / 10]
-ck <- cklut_build(lt, tempfile("dist"), keys = c("year", "sex"))
-tbl <- data.table(year = c(2018L, 2020L), sex = factor(c("men", "women")))
-cklut_lookup(tbl, ck)
+# A dense grid: every combination of the key columns appears exactly once.
+dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+dt[, rate := year / 1000 + (sex == "men")]
+base <- tempfile("cklut")
+ck <- cklut_build(dt, base, keys = c("year", "sex"))
+ck                       # a <cklut> handle
+cklut_lookup(data.table(year = 2016L, sex = factor("men", levels = c("men", "women"))),
+             ck, merge = FALSE)
 }
 \seealso{
-\code{\link{cklut_lookup}}, \code{\link{cklut_to_csv}}, \code{\link{lookup_dt}}
+\code{\link{cklut_lookup}}, \code{\link{cklut_to_csv}}
 }

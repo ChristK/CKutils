@@ -16,6 +16,13 @@ A \code{data.table} with the key and value columns.
 Reconstructs the full dense table (all key combinations + value columns) in
 row-major order.
 }
-\seealso{
-\code{\link{cklut_to_csv}}, \code{\link{cklut_to_parquet}}
+\examples{
+library(data.table)
+dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+dt[, value := year + (sex == "men")]
+base <- tempfile("cklut")
+ck <- cklut_build(dt, base, keys = c("year", "sex"))
+
+# read the whole dense table back into memory
+cklut_to_dt(ck)
 }

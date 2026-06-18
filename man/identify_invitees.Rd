@@ -37,3 +37,16 @@ This ensures proper tracking of invitation intervals and temporal relationships.
 **Missing Values**: Missing values (NA) in any of the input vectors result in NA output
 for that position, ensuring data integrity in the screening process.
 }
+\examples{
+# Data grouped by person id and sorted by time within person
+pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+mrk <- mk_new_simulant_markers(pid)
+
+set.seed(42)
+elig     <- rep(1L, 6)   # everyone eligible
+prev_inv <- rep(0L, 6)   # no prior invitations
+prb      <- rep(1.0, 6)  # always invite when due
+freq     <- rep(2L, 6)   # at least 2 years between invitations
+
+identify_invitees(elig, prev_inv, prb, freq, pid = mrk)
+}

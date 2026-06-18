@@ -45,3 +45,13 @@ This ensures proper temporal ordering for the incremental carry-forward operatio
 **Missing Values**: Missing values (NA) in the input vectors are handled gracefully. Positions
 with missing person ID markers or values are skipped during processing, preserving existing values.
 }
+\examples{
+# Data grouped by person id and sorted by time within person
+pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+mrk <- mk_new_simulant_markers(pid)
+x   <- c(2L, 2L, 2L, 0L, 2L, 2L)
+
+# Non-recursive: once previous >= y, keep incrementing within the person
+carry_forward_incr(x, pid_mrk = mrk, recur = FALSE, y = 2L, byref = FALSE)
+# 2 3 4 0 2 2
+}

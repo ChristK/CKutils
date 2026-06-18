@@ -31,6 +31,17 @@
   instead of its local `data.table`, so the function always errored before
   returning. It now completes and returns the predicted variable as documented.
 
+* `gnrt_folder_structure()` built the list of folder paths but never created any
+  directories (it returned `NULL` without side effects). It now actually creates
+  the documented folder structure under `path`.
+
+## Documentation
+
+* Reviewed and completed the roxygen documentation of all exported functions:
+  every exported function now documents its return value (`@return`) and carries
+  a runnable `@examples` section (heavier model-fitting helpers use `\dontrun`).
+  `R CMD check` reports no documentation problems.
+
 ## Testing and coverage
 
 * Greatly expanded the `tinytest` suite to systematically cover the package's

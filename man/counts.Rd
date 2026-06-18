@@ -11,6 +11,13 @@ counts(x)
 nested) list of such vectors. If \code{x} is a list, we recursively apply
 \code{counts} throughout elements in the list.}
 }
+\value{
+A named integer vector giving the count of each unique value in
+  \code{x} (including \code{NA}/\code{NaN} when present), with the names being
+  the unique values. When \code{x} is a list, a (possibly nested) list of such
+  named integer vectors, obtained by recursively applying \code{counts} to
+  each element.
+}
 \description{
 This function uses Rcpp sugar to implement a fast \code{table}, for
 unique counts of a single vector. This implementation seeks to

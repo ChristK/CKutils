@@ -17,3 +17,10 @@ A numeric value representing the proportion of TRUE values in the vector.
 \description{
 This function calculates the proportion of TRUE values in a logical vector, with an option to remove missing values.
 }
+\examples{
+prop_if(c(TRUE, FALSE, TRUE, FALSE))  # 0.5
+
+# Drop NAs before computing the proportion
+prop_if(c(TRUE, FALSE, NA, TRUE), na_rm = TRUE)
+
+}

@@ -11,6 +11,10 @@ match_colnames_pattern(dtb, ...)
 
 \item{...}{A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops}
 }
+\value{
+A character vector of the column names of \code{dtb} (i.e. elements of
+  \code{names(dtb)}) that match the supplied regular expression pattern(s).
+}
 \description{
 `match_colnames_pattern` returns the matching names of the argument `dtb`
 (i.e. \code{names(dtb)}) corresponding to the regular expression patterns

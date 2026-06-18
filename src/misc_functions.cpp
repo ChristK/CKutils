@@ -32,6 +32,13 @@ using namespace Rcpp;
 //'
 //' @return A numeric vector containing the computed quantiles corresponding to the probabilities in \code{probs}.
 //'
+//' @examples
+//' # Quantiles of a numeric vector (NAs removed by default)
+//' fquantile(c(1, 2, 3, 4, 5, NA), probs = c(0.25, 0.5, 0.75))
+//'
+//' # Equivalent to base R quantile() with type 7
+//' fquantile(1:100, probs = c(0.1, 0.5, 0.9))
+//'
 //' @export
 // [[Rcpp::export]]
 NumericVector fquantile(NumericVector x, NumericVector probs, bool na_rm = true)
@@ -113,6 +120,17 @@ NumericVector fquantile(NumericVector x, NumericVector probs, bool na_rm = true)
 //' @param na_rm Logical flag indicating whether to remove NA values (default is true).
 //'
 //' @return A list where the first element is a vector of group IDs and subsequent elements are numeric vectors of computed quantiles for each group.
+//'
+//' @examples
+//' # x must be sorted by id; one quantile vector is returned per group
+//' x  <- c(1, 2, 3, 10, 20, 30)
+//' id <- c("a", "a", "a", "b", "b", "b")
+//' fquantile_byid(x, q = c(0.25, 0.5, 0.75), id = id)
+//'
+//' # The first list element holds the group ids, the rest the quantiles
+//' res <- fquantile_byid(x, q = c(0.5), id = id)
+//' res[[1]]  # group ids: "a" "b"
+//' res[[2]]  # medians per group
 //'
 //' @export
 // [[Rcpp::export]]
@@ -215,6 +233,12 @@ List fquantile_byid(NumericVector x,
 //'
 //' @return An integer representing the number of TRUE values in the vector.
 //'
+//' @examples
+//' count_if(c(TRUE, FALSE, TRUE, TRUE))
+//'
+//' # NAs are not counted as TRUE; use na_rm to drop them first
+//' count_if(c(TRUE, FALSE, NA, TRUE), na_rm = TRUE)
+//'
 //' @export
 // [[Rcpp::export]]
 int count_if(LogicalVector x, bool na_rm = false)
@@ -241,6 +265,12 @@ int count_if(LogicalVector x, bool na_rm = false)
 //' @param na_rm Logical flag indicating whether to remove NA values before calculating the proportion (default is false).
 //'
 //' @return A numeric value representing the proportion of TRUE values in the vector.
+//'
+//' @examples
+//' prop_if(c(TRUE, FALSE, TRUE, FALSE))  # 0.5
+//'
+//' # Drop NAs before computing the proportion
+//' prop_if(c(TRUE, FALSE, NA, TRUE), na_rm = TRUE)
 //'
 //' @export
 // [[Rcpp::export]]
@@ -273,9 +303,19 @@ double prop_if(LogicalVector x, bool na_rm = false)
 //'
 //' @return A numeric vector with values clamped to the range [a, b].
 //'
+//' @examples
+//' # Clamp values to the default [0, 1] range
+//' fclamp(c(-1, 0.5, 2))
+//'
+//' # Custom bounds
+//' fclamp(c(-5, 0, 5, 15), a = 0, b = 10)
+//'
+//' # Bounds are recycled element-wise
+//' fclamp(c(5, 5, 5), a = c(0, 6, 0), b = c(4, 10, 10))
+//'
 //' @export
 // [[Rcpp::export]]
-NumericVector fclamp(NumericVector &x, NumericVector a = NumericVector::create(0.0), 
+NumericVector fclamp(NumericVector &x, NumericVector a = NumericVector::create(0.0),
                      NumericVector b = NumericVector::create(1.0), const bool &inplace = false)
 {
   // Use recycling for x, a, and b vectors
@@ -358,6 +398,10 @@ NumericVector fclamp(NumericVector &x, NumericVector a = NumericVector::create(0
 //'
 //' @return An integer vector with values clamped to the range [a, b].
 //'
+//' @examples
+//' # Note x must be an integer vector (use the L suffix)
+//' fclamp_int(c(-2L, 0L, 5L, 11L), a = 0L, b = 10L)
+//'
 //' @export
 // [[Rcpp::export]]
 IntegerVector fclamp_int(IntegerVector &x, int a = 0, int b = 1, const bool &inplace = false)
@@ -413,6 +457,13 @@ IntegerVector fclamp_int(IntegerVector &x, int a = 0, int b = 1, const bool &inp
 //' @return A logical value: TRUE if all non-missing elements are equal within the tolerance,
 //'         and FALSE otherwise.
 //'
+//' @examples
+//' # Tiny differences within tolerance are treated as equal
+//' fequal(c(1, 1 + 1e-9, 1 - 1e-9), tol = 1e-6)  # TRUE
+//'
+//' # Differences larger than the tolerance return FALSE
+//' fequal(c(1, 1.5, 2), tol = 1e-6)              # FALSE
+//'
 //' @export
 // [[Rcpp::export]]
 LogicalVector fequal(const NumericVector &x, const double &tol)
@@ -435,6 +486,9 @@ LogicalVector fequal(const NumericVector &x, const double &tol)
 //' @param x A numeric vector to be normalised.
 //'
 //' @return A numeric vector with values scaled between 0 and 1.
+//'
+//' @examples
+//' fnormalise(c(10, 20, 30, 40))  # 0.000 0.333 0.667 1.000
 //'
 //' @export
 // [[Rcpp::export]]
@@ -463,6 +517,12 @@ NumericVector fnormalise(const NumericVector &x)
 //' @param y1 A numeric vector of original y values corresponding to x1.
 //'
 //' @return A numeric vector of interpolated y values corresponding to \code{xp}.
+//'
+//' @examples
+//' # Interpolate y at xp given the line segments (x0, y0) -> (x1, y1)
+//' lin_interpolation(xp = c(1.5, 2.5),
+//'                   x0 = c(1, 2), x1 = c(2, 3),
+//'                   y0 = c(10, 20), y1 = c(20, 30))  # 15 25
 //'
 //' @export
 // [[Rcpp::export]]
@@ -494,6 +554,15 @@ NumericVector lin_interpolation(
 //' @param y The integer value to carry forward
 //' @param byref Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector
 //' @return An integer vector with values carried forward according to the rules
+//' @examples
+//' # Data grouped by person id and sorted by time within person
+//' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+//' mrk <- mk_new_simulant_markers(pid)  # TRUE marks the first row of each person
+//' x   <- c(0L, 5L, 0L, 0L, 5L, 0L)
+//'
+//' # Once a 5 appears it is carried forward within the same person,
+//' # but never across a person boundary (use byref = FALSE to keep x unchanged)
+//' carry_forward(x, pid_mrk = mrk, y = 5L, byref = FALSE)  # 0 5 5 0 5 0
 //' @export
 // [[Rcpp::export]]
 IntegerVector carry_forward(IntegerVector &x,
@@ -567,6 +636,15 @@ IntegerVector carry_forward(IntegerVector &x,
 //' @param y The threshold value for triggering incremental carry-forward behaviour
 //' @param byref Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector
 //' @return An integer vector with incremented values carried forward according to the specified mode
+//' @examples
+//' # Data grouped by person id and sorted by time within person
+//' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+//' mrk <- mk_new_simulant_markers(pid)
+//' x   <- c(2L, 2L, 2L, 0L, 2L, 2L)
+//'
+//' # Non-recursive: once previous >= y, keep incrementing within the person
+//' carry_forward_incr(x, pid_mrk = mrk, recur = FALSE, y = 2L, byref = FALSE)
+//' # 2 3 4 0 2 2
 //' @export
 // [[Rcpp::export]]
 IntegerVector carry_forward_incr(IntegerVector &x, const LogicalVector &pid_mrk,
@@ -660,6 +738,14 @@ IntegerVector carry_forward_incr(IntegerVector &x, const LogicalVector &pid_mrk,
 //'   Data must be grouped by person and sorted by year/time.
 //' @param y The threshold value for backward propagation
 //' @return An integer vector with values carried backward and decremented
+//' @examples
+//' # Data grouped by person id and sorted by time within person
+//' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+//' mrk <- mk_new_simulant_markers(pid)
+//' x   <- c(0L, 0L, 3L, 0L, 0L, 2L)
+//'
+//' # Values are propagated backward within a person, decremented by 1 each step
+//' carry_backward_decr(x, pid_mrk = mrk, y = 0L)  # 1 2 3 0 0 2
 //' @export
 // [[Rcpp::export]]
 IntegerVector carry_backward_decr(const IntegerVector &x, const LogicalVector &pid_mrk,
@@ -704,6 +790,10 @@ IntegerVector carry_backward_decr(const IntegerVector &x, const LogicalVector &p
 //'
 //' @param pid An integer vector of person IDs (must be grouped by person and sorted by year/time)
 //' @return A logical vector where TRUE indicates the start of a new simulant
+//' @examples
+//' # pid must be grouped so each person's rows are contiguous
+//' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+//' mk_new_simulant_markers(pid)  # TRUE FALSE FALSE TRUE FALSE TRUE
 //' @export
 // [[Rcpp::export]]
 LogicalVector mk_new_simulant_markers(const IntegerVector &pid)
@@ -763,6 +853,14 @@ LogicalVector mk_new_simulant_markers(const IntegerVector &pid)
 //' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
 //'   Data must be grouped by person and sorted by year/time.
 //' @return A logical vector where TRUE indicates a "long dead" individual
+//' @examples
+//' # Data grouped by person id and sorted by time within person
+//' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+//' mrk <- mk_new_simulant_markers(pid)
+//' x   <- c(0L, 1L, 1L, 0L, 1L, 0L)
+//'
+//' # A row is "long dead" if the previous (same-person) value was non-zero
+//' identify_longdead(x, pid = mrk)  # FALSE FALSE TRUE FALSE FALSE FALSE
 //' @export
 // [[Rcpp::export]]
 LogicalVector identify_longdead(const IntegerVector &x, const LogicalVector &pid)
@@ -809,6 +907,18 @@ LogicalVector identify_longdead(const IntegerVector &x, const LogicalVector &pid
 //' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
 //'   Data must be grouped by person and sorted by year/time.
 //' @return An integer vector where 1 indicates an invitation should be sent, 0 otherwise, NA for missing inputs
+//' @examples
+//' # Data grouped by person id and sorted by time within person
+//' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+//' mrk <- mk_new_simulant_markers(pid)
+//'
+//' set.seed(42)
+//' elig     <- rep(1L, 6)   # everyone eligible
+//' prev_inv <- rep(0L, 6)   # no prior invitations
+//' prb      <- rep(1.0, 6)  # always invite when due
+//' freq     <- rep(2L, 6)   # at least 2 years between invitations
+//'
+//' identify_invitees(elig, prev_inv, prb, freq, pid = mrk)
 //' @export
 // [[Rcpp::export]]
 IntegerVector identify_invitees(const IntegerVector &elig,
@@ -877,6 +987,15 @@ IntegerVector identify_invitees(const IntegerVector &elig,
 //' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
 //'   Data must be grouped by person and sorted by year/time.
 //' @return An integer vector with updated health care effect status
+//' @examples
+//' # Data grouped by person id and sorted by time within person
+//' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+//' mrk <- mk_new_simulant_markers(pid)
+//' x   <- c(1L, 0L, 0L, 1L, 0L, 1L)
+//'
+//' # With probability 1 the effect always continues within a person
+//' set.seed(1)
+//' hc_effect(x, prb_of_continuation = 1.0, pid = mrk)  # 1 1 1 1 1 1
 //' @export
 // [[Rcpp::export]]
 IntegerVector hc_effect(const IntegerVector &x,
@@ -912,6 +1031,10 @@ IntegerVector hc_effect(const IntegerVector &x,
 //'
 //' @param x A numeric value to transform (can be any real number)
 //' @return A numeric value between 0 and 1 representing a probability
+//' @examples
+//' antilogit(0)        # 0.5
+//' antilogit(log(4))   # 0.8  (log-odds of 4:1)
+//' antilogit(-Inf)     # 0
 //' @export
 // [[Rcpp::export]]
 double antilogit(const double &x)

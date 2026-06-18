@@ -18,3 +18,7 @@ A logical value indicating whether all elements in \code{x} are identical.
 This function checks whether all elements in a numeric vector are equal within a specified tolerance.
 It returns TRUE if all elements are identical (considering the tolerance), and FALSE otherwise.
 }
+\examples{
+identical_elements(c(3, 3, 3))        # TRUE
+identical_elements(c(3, 3, 3.0001))   # FALSE
+}

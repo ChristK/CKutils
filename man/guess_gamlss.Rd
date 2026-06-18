@@ -15,8 +15,34 @@ guess_gamlss(dtb, gamlss_obj, orig_data = gamlss_obj$data, nc = 1L)
 
 \item{nc}{by default = 1L}
 }
+\value{
+The input \code{data.table} \code{dtb}, modified by reference: the
+  outcome column (named after the model's dependent variable) is replaced by
+  the predicted quantiles corresponding to the percentiles in the
+  \code{rank_y} column, and the temporary working columns (the percentile
+  \code{p} and the distributional parameter columns) are dropped. The
+  modified \code{data.table} is returned invisibly.
+}
 \description{
 `guess_gamlss` returns a data.table with the predicted
  variable. `dtb` needs to have a column with percentiles named `rank_y`,
  where `y` the name of the predicted variable (i.e. bmi).
+}
+\examples{
+\dontrun{
+library(data.table)
+library(gamlss)
+
+dat <- data.table(year = rep(c(1L, 2L), each = 50L),
+  agegrp = runif(100, 20, 60))
+dat[, bmi := 25 + 0.05 * agegrp + rnorm(.N, 0, 2)]
+# year must be a predictor (guess_gamlss splits the unique rows by year)
+mod <- gamlss(bmi ~ agegrp + year, sigma.fo = ~1,
+  family = gamlss.dist::NO(), data = dat)
+
+dtb <- copy(dat)
+dtb[, rank_bmi := runif(.N, 0.01, 0.99)] # percentiles in (0, 1)
+guess_gamlss(dtb, mod, orig_data = copy(dat), nc = 1L)
+# dtb$bmi now holds the predicted quantiles
+}
 }

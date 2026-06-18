@@ -792,6 +792,13 @@ fqDEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' @seealso \code{\link{fdDPO}}, \code{\link{fpDPO}}, \code{\link{fqDPO}}
 #'
+#' @examples
+#' # Log normalizing constants for given mu and sigma (x sets the search range)
+#' fget_C(x = 0:5, mu = 2, sigma = 1.5)
+#'
+#' # mu and sigma are recycled to the length of the longest argument
+#' fget_C(x = 0:3, mu = c(2, 4), sigma = c(1.2, 0.8))
+#'
 #' @export
 fget_C <- function(x, mu, sigma) {
     .Call(`_CKutils_fget_C`, x, mu, sigma)
@@ -1900,6 +1907,10 @@ fpZISICHEL <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) 
 #'
 #' @return An integer vector containing the underlying integer codes without factor attributes.
 #'
+#' @examples
+#' f <- factor(c("b", "a", "c", "a"), levels = c("a", "b", "c"))
+#' fct_to_int_cpp(f)  # 2 1 3 1 (the underlying integer codes, no levels)
+#'
 #' @export
 fct_to_int_cpp <- function(x, inplace = FALSE) {
     .Call(`_CKutils_fct_to_int_cpp`, x, inplace)
@@ -1924,6 +1935,13 @@ dtsubset <- function(x, rows, cols) {
 #'
 #' @return A numeric vector containing the computed quantiles corresponding to the probabilities in \code{probs}.
 #'
+#' @examples
+#' # Quantiles of a numeric vector (NAs removed by default)
+#' fquantile(c(1, 2, 3, 4, 5, NA), probs = c(0.25, 0.5, 0.75))
+#'
+#' # Equivalent to base R quantile() with type 7
+#' fquantile(1:100, probs = c(0.1, 0.5, 0.9))
+#'
 #' @export
 fquantile <- function(x, probs, na_rm = TRUE) {
     .Call(`_CKutils_fquantile`, x, probs, na_rm)
@@ -1942,6 +1960,17 @@ fquantile <- function(x, probs, na_rm = TRUE) {
 #'
 #' @return A list where the first element is a vector of group IDs and subsequent elements are numeric vectors of computed quantiles for each group.
 #'
+#' @examples
+#' # x must be sorted by id; one quantile vector is returned per group
+#' x  <- c(1, 2, 3, 10, 20, 30)
+#' id <- c("a", "a", "a", "b", "b", "b")
+#' fquantile_byid(x, q = c(0.25, 0.5, 0.75), id = id)
+#'
+#' # The first list element holds the group ids, the rest the quantiles
+#' res <- fquantile_byid(x, q = c(0.5), id = id)
+#' res[[1]]  # group ids: "a" "b"
+#' res[[2]]  # medians per group
+#'
 #' @export
 fquantile_byid <- function(x, q, id, rounding = FALSE, na_rm = TRUE) {
     .Call(`_CKutils_fquantile_byid`, x, q, id, rounding, na_rm)
@@ -1956,6 +1985,12 @@ fquantile_byid <- function(x, q, id, rounding = FALSE, na_rm = TRUE) {
 #'
 #' @return An integer representing the number of TRUE values in the vector.
 #'
+#' @examples
+#' count_if(c(TRUE, FALSE, TRUE, TRUE))
+#'
+#' # NAs are not counted as TRUE; use na_rm to drop them first
+#' count_if(c(TRUE, FALSE, NA, TRUE), na_rm = TRUE)
+#'
 #' @export
 count_if <- function(x, na_rm = FALSE) {
     .Call(`_CKutils_count_if`, x, na_rm)
@@ -1969,6 +2004,12 @@ count_if <- function(x, na_rm = FALSE) {
 #' @param na_rm Logical flag indicating whether to remove NA values before calculating the proportion (default is false).
 #'
 #' @return A numeric value representing the proportion of TRUE values in the vector.
+#'
+#' @examples
+#' prop_if(c(TRUE, FALSE, TRUE, FALSE))  # 0.5
+#'
+#' # Drop NAs before computing the proportion
+#' prop_if(c(TRUE, FALSE, NA, TRUE), na_rm = TRUE)
 #'
 #' @export
 prop_if <- function(x, na_rm = FALSE) {
@@ -1988,6 +2029,16 @@ prop_if <- function(x, na_rm = FALSE) {
 #'
 #' @return A numeric vector with values clamped to the range [a, b].
 #'
+#' @examples
+#' # Clamp values to the default [0, 1] range
+#' fclamp(c(-1, 0.5, 2))
+#'
+#' # Custom bounds
+#' fclamp(c(-5, 0, 5, 15), a = 0, b = 10)
+#'
+#' # Bounds are recycled element-wise
+#' fclamp(c(5, 5, 5), a = c(0, 6, 0), b = c(4, 10, 10))
+#'
 #' @export
 fclamp <- function(x, a = as.numeric( c(0.0)), b = as.numeric( c(1.0)), inplace = FALSE) {
     .Call(`_CKutils_fclamp`, x, a, b, inplace)
@@ -2004,6 +2055,10 @@ fclamp <- function(x, a = as.numeric( c(0.0)), b = as.numeric( c(1.0)), inplace 
 #' @param inplace Logical flag indicating whether to modify the input vector in place (default is false).
 #'
 #' @return An integer vector with values clamped to the range [a, b].
+#'
+#' @examples
+#' # Note x must be an integer vector (use the L suffix)
+#' fclamp_int(c(-2L, 0L, 5L, 11L), a = 0L, b = 10L)
 #'
 #' @export
 fclamp_int <- function(x, a = 0L, b = 1L, inplace = FALSE) {
@@ -2022,6 +2077,13 @@ fclamp_int <- function(x, a = 0L, b = 1L, inplace = FALSE) {
 #' @return A logical value: TRUE if all non-missing elements are equal within the tolerance,
 #'         and FALSE otherwise.
 #'
+#' @examples
+#' # Tiny differences within tolerance are treated as equal
+#' fequal(c(1, 1 + 1e-9, 1 - 1e-9), tol = 1e-6)  # TRUE
+#'
+#' # Differences larger than the tolerance return FALSE
+#' fequal(c(1, 1.5, 2), tol = 1e-6)              # FALSE
+#'
 #' @export
 fequal <- function(x, tol) {
     .Call(`_CKutils_fequal`, x, tol)
@@ -2035,6 +2097,9 @@ fequal <- function(x, tol) {
 #' @param x A numeric vector to be normalised.
 #'
 #' @return A numeric vector with values scaled between 0 and 1.
+#'
+#' @examples
+#' fnormalise(c(10, 20, 30, 40))  # 0.000 0.333 0.667 1.000
 #'
 #' @export
 fnormalise <- function(x) {
@@ -2052,6 +2117,12 @@ fnormalise <- function(x) {
 #' @param y1 A numeric vector of original y values corresponding to x1.
 #'
 #' @return A numeric vector of interpolated y values corresponding to \code{xp}.
+#'
+#' @examples
+#' # Interpolate y at xp given the line segments (x0, y0) -> (x1, y1)
+#' lin_interpolation(xp = c(1.5, 2.5),
+#'                   x0 = c(1, 2), x1 = c(2, 3),
+#'                   y0 = c(10, 20), y1 = c(20, 30))  # 15 25
 #'
 #' @export
 lin_interpolation <- function(xp, x0, x1, y0, y1) {
@@ -2076,6 +2147,15 @@ lin_interpolation <- function(xp, x0, x1, y0, y1) {
 #' @param y The integer value to carry forward
 #' @param byref Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector
 #' @return An integer vector with values carried forward according to the rules
+#' @examples
+#' # Data grouped by person id and sorted by time within person
+#' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+#' mrk <- mk_new_simulant_markers(pid)  # TRUE marks the first row of each person
+#' x   <- c(0L, 5L, 0L, 0L, 5L, 0L)
+#'
+#' # Once a 5 appears it is carried forward within the same person,
+#' # but never across a person boundary (use byref = FALSE to keep x unchanged)
+#' carry_forward(x, pid_mrk = mrk, y = 5L, byref = FALSE)  # 0 5 5 0 5 0
 #' @export
 carry_forward <- function(x, pid_mrk, y, byref) {
     .Call(`_CKutils_carry_forward`, x, pid_mrk, y, byref)
@@ -2112,6 +2192,15 @@ carry_forward <- function(x, pid_mrk, y, byref) {
 #' @param y The threshold value for triggering incremental carry-forward behaviour
 #' @param byref Logical; if TRUE, modifies `x` in place, if FALSE returns a new vector
 #' @return An integer vector with incremented values carried forward according to the specified mode
+#' @examples
+#' # Data grouped by person id and sorted by time within person
+#' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+#' mrk <- mk_new_simulant_markers(pid)
+#' x   <- c(2L, 2L, 2L, 0L, 2L, 2L)
+#'
+#' # Non-recursive: once previous >= y, keep incrementing within the person
+#' carry_forward_incr(x, pid_mrk = mrk, recur = FALSE, y = 2L, byref = FALSE)
+#' # 2 3 4 0 2 2
 #' @export
 carry_forward_incr <- function(x, pid_mrk, recur, y, byref) {
     .Call(`_CKutils_carry_forward_incr`, x, pid_mrk, recur, y, byref)
@@ -2131,6 +2220,14 @@ carry_forward_incr <- function(x, pid_mrk, recur, y, byref) {
 #'   Data must be grouped by person and sorted by year/time.
 #' @param y The threshold value for backward propagation
 #' @return An integer vector with values carried backward and decremented
+#' @examples
+#' # Data grouped by person id and sorted by time within person
+#' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+#' mrk <- mk_new_simulant_markers(pid)
+#' x   <- c(0L, 0L, 3L, 0L, 0L, 2L)
+#'
+#' # Values are propagated backward within a person, decremented by 1 each step
+#' carry_backward_decr(x, pid_mrk = mrk, y = 0L)  # 1 2 3 0 0 2
 #' @export
 carry_backward_decr <- function(x, pid_mrk, y = 0L) {
     .Call(`_CKutils_carry_backward_decr`, x, pid_mrk, y)
@@ -2150,6 +2247,10 @@ carry_backward_decr <- function(x, pid_mrk, y = 0L) {
 #'
 #' @param pid An integer vector of person IDs (must be grouped by person and sorted by year/time)
 #' @return A logical vector where TRUE indicates the start of a new simulant
+#' @examples
+#' # pid must be grouped so each person's rows are contiguous
+#' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+#' mk_new_simulant_markers(pid)  # TRUE FALSE FALSE TRUE FALSE TRUE
 #' @export
 mk_new_simulant_markers <- function(pid) {
     .Call(`_CKutils_mk_new_simulant_markers`, pid)
@@ -2167,6 +2268,14 @@ mk_new_simulant_markers <- function(pid) {
 #' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
 #'   Data must be grouped by person and sorted by year/time.
 #' @return A logical vector where TRUE indicates a "long dead" individual
+#' @examples
+#' # Data grouped by person id and sorted by time within person
+#' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+#' mrk <- mk_new_simulant_markers(pid)
+#' x   <- c(0L, 1L, 1L, 0L, 1L, 0L)
+#'
+#' # A row is "long dead" if the previous (same-person) value was non-zero
+#' identify_longdead(x, pid = mrk)  # FALSE FALSE TRUE FALSE FALSE FALSE
 #' @export
 identify_longdead <- function(x, pid) {
     .Call(`_CKutils_identify_longdead`, x, pid)
@@ -2195,6 +2304,18 @@ identify_longdead <- function(x, pid) {
 #' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
 #'   Data must be grouped by person and sorted by year/time.
 #' @return An integer vector where 1 indicates an invitation should be sent, 0 otherwise, NA for missing inputs
+#' @examples
+#' # Data grouped by person id and sorted by time within person
+#' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+#' mrk <- mk_new_simulant_markers(pid)
+#'
+#' set.seed(42)
+#' elig     <- rep(1L, 6)   # everyone eligible
+#' prev_inv <- rep(0L, 6)   # no prior invitations
+#' prb      <- rep(1.0, 6)  # always invite when due
+#' freq     <- rep(2L, 6)   # at least 2 years between invitations
+#'
+#' identify_invitees(elig, prev_inv, prb, freq, pid = mrk)
 #' @export
 identify_invitees <- function(elig, prev_inv, prb, freq, pid) {
     .Call(`_CKutils_identify_invitees`, elig, prev_inv, prb, freq, pid)
@@ -2215,6 +2336,15 @@ identify_invitees <- function(elig, prev_inv, prb, freq, pid) {
 #' @param pid A logical vector marking new person IDs (TRUE for new person, FALSE otherwise).
 #'   Data must be grouped by person and sorted by year/time.
 #' @return An integer vector with updated health care effect status
+#' @examples
+#' # Data grouped by person id and sorted by time within person
+#' pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+#' mrk <- mk_new_simulant_markers(pid)
+#' x   <- c(1L, 0L, 0L, 1L, 0L, 1L)
+#'
+#' # With probability 1 the effect always continues within a person
+#' set.seed(1)
+#' hc_effect(x, prb_of_continuation = 1.0, pid = mrk)  # 1 1 1 1 1 1
 #' @export
 hc_effect <- function(x, prb_of_continuation, pid) {
     .Call(`_CKutils_hc_effect`, x, prb_of_continuation, pid)
@@ -2228,6 +2358,10 @@ hc_effect <- function(x, prb_of_continuation, pid) {
 #'
 #' @param x A numeric value to transform (can be any real number)
 #' @return A numeric value between 0 and 1 representing a probability
+#' @examples
+#' antilogit(0)        # 0.5
+#' antilogit(log(4))   # 0.8  (log-odds of 4:1)
+#' antilogit(-Inf)     # 0
 #' @export
 antilogit <- function(x) {
     .Call(`_CKutils_antilogit`, x)

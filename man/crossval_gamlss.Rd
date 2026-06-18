@@ -15,7 +15,30 @@ crossval_gamlss(dtb, gamlss_obj, orig_data = dtb, colnam = "rank")
 
 \item{colnam}{column names}
 }
+\value{
+A list with two elements: \code{observed}, a vector of the observed
+  values of the dependent variable taken from \code{dtb}, and
+  \code{predicted}, a vector of the deterministically predicted values of the
+  dependent variable (the quantiles of the fitted distribution evaluated at
+  the percentiles in column \code{colnam}). Both vectors have one element per
+  row of \code{dtb}.
+}
 \description{
 `crossval_gamlss` returns the observed and predicted values of the dependent
  variable. Useful for cross-validation metrics.
+}
+\examples{
+\dontrun{
+library(data.table)
+library(gamlss)
+
+dat <- data.table(agegrp = runif(100, 20, 60))
+dat[, bmi := 25 + 0.05 * agegrp + rnorm(.N, 0, 2)]
+mod <- gamlss(bmi ~ agegrp, sigma.fo = ~1,
+  family = gamlss.dist::NO(), data = dat)
+
+dat[, rank := runif(.N)] # column holding the percentiles (default colnam)
+cv <- crossval_gamlss(dat, mod, orig_data = dat, colnam = "rank")
+str(cv)            # list(observed = ..., predicted = ...)
+}
 }
