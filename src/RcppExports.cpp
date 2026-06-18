@@ -10,6 +10,74 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// cklut_open_cpp
+SEXP cklut_open_cpp(std::string meta_path, bool warm);
+RcppExport SEXP _CKutils_cklut_open_cpp(SEXP meta_pathSEXP, SEXP warmSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type meta_path(meta_pathSEXP);
+    Rcpp::traits::input_parameter< bool >::type warm(warmSEXP);
+    rcpp_result_gen = Rcpp::wrap(cklut_open_cpp(meta_path, warm));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cklut_schema_cpp
+List cklut_schema_cpp(SEXP xp);
+RcppExport SEXP _CKutils_cklut_schema_cpp(SEXP xpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xp(xpSEXP);
+    rcpp_result_gen = Rcpp::wrap(cklut_schema_cpp(xp));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cklut_rownum_cpp
+NumericVector cklut_rownum_cpp(SEXP xp, List keys);
+RcppExport SEXP _CKutils_cklut_rownum_cpp(SEXP xpSEXP, SEXP keysSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xp(xpSEXP);
+    Rcpp::traits::input_parameter< List >::type keys(keysSEXP);
+    rcpp_result_gen = Rcpp::wrap(cklut_rownum_cpp(xp, keys));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cklut_gather_cpp
+List cklut_gather_cpp(SEXP xp, SEXP rownum);
+RcppExport SEXP _CKutils_cklut_gather_cpp(SEXP xpSEXP, SEXP rownumSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xp(xpSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type rownum(rownumSEXP);
+    rcpp_result_gen = Rcpp::wrap(cklut_gather_cpp(xp, rownum));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cklut_build_cpp
+void cklut_build_cpp(std::string out_base, CharacterVector dim_names, LogicalVector dim_is_string, NumericVector dim_min, NumericVector dim_size, List dim_cats, List dim_index, CharacterVector value_names, IntegerVector value_types, List value_data, List value_levels, double max_bytes);
+RcppExport SEXP _CKutils_cklut_build_cpp(SEXP out_baseSEXP, SEXP dim_namesSEXP, SEXP dim_is_stringSEXP, SEXP dim_minSEXP, SEXP dim_sizeSEXP, SEXP dim_catsSEXP, SEXP dim_indexSEXP, SEXP value_namesSEXP, SEXP value_typesSEXP, SEXP value_dataSEXP, SEXP value_levelsSEXP, SEXP max_bytesSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type out_base(out_baseSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type dim_names(dim_namesSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type dim_is_string(dim_is_stringSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dim_min(dim_minSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dim_size(dim_sizeSEXP);
+    Rcpp::traits::input_parameter< List >::type dim_cats(dim_catsSEXP);
+    Rcpp::traits::input_parameter< List >::type dim_index(dim_indexSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type value_names(value_namesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type value_types(value_typesSEXP);
+    Rcpp::traits::input_parameter< List >::type value_data(value_dataSEXP);
+    Rcpp::traits::input_parameter< List >::type value_levels(value_levelsSEXP);
+    Rcpp::traits::input_parameter< double >::type max_bytes(max_bytesSEXP);
+    cklut_build_cpp(out_base, dim_names, dim_is_string, dim_min, dim_size, dim_cats, dim_index, value_names, value_types, value_data, value_levels, max_bytes);
+    return R_NilValue;
+END_RCPP
+}
 // tableRcpp
 IntegerVector tableRcpp(SEXP x);
 RcppExport SEXP _CKutils_tableRcpp(SEXP xSEXP) {
@@ -973,6 +1041,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_CKutils_cklut_open_cpp", (DL_FUNC) &_CKutils_cklut_open_cpp, 2},
+    {"_CKutils_cklut_schema_cpp", (DL_FUNC) &_CKutils_cklut_schema_cpp, 1},
+    {"_CKutils_cklut_rownum_cpp", (DL_FUNC) &_CKutils_cklut_rownum_cpp, 2},
+    {"_CKutils_cklut_gather_cpp", (DL_FUNC) &_CKutils_cklut_gather_cpp, 2},
+    {"_CKutils_cklut_build_cpp", (DL_FUNC) &_CKutils_cklut_build_cpp, 12},
     {"_CKutils_tableRcpp", (DL_FUNC) &_CKutils_tableRcpp, 1},
     {"_CKutils_counts", (DL_FUNC) &_CKutils_counts, 1},
     {"_CKutils_fdBCPEo", (DL_FUNC) &_CKutils_fdBCPEo, 6},

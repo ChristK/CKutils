@@ -1,0 +1,15 @@
+# build output
+build/
+cmake-build-*/
+*.o
+*.obj
+*.exe
+
+# generated lookup-table artifacts
+*.ckmeta
+*.ckdat
+*.lut
+
+# compiled benchmark binaries
+bench/bench
+bench/bench_mt
