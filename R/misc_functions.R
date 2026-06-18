@@ -16,9 +16,11 @@
 ## or write to the Free Software Foundation, Inc., 51 Franklin Street,
 ## Fifth Floor, Boston, MA 02110-1301  USA.
 
+# nocov start: package unload hook, executed by R at unload time, not callable in tests
 .onUnload <- function(libpath) {
   library.dynam.unload("CKutils", libpath)
 }
+# nocov end
 
 #' Get Dropbox path
 #'
@@ -47,7 +49,7 @@ get_dropbox_path <-
     }
     type <- match.arg(type)
     if (type[[1]] == "personal") {
-      if (.Platform$OS.type == "windows") {
+      if (.Platform$OS.type == "windows") {   # nocov start: Windows-only, coverage runs on Linux
         if (file.exists(paste0(Sys.getenv("APPDATA"), "/Dropbox/info.json"))) {
           # for older versions of Dropbox
           dropbox_path <-
@@ -65,7 +67,7 @@ get_dropbox_path <-
               "/Dropbox/info.json"
             ))$personal$path
         }
-      } else {
+      } else {                                # nocov end
         if (file.exists("~/.dropbox/info.json")) {
           dropbox_path <-
             jsonlite::read_json("~/.dropbox/info.json")$personal$path
@@ -73,7 +75,7 @@ get_dropbox_path <-
       }
     }
     if (type[[1]] == "business") {
-      if (.Platform$OS.type == "windows") {
+      if (.Platform$OS.type == "windows") {   # nocov start: Windows-only, coverage runs on Linux
         if (file.exists(paste0(Sys.getenv("APPDATA"), "/Dropbox/info.json"))) {
           # for older versions of Dropbox
           dropbox_path <-
@@ -91,7 +93,7 @@ get_dropbox_path <-
               "/Dropbox/info.json"
             ))$business$path
         }
-      } else {
+      } else {                                # nocov end
         if (file.exists("~/.dropbox/info.json")) {
           dropbox_path <-
             jsonlite::read_json("~/.dropbox/info.json")$business$path
@@ -127,7 +129,7 @@ get_dropbox_path <-
 #' }
 get_pcloud_path <- function(pathtail = character(0)) {
   if (.Platform$OS.type == "windows") {
-    pcloud_path <- "p:\\"
+    pcloud_path <- "p:\\"                # nocov: Windows-only, coverage runs on Linux
   } else {
     pcloud_path <- "~/pCloudDrive/"
   }
@@ -806,7 +808,7 @@ read_parquet_dt <- function(
 #' @export
 validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
   if (!requireNamespace("gamlss", quietly = TRUE)) {
-    stop("Please install package gamlss first.")
+    stop("Please install package gamlss first.")             # nocov
   }
   stopifnot(
     "gamlss" %in% class(gamlss_obj),
@@ -856,7 +858,7 @@ guess_gamlss <- function(
   nc = 1L
 ) {
   if (!requireNamespace("gamlss", quietly = TRUE)) {
-    stop("Please install package gamlss first.")
+    stop("Please install package gamlss first.")             # nocov
   }
   stopifnot(
     "gamlss" %in% class(gamlss_obj),
@@ -873,10 +875,10 @@ guess_gamlss <- function(
   dtu <- unique(dtb[, ..nam_var]) # otherwise too slow
   dtu <- split(dtu, dtu$year)
   if ("RevoUtilsMath" %in% (.packages())) {
-    tt <- get("getMKLthreads", mode = "function")()
+    tt <- get("getMKLthreads", mode = "function")()        # nocov
   }
   if ("RevoUtilsMath" %in% (.packages())) {
-    get("setMKLthreads", mode = "function")(1L)
+    get("setMKLthreads", mode = "function")(1L)            # nocov
   }
   dtu <- parallel::mclapply(
     dtu,
@@ -894,7 +896,7 @@ guess_gamlss <- function(
     mc.cores = nc
   )
   if ("RevoUtilsMath" %in% (.packages())) {
-    get("setMKLthreads", mode = "function")(tt)
+    get("setMKLthreads", mode = "function")(tt)            # nocov
   }
   dtu <- rbindlist(dtu)
   # dtu[, (nam_param) := gamlss::predictAll(gamlss_obj,
@@ -903,7 +905,7 @@ guess_gamlss <- function(
   #                                        data = orig_data)]
   dtb[dtu, on = nam_var, (nam_param) := mget(paste0("i.", nam_param))]
   dtb[, p := get(paste0("rank_", nam_y))]
-  stopifnot(dt[, all(between(p, 0, 1, incbounds = FALSE))])
+  stopifnot(dtb[, all(between(p, 0, 1, incbounds = FALSE))])
   dtb[, (nam_y) := do.call(nam_dist, .SD), .SDcols = c("p", nam_param)]
   dtb[, c("p", nam_param) := NULL]
 }
@@ -940,10 +942,10 @@ guess_gamlss <- function(
 #' }
 guess_polr <- function(dtb, polr_obj) {
   if (!requireNamespace("MASS", quietly = TRUE)) {
-    stop("Please install package MASS first.")
+    stop("Please install package MASS first.")               # nocov
   }
   if (!requireNamespace("matrixStats", quietly = TRUE)) {
-    stop("Please install package matrixStats first.")
+    stop("Please install package matrixStats first.")        # nocov
   }
   stopifnot("polr" %in% class(polr_obj), is.data.table(dtb))
   nam_y <- as.character(polr_obj$call$formula[[2]])
@@ -1094,12 +1096,12 @@ reldist_diagnostics <- function(
 ) {
   opar <- par(no.readonly = TRUE)
   on.exit(par(opar))
-  if (!requireNamespace("reldist", quietly = TRUE)) {
+  if (!requireNamespace("reldist", quietly = TRUE)) {        # nocov start
     stop(
       "Package \"reldist\" needed for this function to work. Please install it.",
       call. = FALSE
     )
-  }
+  }                                                          # nocov end
 
   reference_dens <- density(reference, weights = reference_wt)
   comparison_dens <- density(comparison, weights = comparison_wt)

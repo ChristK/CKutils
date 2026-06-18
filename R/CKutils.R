@@ -50,6 +50,7 @@
 .datatable.aware = TRUE
 
 # Initialize data.table API when package loads
+# nocov start: package load hook, executed by R at load time, not callable in tests
 .onLoad <- function(libname, pkgname) {
   # Initialize the data.table API for C++ functions
   if (!requireNamespace("data.table", quietly = TRUE)) {
@@ -69,10 +70,11 @@
     }
   }, error = function(e) {
     # Don't fail package loading if data.table initialization fails
-    warning("data.table initialization failed: ", e$message, 
+    warning("data.table initialization failed: ", e$message,
             ". Some functions may not work properly.")
   })
 }
+# nocov end
 
 # Prevent R CMD check from complaining about the use of pipe expressions
 # standard data.table variables

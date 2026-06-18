@@ -48,9 +48,9 @@ IntegerVector fct_to_int_cpp(SEXP x, bool inplace = false)
     }
     
     // Check if the factor has valid length
-    if (Rf_length(x) < 0) {
+    if (Rf_length(x) < 0) {        // # nocov start: R object length is never negative
         stop("Invalid factor length");
-    }
+    }                              // # nocov end
     
     IntegerVector result;
     if (inplace)
@@ -146,11 +146,11 @@ IntegerVector starts_from_1_cpp(DataFrame tbl, CharacterVector on, int i, List m
             }
             
             // Check for potential integer overflow/underflow
-            if (coldata[j] == INT_MIN || (coldata[j] - offset) < INT_MIN || (coldata[j] - offset) > INT_MAX) {
+            if (coldata[j] == INT_MIN || (coldata[j] - offset) < INT_MIN || (coldata[j] - offset) > INT_MAX) {  // # nocov start: defensive overflow guard, NA already handled
                 out[j] = NA_INTEGER;
                 continue;
-            }
-            
+            }                                                                                                    // # nocov end
+
             int val = coldata[j] - offset;
             if (val < 1 || val > card)
                 out[j] = NA_INTEGER;

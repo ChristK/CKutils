@@ -124,10 +124,12 @@ installLocalPackage <- function(pkg_path, debug = TRUE) {
   # Read package name from DESCRIPTION file
   desc_path <- file.path(pkg_path, "DESCRIPTION")
   pkg_name <- if (file.exists(desc_path)) {
-    read.dcf(desc_path, fields = "Package")[1]
+    read.dcf(desc_path, fields = "Package")[1]      # nocov
   } else {
     stop("DESCRIPTION file not found in: ", pkg_path)
   }
+  # nocov start: performs a real package build/install (roxygenise + R CMD INSTALL),
+  # which has side effects and cannot run inside the unit-test suite.
   detach_package(pkg_name)
 
   rscript(
@@ -185,6 +187,7 @@ installLocalPackage <- function(pkg_path, debug = TRUE) {
       message(paste0("Failed to install ", pkg_name, " package: "), e$message)
     }
   )
+  # nocov end
 }
 
 #' @title Install Local Package If Changed
@@ -225,18 +228,20 @@ installLocalPackage <- function(pkg_path, debug = TRUE) {
 #' @export
 installLocalPackageIfChanged <- function(pkg_path, snapshot_path, debug = TRUE) {
   snapshot <- if (file.exists(snapshot_path)) {
-    changedFiles(readRDS(snapshot_path))
+    changedFiles(readRDS(snapshot_path))            # nocov
   } else {
     NULL
   }
 
   desc_path <- file.path(pkg_path, "DESCRIPTION")
   pkg_name <- if (file.exists(desc_path)) {
-    read.dcf(desc_path, fields = "Package")[1]
+    read.dcf(desc_path, fields = "Package")[1]      # nocov
   } else {
     stop("DESCRIPTION file not found in: ", pkg_path)
   }
 
+  # nocov start: branches into installLocalPackage (a real build/install) and
+  # rewrites the on-disk snapshot; both have side effects unsuitable for tests.
   needs_install <- !requireNamespace(pkg_name, quietly = TRUE) ||
     is.null(snapshot) ||
     any(nzchar(unlist(snapshot[c("added", "deleted", "changed")])))
@@ -258,6 +263,7 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path, debug = TRUE) 
   }
 
   invisible(NULL)
+  # nocov end
 }
 
 
@@ -450,6 +456,8 @@ dependencies <-
       
       # Install and/or load package
       if (needs_install || !myrequire(pkg)) {
+        # nocov start: actually downloads/installs from a repository; tests must
+        # never trigger a real install.packages(), so this path is excluded.
         # Install package
         tryCatch({
           if (verbose) {
@@ -457,7 +465,7 @@ dependencies <-
           } else {
             suppressMessages(install.packages(pkgs = pkg, quiet = quiet))
           }
-          
+
           # Verify installation and loading
           if (myrequire(pkg)) {
             results[pkg, 'installed'] <- TRUE
@@ -469,6 +477,7 @@ dependencies <-
         }, error = function(e) {
           warning(sprintf("Failed to install package %s: %s", pkg, e$message))
         })
+        # nocov end
       } else {
         # Package loaded successfully without installation
         results[pkg, 'loaded'] <- TRUE

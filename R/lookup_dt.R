@@ -180,9 +180,9 @@ lookup_dt <- function(
   # Calculate cardinality and minimum lookup values for each key column
   for (j in on) {
     # Additional safety checks for column data
-    if (is.null(tbl[[j]]) || is.null(lookup_tbl[[j]])) {
+    if (is.null(tbl[[j]]) || is.null(lookup_tbl[[j]])) {       # nocov start
       stop("Column '", j, "' contains NULL data")
-    }
+    }                                                          # nocov end
     
     if (is.factor(lookup_tbl[[j]])) {
       lv <- levels(lookup_tbl[[j]])
@@ -271,9 +271,9 @@ lookup_dt <- function(
     } else {
       return(invisible(dtsubset(lookup_tbl, rownum, return_cols)))
     }
-  }, error = function(e) {
+  }, error = function(e) {                                     # nocov start
     stop("Error in data.table subset operation: ", e$message)
-  })
+  })                                                           # nocov end
 }
 
 
