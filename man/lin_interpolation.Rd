@@ -23,3 +23,10 @@ A numeric vector of interpolated y values corresponding to \code{xp}.
 \description{
 This function performs linear interpolation for a set of points.
 }
+\examples{
+# Interpolate y at xp given the line segments (x0, y0) -> (x1, y1)
+lin_interpolation(xp = c(1.5, 2.5),
+                  x0 = c(1, 2), x1 = c(2, 3),
+                  y0 = c(10, 20), y1 = c(20, 30))  # 15 25
+
+}

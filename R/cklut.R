@@ -62,6 +62,16 @@
 #'
 #' @return Invisibly, a \code{cklut} handle (as returned by \code{\link{cklut_open}}).
 #' @seealso \code{\link{cklut_lookup}}, \code{\link{cklut_to_csv}}
+#' @examples
+#' library(data.table)
+#' # A dense grid: every combination of the key columns appears exactly once.
+#' dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+#' dt[, rate := year / 1000 + (sex == "men")]
+#' base <- tempfile("cklut")
+#' ck <- cklut_build(dt, base, keys = c("year", "sex"))
+#' ck                       # a <cklut> handle
+#' cklut_lookup(data.table(year = 2016L, sex = factor("men", levels = c("men", "women"))),
+#'              ck, merge = FALSE)
 #' @export
 cklut_build <- function(x, out_base, keys, values = NULL,
                         value_types = NULL, max_bytes = 100 * 1024^2,
@@ -157,6 +167,16 @@ cklut_build <- function(x, out_base, keys, values = NULL,
 #'   page cache before returning (good for latency-sensitive repeated use that
 #'   fits in RAM). Default \code{FALSE} keeps the lazy, demand-paged behaviour.
 #' @return A \code{cklut} handle.
+#' @examples
+#' library(data.table)
+#' dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+#' dt[, value := year + (sex == "men")]
+#' base <- tempfile("cklut")
+#' ck <- cklut_build(dt, base, keys = c("year", "sex"))
+#'
+#' # reopen the table from its manifest
+#' ck2 <- cklut_open(paste0(base, ".ckmeta"))
+#' ck2
 #' @export
 cklut_open <- function(meta_path, warm = FALSE) {
   xp <- cklut_open_cpp(meta_path, warm)
@@ -209,6 +229,24 @@ print.cklut <- function(x, ...) {
 #'   Otherwise a \code{data.table} (or list, if \code{as.data.table=FALSE}) of
 #'   the value columns, one row per row of \code{tbl}.
 #' @seealso \code{\link{lookup_dt}}, \code{\link{cklut_build}}
+#' @examples
+#' library(data.table)
+#' dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+#' dt[, value := year + (sex == "men")]
+#' base <- tempfile("cklut")
+#' ck <- cklut_build(dt, base, keys = c("year", "sex"))
+#'
+#' # a small query table
+#' q <- data.table(
+#'   year = c(2015L, 2018L),
+#'   sex  = factor(c("men", "women"), levels = c("men", "women")))
+#'
+#' # merge = FALSE returns just the looked-up value columns
+#' cklut_lookup(q, ck, merge = FALSE)
+#'
+#' # merge = TRUE adds the value columns to the query table (by reference)
+#' cklut_lookup(q, ck, merge = TRUE)
+#' q
 #' @export
 cklut_lookup <- function(tbl, ck, merge = TRUE, exclude_col = NULL,
                          as.data.table = TRUE, check = TRUE) {
@@ -262,6 +300,15 @@ cklut_lookup <- function(tbl, ck, merge = TRUE, exclude_col = NULL,
 #'
 #' @param ck A \code{cklut} handle or path to a \code{.ckmeta} file.
 #' @return A \code{data.table} with the key and value columns.
+#' @examples
+#' library(data.table)
+#' dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+#' dt[, value := year + (sex == "men")]
+#' base <- tempfile("cklut")
+#' ck <- cklut_build(dt, base, keys = c("year", "sex"))
+#'
+#' # read the whole dense table back into memory
+#' cklut_to_dt(ck)
 #' @export
 cklut_to_dt <- function(ck) {
   if (is.character(ck)) ck <- cklut_open(ck)
@@ -281,6 +328,17 @@ cklut_to_dt <- function(ck) {
 #' @param path Output \code{.csv} path.
 #' @param ... Passed to \code{data.table::fwrite}.
 #' @return Invisibly, \code{path}.
+#' @examples
+#' library(data.table)
+#' dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+#' dt[, value := year + (sex == "men")]
+#' base <- tempfile("cklut")
+#' ck <- cklut_build(dt, base, keys = c("year", "sex"))
+#'
+#' # export the full table to a CSV file
+#' csv <- tempfile(fileext = ".csv")
+#' cklut_to_csv(ck, csv)
+#' file.exists(csv)
 #' @export
 cklut_to_csv <- function(ck, path, ...) {
   data.table::fwrite(cklut_to_dt(ck), path, ...)
@@ -296,6 +354,17 @@ cklut_to_csv <- function(ck, path, ...) {
 #' @param path Output \code{.parquet} path.
 #' @param ... Passed to \code{write_parquet_dt}.
 #' @return Invisibly, \code{path}.
+#' @examples
+#' library(data.table)
+#' dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+#' dt[, value := year + (sex == "men")]
+#' base <- tempfile("cklut")
+#' ck <- cklut_build(dt, base, keys = c("year", "sex"))
+#'
+#' # export the full table to a Parquet file
+#' pq <- tempfile(fileext = ".parquet")
+#' cklut_to_parquet(ck, pq)
+#' file.exists(pq)
 #' @export
 cklut_to_parquet <- function(ck, path, ...) {
   write_parquet_dt(cklut_to_dt(ck), path, ...)

@@ -18,3 +18,7 @@ A numeric vector with values scaled between 0 and 1, or a single value 1 if all 
 This function normalises a numeric vector so that its values are scaled to lie within the 0 to 1 range.
 If all elements in the vector are identical, the function returns 1.
 }
+\examples{
+normalise(c(2, 4, 6, 8))   # -> 0.0 0.3333 0.6667 1.0
+normalise(c(5, 5, 5))      # all identical -> 1
+}

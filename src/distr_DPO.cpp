@@ -293,6 +293,13 @@ double fdDPO_scalar(const int& x,
 //'
 //' @seealso \code{\link{fdDPO}}, \code{\link{fpDPO}}, \code{\link{fqDPO}}
 //'
+//' @examples
+//' # Log normalizing constants for given mu and sigma (x sets the search range)
+//' fget_C(x = 0:5, mu = 2, sigma = 1.5)
+//'
+//' # mu and sigma are recycled to the length of the longest argument
+//' fget_C(x = 0:3, mu = c(2, 4), sigma = c(1.2, 0.8))
+//'
 //' @export
 // [[Rcpp::export]]
 NumericVector fget_C(const IntegerVector& x,

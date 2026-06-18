@@ -20,3 +20,8 @@ to its underlying integer representation by stripping away the factor's levels a
 By default, the function does not modify the input by reference (a copy is made), but if `inplace`
 is set to `true`, the function will modify the input directly.
 }
+\examples{
+f <- factor(c("b", "a", "c", "a"), levels = c("a", "b", "c"))
+fct_to_int_cpp(f)  # 2 1 3 1 (the underlying integer codes, no levels)
+
+}

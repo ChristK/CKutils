@@ -4,8 +4,14 @@
 \alias{cklut_lookup}
 \title{Look up values from a cklut table (a drop-in for lookup_dt)}
 \usage{
-cklut_lookup(tbl, ck, merge = TRUE, exclude_col = NULL,
-  as.data.table = TRUE, check = TRUE)
+cklut_lookup(
+  tbl,
+  ck,
+  merge = TRUE,
+  exclude_col = NULL,
+  as.data.table = TRUE,
+  check = TRUE
+)
 }
 \arguments{
 \item{tbl}{A \code{data.table} (or data.frame) whose key columns are matched.}
@@ -29,17 +35,35 @@ vectors is returned (cheaper if you only need the vectors).}
 have no match.}
 }
 \value{
-If \code{merge=TRUE}, \code{tbl} with the value columns added. Otherwise a
-\code{data.table} (or list, if \code{as.data.table=FALSE}) of the value
-columns, one row per row of \code{tbl}.
+If \code{merge=TRUE}, \code{tbl} with the value columns added.
+  Otherwise a \code{data.table} (or list, if \code{as.data.table=FALSE}) of
+  the value columns, one row per row of \code{tbl}.
 }
 \description{
 Matches each row of \code{tbl} against the key columns of a cklut table and
 returns the corresponding value columns. Mirrors \code{\link{lookup_dt}}:
-\code{"year"} is prioritised among the key columns and rows with no match
-return \code{NA}. Values are read straight from the memory-mapped file, so the
-table can be larger than RAM and there is no per-call rebuild.
+common columns between \code{tbl} and the table's keys form the join, with
+\code{"year"} prioritised; rows with no match return \code{NA}.
+}
+\examples{
+library(data.table)
+dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+dt[, value := year + (sex == "men")]
+base <- tempfile("cklut")
+ck <- cklut_build(dt, base, keys = c("year", "sex"))
+
+# a small query table
+q <- data.table(
+  year = c(2015L, 2018L),
+  sex  = factor(c("men", "women"), levels = c("men", "women")))
+
+# merge = FALSE returns just the looked-up value columns
+cklut_lookup(q, ck, merge = FALSE)
+
+# merge = TRUE adds the value columns to the query table (by reference)
+cklut_lookup(q, ck, merge = TRUE)
+q
 }
 \seealso{
-\code{\link{lookup_dt}}, \code{\link{cklut_build}}, \code{\link{cklut_open}}
+\code{\link{lookup_dt}}, \code{\link{cklut_build}}
 }

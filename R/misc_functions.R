@@ -805,6 +805,20 @@ read_parquet_dt <- function(
 #' @param mc Number of Monte Carlo simulations, by default 10L
 #' @param orig_data Initial data.table, defaults to \code{dtb}
 #' @return A data.table with observed and predicted variables
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#' library(gamlss)
+#'
+#' dat <- data.table(agegrp = runif(100, 20, 60))
+#' dat[, bmi := 25 + 0.05 * agegrp + rnorm(.N, 0, 2)]
+#' mod <- gamlss(bmi ~ agegrp, sigma.fo = ~1,
+#'   family = gamlss.dist::NO(), data = dat)
+#'
+#' # mc Monte Carlo draws stacked under the observed rows ("type" column)
+#' vg <- validate_gamlss(copy(dat), mod, mc = 5L, orig_data = copy(dat))
+#' vg[, .N, by = type]
+#' }
 #' @export
 validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
   if (!requireNamespace("gamlss", quietly = TRUE)) {
@@ -850,6 +864,29 @@ validate_gamlss <- function(dtb, gamlss_obj, mc = 10L, orig_data = dtb) {
 #' @param gamlss_obj gamlss object
 #' @param orig_data original data.table
 #' @param nc by default = 1L
+#' @return The input \code{data.table} \code{dtb}, modified by reference: the
+#'   outcome column (named after the model's dependent variable) is replaced by
+#'   the predicted quantiles corresponding to the percentiles in the
+#'   \code{rank_y} column, and the temporary working columns (the percentile
+#'   \code{p} and the distributional parameter columns) are dropped. The
+#'   modified \code{data.table} is returned invisibly.
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#' library(gamlss)
+#'
+#' dat <- data.table(year = rep(c(1L, 2L), each = 50L),
+#'   agegrp = runif(100, 20, 60))
+#' dat[, bmi := 25 + 0.05 * agegrp + rnorm(.N, 0, 2)]
+#' # year must be a predictor (guess_gamlss splits the unique rows by year)
+#' mod <- gamlss(bmi ~ agegrp + year, sigma.fo = ~1,
+#'   family = gamlss.dist::NO(), data = dat)
+#'
+#' dtb <- copy(dat)
+#' dtb[, rank_bmi := runif(.N, 0.01, 0.99)] # percentiles in (0, 1)
+#' guess_gamlss(dtb, mod, orig_data = copy(dat), nc = 1L)
+#' # dtb$bmi now holds the predicted quantiles
+#' }
 #' @export
 guess_gamlss <- function(
   dtb,
@@ -988,6 +1025,26 @@ guess_polr <- function(dtb, polr_obj) {
 #' @param gamlss_obj a gamlss object
 #' @param orig_data original data.table
 #' @param colnam column names
+#' @return A list with two elements: \code{observed}, a vector of the observed
+#'   values of the dependent variable taken from \code{dtb}, and
+#'   \code{predicted}, a vector of the deterministically predicted values of the
+#'   dependent variable (the quantiles of the fitted distribution evaluated at
+#'   the percentiles in column \code{colnam}). Both vectors have one element per
+#'   row of \code{dtb}.
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#' library(gamlss)
+#'
+#' dat <- data.table(agegrp = runif(100, 20, 60))
+#' dat[, bmi := 25 + 0.05 * agegrp + rnorm(.N, 0, 2)]
+#' mod <- gamlss(bmi ~ agegrp, sigma.fo = ~1,
+#'   family = gamlss.dist::NO(), data = dat)
+#'
+#' dat[, rank := runif(.N)] # column holding the percentiles (default colnam)
+#' cv <- crossval_gamlss(dat, mod, orig_data = dat, colnam = "rank")
+#' str(cv)            # list(observed = ..., predicted = ...)
+#' }
 #' @export
 crossval_gamlss <- function(dtb, gamlss_obj, orig_data = dtb, colnam = "rank") {
   stopifnot(
@@ -1034,6 +1091,11 @@ crossval_gamlss <- function(dtb, gamlss_obj, orig_data = dtb, colnam = "rank") {
 #' @param x A numeric, integer, character or logical vector, or a (potentially
 #'   nested) list of such vectors. If \code{x} is a list, we recursively apply
 #'   \code{counts} throughout elements in the list.
+#' @return A named integer vector giving the count of each unique value in
+#'   \code{x} (including \code{NA}/\code{NaN} when present), with the names being
+#'   the unique values. When \code{x} is a list, a (possibly nested) list of such
+#'   named integer vectors, obtained by recursively applying \code{counts} to
+#'   each element.
 #' @export
 #' @examples
 #' x <- round( rnorm(1E2), 1 )
@@ -1056,6 +1118,8 @@ counts <- function(x) {
 #' This is based on `data.table:::patterns`
 #' @param dtb A data.table from which the column names \code{names(dtb)} or \code{colnames(dtb)} will be tested
 #' @param ... A list of the names to match with the data.table ones. Needs to be made of character otherwise the function stops
+#' @return A character vector of the column names of \code{dtb} (i.e. elements of
+#'   \code{names(dtb)}) that match the supplied regular expression pattern(s).
 #' @export
 #' @examples
 #' library(data.table)
@@ -1084,6 +1148,29 @@ match_colnames_pattern <- function(dtb, ...) {
 #' @param main the main part
 #' @param smooth smooth object
 #' @param discrete discrete value
+#' @return A \code{data.table} with one row per summary statistic of the
+#'   location/shape decomposition of the relative distribution (overall change
+#'   entropy, median effect entropy, shape effect entropy, and the median, lower
+#'   and upper polarization indices) and columns \code{"Summary statistics"},
+#'   \code{"Measure"}, \code{"Lower 95\% CI"}, \code{"Upper 95\% CI"} and
+#'   \code{"p-value"}. As a side effect, the function also draws diagnostic plots
+#'   (the comparison vs. reference densities and the overall, median-shift and
+#'   median-adjusted relative density plots).
+#' @examples
+#' \dontrun{
+#' set.seed(99L)
+#' reference <- rnorm(400, 0, 1)
+#' comparison <- rnorm(400, 0.4, 1.1)
+#' reldist_diagnostics(
+#'   comparison = comparison,
+#'   reference = reference,
+#'   comparison_wt = rep(1, length(comparison)),
+#'   reference_wt = rep(1, length(reference)),
+#'   main = "Modelled vs Observed",
+#'   smooth = 0.35,
+#'   discrete = FALSE
+#' )
+#' }
 #' @export
 reldist_diagnostics <- function(
   comparison,
@@ -1353,6 +1440,9 @@ resample <-
 #'
 #' @return A logical value indicating whether all elements in \code{x} are identical.
 #'
+#' @examples
+#' identical_elements(c(3, 3, 3))        # TRUE
+#' identical_elements(c(3, 3, 3.0001))   # FALSE
 #' @export
 identical_elements <-
   function(x, tol = .Machine$double.eps^0.5) {
@@ -1371,6 +1461,9 @@ identical_elements <-
 #'
 #' @return A numeric vector with values scaled between 0 and 1, or a single value 1 if all elements are identical.
 #'
+#' @examples
+#' normalise(c(2, 4, 6, 8))   # -> 0.0 0.3333 0.6667 1.0
+#' normalise(c(5, 5, 5))      # all identical -> 1
 #' @export
 normalise <-
   function(x, ...) {
@@ -1423,6 +1516,10 @@ csv_to_fst <- function(csv_files, compression = 100L, delete_csv = FALSE) {
 #' @param inplace Logical. If TRUE, the clamping operation is performed in-place; otherwise, a new vector is returned.
 #'
 #' @return A numeric vector with values clamped to the interval [a, b].
+#' @examples
+#' clamp(c(-1, 0.5, 2))          # default bounds [0, 1]
+#' clamp(c(-5, 0, 5, 10), a = 0, b = 6)
+#' clamp(c(-5L, 0L, 5L, 10L), a = 0, b = 6) # integer input
 #' @export
 clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
   stopifnot(is.numeric(a), is.numeric(b), is.logical(inplace))
@@ -1445,7 +1542,15 @@ clamp <- function(x, a = 0, b = 1, inplace = FALSE) {
 #'
 #' @param path A string scalar. The root folder where the folder structure will
 #' be created.
-#' @return NULL
+#' @return Called for its side effect of creating the IMPACTncd folder structure
+#'   (the \code{inputs}, \code{processed_inputs}, \code{simulation},
+#'   \code{outputs}, \code{validation}, \code{gui} and \code{logs}
+#'   sub-directories) under \code{path}. Returns \code{NULL} invisibly.
+#' @examples
+#' demo_path <- file.path(tempdir(), "impactncd_demo")
+#' gnrt_folder_structure(demo_path)
+#' list.dirs(demo_path, recursive = FALSE)
+#' unlink(demo_path, recursive = TRUE) # clean up
 #' @export
 
 gnrt_folder_structure <- function(path = getwd()) {
@@ -1475,7 +1580,13 @@ gnrt_folder_structure <- function(path = getwd()) {
     "population" = file.path(fldr_strc$inputs$open_data, "population")
   )
 
-  NULL
+  # Create every leaf directory (recursive = TRUE also creates parents).
+  dirs <- unlist(fldr_strc, use.names = FALSE)
+  for (d in dirs) {
+    dir.create(d, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  return(invisible(NULL))
 }
 
 

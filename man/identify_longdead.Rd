@@ -23,3 +23,12 @@ value being non-zero and the current position not being a new person ID.
 **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
 This ensures proper temporal sequencing for identifying long-dead status.
 }
+\examples{
+# Data grouped by person id and sorted by time within person
+pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+mrk <- mk_new_simulant_markers(pid)
+x   <- c(0L, 1L, 1L, 0L, 1L, 0L)
+
+# A row is "long dead" if the previous (same-person) value was non-zero
+identify_longdead(x, pid = mrk)  # FALSE FALSE TRUE FALSE FALSE FALSE
+}

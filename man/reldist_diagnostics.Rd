@@ -29,7 +29,33 @@ reldist_diagnostics(
 
 \item{discrete}{discrete value}
 }
+\value{
+A \code{data.table} with one row per summary statistic of the
+  location/shape decomposition of the relative distribution (overall change
+  entropy, median effect entropy, shape effect entropy, and the median, lower
+  and upper polarization indices) and columns \code{"Summary statistics"},
+  \code{"Measure"}, \code{"Lower 95\% CI"}, \code{"Upper 95\% CI"} and
+  \code{"p-value"}. As a side effect, the function also draws diagnostic plots
+  (the comparison vs. reference densities and the overall, median-shift and
+  median-adjusted relative density plots).
+}
 \description{
 `reldist_diagnostics` Summary statistics for the location/shape decomposition of the relative
 distribution of the exposure: Modelled to Observed."
+}
+\examples{
+\dontrun{
+set.seed(99L)
+reference <- rnorm(400, 0, 1)
+comparison <- rnorm(400, 0.4, 1.1)
+reldist_diagnostics(
+  comparison = comparison,
+  reference = reference,
+  comparison_wt = rep(1, length(comparison)),
+  reference_wt = rep(1, length(reference)),
+  main = "Modelled vs Observed",
+  smooth = 0.35,
+  discrete = FALSE
+)
+}
 }

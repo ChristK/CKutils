@@ -24,3 +24,15 @@ A list where the first element is a vector of group IDs and subsequent elements 
 This function computes quantiles for subsets of a numeric vector defined by an ID vector.
 The input vector must be sorted by the ID vector. Optionally, the results can be rounded.
 }
+\examples{
+# x must be sorted by id; one quantile vector is returned per group
+x  <- c(1, 2, 3, 10, 20, 30)
+id <- c("a", "a", "a", "b", "b", "b")
+fquantile_byid(x, q = c(0.25, 0.5, 0.75), id = id)
+
+# The first list element holds the group ids, the rest the quantiles
+res <- fquantile_byid(x, q = c(0.5), id = id)
+res[[1]]  # group ids: "a" "b"
+res[[2]]  # medians per group
+
+}

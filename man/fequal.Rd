@@ -20,3 +20,11 @@ This function checks whether all non-missing elements in a numeric vector are eq
 within a specified tolerance. Differences between elements that are less than or equal
 to the tolerance are considered negligible.
 }
+\examples{
+# Tiny differences within tolerance are treated as equal
+fequal(c(1, 1 + 1e-9, 1 - 1e-9), tol = 1e-6)  # TRUE
+
+# Differences larger than the tolerance return FALSE
+fequal(c(1, 1.5, 2), tol = 1e-6)              # FALSE
+
+}

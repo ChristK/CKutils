@@ -20,3 +20,11 @@ A numeric vector containing the computed quantiles corresponding to the probabil
 This function computes quantiles for a numeric vector using the default R method (type 7).
 It handles missing values and can remove them if requested.
 }
+\examples{
+# Quantiles of a numeric vector (NAs removed by default)
+fquantile(c(1, 2, 3, 4, 5, NA), probs = c(0.25, 0.5, 0.75))
+
+# Equivalent to base R quantile() with type 7
+fquantile(1:100, probs = c(0.1, 0.5, 0.9))
+
+}

@@ -22,3 +22,8 @@ A numeric vector with values clamped to the interval [a, b].
 `clamp` limits the values in a numeric vector `x` so that all elements are constrained within the interval [a, b].
 It dispatches to either `fclamp` for double precision values or `fclamp_int` for integer values.
 }
+\examples{
+clamp(c(-1, 0.5, 2))          # default bounds [0, 1]
+clamp(c(-5, 0, 5, 10), a = 0, b = 6)
+clamp(c(-5L, 0L, 5L, 10L), a = 0, b = 6) # integer input
+}

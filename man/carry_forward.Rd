@@ -31,3 +31,13 @@ This ensures proper temporal ordering for the carry-forward operation.
 **Missing Values**: Missing values (NA) in the input vectors are handled gracefully. Positions
 with missing person ID markers or values are skipped during processing, preserving existing values.
 }
+\examples{
+# Data grouped by person id and sorted by time within person
+pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+mrk <- mk_new_simulant_markers(pid)  # TRUE marks the first row of each person
+x   <- c(0L, 5L, 0L, 0L, 5L, 0L)
+
+# Once a 5 appears it is carried forward within the same person,
+# but never across a person boundary (use byref = FALSE to keep x unchanged)
+carry_forward(x, pid_mrk = mrk, y = 5L, byref = FALSE)  # 0 5 5 0 5 0
+}

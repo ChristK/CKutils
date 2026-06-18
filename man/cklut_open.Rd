@@ -2,12 +2,9 @@
 % Please edit documentation in R/cklut.R
 \name{cklut_open}
 \alias{cklut_open}
-\alias{print.cklut}
 \title{Open a cklut table}
 \usage{
 cklut_open(meta_path, warm = FALSE)
-
-\method{print}{cklut}(x, ...)
 }
 \arguments{
 \item{meta_path}{Path to the \code{.ckmeta} manifest.}
@@ -15,19 +12,21 @@ cklut_open(meta_path, warm = FALSE)
 \item{warm}{Logical; if \code{TRUE}, eagerly load the whole table into the
 page cache before returning (good for latency-sensitive repeated use that
 fits in RAM). Default \code{FALSE} keeps the lazy, demand-paged behaviour.}
-
-\item{x}{A \code{cklut} handle.}
-
-\item{...}{Ignored.}
 }
 \value{
-A \code{cklut} handle: a list with the external pointer, manifest path and
-schema, of class \code{"cklut"}.
+A \code{cklut} handle.
 }
 \description{
-Opens a previously built cklut table for querying with
-\code{\link{cklut_lookup}}.
+Open a cklut table
 }
-\seealso{
-\code{\link{cklut_build}}, \code{\link{cklut_lookup}}
+\examples{
+library(data.table)
+dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+dt[, value := year + (sex == "men")]
+base <- tempfile("cklut")
+ck <- cklut_build(dt, base, keys = c("year", "sex"))
+
+# reopen the table from its manifest
+ck2 <- cklut_open(paste0(base, ".ckmeta"))
+ck2
 }

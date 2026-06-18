@@ -27,3 +27,13 @@ a binomial trial determines if the effect continues.
 **Important**: The input data must be grouped by person ID and sorted by year/time within each person.
 This ensures proper temporal sequencing for modelling effect continuation.
 }
+\examples{
+# Data grouped by person id and sorted by time within person
+pid <- c(1L, 1L, 1L, 2L, 2L, 3L)
+mrk <- mk_new_simulant_markers(pid)
+x   <- c(1L, 0L, 0L, 1L, 0L, 1L)
+
+# With probability 1 the effect always continues within a person
+set.seed(1)
+hc_effect(x, prb_of_continuation = 1.0, pid = mrk)  # 1 1 1 1 1 1
+}

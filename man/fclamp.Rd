@@ -23,3 +23,14 @@ This function clamps (limits) the values of a numeric vector to lie within a spe
 Values below a are set to a and values above b are set to b. Vector arguments a and b support recycling.
 Optionally, the operation can be performed in-place.
 }
+\examples{
+# Clamp values to the default [0, 1] range
+fclamp(c(-1, 0.5, 2))
+
+# Custom bounds
+fclamp(c(-5, 0, 5, 15), a = 0, b = 10)
+
+# Bounds are recycled element-wise
+fclamp(c(5, 5, 5), a = c(0, 6, 0), b = c(4, 10, 10))
+
+}

@@ -23,3 +23,18 @@ A data.table with observed and predicted variables
 variable. Multiple predictions are drawn from the predicted
 distributions. Useful for plotting with ggplot.
 }
+\examples{
+\dontrun{
+library(data.table)
+library(gamlss)
+
+dat <- data.table(agegrp = runif(100, 20, 60))
+dat[, bmi := 25 + 0.05 * agegrp + rnorm(.N, 0, 2)]
+mod <- gamlss(bmi ~ agegrp, sigma.fo = ~1,
+  family = gamlss.dist::NO(), data = dat)
+
+# mc Monte Carlo draws stacked under the observed rows ("type" column)
+vg <- validate_gamlss(copy(dat), mod, mc = 5L, orig_data = copy(dat))
+vg[, .N, by = type]
+}
+}

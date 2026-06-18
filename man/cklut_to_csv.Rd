@@ -18,11 +18,17 @@ Invisibly, \code{path}.
 }
 \description{
 Writes the full table (keys + values) to CSV using \code{data.table::fwrite}.
-The output round-trips back through \code{\link{cklut_build}}. Note that CSV
-stores factor \emph{labels} but not factor level order; rebuilding yields
-factors with sorted levels (use \code{\link{cklut_to_parquet}} for exact
-factor-level fidelity).
+The output round-trips back through \code{\link{cklut_build}}.
 }
-\seealso{
-\code{\link{cklut_to_dt}}, \code{\link{cklut_to_parquet}}
+\examples{
+library(data.table)
+dt <- CJ(year = 2015:2018, sex = factor(c("men", "women")))
+dt[, value := year + (sex == "men")]
+base <- tempfile("cklut")
+ck <- cklut_build(dt, base, keys = c("year", "sex"))
+
+# export the full table to a CSV file
+csv <- tempfile(fileext = ".csv")
+cklut_to_csv(ck, csv)
+file.exists(csv)
 }
