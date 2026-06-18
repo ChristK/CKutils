@@ -3,3 +3,5 @@
 *.dll
 symbols.rds
 src/*.o
+*.gcno
+*.gcda

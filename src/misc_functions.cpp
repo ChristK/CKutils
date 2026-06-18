@@ -61,10 +61,10 @@ NumericVector fquantile(NumericVector x, NumericVector probs, bool na_rm = true)
   // After na_omit, check if vector became empty
   const int n = x.size();
   if (n == 0)
-  {
+  {                                            // # nocov start: all-NA input already returned above
     NumericVector out(probs.size(), NA_REAL);
     return (out);
-  }
+  }                                            // # nocov end
 
   // Handle single element case - all quantiles are that single value
   if (n == 1)
@@ -86,10 +86,10 @@ NumericVector fquantile(NumericVector x, NumericVector probs, bool na_rm = true)
   }
   std::sort(x.begin(), x.end());
   out = x[as<IntegerVector>(lo) - 1];
-  if (all(is_na(ii)))
+  if (all(is_na(ii)))                          // # nocov start: ii is zero-initialised, never all-NA
   {
     return (out);
-  }
+  }                                            // # nocov end
   else
   {
     x = x[as<IntegerVector>(hi) - 1];
@@ -142,14 +142,14 @@ List fquantile_byid(NumericVector x,
   const int m = unique(id).size();
 
   // Safety check: m must be > 0
-  if (m == 0) {
+  if (m == 0) {                          // # nocov start: id is non-empty here (n > 0), so m >= 1
     List outputList(1 + q.size());
     outputList[0] = StringVector(0);
     for (int i = 1; i <= q.size(); i++) {
       outputList[i] = NumericVector(0);
     }
     return outputList;
-  }
+  }                                      // # nocov end
 
   NumericMatrix z(m, q.size());
   StringVector id_nam(m);
@@ -165,9 +165,9 @@ List fquantile_byid(NumericVector x,
     else
     {
       // Bounds check before accessing matrix
-      if (counter_row >= m) {
+      if (counter_row >= m) {   // # nocov start: defensive; group count never exceeds m
         stop("Internal error: counter_row exceeded expected number of groups");
-      }
+      }                         // # nocov end
       start = i - counter - 1;
       end = i - 1;
       counter = 0;
@@ -181,9 +181,9 @@ List fquantile_byid(NumericVector x,
   }
 
   // Bounds check for last group
-  if (counter_row >= m) {
+  if (counter_row >= m) {       // # nocov start: defensive; group count never exceeds m
     stop("Internal error: counter_row exceeded expected number of groups");
-  }
+  }                             // # nocov end
 
   // Handle the last group regardless of its size
   // Ensure start index is valid
