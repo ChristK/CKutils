@@ -103,8 +103,12 @@ inline double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
 
 // Cache structure for normalizing constants.
 // Required by fdDPO_scalar; kept here (rather than in the .cpp) so the inline
-// scalar API is self-contained and header-only-linkable. The static members are
-// `inline` (C++17) to provide a single definition across translation units.
+// scalar API is self-contained and header-only-linkable. The cache is
+// `inline static thread_local` (C++17): `inline` gives it a single definition
+// across translation units, and `thread_local` gives each thread its own copy
+// so a downstream consumer can call fdDPO_scalar/fpDPO_scalar from a parallel
+// (e.g. OpenMP) hot loop without a data race, while still benefiting from
+// per-thread memoization.
 struct DPOCache {
   static const int CACHE_SIZE = 1024;
   struct CacheEntry {
@@ -114,8 +118,7 @@ struct DPOCache {
     bool valid;
   };
 
-  inline static CacheEntry cache[CACHE_SIZE] = {};
-  inline static int cache_index = 0;
+  inline static thread_local CacheEntry cache[CACHE_SIZE] = {};
 
   static double get_or_compute(double mu, double sigma, int ly) {
     // Simple hash for cache lookup
