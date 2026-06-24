@@ -20,6 +20,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <math.h>
 #include <Rmath.h>
 #include "recycling_helpers.h"
+#include "distr_BNB.h"   // canonical header-only scalar definitions
 // [[Rcpp::plugins(cpp17)]]
 
 // Enable vectorization hints for modern compilers
@@ -32,33 +33,8 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 using namespace Rcpp;
 
 
-// SIMD-optimised Beta Negative Binomial density scalar function
-double fdBNB_scalar(const int& x,
-                      const double& mu = 1.0,
-                      const double& sigma = 1.0,
-                      const double& nu = 1.0,
-                      const bool& log = false) {
-    // Parameter validation (uncommented for performance)
-    // if (mu    <= 0.0) stop("mu must be greater than 0");
-    // if (sigma <= 0.0) stop("sigma must be greater than 0");
-    // if (nu    <= 0.0) stop("nu must be greater than 0");
-    // if (x      < 0.0) stop("x must be >=0");
-    
-    // Pre-compute commonly used values
-    const double inv_sigma = 1.0 / sigma;
-    const double inv_nu = 1.0 / nu;
-    const double mu_nu_over_sigma = (mu * nu) * inv_sigma;
-    
-    const double m = inv_sigma + 1.0;
-    const double n = mu_nu_over_sigma;
-    const double k = inv_nu;
-    
-    // Use lgamma instead of lgammafn for better performance
-    const double logL = R::lbeta(x + n, m + k) - R::lbeta(n, m) - 
-                        R::lgammafn(x + 1) - R::lgammafn(k) + R::lgammafn(x + k);
-    
-    return log ? logL : std::exp(logL);
-}
+// BNB *_scalar definitions now live (inline) in inst/include/distr_BNB.h so
+// that downstream LinkingTo: CKutils consumers can call them directly.
 
 
 //' Beta Negative Binomial Distribution Density
@@ -124,45 +100,6 @@ NumericVector fdBNB(const NumericVector& x,
   return out;
 }
 
-// SIMD-optimised Beta Negative Binomial CDF scalar function
-double fpBNB_scalar(const int& q,
-                      const double& mu = 1.0,
-                      const double& sigma = 1.0,
-                      const double& nu = 1.0,
-                      const bool& lower_tail = true,
-                      const bool& log_p = false)
-  {
-    // Parameter validation (uncommented for performance)
-    // if (mu    <= 0.0) stop("mu must be greater than 0");
-    // if (sigma <= 0.0) stop("sigma must be greater than 0");
-    // if (nu    <= 0.0) stop("nu must be greater than 0");
-    // if (q      < 0) stop("q must be >=0");
-
-    double cdf = 0.0;
-    
-    // Cache parameters for repeated use
-    const double inv_sigma = 1.0 / sigma;
-    const double inv_nu = 1.0 / nu;
-    const double mu_nu_over_sigma = (mu * nu) * inv_sigma;
-    const double m = inv_sigma + 1.0;
-    const double n = mu_nu_over_sigma;
-    const double k = inv_nu;
-    
-    // Pre-compute common terms
-    const double log_beta_n_m = R::lbeta(n, m);
-    const double log_gamma_k = R::lgammafn(k);
-    
-    for(int i = 0; i <= q; i++)
-    {
-      const double log_prob = R::lbeta(i + n, m + k) - log_beta_n_m - 
-                             R::lgammafn(i + 1) - log_gamma_k + R::lgammafn(i + k);
-      cdf += std::exp(log_prob);
-    }
-    
-    if (!lower_tail) cdf = 1.0 - cdf;
-    return log_p ? std::log(cdf) : cdf;
-  }
-
 //' Beta Negative Binomial Distribution Function
 //'
 //' Cumulative distribution function for the Beta Negative Binomial (BNB) distribution
@@ -226,56 +163,6 @@ NumericVector fpBNB(const IntegerVector& q,
 
     return out;
   }
-
-// Optimized quantile search using incremental CDF computation
-int fqBNB_search(const double& p, const double& mu, const double& sigma, const double& nu) {
-    // Pre-compute common terms for density calculation
-    const double inv_sigma = 1.0 / sigma;
-    const double inv_nu = 1.0 / nu;
-    const double mu_nu_over_sigma = (mu * nu) * inv_sigma;
-    const double m = inv_sigma + 1.0;
-    const double n_param = mu_nu_over_sigma;
-    const double k = inv_nu;
-    
-    const double log_beta_n_m = R::lbeta(n_param, m);
-    const double log_gamma_k = R::lgammafn(k);
-    
-    double cdf = 0.0;
-    const int max_iter = 1000000;
-    
-    for (int i = 0; i < max_iter; i++) {
-        const double log_prob = R::lbeta(i + n_param, m + k) - log_beta_n_m - 
-                               R::lgammafn(i + 1) - log_gamma_k + R::lgammafn(i + k);
-        cdf += std::exp(log_prob);
-        
-        if (cdf >= p) {
-            return i;
-        }
-    }
-    
-    return max_iter;
-}
-
-// qBNB ----
-// fast
-double fqBNB_scalar(const double& p,
-                    const double& mu = 1.0,
-                    const double& sigma = 1.0,
-                    const double& nu = 1.0,
-                    const bool& lower_tail = true,
-                    const bool& log_p = false)
-{
-  double p_ = p;
-  if (log_p) p_ = std::exp(p_);
-  if (!lower_tail) p_ = 1.0 - p_;
-
-  if (p_ + 1e-09 >= 1.0) {
-    return R_PosInf;
-  }
-  
-  // Use optimized incremental search
-  return fqBNB_search(p_, mu, sigma, nu);
-}
 
 
 //' Beta Negative Binomial Quantile Function

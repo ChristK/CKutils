@@ -19,31 +19,35 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #ifndef DISTR_BCT_H
 #define DISTR_BCT_H
 
+// BCT is a continuous distribution implemented purely as vectorised, Rcpp-exported
+// functions (defined in src/distr_BCT.cpp); it has no per-element *_scalar API to
+// expose header-only. Only the vectorised declarations are provided here, for
+// reference. No `using namespace Rcpp;` so a downstream LinkingTo consumer's
+// namespace is not polluted.
+
 #include <Rcpp.h>
-using namespace Rcpp;
 
-// Function declarations for BCT distribution
-NumericVector fdBCT(const NumericVector& x,
-                    const NumericVector& mu,
-                    const NumericVector& sigma,
-                    const NumericVector& nu,
-                    const NumericVector& tau,
-                    const bool& log_p);
+Rcpp::NumericVector fdBCT(const Rcpp::NumericVector& x,
+                         const Rcpp::NumericVector& mu,
+                         const Rcpp::NumericVector& sigma,
+                         const Rcpp::NumericVector& nu,
+                         const Rcpp::NumericVector& tau,
+                         const bool& log_);
 
-NumericVector fpBCT(const NumericVector& q,
-                    const NumericVector& mu,
-                    const NumericVector& sigma,
-                    const NumericVector& nu,
-                    const NumericVector& tau,
-                    const bool& lower_tail,
-                    const bool& log_p);
+Rcpp::NumericVector fpBCT(const Rcpp::NumericVector& q,
+                         const Rcpp::NumericVector& mu,
+                         const Rcpp::NumericVector& sigma,
+                         const Rcpp::NumericVector& nu,
+                         const Rcpp::NumericVector& tau,
+                         const bool& lower_tail,
+                         const bool& log_p);
 
-NumericVector fqBCT(const NumericVector& p,
-                    const NumericVector& mu,
-                    const NumericVector& sigma,
-                    const NumericVector& nu,
-                    const NumericVector& tau,
-                    const bool& lower_tail,
-                    const bool& log_p);
+Rcpp::NumericVector fqBCT(const Rcpp::NumericVector& p,
+                         const Rcpp::NumericVector& mu,
+                         const Rcpp::NumericVector& sigma,
+                         const Rcpp::NumericVector& nu,
+                         const Rcpp::NumericVector& tau,
+                         const bool& lower_tail,
+                         const bool& log_p);
 
 #endif // DISTR_BCT_H

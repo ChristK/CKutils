@@ -2,5 +2,8 @@
 CXX_STD = CXX17
 
 # -O2 ensures optimization is enabled (required for _FORTIFY_SOURCE)
-PKG_CPPFLAGS = -U_FORTIFY_SOURCE
+# -I../inst/include lets this package's own src compile against the canonical,
+# header-only distribution scalars shipped in inst/include (single source of
+# truth shared with downstream LinkingTo: CKutils consumers).
+PKG_CPPFLAGS = -U_FORTIFY_SOURCE -I../inst/include
 PKG_CXXFLAGS = $(shell "$(R_HOME)/bin/Rscript" -e "cat(paste0('-I\"', system.file('include', package='data.table'), '\"'))")

@@ -22,6 +22,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <algorithm>
 #include "recycling_helpers.h"
 #include "distr_SICHEL.h"
+#include "distr_ZISICHEL.h"   // canonical header-only scalar definitions
 // [[Rcpp::plugins(cpp17)]]
 
 using namespace Rcpp;

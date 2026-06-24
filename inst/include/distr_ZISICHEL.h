@@ -19,33 +19,31 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #ifndef DISTR_ZISICHEL_H
 #define DISTR_ZISICHEL_H
 
+// Header-only API for the Zero-Inflated Sichel (ZISICHEL) distribution.
+//
+// ZISICHEL defines no scalar functions of its own; its vectorised,
+// Rcpp-exported wrappers (declared at the bottom) live in
+// src/distr_ZISICHEL.cpp and call the inline SICHEL scalars
+// (fpSICHEL_scalar) defined in distr_SICHEL.h.
+
 #include <Rcpp.h>
-using namespace Rcpp;
+#include "distr_SICHEL.h"   // ZISICHEL wrappers call the inline SICHEL scalars
 
-// Function declarations for ZISICHEL distribution
-NumericVector fdZISICHEL(const NumericVector& x,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& log_p);
+// Vectorised, Rcpp-exported wrappers (defined in src/distr_ZISICHEL.cpp)
+Rcpp::IntegerVector fqZISICHEL(Rcpp::NumericVector p,
+                              const Rcpp::NumericVector& mu,
+                              const Rcpp::NumericVector& sigma,
+                              const Rcpp::NumericVector& nu,
+                              const Rcpp::NumericVector& tau,
+                              const bool& lower_tail,
+                              const bool& log_p);
 
-NumericVector fpZISICHEL(const NumericVector& q,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& lower_tail,
-                        const bool& log_p);
-
-NumericVector fqZISICHEL(const NumericVector& p,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& lower_tail,
-                        const bool& log_p);
-
-NumericVector frZISICHEL(const int& n,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu);
+Rcpp::NumericVector fpZISICHEL(const Rcpp::NumericVector& q,
+                              const Rcpp::NumericVector& mu,
+                              const Rcpp::NumericVector& sigma,
+                              const Rcpp::NumericVector& nu,
+                              const Rcpp::NumericVector& tau,
+                              const bool& lower_tail,
+                              const bool& log_p);
 
 #endif // DISTR_ZISICHEL_H

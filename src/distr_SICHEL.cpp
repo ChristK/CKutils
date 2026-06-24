@@ -22,48 +22,15 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <algorithm>
 #include "recycling_helpers.h"
 #include "distr_NBI.h"
+#include "distr_SICHEL.h"   // canonical header-only scalar definitions
 // [[Rcpp::plugins(cpp17)]]
 
 using namespace Rcpp;
 
-// Helper functions for SICHEL computations
-
-// Compute cvec efficiently
-inline double compute_cvec(const double& sigma, const double& nu) {
-    return exp(log(R::bessel_k(1.0/sigma, nu + 1.0, 1)) - log(R::bessel_k(1.0/sigma, nu, 1)));
-}
-
-// Compute alpha efficiently
-inline double compute_alpha(const double& sigma, const double& mu, const double& cvec) {
-    return sqrt(1.0 + 2.0 * sigma * mu / cvec) / sigma;
-}
-
-// Compute lbes efficiently
-inline double compute_lbes(const double& alpha, const double& nu) {
-    return log(R::bessel_k(alpha, nu + 1.0, 1)) - log(R::bessel_k(alpha, nu, 1));
-}
-
-// Scalar helper function for tofySICHEL computation
-double ftofySICHEL2_scalar(const int& y, const double& mu,
-                          const double& sigma, const double& nu, 
-                          const double& lbes, const double& cvec) {
-    if (y <= 0) return 0.0;
-    
-    const int iy = y + 1;  // This is the key: iy = y + 1
-    std::vector<double> tofY(iy);
-    const double alpha = compute_alpha(sigma, mu, cvec);
-    
-    tofY[0] = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);
-    
-    double sumT = 0.0;
-    for (int j = 1; j < iy; j++) {  // j < iy, not j < y
-        tofY[j] = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tofY[j-1])) * 
-                  pow(mu / (sigma * alpha * cvec), 2.0);
-        sumT += log(tofY[j-1]);
-    }
-    
-    return sumT;
-}
+// SICHEL helper and *_scalar definitions (compute_cvec, compute_alpha,
+// compute_lbes, ftofySICHEL2_scalar, fcdfSICHEL_scalar, fpSICHEL_scalar) now
+// live (inline) in inst/include/distr_SICHEL.h so that downstream
+// LinkingTo: CKutils consumers can call them directly.
 
 //' Sichel Distribution Density
 //'
@@ -156,35 +123,7 @@ NumericVector fdSICHEL(const NumericVector& x,
     return logfy;
 }
 
-// CDF helper function
-double fcdfSICHEL_scalar(const int& y, const double& mu, const double& sigma, const double& nu) {
-    if (y < 0) return 0.0;
-    
-    const int lyp1 = y + 1;
-    const double cvec = compute_cvec(sigma, nu);
-    const double alpha = compute_alpha(sigma, mu, cvec);
-    const double lbes = compute_lbes(alpha, nu);
-    
-    std::vector<double> tynew(lyp1);
-    std::vector<double> lpnew(lyp1);
-    
-    tynew[0] = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);
-    lpnew[0] = -nu * log(sigma * alpha) + log(R::bessel_k(alpha, nu, 1)) - 
-               log(R::bessel_k(1.0/sigma, nu, 1));
-    
-    for (int j = 1; j < lyp1; j++) {
-        tynew[j] = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tynew[j-1])) * 
-                   pow(mu / (sigma * alpha * cvec), 2.0);
-        lpnew[j] = lpnew[j-1] + log(tynew[j-1]) - log(j);
-    }
-    
-    double sumT = 0.0;
-    for (int j = 0; j < lyp1; j++) {
-        sumT += exp(lpnew[j]);
-    }
-    
-    return sumT;
-}
+// fcdfSICHEL_scalar now lives (inline) in inst/include/distr_SICHEL.h.
 
 //' Sichel Distribution Cumulative Distribution Function
 //'
@@ -259,16 +198,7 @@ NumericVector fpSICHEL(const NumericVector& q,
 }
 
 
-// Scalar CDF function for internal use
-double fpSICHEL_scalar(const int& q, const double& mu, const double& sigma, const double& nu,
-                       const bool& lower_tail = true, const bool& log_p = false) {
-    double cdf = fcdfSICHEL_scalar(q, mu, sigma, nu);
-    
-    if (!lower_tail) cdf = 1.0 - cdf;
-    if (log_p) cdf = log(cdf);
-    
-    return cdf;
-}
+// fpSICHEL_scalar now lives (inline) in inst/include/distr_SICHEL.h.
 
 // Optimized quantile search using incremental CDF computation
 // This directly computes densities incrementally without recomputing from scratch

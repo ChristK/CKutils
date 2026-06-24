@@ -24,6 +24,18 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <algorithm>
 #include <type_traits>
 
+// Enable vectorization hints for modern compilers. Centralised here (every
+// distr_*.cpp includes this header) so the vectorised wrappers have SIMD_HINT
+// available regardless of header-include order. Guarded so the identical local
+// re-definitions still present in some .cpp files remain harmless.
+#ifndef SIMD_HINT
+#if defined(__GNUC__) || defined(__clang__)
+#define SIMD_HINT _Pragma("GCC ivdep")
+#else
+#define SIMD_HINT
+#endif
+#endif
+
 using namespace Rcpp;
 
 // Helper structures to hold recycled vectors

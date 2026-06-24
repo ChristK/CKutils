@@ -19,31 +19,35 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #ifndef DISTR_BCPEO_H
 #define DISTR_BCPEO_H
 
+// BCPEo is a continuous distribution implemented purely as vectorised, Rcpp-exported
+// functions (defined in src/distr_BCPEo.cpp); it has no per-element *_scalar API to
+// expose header-only. Only the vectorised declarations are provided here, for
+// reference. No `using namespace Rcpp;` so a downstream LinkingTo consumer's
+// namespace is not polluted.
+
 #include <Rcpp.h>
-using namespace Rcpp;
 
-// Function declarations for BCPEo distribution
-NumericVector fdBCPEo(const NumericVector& x,
-                      const NumericVector& mu,
-                      const NumericVector& sigma,
-                      const NumericVector& nu,
-                      const NumericVector& tau,
-                      const bool& log_p);
+Rcpp::NumericVector fdBCPEo(const Rcpp::NumericVector& x,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const Rcpp::NumericVector& tau,
+                           const bool& log_);
 
-NumericVector fpBCPEo(const NumericVector& q,
-                      const NumericVector& mu,
-                      const NumericVector& sigma,
-                      const NumericVector& nu,
-                      const NumericVector& tau,
-                      const bool& lower_tail,
-                      const bool& log_p);
+Rcpp::NumericVector fpBCPEo(const Rcpp::NumericVector& q,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const Rcpp::NumericVector& tau,
+                           const bool& lower_tail,
+                           const bool& log_p);
 
-NumericVector fqBCPEo(const NumericVector& p,
-                      const NumericVector& mu,
-                      const NumericVector& sigma,
-                      const NumericVector& nu,
-                      const NumericVector& tau,
-                      const bool& lower_tail,
-                      const bool& log_p);
+Rcpp::NumericVector fqBCPEo(const Rcpp::NumericVector& p,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const Rcpp::NumericVector& tau,
+                           const bool& lower_tail,
+                           const bool& log_p);
 
 #endif // DISTR_BCPEO_H

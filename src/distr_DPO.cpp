@@ -29,6 +29,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <vector>
 #include <cstring>
 #include "recycling_helpers.h"
+#include "distr_DPO.h"   // canonical header-only scalar definitions
 // [[Rcpp::plugins(cpp17)]]
 using namespace Rcpp;
 
@@ -118,145 +119,9 @@ NumericVector fdDPOgetC5_C(const NumericVector& mu, const NumericVector& sigma,
   return ans;
 }
 
-// Optimized scalar version for single computation with random parameters
-double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
-                              const int& lmu, const int& ly) {
-  double   sumC, mus, lmus, lsig2, invs, ls;
-  
-  // Fast path for near-Poisson case
-  if (std::abs(sigma - 1.0) < 1e-6) {
-    return 1.0; // Normalizing constant for Poisson is 1
-  }
-  
-  // Pre-compute constants outside loops
-  mus = mu / sigma;
-  lsig2 = -0.5 * log(sigma);
-  lmus = log(mu) / sigma - 1;
-  invs = 1 / sigma;
-  ls = lsig2 - mus;
-
-  sumC = 0.0;
-  
-  // Ultra-aggressive early termination using mathematical properties of DPO series
-  double prev_term = 0.0;
-  double max_term = 0.0;
-  int max_term_pos = 0;
-  
-  // The DPO series has its mode approximately at mu/sigma for most practical cases
-  // We can use this to terminate much more aggressively
-  double expected_mode = mu / sigma;
-  bool pathological = (mu > 800.0 && sigma > 8.0);
-  
-  for (int j = 0; j < ly; j++) {
-    double j_log = (j == 0) ? 1.0 : log(static_cast<double>(j));
-    double ylogofy = j * j_log;
-    double lga = R::lgammafn(j + 1);
-    double ym = j - ylogofy;
-    
-    double term = exp(ls - lga + ylogofy + j * lmus + invs * ym);
-    sumC += term;
-    
-    // Track maximum term
-    if (term > max_term) {
-      max_term = term;
-      max_term_pos = j;
-    }
-    
-    // Ultra-aggressive termination based on mathematical insights:
-    if (pathological) {
-      // Conservative for pathological cases
-      if (j > 100 && term < 1e-15 && term < prev_term * 1e-6) {
-        break;
-      }
-    } else {
-      // Conservative termination for normal cases - prioritize accuracy over extreme speed
-      int min_iter = std::max(15, static_cast<int>(expected_mode * 0.7));
-      
-      if (j >= min_iter && j > max_term_pos + 8) {
-        // Only terminate if we're well past the mode and terms are extremely small
-        if (term < max_term * 1e-15) {
-          break;
-        }
-        // Very conservative decreasing term check
-        if (j > max_term_pos + 12 && term < prev_term * 0.01) {
-          break;
-        }
-      }
-    }
-    prev_term = term;
-  }
-  
-  return 1.0 / sumC;
-}
-
-// Cache structure for normalizing constants
-struct DPOCache {
-  static const int CACHE_SIZE = 1024;
-  struct CacheEntry {
-    double mu, sigma;
-    int ly;
-    double result;
-    bool valid;
-  };
-  
-  static CacheEntry cache[CACHE_SIZE];
-  static int cache_index;
-  
-  static double get_or_compute(double mu, double sigma, int ly) {
-    // Simple hash for cache lookup
-    int hash = (int)(mu * 1000 + sigma * 100000 + ly) % CACHE_SIZE;
-    
-    CacheEntry& entry = cache[hash];
-    if (entry.valid && 
-        std::abs(entry.mu - mu) < 1e-10 && 
-        std::abs(entry.sigma - sigma) < 1e-10 && 
-        entry.ly == ly) {
-      return entry.result;
-    }
-    
-    // Compute and cache
-    double result = fdDPOgetC5_C_scalar(mu, sigma, 1, ly);
-    entry.mu = mu;
-    entry.sigma = sigma;
-    entry.ly = ly;
-    entry.result = result;
-    entry.valid = true;
-    
-    return result;
-  }
-};
-
-// Initialize static members
-DPOCache::CacheEntry DPOCache::cache[DPOCache::CACHE_SIZE] = {};
-int DPOCache::cache_index = 0;
-
-// Optimized scalar density function
-double fdDPO_scalar(const int& x,
-                      const double& mu,
-                      const double& sigma,
-                      const bool& log_ = false)
-{
-  if (x < 0) return log_ ? R_NegInf : 0.0;
-  if (mu <= 0.0 || sigma <= 0.0) return log_ ? R_NegInf : 0.0;
-  
-  // Fast path for near-Poisson case
-  if (std::abs(sigma - 1.0) < 1e-6) {
-    return R::dpois(x, mu, log_);
-  }
-  
-  // Use cache for normalizing constant
-  int maxV = std::max(x * 3, 500);
-  double theC = log(DPOCache::get_or_compute(mu, sigma, maxV + 1));
-  
-  double logofx = (x > 0) ? log(static_cast<double>(x)) : 1.0;
-  
-  double lh = -0.5 * log(sigma) - (mu/sigma) - 
-              R::lgammafn(x + 1) + x * logofx - x + 
-              (x * log(mu))/sigma + x/sigma - 
-              (x * logofx)/sigma + theC;
-  
-  return log_ ? lh : exp(lh);
-}
+// fdDPOgetC5_C_scalar, the DPOCache helper, and fdDPO_scalar now live (inline)
+// in inst/include/distr_DPO.h so that downstream LinkingTo: CKutils consumers
+// can call them directly.
 
 
 //' Get Normalizing Constant for DPO Distribution
@@ -414,33 +279,8 @@ NumericVector fdDPO(const IntegerVector &x,
   return lh;
 }
 
-// Helper function for optimised CDF computation 
-double fpDPO_scalar(const int& q,
-                      const double& mu,
-                      const double& sigma,
-                      const bool& lower_tail = true,
-                      const bool& log_p = false)
-{
-  if (q < 0) return (lower_tail) ? ((log_p) ? R_NegInf : 0.0) : ((log_p) ? 0.0 : 1.0);
-  
-  // Fast path for near-Poisson case
-  if (std::abs(sigma - 1.0) < 1e-6) {
-    return R::ppois(q, mu, lower_tail, log_p);
-  }
-  
-  // Optimized CDF computation using cached normalizing constants
-  double cdf = 0.0;
-  
-  // Sum densities from 0 to q using cached computations
-  for (int i = 0; i <= q; i++) {
-    cdf += fdDPO_scalar(i, mu, sigma, false);
-  }
-  
-  if (!lower_tail) cdf = 1.0 - cdf;
-  if (log_p) cdf = log(cdf);
-  
-  return cdf;
-}
+// fpDPO_scalar now lives (inline) in inst/include/distr_DPO.h so that
+// downstream LinkingTo: CKutils consumers can call it directly.
 
 // Optimized quantile search using incremental CDF computation
 int fqDPO_search(const double& p,
