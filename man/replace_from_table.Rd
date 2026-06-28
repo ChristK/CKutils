@@ -40,6 +40,9 @@ replace_from_table(data.table::copy(dtb), "a", 3L, -11L, "newcol")[]
 replace_from_table(data.table::copy(dtb), "b", 1.3, "a")[]
 replace_from_table(data.table::copy(dtb), "b", 1.3, "a", "newcol")[]
 replace_from_table(data.table::copy(dtb), "d", "a", "7")[]
-replace_from_table(data.table::copy(dtb), "d", "a", 7)[]
+# `to` is numeric while column "d" holds letters, so the column is coerced to
+# numeric and becomes NA; suppressWarnings() hides the base R
+# "NAs introduced by coercion" warning this intentionally triggers.
+suppressWarnings(replace_from_table(data.table::copy(dtb), "d", "a", 7))[]
 replace_from_table(data.table::copy(dtb), "e", "B", "J")[]
 }
