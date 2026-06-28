@@ -90,7 +90,7 @@ jobs:
 
       # Step 5: Upload coverage to Codecov using official action
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: coverage.xml
           flags: unittests
