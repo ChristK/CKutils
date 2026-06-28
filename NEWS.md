@@ -1,3 +1,34 @@
+# CKutils 0.1.27
+
+## Bug fixes
+
+* **`fquantile()`**: fixed undefined behaviour when the input contained
+  `NA`/`NaN`. `std::sort()` was applied to data containing `NaN` (not a valid
+  strict-weak ordering), giving platform-dependent results that surfaced as a
+  test failure on macOS. Missing values are now detected with `ISNAN()` (matching
+  R's `is.na(NaN) == TRUE`): with `na_rm = FALSE` any `NA`/`NaN` propagates to
+  `NA`, and the sort always runs on a fresh copy, which also fixes `fquantile()`
+  mutating its caller's vector in place.
+
+* **Distribution functions** (`fd*`/`fp*`/`fq*` for NBI, DPO, DEL, SICHEL, BNB,
+  MN4, ZANBI, ZINBI, ZISICHEL, ZABNB, ZIBNB, BCPEo, BCT): `NA`/`NaN` quantiles or
+  probabilities no longer trigger out-of-range float-to-int undefined behaviour
+  or bypass range validation; they now propagate to `NA`, as in base R.
+
+* **`shift_bypidNum()`/`shift_bypidInt()`/`shift_bypidBool()`/`shift_bypidStr()`**:
+  a `NA_integer_` `lag` (stored as `INT_MIN`) caused signed-integer overflow and
+  an out-of-bounds access (a segfault); it is now rejected with an informative
+  error.
+
+* **Distribution parameter recycling**: a zero-length argument alongside a
+  non-empty one caused an integer modulo-by-zero (a crash); it now returns a
+  zero-length result, following R's recycling rules.
+
+* **`cklut`**: out-of-range row indices in the gather path and out-of-range or
+  `NA` key indices in the build path are now bounds-checked, preventing
+  out-of-bounds memory access; `i64` value columns now treat a plain `NaN` (not
+  only `NA`) as missing.
+
 # CKutils 0.1.25
 
 ## New features
