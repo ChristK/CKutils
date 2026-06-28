@@ -69,10 +69,25 @@ IntegerVector fqZISICHEL(NumericVector p,
     auto recycled = recycle_vectors(p, mu, sigma, nu, tau);
     const int n = recycled.n;
     
+    // NaN/NA in any used argument -> NA quantile. Without this, a NaN p (or NaN
+    // mu/sigma/nu/tau) slips past the range checks below (every NaN comparison is
+    // false) and reaches fqSICHEL, which can return a wrong, non-NA value. Base R
+    // returns NA for a NaN probability. Track which elements are NaN so we can
+    // overwrite the corresponding results with NA_INTEGER after the delegated call.
+    std::vector<bool> is_nan_input(n, false);
+    for (int i = 0; i < n; i++) {
+        if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
+            ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i]) ||
+            ISNAN(recycled.vec5[i])) {
+            is_nan_input[i] = true;
+        }
+    }
+
     // Validate parameters after recycling
     if (log_p) {
       for (int i = 0; i < n; i++)
       {
+        if (is_nan_input[i]) continue;
         if (recycled.vec2[i] <= 0.0)
           stop("mu must be greater than 0");
         if (recycled.vec3[i] <= 0.0)
@@ -83,6 +98,7 @@ IntegerVector fqZISICHEL(NumericVector p,
     } else {
       for (int i = 0; i < n; i++)
       {
+        if (is_nan_input[i]) continue;
         if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0001)
           stop("p must be between 0 and 1");
         if (recycled.vec2[i] <= 0.0)
@@ -94,7 +110,7 @@ IntegerVector fqZISICHEL(NumericVector p,
       }
     }
 
-    
+
     // Transform probabilities
     NumericVector p_transformed = clone(recycled.vec1);
     if (log_p) {
@@ -110,11 +126,22 @@ IntegerVector fqZISICHEL(NumericVector p,
     
     NumericVector pnew(n);
     for (int i = 0; i < n; i++) {
+        // For NaN inputs, feed a benign value into the delegated search (its result
+        // is overwritten with NA_INTEGER below) so we never propagate NaN into it.
+        if (is_nan_input[i]) {
+            pnew[i] = 0.0;
+            continue;
+        }
         pnew[i] = (p_transformed[i] - recycled.vec5[i]) / (1.0 - recycled.vec5[i]) - 1e-7;
         if (pnew[i] < 0.0) pnew[i] = 0.0;
     }
-    
-    return fqSICHEL(pnew, recycled.vec2, recycled.vec3, recycled.vec4, true, false);
+
+    IntegerVector result =
+        fqSICHEL(pnew, recycled.vec2, recycled.vec3, recycled.vec4, true, false);
+    for (int i = 0; i < n; i++) {
+        if (is_nan_input[i]) result[i] = NA_INTEGER;
+    }
+    return result;
 }
 
 //' Zero-Inflated Sichel Distribution Cumulative Distribution Function
@@ -159,18 +186,22 @@ NumericVector fpZISICHEL(const NumericVector& q,
     auto recycled = recycle_vectors(q, mu, sigma, nu, tau);
     const int n = recycled.n;
     
+    NumericVector cdf(n);
+
     // Validate parameters after recycling
     for (int i = 0; i < n; i++) {
+        // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+        // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+        if (ISNAN(recycled.vec1[i])) { cdf[i] = NA_REAL; continue; }
         if (recycled.vec1[i] < 0.0) stop("q must be >=0");
         if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
         if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
-        if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0) 
+        if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0)
             stop("tau must be between 0 and 1");
     }
-    
-    NumericVector cdf(n);
-    
+
     for (int i = 0; i < n; i++) {
+        if (ISNAN(recycled.vec1[i])) continue;  // already set to NA_REAL above
         const int qi = static_cast<int>(recycled.vec1[i]);
         const double mui = recycled.vec2[i];
         const double sigmai = recycled.vec3[i];

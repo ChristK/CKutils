@@ -99,14 +99,25 @@ NumericVector fdMN4(const IntegerVector& x,
   NumericVector x_num = recycled.vec1;
   IntegerVector x_int(n);
   for (int i = 0; i < n; i++) {
+    // NaN/NA x -> NA: static_cast<int>(NaN) is out-of-range float-to-int UB.
+    // Mark with NA_INTEGER so the main loop can skip the cast value.
+    if (ISNAN(x_num[i])) {
+      x_int[i] = NA_INTEGER;
+      continue;
+    }
     x_int[i] = static_cast<int>(x_num[i]);
   }
-  
+
   NumericVector out(n);
-  
+
   // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
+    // NaN/NA x propagated from the conversion loop -> NA density.
+    if (x_int[i] == NA_INTEGER) {
+      out[i] = NA_REAL;
+      continue;
+    }
     out[i] = fdMN4_scalar(x_int[i], recycled.vec2[i], recycled.vec3[i], recycled.vec4[i], log_);
   }
   
@@ -184,14 +195,25 @@ NumericVector fpMN4(const IntegerVector& q,
   NumericVector q_num = recycled.vec1;
   IntegerVector q_int(n);
   for (int i = 0; i < n; i++) {
+    // NaN/NA q -> NA: static_cast<int>(NaN) is out-of-range float-to-int UB.
+    // Mark with NA_INTEGER so the main loop can skip the cast value.
+    if (ISNAN(q_num[i])) {
+      q_int[i] = NA_INTEGER;
+      continue;
+    }
     q_int[i] = static_cast<int>(q_num[i]);
   }
-  
+
   NumericVector out(n);
-  
+
   // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
+    // NaN/NA q propagated from the conversion loop -> NA probability.
+    if (q_int[i] == NA_INTEGER) {
+      out[i] = NA_REAL;
+      continue;
+    }
     out[i] = fpMN4_scalar(q_int[i], recycled.vec2[i], recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
   
@@ -265,13 +287,20 @@ IntegerVector fqMN4(const NumericVector& p,
   const int n = recycled.n;
   
   IntegerVector out(n);
-  
+
   // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
+    // NaN/NA in p or any parameter -> NA quantile. Without this a NaN p slips
+    // past the [0,1] range check in fqMN4_scalar (NaN comparisons are false).
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
+        ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) {
+      out[i] = NA_INTEGER;
+      continue;
+    }
     out[i] = fqMN4_scalar(recycled.vec1[i], recycled.vec2[i], recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
-  
+
   if (any(is_na(out))) warning("NAs were produced");
   return out;
 }

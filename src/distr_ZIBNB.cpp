@@ -98,7 +98,16 @@ NumericVector fqZIBNB(const NumericVector& p,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fqZIBNB_scalar(recycled.vec1[i], recycled.vec2[i], recycled.vec3[i], 
+    // NaN/NA in any argument -> NA quantile. A NaN p (or NaN parameter) slips
+    // past the [0,1]/positivity checks above (every NaN comparison is false) and
+    // would otherwise reach the search inside fqZIBNB_scalar -> fqBNB_scalar,
+    // returning a wrong, non-NA value instead of NA.
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) || ISNAN(recycled.vec3[i]) ||
+        ISNAN(recycled.vec4[i]) || ISNAN(recycled.vec5[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fqZIBNB_scalar(recycled.vec1[i], recycled.vec2[i], recycled.vec3[i],
                             recycled.vec4[i], recycled.vec5[i], lower_tail, log_p);
   }
 

@@ -96,7 +96,13 @@ NumericVector fdZANBI(const NumericVector& x,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fdZANBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], 
+    // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+    // UB, and a NaN x slips past the `< 0` check (NaN comparisons are false).
+    if (ISNAN(recycled.vec1[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fdZANBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], log);
   }
 
@@ -164,7 +170,13 @@ NumericVector fpZANBI(const NumericVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fpZANBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], 
+    // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+    // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+    if (ISNAN(recycled.vec1[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fpZANBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 
@@ -230,7 +242,16 @@ IntegerVector fqZANBI(const NumericVector& p,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fqZANBI_scalar(recycled.vec1[i], recycled.vec2[i], 
+    // NaN/NA in any argument -> NA quantile. A NaN p (or NaN parameter) slips
+    // past the [0,1]/positivity range checks (every NaN comparison is false)
+    // and would reach fqZANBI_scalar -> static_cast<int>(...) UB or a wrong,
+    // non-NA search result. Base R returns NA for a NaN probability.
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
+        ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) {
+      out[i] = NA_INTEGER;
+      continue;
+    }
+    out[i] = fqZANBI_scalar(recycled.vec1[i], recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 

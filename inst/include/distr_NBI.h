@@ -82,6 +82,13 @@ inline int fqNBI_scalar(const double& p,
     // if (sigma <= 0) stop("sigma must be greater than 0");
     // if (p < 0.0 || p > 1.0) stop("p must be >=0 and <=1");
 
+    // NaN/NA guard: a NaN p (or NaN mu/sigma) slips past the disabled range
+    // checks above and would reach R::qnbinom_mu/qpois(NaN,...), feeding an
+    // out-of-range value to float-to-int conversion (UB). Return NA like base R.
+    if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma)) {
+        return NA_INTEGER;
+    }
+
     // For very small sigma values, use Poisson approximation
     if (sigma < 1e-4) {
         return R::qpois(p, mu, lower_tail, log_p);

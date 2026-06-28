@@ -171,6 +171,12 @@ NumericVector fget_C(const IntegerVector& x,
                        const NumericVector& mu,
                        const NumericVector& sigma)
 {
+  // Any zero-length input -> zero-length result. This guards both Rcpp::max(x)
+  // on an empty vector and the i % length() modulo-by-zero in the recycling loop
+  // below (UB / SIGFPE when mu or sigma is empty while another arg is not).
+  if (x.length() == 0 || mu.length() == 0 || sigma.length() == 0) {
+    return NumericVector(0);
+  }
   int maxV = std::max(Rcpp::max(x) * 3, 500);
   int lmu   = std::max(std::max(x.length(), mu.length()), sigma.length());
   
@@ -268,6 +274,12 @@ NumericVector fdDPO(const IntegerVector &x,
     #endif
     
     for (int i = chunk_start; i < chunk_end; i++) {
+      // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+      // UB, and a NaN x slips past the `< 0` check (NaN comparisons are false).
+      if (ISNAN(recycled.vec1[i])) {
+        lh[i] = NA_REAL;
+        continue;
+      }
       if (recycled.vec1[i] < 0.0)
         stop("x must be >=0");
       if (recycled.vec2[i] <= 0.0)
@@ -275,7 +287,7 @@ NumericVector fdDPO(const IntegerVector &x,
       if (recycled.vec3[i] <= 0.0)
         stop("sigma must be greater than 0");
 
-      lh[i] = fdDPO_scalar(static_cast<int>(recycled.vec1[i]), 
+      lh[i] = fdDPO_scalar(static_cast<int>(recycled.vec1[i]),
                           recycled.vec2[i], recycled.vec3[i], log_);
     }
   }
@@ -294,6 +306,12 @@ int fqDPO_search(const double& p,
                  const double& mu,
                  const double& sigma)
 {
+  // NaN/NA guard: the vector wrapper (fqDPO) already maps NaN args to NA, but
+  // guard here too so R::qpois(NaN,...) and the static_cast<int> below can never
+  // see NaN, which would be out-of-range float-to-int undefined behaviour.
+  if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma)) {
+    return NA_INTEGER;
+  }
   // Fast path for near-Poisson case
   if (std::abs(sigma - 1.0) < 1e-6) {
     return static_cast<int>(R::qpois(p, mu, true, false));
@@ -398,14 +416,20 @@ NumericVector fpDPO(const IntegerVector &q,
     int chunk_end = std::min(chunk_start + chunk_size, n);
     
     for (int i = chunk_start; i < chunk_end; i++) {
+      // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+      // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+      if (ISNAN(recycled.vec1[i])) {
+        cdf[i] = NA_REAL;
+        continue;
+      }
       if (recycled.vec1[i] < 0)
         stop("q must be >=0");
       if (recycled.vec2[i] <= 0.0)
         stop("mu must be greater than 0");
       if (recycled.vec3[i] <= 0.0)
         stop("sigma must be greater than 0");
-        
-      cdf[i] = fpDPO_scalar(static_cast<int>(recycled.vec1[i]), 
+
+      cdf[i] = fpDPO_scalar(static_cast<int>(recycled.vec1[i]),
                            recycled.vec2[i], recycled.vec3[i], lower_tail, log_p);
     }
   }
@@ -505,12 +529,21 @@ NumericVector fqDPO(NumericVector p,
     
     for (int i = chunk_start; i < chunk_end; i++) {
       double p_i = recycled.vec1[i];
-      
+
+      // NaN/NA in any argument -> NA quantile. Without this, a NaN p slips past
+      // the [0,1] range checks below (every NaN comparison is false) and reaches
+      // fqDPO_search -> static_cast<int>(R::qpois(NaN,...)), out-of-range
+      // float-to-int UB.
+      if (ISNAN(p_i) || ISNAN(recycled.vec2[i]) || ISNAN(recycled.vec3[i])) {
+        QQQ[i] = NA_REAL;
+        continue;
+      }
+
       if (recycled.vec2[i] <= 0.0)
         stop("mu must be greater than 0");
       if (recycled.vec3[i] <= 0.0)
         stop("sigma must be greater than 0");
-      
+
       // Apply transformations
       if (log_p)
         p_i = exp(p_i);

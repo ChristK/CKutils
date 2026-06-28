@@ -99,7 +99,14 @@ inline RecycledVectors2 recycle_vectors(const T1& v1, const T2& v2) {
     if (n1 == n2) {
         return {nv1, nv2, n1};
     }
-    
+
+    // Any zero-length input -> zero-length result (R recycling rule). This also
+    // guards the i % nK below: with a zero length that modulo is i % 0, which is
+    // undefined behaviour (SIGFPE on x86) once max_n > 0.
+    if (n1 == 0 || n2 == 0) {
+        return {NumericVector(0), NumericVector(0), 0};
+    }
+
     // Find maximum length
     const int max_n = std::max(n1, n2);
     
@@ -133,7 +140,14 @@ inline RecycledVectors3 recycle_vectors(const T1& v1, const T2& v2, const T3& v3
     if (n1 == n2 && n2 == n3) {
         return {nv1, nv2, nv3, n1};
     }
-    
+
+    // Any zero-length input -> zero-length result (R recycling rule). This also
+    // guards the i % nK below: with a zero length that modulo is i % 0, which is
+    // undefined behaviour (SIGFPE on x86) once max_n > 0.
+    if (n1 == 0 || n2 == 0 || n3 == 0) {
+        return {NumericVector(0), NumericVector(0), NumericVector(0), 0};
+    }
+
     // Find maximum length
     const int max_n = std::max({n1, n2, n3});
     
@@ -171,7 +185,14 @@ inline RecycledVectors4 recycle_vectors(const T1& v1, const T2& v2, const T3& v3
     if (n1 == n2 && n2 == n3 && n3 == n4) {
         return {nv1, nv2, nv3, nv4, n1};
     }
-    
+
+    // Any zero-length input -> zero-length result (R recycling rule). This also
+    // guards the i % nK below: with a zero length that modulo is i % 0, which is
+    // undefined behaviour (SIGFPE on x86) once max_n > 0.
+    if (n1 == 0 || n2 == 0 || n3 == 0 || n4 == 0) {
+        return {NumericVector(0), NumericVector(0), NumericVector(0), NumericVector(0), 0};
+    }
+
     // Find maximum length
     const int max_n = std::max({n1, n2, n3, n4});
     
@@ -212,7 +233,14 @@ inline RecycledVectors5 recycle_vectors(const T1& v1, const T2& v2, const T3& v3
     if (n1 == n2 && n2 == n3 && n3 == n4 && n4 == n5) {
         return {nv1, nv2, nv3, nv4, nv5, n1};
     }
-    
+
+    // Any zero-length input -> zero-length result (R recycling rule). This also
+    // guards the i % nK below: with a zero length that modulo is i % 0, which is
+    // undefined behaviour (SIGFPE on x86) once max_n > 0.
+    if (n1 == 0 || n2 == 0 || n3 == 0 || n4 == 0 || n5 == 0) {
+        return {NumericVector(0), NumericVector(0), NumericVector(0), NumericVector(0), NumericVector(0), 0};
+    }
+
     // Find maximum length
     const int max_n = std::max({n1, n2, n3, n4, n5});
     

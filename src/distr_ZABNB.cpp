@@ -98,7 +98,17 @@ NumericVector fqZABNB(const NumericVector& p,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fqZABNB_scalar(recycled.vec1[i], recycled.vec2[i], recycled.vec3[i], 
+    // NaN/NA in p or any distribution parameter -> NA quantile. Without this, a
+    // NaN slips past the [0,1]/positivity range checks above (every NaN
+    // comparison is false) and reaches fqZABNB_scalar -> fqBNB_scalar's search,
+    // returning a wrong non-NA value. Base R returns NA for a NaN probability.
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
+        ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i]) ||
+        ISNAN(recycled.vec5[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fqZABNB_scalar(recycled.vec1[i], recycled.vec2[i], recycled.vec3[i],
                             recycled.vec4[i], recycled.vec5[i], lower_tail, log_p);
   }
 

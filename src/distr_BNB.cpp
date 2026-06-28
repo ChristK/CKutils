@@ -82,6 +82,10 @@ NumericVector fdBNB(const NumericVector& x,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
+    // NaN/NA x -> handled in the compute loop below (NA_REAL). Skip validation
+    // here so a NaN x does not trip the `< 0` check (NaN comparisons are false
+    // anyway) before we can map it to NA.
+    if (ISNAN(recycled.vec1[i])) continue;
     if (recycled.vec1[i] < 0.0) stop("x must be >=0");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
@@ -93,7 +97,13 @@ NumericVector fdBNB(const NumericVector& x,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fdBNB_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], 
+    // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+    // UB. Only the value cast to int (x = vec1) needs guarding.
+    if (ISNAN(recycled.vec1[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fdBNB_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
                           recycled.vec3[i], recycled.vec4[i], log);
   }
 
@@ -146,6 +156,10 @@ NumericVector fpBNB(const IntegerVector& q,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
+    // NaN/NA q -> handled in the compute loop below (NA_REAL). Skip validation
+    // here so a NaN q does not trip the `< 0` check (NaN comparisons are false
+    // anyway) before we can map it to NA.
+    if (ISNAN(recycled.vec1[i])) continue;
     if (recycled.vec1[i] < 0) stop("q must be >=0");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
@@ -157,7 +171,13 @@ NumericVector fpBNB(const IntegerVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fpBNB_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], 
+    // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+    // UB. Only the value cast to int (q = vec1) needs guarding.
+    if (ISNAN(recycled.vec1[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fpBNB_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
                           recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 
@@ -211,6 +231,11 @@ NumericVector fqBNB(const NumericVector& p,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
+    // NaN/NA in any argument -> handled in the compute loop below (NA_REAL).
+    // Skip validation here so a NaN does not slip past the range checks (NaN
+    // comparisons are false) before we can map it to NA.
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
+        ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) continue;
     if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0001) stop("p must be >=0 and <=1");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
@@ -222,7 +247,15 @@ NumericVector fqBNB(const NumericVector& p,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fqBNB_scalar(recycled.vec1[i], recycled.vec2[i], 
+    // NaN/NA in any argument -> NA. Without this, a NaN p slips past the [0,1]
+    // checks and reaches fqBNB_search, whose `cdf >= p` is always false for NaN,
+    // so it would return a wrong, non-NA value (max_iter) instead of NA.
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
+        ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fqBNB_scalar(recycled.vec1[i], recycled.vec2[i],
                           recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 

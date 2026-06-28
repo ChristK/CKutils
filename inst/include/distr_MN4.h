@@ -87,6 +87,9 @@ inline int fqMN4_scalar(const double& p,
                         const double& nu,
                         const bool& lower_tail,
                         const bool& log_p) {
+  // NaN/NA guard: a NaN p or parameter slips past the positivity / [0,1] range
+  // checks below (every NaN comparison is false). Base R returns NA for NaN p.
+  if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) return NA_INTEGER;
   if (mu <= 0.0) return NA_INTEGER;
   if (sigma <= 0.0) return NA_INTEGER;
   if (nu <= 0.0) return NA_INTEGER;

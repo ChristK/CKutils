@@ -99,6 +99,13 @@ inline double fpBNB_scalar(const int& q,
 
 // Optimized quantile search using incremental CDF computation
 inline int fqBNB_search(const double& p, const double& mu, const double& sigma, const double& nu) {
+    // NaN/NA guard: the vector wrapper (fqBNB) already maps NaN args to NA, but
+    // guard here too so the search below can never see NaN. For a NaN p the
+    // `cdf >= p` test is always false, so it would otherwise spin to max_iter
+    // and return a wrong, non-NA value.
+    if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) {
+        return NA_INTEGER;
+    }
     // Pre-compute common terms for density calculation
     const double inv_sigma = 1.0 / sigma;
     const double inv_nu = 1.0 / nu;

@@ -47,6 +47,13 @@ inline double fqZIBNB_scalar(const double& p,
   // if (tau <= 0.0 || tau >= 1.0) stop("tau must be >0 and <1");
   // if (p < 0.0 || p > 1.0001) stop("p must be >=0 and <=1"); //I don't like this but it comes from original function
 
+  // NaN/NA guard: a NaN p (or NaN parameter) slips past the range checks above
+  // (every NaN comparison is false) and would otherwise propagate into
+  // fqBNB_scalar's search, returning a wrong, non-NA value instead of NA.
+  if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu) || ISNAN(tau)) {
+    return NA_REAL;
+  }
+
   double p_ = p;
   if (log_p) p_ = exp(p_);
   if (!lower_tail) p_ = 1.0 - p_;

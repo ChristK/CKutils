@@ -146,9 +146,14 @@ List cklut_gather_cpp(SEXP xp, SEXP rownum) {
     bool is_int = TYPEOF(rownum) == INTSXP;
     R_xlen_t n;
     if (is_int) { ri = rownum; n = ri.size(); } else { rd = as<NumericVector>(rownum); n = rd.size(); }
+    const std::int64_t n_rows_i = (std::int64_t)s.n_rows;
     auto row_at = [&](R_xlen_t i) -> std::int64_t {
-        if (is_int) { int v = ri[i]; return v == NA_INTEGER ? -1 : (std::int64_t)v - 1; }
-        double v = rd[i]; return ISNAN(v) ? -1 : (std::int64_t)v - 1;
+        std::int64_t row;
+        if (is_int) { int v = ri[i]; row = (v == NA_INTEGER) ? -1 : (std::int64_t)v - 1; }
+        else { double v = rd[i]; row = ISNAN(v) ? -1 : (std::int64_t)v - 1; }
+        // Out-of-range row -> NA: row_f64()/record() do no bounds check, so an
+        // index >= n_rows would read past the last shard's mmap (OOB read).
+        return (row < 0 || row >= n_rows_i) ? -1 : row;
     };
 
     // Pre-allocate one R vector per value column, then fill row-major so each
@@ -262,9 +267,20 @@ void cklut_build_cpp(std::string out_base,
     std::vector<IntegerVector> didx(ND);
     for (std::size_t d = 0; d < ND; ++d) didx[d] = as<IntegerVector>(dim_index[d]);
 
+    const std::uint64_t n_rows = w.rows();
     for (R_xlen_t row = 0; row < nrow; ++row) {
         std::uint64_t idx = 0;
-        for (std::size_t d = 0; d < ND; ++d) idx += (std::uint64_t)didx[d][row] * strides[d];
+        for (std::size_t d = 0; d < ND; ++d) {
+            const int di = didx[d][row];
+            // An NA (INT_MIN) or negative dense index would make idx wrap/blow up
+            // so w.record(idx) writes outside the mmap (UB / memory corruption).
+            if (di < 0)
+                stop("cklut_build_cpp: NA or negative key index encountered");
+            idx += (std::uint64_t)di * strides[d];
+        }
+        // Catch any out-of-range positive index before it reaches the mmap.
+        if (idx >= n_rows)
+            stop("cklut_build_cpp: key index out of range for the dense grid");
         unsigned char* rec = w.record(idx);
         for (std::size_t v = 0; v < NV; ++v) {
             SEXP col = value_data[v];
@@ -273,7 +289,7 @@ void cklut_build_cpp(std::string out_base,
                 case ValType::F32: { double d = REAL(col)[row]; w.set_f32(rec, v, ISNA(d) ? std::numeric_limits<float>::quiet_NaN() : (float)d); break; }
                 case ValType::I32: { int x = INTEGER(col)[row]; w.set_i32(rec, v, x); break; }   // NA_INTEGER preserved
                 case ValType::LGL: { int x = LOGICAL(col)[row]; w.set_i32(rec, v, x); break; }   // NA_LOGICAL preserved
-                case ValType::I64: { double d = REAL(col)[row]; w.set_i64(rec, v, ISNA(d) ? cklut::ck_na_i64 : (std::int64_t)llround(d)); break; }
+                case ValType::I64: { double d = REAL(col)[row]; w.set_i64(rec, v, ISNAN(d) ? cklut::ck_na_i64 : (std::int64_t)llround(d)); break; }
                 case ValType::STR: { int code = INTEGER(col)[row]; w.set_code(rec, v, code == NA_INTEGER ? cklut::ck_na_str : (std::uint32_t)(code - 1)); break; }
             }
         }

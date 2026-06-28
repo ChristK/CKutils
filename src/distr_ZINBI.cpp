@@ -77,6 +77,9 @@ NumericVector fdZINBI(const NumericVector& x,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
+    // NaN/NA x is handled in the compute loop below (mapped to NA); skip the
+    // `< 0` check here because NaN comparisons are always false anyway.
+    if (ISNAN(recycled.vec1[i])) continue;
     if (recycled.vec1[i] < 0) stop("x must be >=0");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
@@ -88,7 +91,13 @@ NumericVector fdZINBI(const NumericVector& x,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fdZINBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], 
+    // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+    // UB, and a NaN x slips past the `< 0` check (NaN comparisons are false).
+    if (ISNAN(recycled.vec1[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fdZINBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], log);
   }
 
@@ -144,6 +153,9 @@ NumericVector fpZINBI(const NumericVector& q,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
+    // NaN/NA q is handled in the compute loop below (mapped to NA); skip the
+    // `< 0` check here because NaN comparisons are always false anyway.
+    if (ISNAN(recycled.vec1[i])) continue;
     if (recycled.vec1[i] < 0) stop("q must be >=0");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
@@ -155,7 +167,13 @@ NumericVector fpZINBI(const NumericVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fpZINBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], 
+    // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+    // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+    if (ISNAN(recycled.vec1[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fpZINBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 
@@ -210,6 +228,10 @@ IntegerVector fqZINBI(const NumericVector& p,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
+    // NaN/NA inputs are handled in the compute loop below (mapped to NA); skip
+    // the range checks here because every NaN comparison is false anyway.
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
+        ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) continue;
     if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0) stop("p must be >=0 and <=1");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
@@ -221,7 +243,16 @@ IntegerVector fqZINBI(const NumericVector& p,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fqZINBI_scalar(recycled.vec1[i], recycled.vec2[i], 
+    // NaN/NA in any argument -> NA quantile. Without this, a NaN p slips past
+    // the [0,1] range checks above (every NaN comparison is false) and reaches
+    // fqZINBI_scalar -> fqNBI_scalar, which casts/searches on a NaN-derived
+    // value (out-of-range float-to-int UB / wrong result).
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
+        ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) {
+      out[i] = NA_INTEGER;
+      continue;
+    }
+    out[i] = fqZINBI_scalar(recycled.vec1[i], recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 

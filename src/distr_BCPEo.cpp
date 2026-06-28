@@ -440,6 +440,14 @@ NumericVector fqBCPEo(const NumericVector& p,
   // SIMD-optimised main computation loop without caching
   SIMD_HINT
   for (int i = 0; i < n; i++) {
+    // NaN/NA in p or any distribution parameter -> NA quantile. A NaN p slips
+    // past the [0,1] range checks above (every NaN comparison is false) and
+    // reaches fqBCPEo_hlp_q_T -> R::qgamma(NaN,...); base R returns NA here.
+    if (ISNAN(p_cloned[i]) || ISNAN(recycled.vec2[i]) || ISNAN(recycled.vec3[i]) ||
+        ISNAN(recycled.vec4[i]) || ISNAN(recycled.vec5[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
     // Handle edge cases for p=0 and p=1
     if (p_cloned[i] == 0.0)
     {

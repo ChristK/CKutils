@@ -48,6 +48,13 @@ inline double fqZABNB_scalar(const double& p,
   // if (p < 0.0 || p > 1.0) stop("p must be >=0 and <=1"); //I don't like this but it comes from original function
 
 
+  // NaN/NA guard: the vector wrapper (fqZABNB) already maps NaN args to NA, but
+  // guard here too so a NaN can never slip past the (commented-out) range checks
+  // and reach fqBNB_scalar's search, which would return a wrong non-NA value.
+  if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu) || ISNAN(tau)) {
+    return NA_REAL;
+  }
+
   double p_ = p;
   if (log_p) p_ = exp(p_);
   if (!lower_tail) p_ = 1.0 - p_;

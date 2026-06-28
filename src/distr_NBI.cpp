@@ -92,7 +92,13 @@ NumericVector fdNBI(const NumericVector& x,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fdNBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], 
+    // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+    // UB, and a NaN x slips past the `< 0` check (NaN comparisons are false).
+    if (ISNAN(recycled.vec1[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fdNBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
                           recycled.vec3[i], log_p);
   }
 
@@ -157,7 +163,13 @@ NumericVector fpNBI(const NumericVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fpNBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], 
+    // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+    // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+    if (ISNAN(recycled.vec1[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fpNBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
                           recycled.vec3[i], lower_tail, log_p);
   }
 
@@ -234,7 +246,14 @@ IntegerVector fqNBI(const NumericVector& p,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    out[i] = fqNBI_scalar(recycled.vec1[i], recycled.vec2[i], 
+    // NaN/NA in any argument -> NA quantile. A NaN p slips past the [0,1] range
+    // checks above (every NaN comparison is false) and reaches fqNBI_scalar ->
+    // R::qnbinom_mu/qpois(NaN,...), which would feed out-of-range float-to-int.
+    if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) || ISNAN(recycled.vec3[i])) {
+      out[i] = NA_INTEGER;
+      continue;
+    }
+    out[i] = fqNBI_scalar(recycled.vec1[i], recycled.vec2[i],
                           recycled.vec3[i], lower_tail, log_p);
   }
 

@@ -446,6 +446,14 @@ NumericVector fqBCT(const NumericVector& p,
   // SIMD-optimised main computation loop
   SIMD_HINT
   for (int i = 0; i < n; i++) {
+    // NaN/NA in p or any distribution parameter -> NA quantile. A NaN p slips
+    // past the [0,1] range checks above (every NaN comparison is false) and
+    // reaches R::qt(NaN,...); base R returns NA here.
+    if (ISNAN(p_cloned[i]) || ISNAN(recycled.vec2[i]) || ISNAN(recycled.vec3[i]) ||
+        ISNAN(recycled.vec4[i]) || ISNAN(recycled.vec5[i])) {
+      out[i] = NA_REAL;
+      continue;
+    }
     // Compute quantile transformation
     const double abs_nu_sigma = recycled.vec3[i] * std::abs(recycled.vec4[i]);
     const double pt_term = fdBCT_t_cdf(1.0 / abs_nu_sigma, recycled.vec5[i]);

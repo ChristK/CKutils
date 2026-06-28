@@ -93,11 +93,17 @@ NumericVector fdSICHEL(const NumericVector& x,
     NumericVector logfy(n);
     
     for (int i = 0; i < n; i++) {
+        // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+        // UB, and a NaN x slips past the `< 0` check (NaN comparisons are false).
+        if (ISNAN(recycled.vec1[i])) {
+            logfy[i] = NA_REAL;
+            continue;
+        }
         const int xi = static_cast<int>(recycled.vec1[i]);
         const double mui = recycled.vec2[i];
         const double sigmai = recycled.vec3[i];
         const double nui = recycled.vec4[i];
-        
+
         // Use NBI approximation for large sigma and positive nu
         if (sigmai > 10000.0 && nui > 0.0) {
             logfy[i] = fdNBI_scalar(xi, mui, 1.0/nui, log_p);
@@ -178,11 +184,17 @@ NumericVector fpSICHEL(const NumericVector& q,
     NumericVector cdf(n);
     
     for (int i = 0; i < n; i++) {
+        // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+        // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+        if (ISNAN(recycled.vec1[i])) {
+            cdf[i] = NA_REAL;
+            continue;
+        }
         const int qi = static_cast<int>(recycled.vec1[i]);
         const double mui = recycled.vec2[i];
         const double sigmai = recycled.vec3[i];
         const double nui = recycled.vec4[i];
-        
+
         cdf[i] = fcdfSICHEL_scalar(qi, mui, sigmai, nui);
     }
     
@@ -203,6 +215,12 @@ NumericVector fpSICHEL(const NumericVector& q,
 // Optimized quantile search using incremental CDF computation
 // This directly computes densities incrementally without recomputing from scratch
 int fqSICHEL_search(const double& p, const double& mu, const double& sigma, const double& nu) {
+    // NaN/NA guard: the vector wrapper (fqSICHEL) already maps NaN args to NA, but
+    // guard here too so the search/qpois path can never see NaN, which would lead
+    // to out-of-range float-to-int undefined behaviour or a wrong non-NA result.
+    if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) {
+        return NA_INTEGER;
+    }
     // Use NBI approximation for large sigma and positive nu
     if (sigma > 10000.0 && nu > 0.0) {
         return fqNBI_scalar(p, mu, 1.0/nu, true, false);
@@ -331,7 +349,17 @@ IntegerVector fqSICHEL(NumericVector p,
         const double mui = recycled.vec2[i];
         const double sigmai = recycled.vec3[i];
         const double nui = recycled.vec4[i];
-        
+
+        // NaN/NA in probability or any distribution parameter -> NA quantile.
+        // Without this a NaN p slips past the [0,1] range checks above (every NaN
+        // comparison is false) and reaches fqSICHEL_search, where it would feed an
+        // out-of-range float-to-int cast / wrong non-NA search result. Base R
+        // returns NA for a NaN probability.
+        if (ISNAN(pi) || ISNAN(mui) || ISNAN(sigmai) || ISNAN(nui)) {
+            QQQ[i] = NA_INTEGER;
+            continue;
+        }
+
         if (pi + 1e-09 >= 1.0) {
             QQQ[i] = R_PosInf;
             continue;

@@ -136,6 +136,13 @@ NumericVector shift_bypidNum(const NumericVector& x, const int& lag,
 
   NumericVector out(n);
 
+  // Reject NA / INT_MIN lag: R's NA_integer_ is stored as INT_MIN, and negating
+  // it below (-lag) is signed-integer overflow (UB) that drives out-of-bounds
+  // indexing and crashes the R process. data.table::shift() likewise refuses an
+  // NA shift amount.
+  if (lag == NA_INTEGER) {
+    stop("'lag' must not be NA");
+  }
   // If lag magnitude >= n, entire result is replace values
   int abs_lag = (lag >= 0) ? lag : -lag;
   if (abs_lag >= n) {
@@ -210,6 +217,13 @@ IntegerVector shift_bypidInt(const IntegerVector& x, const int& lag,
 
   IntegerVector out(n);
 
+  // Reject NA / INT_MIN lag: R's NA_integer_ is stored as INT_MIN, and negating
+  // it below (-lag) is signed-integer overflow (UB) that drives out-of-bounds
+  // indexing and crashes the R process. data.table::shift() likewise refuses an
+  // NA shift amount.
+  if (lag == NA_INTEGER) {
+    stop("'lag' must not be NA");
+  }
   // If lag magnitude >= n, entire result is replace values
   int abs_lag = (lag >= 0) ? lag : -lag;
   if (abs_lag >= n) {
@@ -311,6 +325,13 @@ LogicalVector shift_bypidBool(const LogicalVector& x, const int& lag,
   // Get the replacement value (first element of replace vector)
   int repl_val = replace[0];
 
+  // Reject NA / INT_MIN lag: R's NA_integer_ is stored as INT_MIN, and negating
+  // it below (-lag) is signed-integer overflow (UB) that drives out-of-bounds
+  // indexing and crashes the R process. data.table::shift() likewise refuses an
+  // NA shift amount.
+  if (lag == NA_INTEGER) {
+    stop("'lag' must not be NA");
+  }
   // If lag magnitude >= n, entire result is replace values
   int abs_lag = (lag >= 0) ? lag : -lag;
   if (abs_lag >= n) {
@@ -394,6 +415,13 @@ StringVector shift_bypidStr(const CharacterVector& x, const int& lag,
   // Convert replace to Rcpp::String for compatibility with ternary operators
   Rcpp::String replace_str(replace);
 
+  // Reject NA / INT_MIN lag: R's NA_integer_ is stored as INT_MIN, and negating
+  // it below (-lag) is signed-integer overflow (UB) that drives out-of-bounds
+  // indexing and crashes the R process. data.table::shift() likewise refuses an
+  // NA shift amount.
+  if (lag == NA_INTEGER) {
+    stop("'lag' must not be NA");
+  }
   // If lag magnitude >= n, entire result is replace values
   int abs_lag = (lag >= 0) ? lag : -lag;
   if (abs_lag >= n) {

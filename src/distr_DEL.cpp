@@ -184,6 +184,12 @@ NumericVector fdDEL(const IntegerVector &x,
     #endif
     
     for (int i = chunk_start; i < chunk_end; i++) {
+      // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+      // UB, and a NaN x slips past the `< 0` check (NaN comparisons are false).
+      if (ISNAN(recycled.vec1[i])) {
+        logfy[i] = NA_REAL;
+        continue;
+      }
       if (recycled.vec1[i] < 0.0)
         stop("x must be >=0");
       if (recycled.vec2[i] <= 0.0)
@@ -306,6 +312,12 @@ NumericVector fpDEL(const IntegerVector &q,
     int chunk_end = std::min(chunk_start + chunk_size, n);
     
     for (int i = chunk_start; i < chunk_end; i++) {
+      // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
+      // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+      if (ISNAN(recycled.vec1[i])) {
+        cdf[i] = NA_REAL;
+        continue;
+      }
       if (recycled.vec1[i] < 0)
         stop("q must be >=0");
       if (recycled.vec2[i] <= 0.0)
@@ -314,8 +326,8 @@ NumericVector fpDEL(const IntegerVector &q,
         stop("sigma must be greater than 0");
       if (recycled.vec4[i] <= 0.0 || recycled.vec4[i] >= 1)
         stop("nu must be between 0 and 1");
-        
-      cdf[i] = fpDEL_hlp_fn(static_cast<int>(recycled.vec1[i]), 
+
+      cdf[i] = fpDEL_hlp_fn(static_cast<int>(recycled.vec1[i]),
                            recycled.vec2[i], recycled.vec3[i], recycled.vec4[i]);
     }
   }
@@ -415,6 +427,12 @@ int fqDEL_search(const double &p,
                  const double &sigma,
                  const double &nu)
 {
+  // NaN/NA guard: the vector wrapper (fqDEL) already maps NaN args to NA, but
+  // guard here too so R::qpois(NaN,...) and the static_cast<int> below can never
+  // see NaN, which would be out-of-range float-to-int undefined behaviour.
+  if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) {
+    return NA_INTEGER;
+  }
   // For very small sigma, use Poisson distribution directly
   if (sigma < 1e-04) {
     return static_cast<int>(R::qpois(p, mu, true, false));
@@ -539,7 +557,16 @@ NumericVector fqDEL(NumericVector p,
     
     for (int i = chunk_start; i < chunk_end; i++) {
       double p_i = recycled.vec1[i];
-      
+
+      // NaN/NA in any argument -> NA quantile. Without this, a NaN p slips past
+      // the [0,1] range checks below (every NaN comparison is false) and reaches
+      // fqDEL_search -> static_cast<int>(R::qpois(NaN,...)), out-of-range
+      // float-to-int UB.
+      if (ISNAN(p_i) || ISNAN(recycled.vec2[i]) || ISNAN(recycled.vec3[i]) ||
+          ISNAN(recycled.vec4[i])) {
+        QQQ[i] = NA_REAL;
+        continue;
+      }
 
       if (recycled.vec2[i] <= 0.0)
         stop("mu must be greater than 0");

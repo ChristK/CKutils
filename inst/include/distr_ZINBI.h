@@ -99,6 +99,13 @@ inline int fqZINBI_scalar(const double& p,
     // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
     // if (p < 0.0 || p > 1.0) stop("p must be >=0 and <=1");
 
+    // NaN/NA guard: a NaN p (or NaN parameter) would otherwise propagate through
+    // the arithmetic below into fqNBI_scalar, where it can reach an out-of-range
+    // float-to-int cast / runaway search. Base R returns NA for a NaN p.
+    if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) {
+        return NA_INTEGER;
+    }
+
     double p_adj = p;
     if (log_p) p_adj = exp(p_adj);
     if (!lower_tail) p_adj = 1.0 - p_adj;

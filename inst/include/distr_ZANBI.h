@@ -101,6 +101,13 @@ inline int fqZANBI_scalar(const double& p,
     // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
     // if (p < 0.0 || p > 1.0) stop("p must be >=0 and <=1");
 
+    // NaN/NA guard: a NaN probability or parameter slips past every range check
+    // (NaN comparisons are false) and would reach static_cast<int>(...) UB in
+    // fqNBI_scalar. Base R returns NA for a NaN probability.
+    if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) {
+        return NA_INTEGER;
+    }
+
     double p_adj = p;
     if (log_p) p_adj = std::exp(p_adj);
     if (!lower_tail) p_adj = 1.0 - p_adj;
