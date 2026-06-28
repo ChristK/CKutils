@@ -21,35 +21,21 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <Rmath.h>
 #include "recycling_helpers.h"
 #include "distr_NBI.h"
+#include "distr_ZANBI.h"   // canonical header-only scalar definitions
 // [[Rcpp::plugins(cpp17)]]
+
+// Enable vectorization hints for modern compilers
+#if defined(__GNUC__) || defined(__clang__)
+#define SIMD_HINT _Pragma("GCC ivdep")
+#else
+#define SIMD_HINT
+#endif
 
 using namespace Rcpp;
 
 // Zero-altered NBI functions
-// SIMD-optimised ZANBI density scalar function
-double fdZANBI_scalar(const int& x,
-                      const double& mu,
-                      const double& sigma,
-                      const double& nu,
-                      const bool& log_p) {
-    // Parameter validation (uncommented for performance)
-    // if (mu    <= 0.0) stop("mu must be greater than 0");
-    // if (sigma <= 0.0) stop("sigma must be greater than 0");
-    // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
-    // if (x      < 0) stop("x must be >=0");
-    
-    double log_density;
-    if (x == 0) {
-        log_density = std::log(nu);
-    } else {
-        // For x > 0: P(X = x) = (1-nu) * f_NBI(x) / (1 - f_NBI(0))
-        const double log_f0 = fdNBI_scalar(0, mu, sigma, true);
-        const double log_fx = fdNBI_scalar(x, mu, sigma, true);
-        log_density = std::log(1.0 - nu) + log_fx - std::log(1.0 - std::exp(log_f0));
-    }
-    
-    return log_p ? log_density : std::exp(log_density);
-}
+// ZANBI *_scalar definitions now live (inline) in inst/include/distr_ZANBI.h so
+// that downstream LinkingTo: CKutils consumers can call them directly.
 
 
 //' Zero-Altered Negative Binomial Type I Distribution Density
@@ -115,38 +101,6 @@ NumericVector fdZANBI(const NumericVector& x,
   }
 
   return out;
-}
-
-
-// SIMD-optimised ZANBI CDF scalar function
-double fpZANBI_scalar(const int& q,
-                      const double& mu,
-                      const double& sigma,
-                      const double& nu,
-                      const bool& lower_tail,
-                      const bool& log_p) {
-    // Parameter validation (uncommented for performance)
-    // if (mu    <= 0.0) stop("mu must be greater than 0");
-    // if (sigma <= 0.0) stop("sigma must be greater than 0");
-    // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
-    // if (q      < 0) stop("q must be >=0");
-    
-    double cdf;
-    if (q < 0) {
-        cdf = 0.0;
-    } else if (q == 0) {
-        cdf = nu;
-    } else {
-        // F(q) = nu + (1-nu) * (F_NBI(q) - F_NBI(0)) / (1 - F_NBI(0))
-        const double cdf0 = fpNBI_scalar(0, mu, sigma, true, false);
-        const double cdf1 = fpNBI_scalar(q, mu, sigma, true, false);
-        cdf = nu + ((1.0 - nu) * (cdf1 - cdf0) / (1.0 - cdf0));
-    }
-    
-    if (!lower_tail) cdf = 1.0 - cdf;
-    if (log_p) cdf = std::log(cdf);
-    
-    return cdf;
 }
 
 
@@ -218,40 +172,6 @@ NumericVector fpZANBI(const NumericVector& q,
 }
 
 
-// SIMD-optimised ZANBI quantile scalar function
-int fqZANBI_scalar(const double& p,
-                   const double& mu,
-                   const double& sigma,
-                   const double& nu,
-                   const bool& lower_tail,
-                   const bool& log_p) {
-    // Parameter validation (uncommented for performance)
-    // if (mu    <= 0.0) stop("mu must be greater than 0");
-    // if (sigma <= 0.0) stop("sigma must be greater than 0");
-    // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
-    // if (p < 0.0 || p > 1.0) stop("p must be >=0 and <=1");
-    
-    double p_adj = p;
-    if (log_p) p_adj = exp(p_adj);
-    if (!lower_tail) p_adj = 1.0 - p_adj;
-    
-    if (p_adj <= nu) {
-        return 0;
-    }
-    
-    // Adjust probability for zero-alteration
-    const double p_new = (p_adj - nu) / (1.0 - nu) - 1e-10;
-    const double cdf0 = fpNBI_scalar(0, mu, sigma, true, false);
-    const double p_new2 = cdf0 * (1.0 - p_new) + p_new;
-    
-    if (p_new2 <= 0.0) {
-        return 0;
-    }
-    
-    return fqNBI_scalar(p_new2, mu, sigma, true, false);
-}
-
-
 //' Zero-Altered Negative Binomial Type I Distribution Quantile Function
 //'
 //' Quantile function for the Zero-Altered Negative Binomial type I (ZANBI)
@@ -315,31 +235,6 @@ IntegerVector fqZANBI(const NumericVector& p,
   }
 
   return out;
-}
-
-
-// SIMD-optimised ZANBI random generation scalar function
-int frZANBI_scalar(const double& mu,
-                   const double& sigma,
-                   const double& nu) {
-    // Parameter validation (uncommented for performance)
-    // if (mu    <= 0.0) stop("mu must be greater than 0");
-    // if (sigma <= 0.0) stop("sigma must be greater than 0");
-    // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
-    
-    // Generate uniform random number
-    const double u = R::runif(0.0, 1.0);
-    
-    if (u < nu) {
-        return 0;  // Zero-altered part
-    } else {
-        // Generate from truncated NBI (excluding zero)
-        int x;
-        do {
-            x = frNBI_scalar(mu, sigma);
-        } while (x == 0);
-        return x;
-    }
 }
 
 

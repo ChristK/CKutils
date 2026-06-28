@@ -29,6 +29,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <vector>
 #include <cstring>
 #include "recycling_helpers.h"
+#include "distr_DEL.h"   // header-only scalar definitions (fdPO_scalar, ftofydel2_scalar, fdDEL_scalar, fpDEL_hlp_fn, fpDEL_scalar)
 // [[Rcpp::plugins(cpp17)]]
 using namespace Rcpp;
 
@@ -91,52 +92,7 @@ inline void simd_log_4(const double* input, double* output) {
     }
 }
 
-// dPO (necessary for dDL)
-double fdPO_scalar(const int &x, const double &mu = 1.0, const double &sigma = 1.0, const bool &log_ = false)
-{
-  // if (x < 0) stop("x must be >=0");
-  // if (mu <= 0.0) stop("mu must be greater than 0");
-  // if (sigma <= 0.0) stop("sigma must be greater than 0");
-  double fy;
-  if (sigma > 1e-04)
-  {
-    fy = R::dnbinom_mu(x, 1.0 / sigma, mu, log_);
-  }
-  else
-  {
-    fy = R::dpois(x, mu, log_);
-  }
-  return fy;
-}
-
-// SIMD optimised ftofydel2 computation
-double ftofydel2_scalar(const int &y, const double &mu,
-                       const double &sigma, const double &nu) {
-    if (y <= 0) return 0.0;
-    
-    std::vector<double> tofY(y + 2);
-    const double mu_nu = mu * nu;
-    const double one_minus_nu = 1.0 - nu;
-    const double mu_sigma_1_minus_nu = mu * sigma * one_minus_nu;
-    const double sigma_1_minus_nu = sigma * one_minus_nu;
-    
-    // Initial value
-    tofY[0] = mu_nu + mu * one_minus_nu / (1.0 + mu_sigma_1_minus_nu);
-    
-    double sumT = 0.0;
-    const double inv_sigma_1_minus_nu = 1.0 / sigma_1_minus_nu;
-    const double dum_const = 1.0 + 1.0 / mu_sigma_1_minus_nu;
-    
-    // Optimized loop with better cache access patterns
-    for (int j = 1; j < y + 1; j++) {
-        double term = (j + mu_nu + inv_sigma_1_minus_nu - 
-                      (mu_nu * j) / tofY[j - 1]) / dum_const;
-        tofY[j] = term;
-        sumT += log(tofY[j - 1]);
-    }
-    
-    return sumT;
-}
+// fdPO_scalar and ftofydel2_scalar definitions now live (inline) in inst/include/distr_DEL.h
 
 
 
@@ -263,56 +219,7 @@ NumericVector fdDEL(const IntegerVector &x,
   return logfy;
 }
 
-// Optimized scalar density function
-double fdDEL_scalar(const int &x,
-                      const double &mu,
-                      const double &sigma,
-                      const double &nu,
-                      const bool &log_ = false)
-{
-  double logfy = 0.0;
-  if (sigma < 1e-04) {
-    logfy = R::dpois(x, mu, (int)log_);
-  } else {
-    const double one_minus_nu = 1.0 - nu;
-    double logpy0 = -mu * nu - (1.0 / sigma) * 
-                    log(1.0 + mu * sigma * one_minus_nu);
-    double S = ftofydel2_scalar(x, mu, sigma, nu);
-    logfy = logpy0 - lgamma(x + 1) + S;
-    if (!log_)
-      logfy = exp(logfy);
-  }
-  return logfy;
-}
-
-// CDF helper function matching gamlss.dist algorithm exactly
-double fpDEL_hlp_fn(const int &q,
-                      const double &mu,
-                      const double &sigma,
-                      const double &nu)
-{
-  if (q < 0) return 0.0;
-  
-  // Match gamlss.dist algorithm exactly: sum(dDEL(0:q, ...))
-  double ans = 0.0;
-  
-  // Use the same small sigma threshold as gamlss.dist
-  const bool use_poisson = (sigma < 1e-04);
-  
-  if (use_poisson) {
-    // Use Poisson distribution for small sigma (matching gamlss.dist)
-    for (int i = 0; i <= q; i++) {
-      ans += R::dpois(i, mu, false);
-    }
-  } else {
-    // Sum density values exactly as gamlss.dist does
-    for (int i = 0; i <= q; i++) {
-      ans += fdDEL_scalar(i, mu, sigma, nu, false);
-    }
-  }
-  
-  return ans;
-}
+// fdDEL_scalar and fpDEL_hlp_fn definitions now live (inline) in inst/include/distr_DEL.h
 
 //' The Delaporte Distribution - Cumulative Distribution Function
 //'
@@ -499,22 +406,7 @@ NumericVector fpDEL(const IntegerVector &q,
   return cdf;
 }
 
-// Optimized scalar CDF function
-double fpDEL_scalar(const int &q,
-                      const double &mu,
-                      const double &sigma,
-                      const double &nu,
-                      const bool &lower_tail = true,
-                      const bool &log_p = false)
-{
-  double cdf = fpDEL_hlp_fn(q, mu, sigma, nu);
-  if (!lower_tail)
-    cdf = 1.0 - cdf;
-  if (log_p)
-    cdf = log(cdf);
-
-  return cdf;
-}
+// fpDEL_scalar definition now lives (inline) in inst/include/distr_DEL.h
 
 // Optimized quantile search using incremental CDF computation
 // This avoids recalculating CDF from scratch for each candidate

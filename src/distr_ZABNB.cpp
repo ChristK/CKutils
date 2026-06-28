@@ -21,6 +21,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <Rmath.h>
 #include "recycling_helpers.h"
 #include "distr_BNB.h"
+#include "distr_ZABNB.h"   // canonical header-only scalar definitions
 // [[Rcpp::plugins(cpp17)]]
 
 // Enable vectorization hints for modern compilers
@@ -33,32 +34,8 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 using namespace Rcpp;
 
 // qZABNB ----
-double fqZABNB_scalar(const double& p,
-                     const double& mu = 1.0,
-                     const double& sigma = 1.0,
-                     const double& nu = 1.0,
-                     const double& tau = 0.1,
-                     const bool& lower_tail = true,
-                     const bool& log_p = false)
-{
-  // if (mu    <= 0) stop("mu must be greater than 0");
-  // if (sigma <= 0) stop("sigma must be greater than 0");
-  // if (nu    <= 0) stop("nu must be greater than 0");
-  // if (tau <= 0.0 || tau >= 1.0) stop("tau must be >0 and <1");
-  // if (p < 0.0 || p > 1.0) stop("p must be >=0 and <=1"); //I don't like this but it comes from original function
-
-
-  double p_ = p;
-  if (log_p) p_ = exp(p_);
-  if (!lower_tail) p_ = 1.0 - p_;
-
-  p_ = (p_ - tau)/(1.0 - tau) - (1e-010);
-  double cdf0 = fpBNB_scalar(0, mu, sigma, nu, true, false);
-  p_ = cdf0 * (1.0 - p_) + p_;
-  if (p_ < 0.0) p_ = 0.0;
-
-  return fqBNB_scalar(p_, mu, sigma, nu, true, false);
-}
+// ZABNB *_scalar definitions now live (inline) in inst/include/distr_ZABNB.h so
+// that downstream LinkingTo: CKutils consumers can call them directly.
 
 
 //' Zero Adjusted Beta Negative Binomial Quantile Function

@@ -19,33 +19,143 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #ifndef DISTR_ZINBI_H
 #define DISTR_ZINBI_H
 
+// Header-only scalar API for the Zero-Inflated Negative Binomial type I (ZINBI)
+// distribution.
+//
+// The *_scalar functions below are defined `inline` so that a downstream
+// package can `LinkingTo: CKutils`, `#include <distr_ZINBI.h>` and call them
+// directly from its own C++ (e.g. in a hot per-row loop) without linking
+// against CKutils.so. The vectorised, Rcpp-exported wrappers (declared at the
+// bottom) live in src/distr_ZINBI.cpp and call these same inline scalars.
+
 #include <Rcpp.h>
-using namespace Rcpp;
+#include <cmath>
+#include "distr_NBI.h"   // ZINBI scalars are defined in terms of the NBI scalars
 
-// Function declarations for ZINBI distribution
-NumericVector fdZINBI(const NumericVector& x,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& log_p);
+// SIMD-optimised ZINBI density scalar function
+inline double fdZINBI_scalar(const int& x,
+                      const double& mu,
+                      const double& sigma,
+                      const double& nu,
+                      const bool& log_p) {
+    // Parameter validation (uncommented for performance)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
+    // if (x      < 0) stop("x must be >=0");
 
-NumericVector fpZINBI(const NumericVector& q,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& lower_tail,
-                        const bool& log_p);
+    double log_density;
+    if (x == 0) {
+        // P(X = 0) = nu + (1-nu) * f_NBI(0)
+        const double log_f0 = fdNBI_scalar(0, mu, sigma, true);
+        log_density = std::log(nu + (1.0 - nu) * std::exp(log_f0));
+    } else {
+        // P(X = x) = (1-nu) * f_NBI(x) for x > 0
+        const double log_f = fdNBI_scalar(x, mu, sigma, true);
+        log_density = std::log(1.0 - nu) + log_f;
+    }
 
-NumericVector fqZINBI(const NumericVector& p,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& lower_tail,
-                        const bool& log_p);
+    return log_p ? log_density : std::exp(log_density);
+}
 
-NumericVector frZINBI(const int& n,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu);
+// SIMD-optimised ZINBI CDF scalar function
+inline double fpZINBI_scalar(const int& q,
+                      const double& mu = 1.0,
+                      const double& sigma = 1.0,
+                      const double& nu = 0.1,
+                      const bool& lower_tail = true,
+                      const bool& log_p = false) {
+    // Parameter validation (uncommented for performance)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
+    // if (q      < 0) stop("q must be >=0");
+
+    double cdf;
+    if (q < 0) {
+        cdf = 0.0;
+    } else {
+        // F(q) = nu + (1-nu) * F_NBI(q)
+        const double cdf_nbi = fpNBI_scalar(q, mu, sigma, true, false);
+        cdf = nu + (1.0 - nu) * cdf_nbi;
+    }
+
+    if (!lower_tail) cdf = 1.0 - cdf;
+    if (log_p) cdf = std::log(cdf);
+
+    return cdf;
+}
+
+// SIMD-optimised ZINBI quantile scalar function
+inline int fqZINBI_scalar(const double& p,
+                   const double& mu,
+                   const double& sigma,
+                   const double& nu,
+                   const bool& lower_tail,
+                   const bool& log_p) {
+    // Parameter validation (uncommented for performance)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
+    // if (p < 0.0 || p > 1.0) stop("p must be >=0 and <=1");
+
+    double p_adj = p;
+    if (log_p) p_adj = exp(p_adj);
+    if (!lower_tail) p_adj = 1.0 - p_adj;
+
+    // Adjust probability for zero-inflation
+    const double p_new = (p_adj - nu) / (1.0 - nu) - 1e-10;
+
+    if (p_new <= 0.0) {
+        return 0;
+    }
+
+    return fqNBI_scalar(p_new, mu, sigma, true, false);
+}
+
+// SIMD-optimised ZINBI random generation scalar function
+inline int frZINBI_scalar(const double& mu,
+                   const double& sigma,
+                   const double& nu) {
+    // Parameter validation (uncommented for performance)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
+
+    // Generate uniform random number
+    const double u = R::runif(0.0, 1.0);
+
+    if (u < nu) {
+        return 0;  // Zero-inflated part
+    } else {
+        return frNBI_scalar(mu, sigma);  // Standard NBI part
+    }
+}
+
+// Vectorised, Rcpp-exported wrappers (defined in src/distr_ZINBI.cpp)
+Rcpp::NumericVector fdZINBI(const Rcpp::NumericVector& x,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const bool& log);
+
+Rcpp::NumericVector fpZINBI(const Rcpp::NumericVector& q,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const bool& lower_tail,
+                           const bool& log_p);
+
+Rcpp::IntegerVector fqZINBI(const Rcpp::NumericVector& p,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const bool& lower_tail,
+                           const bool& log_p);
+
+Rcpp::IntegerVector frZINBI(const int& n,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu);
 
 #endif // DISTR_ZINBI_H

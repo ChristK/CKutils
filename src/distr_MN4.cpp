@@ -20,6 +20,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <cmath>
 #include <algorithm>
 #include "recycling_helpers.h"
+#include "distr_MN4.h"   // canonical header-only scalar definitions
 // [[Rcpp::plugins(cpp17)]]
 
 // Enable vectorization hints for modern compilers
@@ -31,82 +32,8 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 using namespace Rcpp;
 
-// Scalar helper for MN4 density
-inline double fdMN4_scalar(const int& x,
-                           const double& mu,
-                           const double& sigma,
-                           const double& nu,
-                           const bool& log_) {
-  if (mu <= 0.0) return R_NaN;
-  if (sigma <= 0.0) return R_NaN;
-  if (nu <= 0.0) return R_NaN;
-  if (x < 1 || x > 4) return log_ ? R_NegInf : 0.0;
-  
-  double logfy = R_NegInf;
-  const double normaliser = 1.0 + mu + sigma + nu;
-  
-  if (x == 1) logfy = std::log(mu);
-  else if (x == 2) logfy = std::log(sigma);
-  else if (x == 3) logfy = std::log(nu);
-  else if (x == 4) logfy = 0.0;  // log(1) = 0
-  
-  logfy -= std::log(normaliser);
-  
-  return log_ ? logfy : std::exp(logfy);
-}
+// MN4 *_scalar definitions now live (inline) in inst/include/distr_MN4.h
 
-// Scalar helper for MN4 distribution function
-inline double fpMN4_scalar(const int& q,
-                           const double& mu,
-                           const double& sigma,
-                           const double& nu,
-                           const bool& lower_tail,
-                           const bool& log_p) {
-  if (mu <= 0.0) return R_NaN;
-  if (sigma <= 0.0) return R_NaN;
-  if (nu <= 0.0) return R_NaN;
-  if (q < 1) return lower_tail ? (log_p ? R_NegInf : 0.0) : (log_p ? 0.0 : 1.0);
-  if (q >= 4) return lower_tail ? (log_p ? 0.0 : 1.0) : (log_p ? R_NegInf : 0.0);
-  
-  const double normaliser = 1.0 + mu + sigma + nu;
-  double cdf = 0.0;
-  
-  if (q >= 1) cdf = mu / normaliser;
-  if (q >= 2) cdf = (mu + sigma) / normaliser;
-  if (q >= 3) cdf = (mu + sigma + nu) / normaliser;
-  if (q >= 4) cdf = 1.0;
-  
-  if (!lower_tail) cdf = 1.0 - cdf;
-  
-  return log_p ? std::log(cdf) : cdf;
-}
-
-// Scalar helper for MN4 quantile function
-inline int fqMN4_scalar(const double& p,
-                        const double& mu,
-                        const double& sigma,
-                        const double& nu,
-                        const bool& lower_tail,
-                        const bool& log_p) {
-  if (mu <= 0.0) return NA_INTEGER;
-  if (sigma <= 0.0) return NA_INTEGER;
-  if (nu <= 0.0) return NA_INTEGER;
-  
-  double p_ = p;
-  if (log_p) p_ = std::exp(p);
-  if (!lower_tail) p_ = 1.0 - p_;
-  
-  if (p_ < 0.0 || p_ > 1.0) return NA_INTEGER;
-  
-  const double normaliser = 1.0 + mu + sigma + nu;
-  int q = 1;
-  
-  if (p_ >= (mu / normaliser)) q = 2;
-  if (p_ >= ((mu + sigma) / normaliser)) q = 3;
-  if (p_ >= ((mu + sigma + nu) / normaliser)) q = 4;
-  
-  return q;
-}
 
 //' Multinomial Distribution with 4 Categories - Density Function
 //'

@@ -1,4 +1,9 @@
 # C++17 is required for constexpr if and std::is_same_v
 CXX_STD = CXX17
 
+# -I../inst/include lets this package's own src compile against the canonical,
+# header-only distribution scalars shipped in inst/include (single source of
+# truth shared with downstream LinkingTo: CKutils consumers).
+PKG_CPPFLAGS = -I../inst/include
+
 PKG_CXXFLAGS = $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "cat(paste0('-I\"', system.file('include', package='data.table'), '\"'))")

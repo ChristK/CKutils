@@ -19,33 +19,116 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #ifndef DISTR_NBI_H
 #define DISTR_NBI_H
 
-#include <Rcpp.h>
-using namespace Rcpp;
+// Header-only scalar API for the Negative Binomial type I (NBI) distribution.
+//
+// The *_scalar functions below are defined `inline` so that a downstream
+// package can `LinkingTo: CKutils`, `#include <distr_NBI.h>` and call them
+// directly from its own C++ (e.g. in a hot per-row loop) without linking
+// against CKutils.so. The vectorised, Rcpp-exported wrappers (declared at the
+// bottom) live in src/distr_NBI.cpp and call these same inline scalars.
 
-// Function declarations for NBI distribution
-NumericVector fdNBI(const NumericVector& x,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& log_p);
+#include <Rcpp.h>   // brings in the R:: namespace math functions (dnbinom_mu, ...)
+#include <cmath>
 
-NumericVector fpNBI(const NumericVector& q,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& lower_tail,
-                        const bool& log_p);
+// SIMD-optimised NBI density scalar function
+inline double fdNBI_scalar(const int& x,
+                           const double& mu = 1.0,
+                           const double& sigma = 1.0,
+                           const bool& log_p = false) {
+    // Parameter validation (uncommented for performance)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (x      < 0.0) stop("x must be >=0");
 
-NumericVector fqNBI(const NumericVector& p,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu,
-                        const bool& lower_tail,
-                        const bool& log_p);
+    // For very small sigma values, use Poisson approximation
+    if (sigma < 1e-4) {
+        return R::dpois(x, mu, log_p);
+    }
 
-NumericVector frNBI(const int& n,
-                        const NumericVector& mu,
-                        const NumericVector& sigma,
-                        const NumericVector& nu);
+    // Standard NBI calculation using negative binomial
+    const double size = 1.0 / sigma;
+    return R::dnbinom_mu(x, size, mu, log_p);
+}
+
+// SIMD-optimised NBI CDF scalar function
+inline double fpNBI_scalar(const int& q,
+                           const double& mu = 1.0,
+                           const double& sigma = 1.0,
+                           const bool& lower_tail = true,
+                           const bool& log_p = false) {
+    // Parameter validation (uncommented for performance)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (q      < 0) stop("q must be >=0");
+
+    // For very small sigma values, use Poisson approximation
+    if (sigma < 1e-4) {
+        return R::ppois(q, mu, lower_tail, log_p);
+    }
+
+    // Standard NBI calculation using negative binomial
+    const double size = 1.0 / sigma;
+    return R::pnbinom_mu(q, size, mu, lower_tail, log_p);
+}
+
+// SIMD-optimised NBI quantile scalar function
+inline int fqNBI_scalar(const double& p,
+                        const double& mu = 1.0,
+                        const double& sigma = 1.0,
+                        const bool& lower_tail = true,
+                        const bool& log_p = false) {
+    // Parameter validation (uncommented for performance)
+    // if (mu    <= 0) stop("mu must be greater than 0");
+    // if (sigma <= 0) stop("sigma must be greater than 0");
+    // if (p < 0.0 || p > 1.0) stop("p must be >=0 and <=1");
+
+    // For very small sigma values, use Poisson approximation
+    if (sigma < 1e-4) {
+        return R::qpois(p, mu, lower_tail, log_p);
+    }
+
+    // Standard NBI calculation using negative binomial
+    const double size = 1.0 / sigma;
+    return R::qnbinom_mu(p, size, mu, lower_tail, log_p);
+}
+
+// SIMD-optimised NBI random generation scalar function
+inline int frNBI_scalar(const double& mu = 1.0,
+                        const double& sigma = 1.0) {
+    // Parameter validation (uncommented for performance)
+    // if (mu    <= 0) stop("mu must be greater than 0");
+    // if (sigma <= 0) stop("sigma must be greater than 0");
+
+    // For very small sigma values, use Poisson approximation
+    if (sigma < 1e-4) {
+        return R::rpois(mu);
+    }
+
+    // Standard NBI generation using negative binomial
+    const double size = 1.0 / sigma;
+    return R::rnbinom(size, size / (size + mu));
+}
+
+// Vectorised, Rcpp-exported wrappers (defined in src/distr_NBI.cpp)
+Rcpp::NumericVector fdNBI(const Rcpp::NumericVector& x,
+                          const Rcpp::NumericVector& mu,
+                          const Rcpp::NumericVector& sigma,
+                          const bool& log_p);
+
+Rcpp::NumericVector fpNBI(const Rcpp::NumericVector& q,
+                          const Rcpp::NumericVector& mu,
+                          const Rcpp::NumericVector& sigma,
+                          const bool& lower_tail,
+                          const bool& log_p);
+
+Rcpp::IntegerVector fqNBI(const Rcpp::NumericVector& p,
+                          const Rcpp::NumericVector& mu,
+                          const Rcpp::NumericVector& sigma,
+                          const bool& lower_tail,
+                          const bool& log_p);
+
+Rcpp::IntegerVector frNBI(const int& n,
+                          const Rcpp::NumericVector& mu,
+                          const Rcpp::NumericVector& sigma);
 
 #endif // DISTR_NBI_H
