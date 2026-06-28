@@ -87,7 +87,7 @@ jobs:
     steps:
       # Step 1: Checkout the repository code
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Step 2: Set up Pandoc (required for vignettes and R Markdown)
       - name: Setup Pandoc
@@ -161,7 +161,7 @@ jobs:
       # Step 5.1: Upload installation logs on failure for debugging
       - name: Upload 00install.out log
         if: failure()  # Only runs if a previous step failed
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: install-log-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: check/CKutils.Rcheck/00install.out
@@ -170,7 +170,7 @@ jobs:
       # Step 5.2: Upload check logs on failure for comprehensive debugging
       - name: Upload all check logs
         if: failure()  # Only runs if a previous step failed
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: check-logs-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: check/CKutils.Rcheck/

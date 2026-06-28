@@ -52,7 +52,7 @@ jobs:
     steps:
       # Step 1: Checkout the repository code
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Step 2: Set up R environment with latest release
       - name: Setup R
@@ -90,7 +90,7 @@ jobs:
 
       # Step 5: Upload coverage to Codecov using official action
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: coverage.xml
           flags: unittests
@@ -117,7 +117,7 @@ jobs:
       # Step 7: Upload test results on failure (for debugging)
       - name: Upload test results on failure
         if: failure()  # Only run if the workflow failed
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-tinytest-failures
           path: ${{ runner.temp }}/package
