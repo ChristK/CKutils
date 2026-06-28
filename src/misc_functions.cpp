@@ -55,20 +55,48 @@ NumericVector fquantile(NumericVector x, NumericVector probs, bool na_rm = true)
     return (out);
   }
 
-  // Handle all-NA input
-  if (is_true(all(is_na(x))))
+  // Count missing values. ISNAN() matches R's is.na(): it is true for BOTH
+  // R's NA and a plain NaN. This is deliberate -- Rcpp's is_na()/na_omit()
+  // recognise only NA (R_IsNA), so a bare NaN would otherwise slip through to
+  // the std::sort() below, where sorting a range containing NaN is undefined
+  // behaviour (NaN is not a valid strict-weak-ordering element) and yields a
+  // platform-dependent result.
+  R_xlen_t n_miss = 0;
+  for (R_xlen_t i = 0; i < x.size(); ++i)
+    if (ISNAN(x[i])) ++n_miss;
+
+  // All values missing -> every quantile is NA.
+  if (n_miss == x.size())
   {
-    NumericVector out(probs.size(), NA_REAL);
-    return (out);
+    return NumericVector(probs.size(), NA_REAL);
   }
 
-  if (na_rm)
-    x = na_omit(x);
+  // na_rm = FALSE with any missing value -> propagate NA to every quantile.
+  if (!na_rm && n_miss > 0)
+  {
+    return NumericVector(probs.size(), NA_REAL);
+  }
 
-  // After na_omit, check if vector became empty
+  // Work on a fresh vector with missing values dropped. Copying serves two
+  // purposes: (1) it keeps NaN/NA out of std::sort() below, and (2) it prevents
+  // that in-place sort from mutating the caller's vector, since NumericVector
+  // aliases the underlying R object. (When n_miss == 0 this clones x verbatim.)
+  if (n_miss > 0)
+  {
+    NumericVector clean(x.size() - n_miss);
+    R_xlen_t k = 0;
+    for (R_xlen_t i = 0; i < x.size(); ++i)
+      if (!ISNAN(x[i])) clean[k++] = x[i];
+    x = clean;
+  }
+  else
+  {
+    x = clone(x);
+  }
+
   const int n = x.size();
   if (n == 0)
-  {                                            // # nocov start: all-NA input already returned above
+  {                                            // # nocov start: all-missing input already returned above
     NumericVector out(probs.size(), NA_REAL);
     return (out);
   }                                            // # nocov end
