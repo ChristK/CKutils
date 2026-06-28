@@ -6,8 +6,8 @@
 # results to Codecov for tracking coverage trends and pull request analysis.
 #
 # Workflow triggers:
-# - Push to main/master branches
-# - Pull requests to main/master branches
+# - Push to main branch
+# - Pull requests to main branch
 #
 # Coverage process:
 # 1. Installs package with dependencies in a temporary location
@@ -30,9 +30,9 @@
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 name: test-coverage
 

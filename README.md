@@ -5,7 +5,7 @@
 <!-- [![Tests](https://github.com/ChristK/CKutils/workflows/Tests/badge.svg)](https://github.com/ChristK/CKutils/actions) -->
 [![rchk](https://github.com/ChristK/CKutils/workflows/rchk/badge.svg)](https://github.com/ChristK/CKutils/actions)
 [![test-coverage](https://github.com/ChristK/CKutils/workflows/test-coverage/badge.svg)](https://github.com/ChristK/CKutils/actions)
-[![Codecov test coverage](https://codecov.io/gh/ChristK/CKutils/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ChristK/CKutils?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/ChristK/CKutils/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ChristK/CKutils?branch=main)
 [![Downloads](https://cranlogs.r-pkg.org/badges/grand-total/CKutils)](https://cran.r-project.org/package=CKutils)
 <!-- badges: end -->
 

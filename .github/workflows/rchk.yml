@@ -12,8 +12,8 @@
 # - Potential crashes due to garbage collection
 #
 # Workflow triggers:
-# - Push to main/master branches
-# - Pull requests to main/master branches
+# - Push to main branch
+# - Pull requests to main branch
 #
 # The workflow:
 # 1. Builds the package from source
@@ -27,9 +27,9 @@
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 name: 'rchk'
 

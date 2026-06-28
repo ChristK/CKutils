@@ -6,8 +6,8 @@
 # R versions to ensure CRAN compliance and cross-platform compatibility.
 #
 # Workflow triggers:
-# - Push to main/master branches
-# - Pull requests to main/master branches
+# - Push to main branch
+# - Pull requests to main branch
 #
 # Testing matrix covers:
 # - Operating Systems: macOS (Intel + Apple Silicon), Windows, Ubuntu (multiple versions)
@@ -29,9 +29,9 @@
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 name: R-CMD-check
 
