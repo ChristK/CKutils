@@ -126,6 +126,10 @@ jobs:
           # Verify command line tools are properly installed
           xcode-select -p
           
+          # Drop the pre-tapped, untrusted aws/tap from the runner image so brew
+          # does not emit "tap not trusted" warnings on every invocation below.
+          brew untap aws/tap || true
+
           # Install Homebrew packages commonly needed for R packages
           # Check and install only if not already present to reduce log noise
           for pkg in pkg-config openssl curl gdal geos proj udunits; do
