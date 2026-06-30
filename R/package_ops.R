@@ -267,6 +267,18 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path, debug = TRUE) 
 }
 
 
+# Internal, non-exported helper: is `pkg` installed (findable in a library tree
+# or an already-loaded namespace) *right now*? dependencies() uses this to make
+# the install-vs-skip decision fresh on every iteration. find.package() is
+# preferred over requireNamespace() because it does not load/attach the
+# package's namespace -- loading would lock the package's DLL and, on Windows,
+# re-create the "package 'x' is in use and will not be installed" situation we
+# are trying to avoid. quiet = TRUE makes "not found" return an empty character
+# vector instead of signalling an error.
+.pkg_is_installed <- function(pkg) {
+  length(find.package(pkg, quiet = TRUE)) > 0L
+}
+
 #' Simplified loading and installing of packages
 #'
 #' This is a wrapper to \code{\link{require}} and \code{\link{install.packages}}.
@@ -385,7 +397,6 @@ dependencies <-
     }
 
     # Get package information once
-    installedpkgs <- installed.packages()
     all_available <- available.packages()
     
     # Handle case where no packages are available
@@ -418,9 +429,17 @@ dependencies <-
     for (pkg in pkges) {
       initial_search <- search()
       needs_install <- FALSE
-      
-      # Check if package is already installed
-      if (pkg %in% rownames(installedpkgs)) {
+
+      # Check if package is already installed. This is deliberately re-checked
+      # *fresh* on every iteration (rather than from a single pre-loop
+      # installed.packages() snapshot): installing an earlier package in the
+      # list can pull in a later list entry as a transitive dependency, which
+      # leaves that entry installed but absent from a stale snapshot. Trusting
+      # the snapshot would then schedule a needless reinstall of an
+      # already-installed, currently-loaded package, which on Windows emits
+      # "package 'x' is in use and will not be installed". See
+      # .pkg_is_installed() (a non-loading check) for why find.package is used.
+      if (.pkg_is_installed(pkg)) {
         current_version <- as.character(packageVersion(pkg))
         
         # Check if available on repositories

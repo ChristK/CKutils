@@ -137,6 +137,104 @@ expect_true(
 )
 
 # =============================================================================
+# Regression tests for the install-vs-skip decision (stale-snapshot bug)
+# =============================================================================
+# Bug: dependencies() used to take a single installed.packages() snapshot before
+# its per-package loop and decide install-vs-skip from that *stale* snapshot.
+# When installing an earlier package pulled a later list entry in as a transitive
+# dependency, that entry ended up installed on disk but absent from the snapshot,
+# so it was needlessly scheduled for reinstall -> on Windows the benign-but-noisy
+# warning "package 'x' is in use and will not be installed". The fix re-checks
+# each package fresh, against live library state, via the non-loading helper
+# .pkg_is_installed() (find.package(), not requireNamespace()).
+#
+# What is / isn't testable: the end-to-end failure needs a real mid-loop
+# install.packages() (to make the on-disk state diverge from a pre-loop
+# snapshot), which the test suite must not perform. So the discriminating
+# regression guard lives at the helper level -- .pkg_is_installed() must reflect
+# the *current* library trees, so a package appearing after any earlier snapshot
+# is still recognised.
+
+.pkg_is_installed <- getFromNamespace(".pkg_is_installed", "CKutils")
+
+# Contract of the helper: TRUE for an installed package, FALSE for a missing one,
+# without loading/attaching anything (find.package, not requireNamespace).
+expect_true(
+  .pkg_is_installed("tools"),
+  info = ".pkg_is_installed: TRUE for an installed (base) package"
+)
+expect_false(
+  .pkg_is_installed("this_package_does_not_exist_zzz_123"),
+  info = ".pkg_is_installed: FALSE for a non-existent package"
+)
+
+# Discriminating regression guard for the stale-snapshot bug: a package that
+# becomes installed *after* a snapshot was taken must still be seen by the fresh
+# check. We reproduce the bug's blind spot by (1) taking a snapshot, then (2)
+# materialising a minimal package in a temporary library prepended to .libPaths()
+# afterwards. A snapshot-based check (the old code) would miss it; the live
+# find.package() check the fix uses must not -- so this assertion would FAIL if
+# .pkg_is_installed() ever reverted to consulting a pre-captured snapshot.
+# Results are captured into booleans and .libPaths()/the temp dir are restored
+# *before* asserting, so global state stays clean regardless of the outcome.
+# NB: the fake package is intentionally NOT passed to dependencies() -- it is not
+# loadable, so it would hit the `!myrequire(pkg)` branch and attempt a real
+# install.packages() (a network call). It is only ever fed to the helper.
+stale_snapshot <- rownames(installed.packages())
+fake_pkg <- "ckutilsfakepkgzzz"
+tmplib <- tempfile("ckutils_testlib")
+dir.create(tmplib)
+fake_dir <- file.path(tmplib, fake_pkg)
+dir.create(fake_dir)
+writeLines(
+  c(
+    paste0("Package: ", fake_pkg),
+    "Version: 1.0",
+    "Type: Package",
+    "Title: Fake Package For Testing find.package Detection",
+    "Description: Not a real package; exists only so find.package() sees it.",
+    "License: GPL-3"
+  ),
+  file.path(fake_dir, "DESCRIPTION")
+)
+old_libs <- .libPaths()
+.libPaths(c(tmplib, old_libs))
+fake_absent_from_snapshot <- !(fake_pkg %in% stale_snapshot)
+fake_seen_by_fresh_check <- .pkg_is_installed(fake_pkg)
+.libPaths(old_libs)
+unlink(tmplib, recursive = TRUE)
+
+expect_true(
+  fake_absent_from_snapshot,
+  info = "regression setup: package is absent from the pre-existing snapshot"
+)
+expect_true(
+  fake_seen_by_fresh_check,
+  info = "dependencies: fresh find.package check sees a pkg installed post-snapshot"
+)
+
+# Behavioural smoke test (NOT a stale-snapshot regression guard -- it passes on
+# the old code too): an already-installed, loadable, non-repository package flows
+# through dependencies() with install = TRUE without being (re)installed and
+# still loads, exercising the no-install / loaded-package path end-to-end through
+# the fixed .pkg_is_installed() check.
+result_no_reinstall <- dependencies(
+  "tools",
+  install = TRUE,
+  update = FALSE,
+  quiet = TRUE,
+  verbose = TRUE
+)
+expect_false(
+  result_no_reinstall["tools", "installed"],
+  info = "dependencies: already-installed package is not reinstalled (install=TRUE)"
+)
+expect_true(
+  result_no_reinstall["tools", "loaded"],
+  info = "dependencies: already-installed package still loads"
+)
+
+# =============================================================================
 # Tests for installLocalPackage error conditions
 # =============================================================================
 # Note: We only test error conditions, not actual installation

@@ -1,3 +1,18 @@
+# CKutils 0.1.28
+
+## Bug fixes
+
+* **`dependencies()`**: the install-vs-skip decision is now re-evaluated fresh
+  for each package instead of from a single `installed.packages()` snapshot
+  taken before the loop. Previously, when an earlier package in the list pulled
+  in a later list entry as a transitive dependency, that entry was left
+  installed but absent from the stale snapshot, so it was needlessly scheduled
+  for reinstallation -- on Windows producing the benign-but-noisy warning
+  `package 'x' is in use and will not be installed`. The freshness check uses a
+  non-loading `find.package()` test, so it never attaches the package's
+  namespace (which would lock its DLL and re-create the problem). Return value
+  and the `update = TRUE` behaviour are unchanged.
+
 # CKutils 0.1.27
 
 ## Bug fixes
