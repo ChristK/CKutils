@@ -24,8 +24,9 @@
 #' @param pkg Character string of package name. The name of the package to
 #' detach.
 #'
-#' @return Invisibly returns \code{TRUE} if the package was detached, or
-#' \code{FALSE} if it was not attached.
+#' @return Invisibly returns \code{TRUE} if the package was detached, or if its
+#' namespace was loaded-but-not-attached and got unloaded; \code{FALSE} if it
+#' was neither attached nor loaded.
 #'
 #' @details If the specified package is attached multiple times (e.g., via
 #' multiple `library()` calls), it will be fully detached. A message is
@@ -64,6 +65,22 @@ detach_package <- function(pkg) {
     )
     message(sprintf("Detached package: %s", pkg))
     detached <- TRUE
+  }
+
+  # A namespace can be *loaded* without being *attached* (e.g. pulled in by
+  # requireNamespace() or as a dependency of something else). It is absent from
+  # search() but still locks the shared library and maps the lazy-load
+  # database, so it too must be unloaded before a reinstall overwrites those
+  # files -- otherwise the next access corrupts the lazy-load DB, and by then it
+  # is too late to unload (unloadNamespace() runs .onUnload, which reads the
+  # already-replaced .rdb).
+  if (!detached && isNamespaceLoaded(pkg)) {
+    try(library.dynam.unload(pkg, system.file(package = pkg)), silent = TRUE)
+    try(unloadNamespace(pkg), silent = TRUE)
+    if (!isNamespaceLoaded(pkg)) {
+      message(sprintf("Unloaded namespace: %s", pkg))
+      detached <- TRUE
+    }
   }
 
   if (!detached) {
@@ -242,7 +259,15 @@ installLocalPackageIfChanged <- function(pkg_path, snapshot_path, debug = TRUE) 
 
   # nocov start: branches into installLocalPackage (a real build/install) and
   # rewrites the on-disk snapshot; both have side effects unsuitable for tests.
-  needs_install <- !requireNamespace(pkg_name, quietly = TRUE) ||
+  # Use .pkg_is_installed() (find.package, non-loading) rather than
+  # requireNamespace(): requireNamespace() would LOAD pkg_name's namespace into
+  # the current session merely to check availability. If a reinstall then
+  # follows, R CMD INSTALL overwrites that package's on-disk files while its old
+  # namespace is still live in memory, and the next access/unload in this
+  # session hits a "lazy-load database is corrupt" error (R cannot hot-swap a
+  # loaded compiled package). find.package() answers "is it installed?" without
+  # loading anything, so the caller can reinstall and then load a clean copy.
+  needs_install <- !.pkg_is_installed(pkg_name) ||
     is.null(snapshot) ||
     any(nzchar(unlist(snapshot[c("added", "deleted", "changed")])))
 

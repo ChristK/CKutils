@@ -1,3 +1,26 @@
+# CKutils 0.1.29
+
+## Bug fixes
+
+* **`installLocalPackageIfChanged()`**: the "is it already installed?" check now
+  uses the non-loading `find.package()` test (`.pkg_is_installed()`) instead of
+  `requireNamespace()`. `requireNamespace()` *loads* the target package's
+  namespace into the current session merely to check availability; if a
+  reinstall then followed, `R CMD INSTALL` overwrote that package's on-disk
+  files while its old namespace was still live in memory, and the next
+  access/unload in the same session raised
+  `lazy-load database '...' is corrupt` / `internal error ... in R_decompress1`
+  (R cannot hot-swap a loaded compiled package). The check no longer loads
+  anything, so a caller can reinstall and then load a clean copy in the same
+  session.
+
+* **`detach_package()`**: now also unloads a namespace that is *loaded but not
+  attached* (e.g. one pulled in by `requireNamespace()` or as a dependency).
+  Such a namespace is absent from `search()` yet still locks the shared library
+  and maps the lazy-load database, so it must be unloaded before a reinstall
+  overwrites those files. Previously it was reported as "not attached" and left
+  loaded.
+
 # CKutils 0.1.28
 
 ## Bug fixes

@@ -11,8 +11,9 @@ detach_package(pkg)
 detach.}
 }
 \value{
-Invisibly returns \code{TRUE} if the package was detached, or
-\code{FALSE} if it was not attached.
+Invisibly returns \code{TRUE} if the package was detached, or if its
+namespace was loaded-but-not-attached and got unloaded; \code{FALSE} if it
+was neither attached nor loaded.
 }
 \description{
 Detaches a loaded R package cleanly from the current session.
