@@ -253,3 +253,15 @@ expect_error(fqBNB(1.5, 2, 1, 1), "p must be >=0 and <=1",
              info = "fqBNB still rejects a natural-scale p > 1")
 expect_error(fqZANBI(-0.1, 2, 1, 0.1), "p must be >=0 and <=1",
              info = "fqZANBI still rejects a natural-scale p < 0")
+
+
+## ---- ZIBNB density/CDF and ZISICHEL density (added 0.1.30) ----
+expect_error(fdZIBNB(0, mu = -1, sigma = 1, nu = 1, tau = 0.1, TRUE), "mu must be greater than 0")
+expect_error(fdZIBNB(0, mu = 1, sigma = 0, nu = 1, tau = 0.1, TRUE), "sigma must be greater than 0")
+expect_error(fdZIBNB(0, mu = 1, sigma = 1, nu = 0, tau = 0.1, TRUE), "nu must be greater than 0")
+expect_error(fdZIBNB(0, mu = 1, sigma = 1, nu = 1, tau = 1.5, TRUE), "tau must be >0 and <1")
+expect_error(fpZIBNB(0, mu = 1, sigma = 1, nu = 1, tau = 0, log_p = TRUE), "tau must be >0 and <1")
+expect_error(fpZIBNB(0, mu = -1, sigma = 1, nu = 1, tau = 0.1, lower_tail = FALSE), "mu must be greater than 0")
+expect_error(fdZISICHEL(0, mu = -1, sigma = 1, nu = -0.5, tau = 0.1), "mu must be greater than 0")
+expect_error(fdZISICHEL(0, mu = 1, sigma = 0, nu = -0.5, tau = 0.1), "sigma must be greater than 0")
+expect_error(fdZISICHEL(0, mu = 1, sigma = 1, nu = -0.5, tau = 0), "tau must be between 0 and 1")

@@ -132,6 +132,80 @@ IntegerVector fqZISICHEL(NumericVector p,
     return result;
 }
 
+//' Zero Inflated Sichel Distribution Density
+//'
+//' Probability mass function for the Zero Inflated Sichel (ZISICHEL)
+//' distribution with parameters mu (mean), sigma (dispersion), nu (shape), and
+//' tau (zero-inflation probability).
+//'
+//' @param x vector of (non-negative integer) quantiles.
+//' @param mu vector of positive means.
+//' @param sigma vector of positive dispersion parameters.
+//' @param nu vector of shape parameters (real values).
+//' @param tau vector of zero-inflation probabilities (0 < tau < 1).
+//' @param log logical; if TRUE, densities are returned as log(density).
+//'
+//' @details
+//' Zero inflation adds a point mass at zero on top of the Sichel distribution:
+//' \deqn{P(Y = 0) = \tau + (1-\tau) f_{SICHEL}(0|\mu,\sigma,\nu)}
+//' \deqn{P(Y = y) = (1-\tau) f_{SICHEL}(y|\mu,\sigma,\nu) \quad \text{for } y > 0}
+//' where \eqn{f_{SICHEL}} is the Sichel probability mass function.
+//'
+//' @return A numeric vector of densities.
+//'
+//' @references
+//' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R,
+//' Chapman and Hall/CRC.
+//'
+//' @examples
+//' # Single values
+//' fdZISICHEL(c(0,1,2,3), mu=1, sigma=1, nu=-0.5, tau=0.1)
+//'
+//' # Vector inputs with recycling
+//' fdZISICHEL(0:5, mu=c(1,2), sigma=1, nu=-0.5, tau=0.1)
+//'
+//' @export
+// [[Rcpp::export]]
+NumericVector fdZISICHEL(const NumericVector& x,
+                         const NumericVector& mu,
+                         const NumericVector& sigma,
+                         const NumericVector& nu,
+                         const NumericVector& tau,
+                         const bool& log = false)
+{
+    auto recycled = recycle_vectors(x, mu, sigma, nu, tau);
+    const int n = recycled.n;
+
+    for (int i = 0; i < n; i++) {
+        if (ISNAN(recycled.vec1[i])) continue;
+        if (recycled.vec1[i] < 0.0) stop("x must be >=0");
+        if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
+        if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
+        if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0)
+            stop("tau must be between 0 and 1");
+    }
+
+    NumericVector out(n);
+
+    for (int i = 0; i < n; i++) {
+        // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+        // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+        // undefined behaviour and it is not benign on either x86-64 or AArch64.
+        int x_i;
+        if (!count_to_int(recycled.vec1[i], x_i)) {
+            out[i] = NA_REAL;
+            continue;
+        }
+        out[i] = fdZISICHEL_scalar(x_i, recycled.vec2[i], recycled.vec3[i],
+                                   recycled.vec4[i], recycled.vec5[i], log);
+    }
+
+    if (any(is_na(out))) warning("NaNs or NAs were produced");
+    return out;
+}
+
+
 //' Zero-Inflated Sichel Distribution Cumulative Distribution Function
 //'
 //' Distribution function for the zero-inflated Sichel distribution with parameters 
@@ -199,8 +273,7 @@ NumericVector fpZISICHEL(const NumericVector& q,
         const double nui = recycled.vec4[i];
         const double taui = recycled.vec5[i];
         
-        const double sichel_cdf = fpSICHEL_scalar(qi, mui, sigmai, nui, true, false);
-        cdf[i] = taui + (1.0 - taui) * sichel_cdf;
+        cdf[i] = fpZISICHEL_scalar(qi, mui, sigmai, nui, taui, true, false);
     }
     
     if (!lower_tail) cdf = 1.0 - cdf;

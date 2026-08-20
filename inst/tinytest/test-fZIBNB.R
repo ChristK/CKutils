@@ -101,3 +101,71 @@ expect_equal(
 
 
 # cat("All ZIBNB distribution tests completed successfully!\n")
+
+
+# =============================================================================
+# Density and CDF (added in 0.1.30, completing ZIBNB's d/p/q/r)
+#
+# gamlss.dist's *BNB functions mis-recycle several parameter vectors supplied
+# together, so reference values are computed one element at a time.
+# =============================================================================
+if (requireNamespace("gamlss.dist", quietly = TRUE)) {
+  elt <- function(FUN, x, ...) {
+    a <- list(...)
+    vapply(seq_along(x), function(i)
+      do.call(FUN, c(list(x[i]), lapply(a, `[`, i))), numeric(1))
+  }
+  set.seed(99)
+  n_zi  <- 100L
+  x_zi  <- sample(0:20, n_zi, TRUE)
+  mu_zi <- runif(n_zi, 0.5, 5); sg_zi <- runif(n_zi, 0.1, 2)
+  nu_zi <- runif(n_zi, 0.1, 3); tau_zi <- runif(n_zi, 0.01, 0.8)
+  tol_zi <- sqrt(.Machine$double.eps)
+
+  expect_equal(fdZIBNB(x_zi, mu_zi, sg_zi, nu_zi, tau_zi),
+               elt(gamlss.dist::dZIBNB, x_zi, mu_zi, sg_zi, nu_zi, tau_zi),
+               tolerance = tol_zi, info = "fdZIBNB matches gamlss.dist dZIBNB")
+  expect_equal(fdZIBNB(x_zi, mu_zi, sg_zi, nu_zi, tau_zi, log = TRUE),
+               log(elt(gamlss.dist::dZIBNB, x_zi, mu_zi, sg_zi, nu_zi, tau_zi)),
+               tolerance = tol_zi, info = "fdZIBNB log scale matches")
+  expect_equal(fpZIBNB(x_zi, mu_zi, sg_zi, nu_zi, tau_zi),
+               elt(gamlss.dist::pZIBNB, x_zi, mu_zi, sg_zi, nu_zi, tau_zi),
+               tolerance = tol_zi, info = "fpZIBNB matches gamlss.dist pZIBNB")
+  expect_equal(fpZIBNB(x_zi, mu_zi, sg_zi, nu_zi, tau_zi, lower_tail = FALSE),
+               1 - elt(gamlss.dist::pZIBNB, x_zi, mu_zi, sg_zi, nu_zi, tau_zi),
+               tolerance = tol_zi, info = "fpZIBNB upper tail matches")
+
+  # cumsum of the pmf must reproduce the cdf
+  for (i in 1:5)
+    expect_equal(cumsum(fdZIBNB(0:50, mu_zi[i], sg_zi[i], nu_zi[i], tau_zi[i])),
+                 fpZIBNB(0:50, mu_zi[i], sg_zi[i], nu_zi[i], tau_zi[i]),
+                 tolerance = 1e-10,
+                 info = paste0("ZIBNB cumsum(pmf) == cdf, set ", i))
+
+  # Inflation, not a hurdle: the zero mass EXCEEDS tau. This is the property
+  # that distinguishes ZIBNB from ZABNB, where P(0) is exactly tau.
+  z_zi <- fdZIBNB(rep(0, 10), mu_zi[1:10], sg_zi[1:10], nu_zi[1:10], tau_zi[1:10])
+  expect_true(all(z_zi > tau_zi[1:10]),
+              info = "ZIBNB P(0) > tau (zero inflation adds to the BNB zero mass)")
+  expect_identical(fdZABNB(rep(0, 10), mu_zi[1:10], sg_zi[1:10], nu_zi[1:10], tau_zi[1:10]),
+                   tau_zi[1:10],
+                   info = "ZABNB P(0) == tau exactly (the hurdle contrast)")
+
+  # Recycling, NA and validation
+  expect_equal(fdZIBNB(0:3, c(1, 2), 0.5, c(1, 1.5), 0.1),
+               fdZIBNB(0:3, rep(c(1, 2), 2), rep(0.5, 4), rep(c(1, 1.5), 2), rep(0.1, 4)),
+               info = "fdZIBNB parameter recycling")
+  expect_equal(fpZIBNB(0:3, c(1, 2), 0.5, c(1, 1.5), 0.1),
+               fpZIBNB(0:3, rep(c(1, 2), 2), rep(0.5, 4), rep(c(1, 1.5), 2), rep(0.1, 4)),
+               info = "fpZIBNB parameter recycling")
+  expect_true(is.na(fdZIBNB(NA_real_, 1, 1, 1, 0.1)), info = "fdZIBNB NA x -> NA")
+  expect_true(is.na(fpZIBNB(NA_real_, 1, 1, 1, 0.1)), info = "fpZIBNB NA q -> NA")
+  expect_true(is.na(fdZIBNB(4e9, 1, 1, 1, 0.1)), info = "fdZIBNB unrepresentable x -> NA")
+  expect_true(is.na(fpZIBNB(4e9, 1, 1, 1, 0.1)), info = "fpZIBNB unrepresentable q -> NA")
+  expect_error(fdZIBNB(-1, 1, 1, 1, 0.1), "x must be >=0", info = "fdZIBNB rejects x < 0")
+  expect_error(fpZIBNB(-1, 1, 1, 1, 0.1), "q must be >=0", info = "fpZIBNB rejects q < 0")
+  expect_error(fdZIBNB(1, 1, 1, 1, 0), "tau must be >0 and <1", info = "fdZIBNB rejects tau = 0")
+  expect_error(fdZIBNB(1, 0, 1, 1, 0.1), "mu must be greater than 0", info = "fdZIBNB rejects mu = 0")
+  expect_equal(length(fdZIBNB(numeric(0), 1, 1, 1, 0.1)), 0L,
+               info = "fdZIBNB zero-length x recycles to length 0")
+}

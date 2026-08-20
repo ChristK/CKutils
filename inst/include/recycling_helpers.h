@@ -334,10 +334,11 @@ inline bool count_to_int(const double& v, int& value) {
 //   O(y) ALLOCATION, and a negative size_t at y == INT_MAX. These size a
 //   std::vector from the count itself, so a large y asks for tens of gigabytes
 //   and y + 1 / y + 2 overflows at the boundary:
-//       ftofydel2_scalar (inst/include/distr_DEL.h)  -- vector(y + 2)
-//       fdSICHEL_scalar, fpSICHEL_scalar (inst/include/distr_SICHEL.h)
-//                                                    -- two vector(y + 1)
-//       fpZISICHEL_scalar (inst/include/distr_ZISICHEL.h), via fpSICHEL_scalar
+//       ftofydel2_scalar   (inst/include/distr_DEL.h)     -- vector(y + 2)
+//       ftofySICHEL2_scalar (inst/include/distr_SICHEL.h) -- vector(y + 1)
+//       fcdfSICHEL_scalar  (inst/include/distr_SICHEL.h)  -- two vector(y + 1)
+//   and, through them, fdDEL_scalar / fpDEL_scalar, fdSICHEL_scalar /
+//   fpSICHEL_scalar, and fdZISICHEL_scalar / fpZISICHEL_scalar.
 //
 // Separately from correctness, note that the CDF kernels above are O(q) in
 // TIME with three lgamma/lbeta calls per step, so a merely large-but-legal q

@@ -47,7 +47,8 @@ guarded <- list(
   fdDPO      = list(2, 1),           fpDPO      = list(2, 1),
   fdDEL      = list(2, 1, 0.5),      fpDEL      = list(2, 1, 0.5),
   fdMN4      = list(1, 1, 1),        fpMN4      = list(1, 1, 1),
-  fpZISICHEL = list(1, 1, -0.5, 0.1)
+  fdZIBNB    = list(2, 1, 1, 0.1),   fpZIBNB    = list(2, 1, 1, 0.1),
+  fdZISICHEL = list(1, 1, -0.5, 0.1), fpZISICHEL = list(1, 1, -0.5, 0.1)
 )
 
 for (nm in names(guarded)) {

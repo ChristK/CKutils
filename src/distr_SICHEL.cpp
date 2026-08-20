@@ -101,25 +101,8 @@ NumericVector fdSICHEL(const NumericVector& x,
             logfy[i] = NA_REAL;
             continue;
         }
-        const double mui = recycled.vec2[i];
-        const double sigmai = recycled.vec3[i];
-        const double nui = recycled.vec4[i];
-
-        // Use NBI approximation for large sigma and positive nu
-        if (sigmai > 10000.0 && nui > 0.0) {
-            logfy[i] = fdNBI_scalar(xi, mui, 1.0/nui, log_p);
-            continue;
-        }
-        
-        const double cvec = compute_cvec(sigmai, nui);
-        const double alpha = compute_alpha(sigmai, mui, cvec);
-        const double lbes = compute_lbes(alpha, nui);
-        const double sumlty = ftofySICHEL2_scalar(xi, mui, sigmai, nui, lbes, cvec);
-        
-        logfy[i] = -R::lgammafn(xi + 1.0) - nui * log(sigmai * alpha) + sumlty +
-                   log(R::bessel_k(alpha, nui, 1)) - log(R::bessel_k(1.0/sigmai, nui, 1));
-        
-        if (!log_p) logfy[i] = exp(logfy[i]);
+        logfy[i] = fdSICHEL_scalar(xi, recycled.vec2[i], recycled.vec3[i],
+                                   recycled.vec4[i], log_p);
     }
     
     // Check for NaN/NA values

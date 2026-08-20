@@ -102,3 +102,64 @@ expect_true(zero_prop > 0.2, info = "ZI random generation should produce excess 
 # Final success message
 # cat("All ZISICHEL distribution tests passed successfully!\n")
 
+
+
+# =============================================================================
+# Density (added in 0.1.30, completing ZISICHEL's d/p/q/r), and a regression
+# guard on the fdSICHEL_scalar extraction that fdZISICHEL is built on.
+# =============================================================================
+if (requireNamespace("gamlss.dist", quietly = TRUE)) {
+  elt_zs <- function(FUN, x, ...) {
+    a <- list(...)
+    vapply(seq_along(x), function(i)
+      do.call(FUN, c(list(x[i]), lapply(a, `[`, i))), numeric(1))
+  }
+  set.seed(2026)
+  n_zs   <- 80L
+  x_zs   <- sample(0:15, n_zs, TRUE)
+  mu_zs  <- runif(n_zs, 0.5, 5);  sg_zs  <- runif(n_zs, 0.1, 2)
+  nu_zs  <- runif(n_zs, -1.5, 1.5); tau_zs <- runif(n_zs, 0.01, 0.8)
+  tol_zs <- sqrt(.Machine$double.eps)
+
+  expect_equal(fdZISICHEL(x_zs, mu_zs, sg_zs, nu_zs, tau_zs),
+               elt_zs(gamlss.dist::dZISICHEL, x_zs, mu_zs, sg_zs, nu_zs, tau_zs),
+               tolerance = tol_zs, info = "fdZISICHEL matches gamlss.dist dZISICHEL")
+  expect_equal(fdZISICHEL(x_zs, mu_zs, sg_zs, nu_zs, tau_zs, log = TRUE),
+               log(elt_zs(gamlss.dist::dZISICHEL, x_zs, mu_zs, sg_zs, nu_zs, tau_zs)),
+               tolerance = tol_zs, info = "fdZISICHEL log scale matches")
+
+  # fdSICHEL now delegates to the extracted fdSICHEL_scalar; it must be unchanged
+  expect_equal(fdSICHEL(x_zs, mu_zs, sg_zs, nu_zs),
+               elt_zs(gamlss.dist::dSICHEL, x_zs, mu_zs, sg_zs, nu_zs),
+               tolerance = tol_zs,
+               info = "fdSICHEL unchanged by the fdSICHEL_scalar extraction")
+  # fpZISICHEL now delegates to fpZISICHEL_scalar; likewise unchanged
+  expect_equal(fpZISICHEL(x_zs, mu_zs, sg_zs, nu_zs, tau_zs),
+               elt_zs(gamlss.dist::pZISICHEL, x_zs, mu_zs, sg_zs, nu_zs, tau_zs),
+               tolerance = tol_zs,
+               info = "fpZISICHEL unchanged by the fpZISICHEL_scalar extraction")
+
+  for (i in 1:5)
+    expect_equal(cumsum(fdZISICHEL(0:40, mu_zs[i], sg_zs[i], nu_zs[i], tau_zs[i])),
+                 fpZISICHEL(0:40, mu_zs[i], sg_zs[i], nu_zs[i], tau_zs[i]),
+                 tolerance = 1e-10,
+                 info = paste0("ZISICHEL cumsum(pmf) == cdf, set ", i))
+
+  z_zs <- fdZISICHEL(rep(0, 10), mu_zs[1:10], sg_zs[1:10], nu_zs[1:10], tau_zs[1:10])
+  expect_true(all(z_zs > tau_zs[1:10]),
+              info = "ZISICHEL P(0) > tau (zero inflation)")
+
+  expect_equal(fdZISICHEL(0:3, c(1, 2), 1, -0.5, 0.1),
+               fdZISICHEL(0:3, rep(c(1, 2), 2), rep(1, 4), rep(-0.5, 4), rep(0.1, 4)),
+               info = "fdZISICHEL parameter recycling")
+  expect_true(is.na(suppressWarnings(fdZISICHEL(NA_real_, 1, 1, -0.5, 0.1))),
+              info = "fdZISICHEL NA x -> NA")
+  expect_true(is.na(suppressWarnings(fdZISICHEL(4e9, 1, 1, -0.5, 0.1))),
+              info = "fdZISICHEL unrepresentable x -> NA")
+  expect_error(fdZISICHEL(-1, 1, 1, -0.5, 0.1), "x must be >=0",
+               info = "fdZISICHEL rejects x < 0")
+  expect_error(fdZISICHEL(1, 1, 1, -0.5, 1), "tau must be between 0 and 1",
+               info = "fdZISICHEL rejects tau = 1")
+  expect_equal(length(fdZISICHEL(numeric(0), 1, 1, -0.5, 0.1)), 0L,
+               info = "fdZISICHEL zero-length x recycles to length 0")
+}

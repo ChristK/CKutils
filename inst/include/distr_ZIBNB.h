@@ -40,6 +40,88 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <cmath>
 #include "distr_BNB.h"   // ZIBNB scalars are defined in terms of the BNB scalars
 
+// dZIBNB ----
+inline double fdZIBNB_scalar(const int& x,
+                             const double& mu = 1.0,
+                             const double& sigma = 1.0,
+                             const double& nu = 1.0,
+                             const double& tau = 0.1,
+                             const bool& log_p = false)
+{
+    // Parameter validation (commented out for performance; the vectorised
+    // wrapper fdZIBNB validates before entering the hot loop)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (nu    <= 0.0) stop("nu must be greater than 0");
+    // if (tau   <= 0.0 || tau >= 1.0) stop("tau must be >0 and <1");
+    // if (x      < 0) stop("x must be >=0");
+
+    if (x == 0) {
+        // P(Y = 0) = tau + (1 - tau) * f(0), computed two ways because neither
+        // is accurate over the whole range, and gamlss.dist uses only the first:
+        //   * when the result is small (a tiny tau AND a tiny f(0)) the direct
+        //     sum of two positives is exact, while the log1p form collapses --
+        //     1 - (1-tau)(1-f(0)) rounds to exactly 1 and its log to 0.
+        //   * when the result approaches 1 (f(0) -> 1, i.e. a small mu) the
+        //     direct sum quantises: 1 - 1.1e-16 is the closest double below 1,
+        //     so log() cannot resolve anything finer. The identity
+        //     tau + (1-tau)f(0) == 1 - (1-tau)(1 - f(0)) keeps the resolution.
+        // 0.5 is the natural switch: below it there is no cancellation to avoid.
+        //
+        // MEASURED benefit (claude_process/probe_zeroinfl_branch_benefit.R):
+        //   none reachable here. The two forms diverge only once
+        //   |log f_BNB(0)| falls below about 1.1e-16, but fdBNB_scalar floors
+        //   log f_BNB(0) to exactly 0 at mu ~ 1e-14 -- its smallest non-zero
+        //   value over mu = 1e-1..1e-20 is 4.97e-14 -- so the upstream floor
+        //   always bites first. Kept for correctness and to match
+        //   fdZISICHEL_scalar, not because it changes an answer here.
+        const double log_f0 = fdBNB_scalar(0, mu, sigma, nu, true);
+        const double p_zero = tau + (1.0 - tau) * std::exp(log_f0);
+        const double log_density = (p_zero < 0.5)
+            ? std::log(p_zero)
+            : std::log1p(-(1.0 - tau) * (-std::expm1(log_f0)));
+        return log_p ? log_density : std::exp(log_density);
+    }
+
+    // For x > 0 the BNB mass is simply scaled: P(X = x) = (1 - tau) f_BNB(x).
+    // log1p(-tau) rather than log(1 - tau), which rounds to 0 for a tiny tau.
+    const double log_density = std::log1p(-tau) + fdBNB_scalar(x, mu, sigma, nu, true);
+    return log_p ? log_density : std::exp(log_density);
+}
+
+// pZIBNB ----
+inline double fpZIBNB_scalar(const int& q,
+                             const double& mu = 1.0,
+                             const double& sigma = 1.0,
+                             const double& nu = 1.0,
+                             const double& tau = 0.1,
+                             const bool& lower_tail = true,
+                             const bool& log_p = false)
+{
+    // Parameter validation (commented out for performance; the vectorised
+    // wrapper fpZIBNB validates before entering the hot loop)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (nu    <= 0.0) stop("nu must be greater than 0");
+    // if (tau   <= 0.0 || tau >= 1.0) stop("tau must be >0 and <1");
+    // if (q      < 0) stop("q must be >=0");
+
+    double cdf;
+    if (q < 0) {
+        cdf = 0.0;
+    } else {
+        // Zero inflation shifts the whole CDF: F(q) = tau + (1 - tau) F_BNB(q).
+        // Unlike the hurdle (ZABNB) case there is no renormalisation, so this
+        // needs no special case at q == 0.
+        cdf = tau + (1.0 - tau) * fpBNB_scalar(q, mu, sigma, nu, true, false);
+    }
+
+    if (!lower_tail) cdf = 1.0 - cdf;
+    if (log_p) cdf = std::log(cdf);
+
+    return cdf;
+}
+
 // qZIBNB ----
 inline double fqZIBNB_scalar(const double& p,
                      const double& mu = 1.0,
@@ -72,6 +154,21 @@ inline double fqZIBNB_scalar(const double& p,
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_ZIBNB.cpp)
+Rcpp::NumericVector fdZIBNB(const Rcpp::NumericVector& x,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const Rcpp::NumericVector& tau,
+                           const bool& log);
+
+Rcpp::NumericVector fpZIBNB(const Rcpp::NumericVector& q,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const Rcpp::NumericVector& tau,
+                           const bool& lower_tail,
+                           const bool& log_p);
+
 Rcpp::NumericVector fqZIBNB(const Rcpp::NumericVector& p,
                            const Rcpp::NumericVector& mu,
                            const Rcpp::NumericVector& sigma,

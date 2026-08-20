@@ -2,6 +2,37 @@
 
 ## New features
 
+* **`fdZIBNB()`, `fpZIBNB()` and `fdZISICHEL()`**: the last two partially
+  implemented distributions now have the full d/p/q/r set, so every
+  distribution CKutils covers is complete with respect to `gamlss.dist`.
+  `ZIBNB` previously had only `fqZIBNB()`/`frZIBNB()` and `ZISICHEL` only
+  `fpZISICHEL()`/`fqZISICHEL()`/`frZISICHEL()`.
+
+  Both are zero *inflated*, so the zero mass is added to rather than replacing
+  the base mass: \eqn{P(Y = 0) = \tau + (1-\tau) f(0)} and
+  \eqn{P(Y = y) = (1-\tau) f(y)}. That is the opposite convention to the
+  zero *adjusted* `ZABNB`/`ZANBI`, where \eqn{P(Y = 0)} is exactly \eqn{\tau};
+  the test suite asserts the contrast directly.
+
+  Supporting changes:
+
+  - **`fdSICHEL_scalar()` is new** in `inst/include/distr_SICHEL.h`. The Sichel
+    density had only ever existed inside the `fdSICHEL()` wrapper, so it was
+    unavailable to `LinkingTo: CKutils` consumers and to `fdZISICHEL_scalar()`.
+    It is now extracted, and `fdSICHEL()` delegates to it rather than
+    duplicating the Bessel-function evaluation.
+  - **`fdZISICHEL_scalar()` and `fpZISICHEL_scalar()` are new.** `ZISICHEL`
+    previously defined no scalars at all; `fpZISICHEL()` inlined the formula.
+    Both wrappers now delegate to the scalars, as the rest of the family does.
+
+* **Documentation fix.** The caller contract added earlier in this release
+  named `fdSICHEL_scalar()` and `fpZISICHEL_scalar()` as O(y)-allocating
+  kernels, but neither existed at the time. The contract now names the
+  functions that actually allocate -- `ftofydel2_scalar()`,
+  `ftofySICHEL2_scalar()` and `fcdfSICHEL_scalar()` -- and lists the density
+  and CDF kernels that inherit the behaviour through them.
+
+
 * **`fdZABNB()`** and **`fpZABNB()`**: the Zero Adjusted (hurdle) Beta Negative
   Binomial distribution now has a density and a distribution function to go with
   the existing `fqZABNB()` and `frZABNB()`, completing the d/p/q/r set. Both

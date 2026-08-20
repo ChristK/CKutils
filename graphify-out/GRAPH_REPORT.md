@@ -1,16 +1,16 @@
 # Graph Report - CKutils  (2026-08-20)
 
 ## Corpus Check
-- 134 files · ~202,467 words
+- 134 files · ~207,422 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1388 nodes · 2468 edges · 132 communities (108 shown, 24 thin omitted)
-- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 162 edges (avg confidence: 0.8)
+- 1400 nodes · 2485 edges · 132 communities (108 shown, 24 thin omitted)
+- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 166 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9b99eec1`
+- Built from commit: `89675fad`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,6 +43,7 @@
 - [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
 - [[_COMMUNITY_Inst Include Recycling|Inst Include Recycling]]
+- [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
 - [[_COMMUNITY_RNG distribution generators (R)|RNG distribution generators (R)]]
@@ -102,7 +103,6 @@
 - [[_COMMUNITY_Community 104|Community 104]]
 - [[_COMMUNITY_Community 105|Community 105]]
 - [[_COMMUNITY_Community 106|Community 106]]
-- [[_COMMUNITY_Community 107|Community 107]]
 - [[_COMMUNITY_Community 108|Community 108]]
 - [[_COMMUNITY_Community 109|Community 109]]
 - [[_COMMUNITY_Community 110|Community 110]]
@@ -122,11 +122,11 @@
 ## God Nodes (most connected - your core abstractions)
 1. `RcppExport` - 72 edges
 2. `SEXP` - 71 edges
-3. `IsNaN()` - 42 edges
+3. `IsNaN()` - 43 edges
 4. `TypedReader` - 36 edges
 5. `ParquetRowSource` - 33 edges
-6. `ParquetTypedRowSource` - 32 edges
-7. `CKutils 0.1.25` - 30 edges
+6. `CKutils 0.1.25` - 33 edges
+7. `ParquetTypedRowSource` - 32 edges
 8. `TypedWriter` - 29 edges
 9. `Reader` - 24 edges
 10. `TypedSchema` - 24 edges
@@ -186,8 +186,8 @@ Cohesion: 0.18
 Nodes (16): const_string_proxy, counts(), CharacterVector, IntegerVector, LogicalVector, NumericVector, SEXP, do_counts() (+8 more)
 
 ### Community 6 - "misc C++ helpers"
-Cohesion: 0.11
-Nodes (16): NumericVector, fqZIBNB(), fqZIBNB_scalar(), NumericVector, RecycledVectors3, RecycledVectors4, RecycledVectors5, T (+8 more)
+Cohesion: 0.14
+Nodes (13): NumericVector, RecycledVectors3, RecycledVectors4, RecycledVectors5, T, T1, T2, T3 (+5 more)
 
 ### Community 7 - "cklut build / CSV source (C++)"
 Cohesion: 0.19
@@ -206,8 +206,8 @@ Cohesion: 0.09
 Nodes (22): Array, FileReader, Schema, shared_ptr, string, Table, unique_ptr, vector (+14 more)
 
 ### Community 11 - "DPO distribution + SIMD (C++)"
-Cohesion: 0.19
-Nodes (20): CacheEntry, IntegerVector, NumericVector, DPOCache, cache, cache_index, CACHE_SIZE, fdDPO() (+12 more)
+Cohesion: 0.58
+Nodes (7): compute_log_c(), NumericVector, fdBCPEo(), fdBCPEo_hlp_f_T(), fpBCPEo(), fqBCPEo(), fqBCPEo_hlp_q_T()
 
 ### Community 12 - "cklut typed reader (C++)"
 Cohesion: 0.13
@@ -272,6 +272,10 @@ Nodes (14): at(), Dim, min, size, encode_one(), int64_t, T, vector (+6 more)
 ### Community 27 - "Inst Include Recycling"
 Cohesion: 0.14
 Nodes (13): recycle_vectors(), to_numeric_vector(), true_type(), NumericVector, RecycledVectors3, RecycledVectors4, RecycledVectors5, T (+5 more)
+
+### Community 28 - "Community 28"
+Cohesion: 0.25
+Nodes (7): NumericVector, fdZIBNB(), fpZIBNB(), fqZIBNB(), fqZIBNB_scalar(), _CKutils_fdZIBNB(), _CKutils_fpZIBNB()
 
 ### Community 29 - "cklut sharded writer (C++)"
 Cohesion: 0.22
@@ -350,8 +354,8 @@ Cohesion: 0.50
 Nodes (3): FileMapRW, base_, len_
 
 ### Community 85 - "BNB family distribution (C++)"
-Cohesion: 0.08
-Nodes (88): DllInfo, RcppExport, compute_log_c(), NumericVector, fdBCPEo(), fdBCPEo_hlp_f_T(), fpBCPEo(), fqBCPEo() (+80 more)
+Cohesion: 0.06
+Nodes (101): CacheEntry, DllInfo, RcppExport, IntegerVector, NumericVector, DPOCache, cache, cache_index (+93 more)
 
 ### Community 86 - "SICHEL/ZISICHEL distribution (C++)"
 Cohesion: 0.05
@@ -398,8 +402,8 @@ Cohesion: 0.12
 Nodes (15): Caller contract: bound your counts, CKutils, code:r (# Install from GitHub), code:r (library(CKutils)), code:r (ck  <- cklut_build(lookup_tbl, "dist", keys = c("year", "age), code:r (# DESCRIPTION), code:cpp (#include <distr_BNB.h>), code:block6 (0 <= x, q <= CK_MAX_COUNT      // CK_MAX_COUNT == INT_MAX - ) (+7 more)
 
 ### Community 97 - "Community 97"
-Cohesion: 0.24
-Nodes (4): fqZANBI_scalar(), frZANBI_scalar(), fqZINBI_scalar(), frZINBI_scalar()
+Cohesion: 0.16
+Nodes (9): compute_alpha(), compute_cvec(), compute_lbes(), fcdfSICHEL_scalar(), ftofySICHEL2_scalar(), fqZANBI_scalar(), frZANBI_scalar(), fqZINBI_scalar() (+1 more)
 
 ### Community 98 - "Community 98"
 Cohesion: 0.22
@@ -407,11 +411,11 @@ Nodes (8): CFLAGS, CXX11FLAGS, CXX14FLAGS, CXX17FLAGS, CXX20FLAGS, CXXFLAGS, _R_
 
 ### Community 99 - "Community 99"
 Cohesion: 0.07
-Nodes (27): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+19 more)
+Nodes (30): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+22 more)
 
 ### Community 100 - "Community 100"
-Cohesion: 0.47
-Nodes (4): IntegerVector, NumericVector, fpZISICHEL(), fqZISICHEL()
+Cohesion: 0.32
+Nodes (6): IntegerVector, NumericVector, fdZISICHEL(), fpZISICHEL(), fqZISICHEL(), _CKutils_fdZISICHEL()
 
 ### Community 101 - "Community 101"
 Cohesion: 0.25
@@ -437,10 +441,6 @@ Nodes (5): ValType, TypedVal, categories, column, type
 Cohesion: 0.29
 Nodes (6): code:bash (graphify hook install    # install), code:bash (graphify claude install), code:bash (graphify claude uninstall  # remove the section), For git commit hook, For native CLAUDE.md integration, graphify reference: commit hook and native CLAUDE.md integration
 
-### Community 107 - "Community 107"
-Cohesion: 0.48
-Nodes (5): compute_alpha(), compute_cvec(), compute_lbes(), fcdfSICHEL_scalar(), ftofySICHEL2_scalar()
-
 ### Community 108 - "Community 108"
 Cohesion: 0.56
 Nodes (7): NumericVector, fdBCT(), fdBCT_normal_approx(), fdBCT_t_cdf(), fdBCT_t_logdens(), fpBCT(), fqBCT()
@@ -462,39 +462,39 @@ Cohesion: 0.50
 Nodes (3): code:bash (GRAPHIFY_WHISPER_MODEL=base  # or whatever --whisper-model t), graphify reference: transcribe video and audio, Step 2.5 - Transcribe video / audio files (only if video files detected)
 
 ### Community 130 - "Community 130"
+Cohesion: 0.17
+Nodes (12): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+4 more)
+
+### Community 131 - "Community 131"
 Cohesion: 0.18
 Nodes (11): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+3 more)
 
-### Community 131 - "Community 131"
-Cohesion: 0.20
-Nodes (10): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+2 more)
-
 ### Community 132 - "Community 132"
-Cohesion: 0.29
-Nodes (7): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, CKutils 0.1.29
+Cohesion: 0.25
+Nodes (8): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, CKutils 0.1.29
 
 ### Community 133 - "Community 133"
 Cohesion: 0.33
 Nodes (5): Bug fixes, CKutils 0.1.30, code:cpp (// was: frZANBI_scalar(mu, sigma, nu)          -- drew from ), Documentation, New features
 
 ## Knowledge Gaps
-- **495 isolated node(s):** `check-before-push.sh script`, `CFLAGS`, `CXXFLAGS`, `CXX11FLAGS`, `CXX14FLAGS` (+490 more)
+- **501 isolated node(s):** `check-before-push.sh script`, `CFLAGS`, `CXXFLAGS`, `CXX11FLAGS`, `CXX14FLAGS` (+496 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `IsNaN()` connect `Community 13` to `Community 2`, `Community 100`, `cklut R bindings (src)`, `misc C++ helpers`, `cklut typed build engine (src)`, `DPO distribution + SIMD (C++)`, `Community 108`, `DEL distribution + SIMD (C++)`, `BNB family distribution (C++)`, `Community 23`, `Community 24`, `Community 25`, `Community 92`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `IsNaN()` connect `Community 13` to `Community 2`, `Community 100`, `cklut R bindings (src)`, `cklut typed build engine (src)`, `DPO distribution + SIMD (C++)`, `Community 108`, `Community 92`, `DEL distribution + SIMD (C++)`, `BNB family distribution (C++)`, `Community 23`, `Community 24`, `Community 25`, `Community 28`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Why does `ParquetRowSource` connect `cklut Parquet source (C++)` to `Community 102`, `Community 103`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **Why does `TypedRowSource` connect `Community 104` to `Community 105`, `cklut typed Parquet source (C++)`, `cklut typed build (C++)`, `cklut typed C++ tests`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **Are the 39 inferred relationships involving `IsNaN()` (e.g. with `cklut_build_cpp()` and `cklut_gather_cpp()`) actually correct?**
-  _`IsNaN()` has 39 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
+- **Are the 40 inferred relationships involving `IsNaN()` (e.g. with `cklut_build_cpp()` and `cklut_gather_cpp()`) actually correct?**
+  _`IsNaN()` has 40 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `check-before-push.sh script`, `CFLAGS`, `CXXFLAGS` to the rest of the system?**
-  _495 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _501 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `cklut R API` be split into smaller, more focused modules?**
   _Cohesion score 0.05727644652250146 - nodes in this community are weakly interconnected._
 - **Should `gamlss distribution benchmark` be split into smaller, more focused modules?**

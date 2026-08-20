@@ -33,14 +33,17 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
 // The vectorised wrappers below already apply it, but a package using
-// LinkingTo: CKutils to call the scalars directly does not get it. Both
-// fdSICHEL_scalar and fpSICHEL_scalar size two std::vector<double> workspaces
-// as y + 1, so they allocate O(y) memory -- tens of gigabytes for a large y --
-// and that size expression overflows to a negative int at y == INT_MAX.
+// LinkingTo: CKutils to call the scalars directly does not get it. The
+// allocating kernels are ftofySICHEL2_scalar, which sizes a std::vector<double>
+// as y + 1, and fcdfSICHEL_scalar, which sizes two of them the same way; both
+// therefore allocate O(y) memory -- tens of gigabytes for a large y -- and that
+// size expression overflows to a negative int at y == INT_MAX. fdSICHEL_scalar
+// and fpSICHEL_scalar inherit this through them.
 
 #include <Rcpp.h>
 #include <cmath>
 #include <vector>
+#include "distr_NBI.h"   // fdSICHEL_scalar falls back to the NBI limit
 
 // Helper functions for SICHEL computations
 
@@ -82,6 +85,40 @@ inline double ftofySICHEL2_scalar(const int& y, const double& mu,
 }
 
 // CDF helper function
+// SICHEL density scalar.
+//
+// Extracted from the fdSICHEL() wrapper so the density is available header-only
+// to a LinkingTo: CKutils consumer (previously only the CDF was), and so that
+// fdZISICHEL_scalar can be defined in terms of it rather than duplicating the
+// Bessel-function evaluation.
+inline double fdSICHEL_scalar(const int& x, const double& mu,
+                              const double& sigma, const double& nu,
+                              const bool& log_p = false) {
+    // Parameter validation (commented out for performance; the vectorised
+    // wrapper validates before entering the hot loop)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (x      < 0) stop("x must be >=0");
+
+    // Large sigma with positive nu: use the NBI limit, as gamlss.dist does.
+    if (sigma > 10000.0 && nu > 0.0) {
+        return fdNBI_scalar(x, mu, 1.0 / nu, log_p);
+    }
+
+    const double cvec   = compute_cvec(sigma, nu);
+    const double alpha  = compute_alpha(sigma, mu, cvec);
+    const double lbes   = compute_lbes(alpha, nu);
+    const double sumlty = ftofySICHEL2_scalar(x, mu, sigma, nu, lbes, cvec);
+
+    // x + 1.0 is deliberately computed in double: at x == INT_MAX an int
+    // lgamma(x + 1) would wrap the argument to INT_MIN.
+    const double logfy = -R::lgammafn(x + 1.0) - nu * std::log(sigma * alpha) +
+                         sumlty + std::log(R::bessel_k(alpha, nu, 1)) -
+                         std::log(R::bessel_k(1.0 / sigma, nu, 1));
+
+    return log_p ? logfy : std::exp(logfy);
+}
+
 inline double fcdfSICHEL_scalar(const int& y, const double& mu, const double& sigma, const double& nu) {
     if (y < 0) return 0.0;
 

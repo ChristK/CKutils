@@ -38,6 +38,162 @@ using namespace Rcpp;
 // that downstream LinkingTo: CKutils consumers can call them directly.
 
 
+//' Zero Inflated Beta Negative Binomial Density
+//'
+//' Probability mass function for the Zero Inflated Beta Negative Binomial
+//' (ZIBNB) distribution with parameters mu (mean), sigma (dispersion),
+//' nu (shape), and tau (zero-inflation probability).
+//'
+//' @param x vector of (non-negative integer) quantiles.
+//' @param mu vector of positive means.
+//' @param sigma vector of positive dispersion parameters.
+//' @param nu vector of positive shape parameters.
+//' @param tau vector of zero-inflation probabilities (0 < tau < 1).
+//' @param log logical; if TRUE, densities are returned as log(density).
+//'
+//' @details
+//' Zero inflation adds a point mass at zero on top of the BNB distribution:
+//' \deqn{P(Y = 0) = \tau + (1-\tau) f_{BNB}(0|\mu,\sigma,\nu)}
+//' \deqn{P(Y = y) = (1-\tau) f_{BNB}(y|\mu,\sigma,\nu) \quad \text{for } y > 0}
+//' where \eqn{f_{BNB}} is the BNB probability mass function. Note the zero
+//' probability exceeds \eqn{\tau}, unlike the zero adjusted (hurdle) ZABNB
+//' case where it is exactly \eqn{\tau}.
+//'
+//' @return A numeric vector of densities.
+//'
+//' @references
+//' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R,
+//' Chapman and Hall/CRC.
+//'
+//' @examples
+//' # Single values
+//' fdZIBNB(c(0,1,2,3), mu=2, sigma=1, nu=1, tau=0.1)
+//'
+//' # Vector inputs with recycling
+//' fdZIBNB(0:5, mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+//'
+//' @export
+// [[Rcpp::export]]
+NumericVector fdZIBNB(const NumericVector& x,
+                      const NumericVector& mu,
+                      const NumericVector& sigma,
+                      const NumericVector& nu,
+                      const NumericVector& tau,
+                      const bool& log = false)
+{
+  auto recycled = recycle_vectors(x, mu, sigma, nu, tau);
+  const int n = recycled.n;
+
+  for (int i = 0; i < n; i++)
+  {
+    if (recycled.vec1[i] < 0) stop("x must be >=0");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
+    if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");
+    if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0) stop("tau must be >0 and <1");
+  }
+
+  NumericVector out(n);
+
+  SIMD_HINT
+  for (int i = 0; i < n; i++)
+  {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int x_i;
+    if (!count_to_int(recycled.vec1[i], x_i)) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fdZIBNB_scalar(x_i, recycled.vec2[i], recycled.vec3[i],
+                            recycled.vec4[i], recycled.vec5[i], log);
+  }
+
+  return out;
+}
+
+
+//' Zero Inflated Beta Negative Binomial Distribution Function
+//'
+//' Cumulative distribution function for the Zero Inflated Beta Negative
+//' Binomial (ZIBNB) distribution with parameters mu (mean), sigma (dispersion),
+//' nu (shape), and tau (zero-inflation probability).
+//'
+//' @param q vector of quantiles.
+//' @param mu vector of positive means.
+//' @param sigma vector of positive dispersion parameters.
+//' @param nu vector of positive shape parameters.
+//' @param tau vector of zero-inflation probabilities (0 < tau < 1).
+//' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
+//'   otherwise, P[X > x].
+//' @param log_p logical; if TRUE, probabilities p are given as log(p).
+//'
+//' @details
+//' Zero inflation shifts the whole distribution function:
+//' \deqn{F(q) = \tau + (1-\tau) F_{BNB}(q|\mu,\sigma,\nu)}
+//' where \eqn{F_{BNB}} is the BNB cumulative distribution function. Unlike the
+//' zero adjusted (hurdle) ZABNB case there is no renormalisation, so no special
+//' case is needed at zero.
+//'
+//' @return A numeric vector of cumulative probabilities.
+//'
+//' @references
+//' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R,
+//' Chapman and Hall/CRC.
+//'
+//' @examples
+//' # Single values
+//' fpZIBNB(c(0,1,2,3), mu=2, sigma=1, nu=1, tau=0.1)
+//'
+//' # Vector inputs with recycling
+//' fpZIBNB(0:5, mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+//'
+//' @export
+// [[Rcpp::export]]
+NumericVector fpZIBNB(const NumericVector& q,
+                      const NumericVector& mu,
+                      const NumericVector& sigma,
+                      const NumericVector& nu,
+                      const NumericVector& tau,
+                      const bool& lower_tail = true,
+                      const bool& log_p = false)
+{
+  auto recycled = recycle_vectors(q, mu, sigma, nu, tau);
+  const int n = recycled.n;
+
+  for (int i = 0; i < n; i++)
+  {
+    if (recycled.vec1[i] < 0) stop("q must be >=0");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
+    if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");
+    if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0) stop("tau must be >0 and <1");
+  }
+
+  NumericVector out(n);
+
+  SIMD_HINT
+  for (int i = 0; i < n; i++)
+  {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int q_i;
+    if (!count_to_int(recycled.vec1[i], q_i)) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fpZIBNB_scalar(q_i, recycled.vec2[i], recycled.vec3[i],
+                            recycled.vec4[i], recycled.vec5[i], lower_tail, log_p);
+  }
+
+  return out;
+}
+
+
 //' Zero Inflated Beta Negative Binomial Quantile Function
 //'
 //' Quantile function for the Zero Inflated Beta Negative Binomial (ZIBNB) distribution

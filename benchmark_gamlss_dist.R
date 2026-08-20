@@ -200,6 +200,17 @@ benchmark_distribution <- function(distribution,
     if ("sigma" %in% detected_params) {
       config$ranges[["sigma"]] <- c(0.1, 2)
     }
+  } else if (distribution == "ZISICHEL") {
+    # Zero Inflated Sichel: mu, sigma > 0, nu is a real shape, tau in (0, 1)
+    if ("nu" %in% detected_params) {
+      config$ranges[["nu"]] <- c(-1.5, 1.5)
+    }
+    if ("sigma" %in% detected_params) {
+      config$ranges[["sigma"]] <- c(0.1, 2)
+    }
+    if ("tau" %in% detected_params) {
+      config$ranges[["tau"]] <- c(0.05, 0.5)
+    }
   } else if (distribution %in% c("ZABNB", "ZIBNB")) {
     # Zero Adjusted / Zero Inflated Beta Negative Binomial: mu, sigma, nu all
     # > 0 and tau is a probability in (0, 1) -- the hurdle probability for
