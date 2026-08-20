@@ -10,9 +10,17 @@
 # - Pull requests to main branch
 #
 # Testing matrix covers:
-# - Operating Systems: macOS (Intel + Apple Silicon), Windows, Ubuntu (multiple versions)
+# - Operating Systems: macOS (Apple Silicon), Windows, Ubuntu (multiple versions)
 # - R Versions: devel, release, oldrel-1, oldrel-2 (for maximum compatibility)
-# - Architectures: 32-bit and 64-bit (automatic on Windows)
+# - Architectures: x86-64 and AArch64 (arm64), the latter on both macOS
+#   (macos-latest) and Linux (ubuntu-24.04-arm)
+#
+# The arm64 jobs are not redundant. Out-of-range double -> int conversion is
+# undefined behaviour that resolves DIFFERENTLY per architecture -- INT_MIN on
+# x86-64, INT_MAX on AArch64 -- and only the second turns the CDF kernels'
+# `for (int i = 0; i <= q; i++)` into a non-terminating loop. See
+# inst/tinytest/test-arch-int-conversion.R and the dedicated arch-int-conversion
+# workflow.
 #
 # This comprehensive testing ensures:
 # - CRAN submission readiness
@@ -70,6 +78,15 @@ jobs:
           - {os: ubuntu-latest,   r: 'oldrel-1'}  # Previous R version
           - {os: ubuntu-latest,   r: 'oldrel-2'}  # Two versions back
           
+          # AArch64 (arm64) coverage. macos-latest above is already Apple
+          # Silicon; this adds native arm64 LINUX, so both arm64 toolchains are
+          # exercised. It matters here specifically because out-of-range
+          # double -> int conversion saturates the OTHER way on AArch64
+          # (INT_MAX rather than INT_MIN), which is a hang rather than a wrong
+          # number in the CDF kernels -- see inst/tinytest/test-arch-int-conversion.R.
+          # Free for public repositories.
+          - {os: ubuntu-24.04-arm, r: 'release'}  # native arm64 Linux
+
           # Additional compatibility testing
           - {os: ubuntu-22.04,   r: 'release'}    # Ubuntu 22.04 LTS for broader compatibility
           # - {os: macos-12,       r: 'release'}    # Intel Mac specifically (ddisabled for now due to slow execution)

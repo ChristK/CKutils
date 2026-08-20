@@ -47,7 +47,11 @@
   returned `0` for a CDF whose true value is ~1, and `fpZANBI(4e9, ...)` did the
   same, in both cases also breaking monotonicity of the CDF. On AArch64 the
   conversion saturates to `INT_MAX` instead, which sends the `0..q` accumulation
-  loops on a two-billion-iteration walk. The conversion is now performed by a
+  loops on a walk of about two billion iterations -- a hang rather than a wrong
+  number, and one no value-comparison test would catch. Both architectures are
+  now exercised in CI (`arch-int-conversion`, on arm64 macOS, arm64 Linux and
+  x86-64 Linux) by `inst/tinytest/test-arch-int-conversion.R`, which asserts
+  both the value and prompt return. The conversion is now performed by a
   single shared `count_to_int()` helper in `recycling_helpers.h`, used by all 15
   conversion sites across `NBI`, `BNB`, `ZANBI`, `ZINBI`, `ZABNB`, `SICHEL`,
   `ZISICHEL`, `DPO`, `DEL` and `MN4`. The helper answers only "is this

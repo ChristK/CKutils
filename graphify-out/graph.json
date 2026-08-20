@@ -525,7 +525,7 @@
       "source_file": "src/counts.cpp",
       "source_location": "L41",
       "id": "src_counts_isnan",
-      "community": 18,
+      "community": 13,
       "norm_label": "isnan()"
     },
     {
@@ -1137,7 +1137,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L1",
       "id": "src_distr_zinbi_cpp",
-      "community": 2,
+      "community": 24,
       "norm_label": "distr_zinbi.cpp"
     },
     {
@@ -1146,7 +1146,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L67",
       "id": "src_distr_zinbi_fdzinbi",
-      "community": 2,
+      "community": 24,
       "norm_label": "fdzinbi()"
     },
     {
@@ -1155,7 +1155,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L144",
       "id": "src_distr_zinbi_fpzinbi",
-      "community": 2,
+      "community": 24,
       "norm_label": "fpzinbi()"
     },
     {
@@ -1164,7 +1164,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L221",
       "id": "src_distr_zinbi_fqzinbi",
-      "community": 2,
+      "community": 24,
       "norm_label": "fqzinbi()"
     },
     {
@@ -1344,7 +1344,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L1",
       "id": "src_distr_nbi_cpp",
-      "community": 28,
+      "community": 24,
       "norm_label": "distr_nbi.cpp"
     },
     {
@@ -1353,7 +1353,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L73",
       "id": "src_distr_nbi_fdnbi",
-      "community": 28,
+      "community": 24,
       "norm_label": "fdnbi()"
     },
     {
@@ -1362,7 +1362,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L145",
       "id": "src_distr_nbi_fpnbi",
-      "community": 28,
+      "community": 24,
       "norm_label": "fpnbi()"
     },
     {
@@ -1371,7 +1371,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L217",
       "id": "src_distr_nbi_fqnbi",
-      "community": 28,
+      "community": 24,
       "norm_label": "fqnbi()"
     },
     {
@@ -1380,7 +1380,7 @@
       "source_file": "src/distr_ZABNB.cpp",
       "source_location": "L1",
       "id": "src_distr_zabnb_cpp",
-      "community": 18,
+      "community": 2,
       "norm_label": "distr_zabnb.cpp"
     },
     {
@@ -1389,7 +1389,7 @@
       "source_file": "src/distr_ZABNB.cpp",
       "source_location": "L80",
       "id": "src_distr_zabnb_fdzabnb",
-      "community": 18,
+      "community": 2,
       "norm_label": "fdzabnb()"
     },
     {
@@ -1398,7 +1398,7 @@
       "source_file": "src/distr_ZABNB.cpp",
       "source_location": "L161",
       "id": "src_distr_zabnb_fpzabnb",
-      "community": 18,
+      "community": 2,
       "norm_label": "fpzabnb()"
     },
     {
@@ -1434,7 +1434,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L1",
       "id": "src_distr_bcpeo_cpp",
-      "community": 35,
+      "community": 85,
       "norm_label": "distr_bcpeo.cpp"
     },
     {
@@ -1443,7 +1443,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L41",
       "id": "src_distr_bcpeo_compute_log_c",
-      "community": 35,
+      "community": 85,
       "norm_label": "compute_log_c()"
     },
     {
@@ -1452,7 +1452,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L46",
       "id": "src_distr_bcpeo_fdbcpeo_hlp_f_t",
-      "community": 35,
+      "community": 85,
       "norm_label": "fdbcpeo_hlp_f_t()"
     },
     {
@@ -1461,7 +1461,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L79",
       "id": "src_distr_bcpeo_fqbcpeo_hlp_q_t",
-      "community": 35,
+      "community": 85,
       "norm_label": "fqbcpeo_hlp_q_t()"
     },
     {
@@ -1470,7 +1470,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L152",
       "id": "src_distr_bcpeo_fdbcpeo",
-      "community": 35,
+      "community": 85,
       "norm_label": "fdbcpeo()"
     },
     {
@@ -1479,7 +1479,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L268",
       "id": "src_distr_bcpeo_fpbcpeo",
-      "community": 35,
+      "community": 85,
       "norm_label": "fpbcpeo()"
     },
     {
@@ -1488,7 +1488,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L397",
       "id": "src_distr_bcpeo_fqbcpeo",
-      "community": 35,
+      "community": 85,
       "norm_label": "fqbcpeo()"
     },
     {
@@ -1497,7 +1497,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L1",
       "id": "src_cklut_r_cpp",
-      "community": 85,
+      "community": 9,
       "norm_label": "cklut_r.cpp"
     },
     {
@@ -1506,7 +1506,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L25",
       "id": "src_cklut_r_cklut_open_cpp",
-      "community": 85,
+      "community": 9,
       "norm_label": "cklut_open_cpp()"
     },
     {
@@ -1515,7 +1515,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L31",
       "id": "src_cklut_r_cklut_schema_cpp",
-      "community": 85,
+      "community": 9,
       "norm_label": "cklut_schema_cpp()"
     },
     {
@@ -1524,7 +1524,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L67",
       "id": "src_cklut_r_cklut_rownum_cpp",
-      "community": 85,
+      "community": 9,
       "norm_label": "cklut_rownum_cpp()"
     },
     {
@@ -1533,7 +1533,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L138",
       "id": "src_cklut_r_cklut_gather_cpp",
-      "community": 85,
+      "community": 9,
       "norm_label": "cklut_gather_cpp()"
     },
     {
@@ -1542,7 +1542,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L229",
       "id": "src_cklut_r_cklut_build_cpp",
-      "community": 85,
+      "community": 9,
       "norm_label": "cklut_build_cpp()"
     },
     {
@@ -2172,7 +2172,7 @@
       "source_file": "src/RcppExports.cpp",
       "source_location": "L509",
       "id": "src_rcppexports_ckutils_fdzabnb",
-      "community": 18,
+      "community": 2,
       "norm_label": "_ckutils_fdzabnb()"
     },
     {
@@ -2181,7 +2181,7 @@
       "source_file": "src/RcppExports.cpp",
       "source_location": "L525",
       "id": "src_rcppexports_ckutils_fpzabnb",
-      "community": 18,
+      "community": 2,
       "norm_label": "_ckutils_fpzabnb()"
     },
     {
@@ -6050,23 +6050,23 @@
       "source_file": "NEWS.md",
       "source_location": "L39",
       "id": "ckutils_news_bug_fixes",
-      "community": 132,
+      "community": 133,
       "norm_label": "bug fixes"
     },
     {
       "label": "code:cpp (// was: frZANBI_scalar(mu, sigma, nu)          -- drew from )",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L113",
+      "source_location": "L117",
       "id": "ckutils_news_codeblock_1",
-      "community": 132,
+      "community": 133,
       "norm_label": "code:cpp (// was: frzanbi_scalar(mu, sigma, nu)          -- drew from )"
     },
     {
       "label": "Documentation",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L171",
+      "source_location": "L175",
       "id": "ckutils_news_documentation",
       "community": 133,
       "norm_label": "documentation"
@@ -6075,7 +6075,7 @@
       "label": "CKutils 0.1.29",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L203",
+      "source_location": "L207",
       "id": "ckutils_news_ckutils_0_1_29",
       "community": 132,
       "norm_label": "ckutils 0.1.29"
@@ -6084,8 +6084,8 @@
       "label": "Bug fixes",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L205",
-      "id": "ckutils_news_bug_fixes_205",
+      "source_location": "L209",
+      "id": "ckutils_news_bug_fixes_209",
       "community": 132,
       "norm_label": "bug fixes"
     },
@@ -6093,7 +6093,7 @@
       "label": "CKutils 0.1.28",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L226",
+      "source_location": "L230",
       "id": "ckutils_news_ckutils_0_1_28",
       "community": 131,
       "norm_label": "ckutils 0.1.28"
@@ -6102,8 +6102,8 @@
       "label": "Bug fixes",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L228",
-      "id": "ckutils_news_bug_fixes_228",
+      "source_location": "L232",
+      "id": "ckutils_news_bug_fixes_232",
       "community": 131,
       "norm_label": "bug fixes"
     },
@@ -6111,7 +6111,7 @@
       "label": "CKutils 0.1.27",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L241",
+      "source_location": "L245",
       "id": "ckutils_news_ckutils_0_1_27",
       "community": 130,
       "norm_label": "ckutils 0.1.27"
@@ -6120,8 +6120,8 @@
       "label": "Bug fixes",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L243",
-      "id": "ckutils_news_bug_fixes_243",
+      "source_location": "L247",
+      "id": "ckutils_news_bug_fixes_247",
       "community": 130,
       "norm_label": "bug fixes"
     },
@@ -6129,7 +6129,7 @@
       "label": "CKutils 0.1.25",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L272",
+      "source_location": "L276",
       "id": "ckutils_news_ckutils_0_1_25",
       "community": 99,
       "norm_label": "ckutils 0.1.25"
@@ -6138,8 +6138,8 @@
       "label": "New features",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L274",
-      "id": "ckutils_news_new_features_274",
+      "source_location": "L278",
+      "id": "ckutils_news_new_features_278",
       "community": 99,
       "norm_label": "new features"
     },
@@ -6147,8 +6147,8 @@
       "label": "Bug fixes",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L299",
-      "id": "ckutils_news_bug_fixes_299",
+      "source_location": "L303",
+      "id": "ckutils_news_bug_fixes_303",
       "community": 99,
       "norm_label": "bug fixes"
     },
@@ -6156,8 +6156,8 @@
       "label": "Documentation",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L309",
-      "id": "ckutils_news_documentation_309",
+      "source_location": "L313",
+      "id": "ckutils_news_documentation_313",
       "community": 99,
       "norm_label": "documentation"
     },
@@ -6165,7 +6165,7 @@
       "label": "Testing and coverage",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L316",
+      "source_location": "L320",
       "id": "ckutils_news_testing_and_coverage",
       "community": 99,
       "norm_label": "testing and coverage"
@@ -6174,7 +6174,7 @@
       "label": "Notes",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L329",
+      "source_location": "L333",
       "id": "ckutils_news_notes",
       "community": 99,
       "norm_label": "notes"
@@ -6318,7 +6318,7 @@
       "label": "License",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L124",
+      "source_location": "L134",
       "id": "ckutils_readme_license",
       "community": 96,
       "norm_label": "license"
@@ -7992,6 +7992,60 @@
       "label": "Bug fixes",
       "file_type": "document",
       "source_file": "NEWS.md",
+      "source_location": "L205",
+      "community": 132,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_205"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L228",
+      "community": 131,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_228"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L243",
+      "community": 130,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_243"
+    },
+    {
+      "label": "New features",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L274",
+      "community": 99,
+      "norm_label": "new features",
+      "id": "ckutils_news_new_features_274"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L299",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_299"
+    },
+    {
+      "label": "Documentation",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L309",
+      "community": 99,
+      "norm_label": "documentation",
+      "id": "ckutils_news_documentation_309"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
       "source_location": "L170",
       "community": 132,
       "norm_label": "bug fixes",
@@ -8110,7 +8164,7 @@
       "file_type": "code",
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L298",
-      "community": 2,
+      "community": 24,
       "norm_label": "frzinbi()",
       "id": "src_distr_zinbi_frzinbi"
     },
@@ -8119,7 +8173,7 @@
       "file_type": "code",
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L290",
-      "community": 28,
+      "community": 24,
       "norm_label": "frnbi()",
       "id": "src_distr_nbi_frnbi"
     },
@@ -9805,7 +9859,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 85,
+      "community": 9,
       "norm_label": "cklut_r.cpp",
       "id": "src_cklut_r"
     },
@@ -9815,7 +9869,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L25",
       "_origin": "ast",
-      "community": 85,
+      "community": 9,
       "norm_label": "sexp",
       "id": "src_cklut_r_cpp_sexp"
     },
@@ -9825,7 +9879,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L25",
       "_origin": "ast",
-      "community": 85,
+      "community": 9,
       "norm_label": "string",
       "id": "src_cklut_r_cpp_string"
     },
@@ -9835,7 +9889,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L31",
       "_origin": "ast",
-      "community": 85,
+      "community": 9,
       "norm_label": "list",
       "id": "src_cklut_r_cpp_list"
     },
@@ -9845,7 +9899,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L67",
       "_origin": "ast",
-      "community": 85,
+      "community": 9,
       "norm_label": "numericvector",
       "id": "src_cklut_r_cpp_numericvector"
     },
@@ -9855,7 +9909,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L224",
       "_origin": "ast",
-      "community": 85,
+      "community": 9,
       "norm_label": "charactervector",
       "id": "src_cklut_r_cpp_charactervector"
     },
@@ -9865,7 +9919,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L224",
       "_origin": "ast",
-      "community": 85,
+      "community": 9,
       "norm_label": "logicalvector",
       "id": "src_cklut_r_cpp_logicalvector"
     },
@@ -9875,7 +9929,7 @@
       "source_file": "src/cklut_r.cpp",
       "source_location": "L224",
       "_origin": "ast",
-      "community": 85,
+      "community": 9,
       "norm_label": "integervector",
       "id": "src_cklut_r_cpp_integervector"
     },
@@ -10015,7 +10069,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 35,
+      "community": 85,
       "norm_label": "distr_bcpeo.cpp",
       "id": "src_distr_bcpeo"
     },
@@ -10025,7 +10079,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L152",
       "_origin": "ast",
-      "community": 35,
+      "community": 85,
       "norm_label": "numericvector",
       "id": "src_distr_bcpeo_cpp_numericvector"
     },
@@ -10385,7 +10439,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 28,
+      "community": 24,
       "norm_label": "distr_nbi.cpp",
       "id": "src_distr_nbi_cpp_src_distr_nbi"
     },
@@ -10395,7 +10449,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L36",
       "_origin": "ast",
-      "community": 28,
+      "community": 24,
       "norm_label": "fdnbi_scalar()",
       "id": "src_distr_nbi_fdnbi_scalar"
     },
@@ -10405,7 +10459,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L89",
       "_origin": "ast",
-      "community": 28,
+      "community": 24,
       "norm_label": "numericvector",
       "id": "src_distr_nbi_cpp_numericvector"
     },
@@ -10425,7 +10479,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L206",
       "_origin": "ast",
-      "community": 28,
+      "community": 24,
       "norm_label": "fqnbi_scalar()",
       "id": "src_distr_nbi_fqnbi_scalar"
     },
@@ -10435,7 +10489,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L261",
       "_origin": "ast",
-      "community": 28,
+      "community": 24,
       "norm_label": "integervector",
       "id": "src_distr_nbi_cpp_integervector"
     },
@@ -10445,7 +10499,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L305",
       "_origin": "ast",
-      "community": 28,
+      "community": 24,
       "norm_label": "frnbi_scalar()",
       "id": "src_distr_nbi_frnbi_scalar"
     },
@@ -10675,7 +10729,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 24,
       "norm_label": "distr_zinbi.cpp",
       "id": "src_distr_zinbi"
     },
@@ -10685,7 +10739,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L30",
       "_origin": "ast",
-      "community": 2,
+      "community": 24,
       "norm_label": "fdzinbi_scalar()",
       "id": "src_distr_zinbi_fdzinbi_scalar"
     },
@@ -10695,7 +10749,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L90",
       "_origin": "ast",
-      "community": 2,
+      "community": 24,
       "norm_label": "numericvector",
       "id": "src_distr_zinbi_cpp_numericvector"
     },
@@ -10705,7 +10759,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L123",
       "_origin": "ast",
-      "community": 2,
+      "community": 24,
       "norm_label": "fpzinbi_scalar()",
       "id": "src_distr_zinbi_fpzinbi_scalar"
     },
@@ -10715,7 +10769,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L219",
       "_origin": "ast",
-      "community": 2,
+      "community": 24,
       "norm_label": "fqzinbi_scalar()",
       "id": "src_distr_zinbi_fqzinbi_scalar"
     },
@@ -10725,7 +10779,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L279",
       "_origin": "ast",
-      "community": 2,
+      "community": 24,
       "norm_label": "integervector",
       "id": "src_distr_zinbi_cpp_integervector"
     },
@@ -10735,7 +10789,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L313",
       "_origin": "ast",
-      "community": 2,
+      "community": 24,
       "norm_label": "frzinbi_scalar()",
       "id": "src_distr_zinbi_frzinbi_scalar"
     },
@@ -20092,9 +20146,9 @@
       "source_file": "src/distr_rng_scalar_bridge.cpp",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_distr_rng_scalar_bridge_cpp",
-      "target": "src_distr_rng_scalar_bridge_frnbi_scalar_vec",
-      "confidence_score": 1.0
+      "target": "src_distr_rng_scalar_bridge_frnbi_scalar_vec"
     },
     {
       "relation": "contains",
@@ -20102,9 +20156,9 @@
       "source_file": "src/distr_rng_scalar_bridge.cpp",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_distr_rng_scalar_bridge_cpp",
-      "target": "src_distr_rng_scalar_bridge_frzanbi_scalar_vec",
-      "confidence_score": 1.0
+      "target": "src_distr_rng_scalar_bridge_frzanbi_scalar_vec"
     },
     {
       "relation": "contains",
@@ -20112,9 +20166,9 @@
       "source_file": "src/distr_rng_scalar_bridge.cpp",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_distr_rng_scalar_bridge_cpp",
-      "target": "src_distr_rng_scalar_bridge_frzinbi_scalar_vec",
-      "confidence_score": 1.0
+      "target": "src_distr_rng_scalar_bridge_frzinbi_scalar_vec"
     },
     {
       "relation": "calls",
@@ -21514,9 +21568,9 @@
       "source_file": "src/RcppExports.cpp",
       "source_location": "L704",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_rcppexports_cpp",
-      "target": "src_rcppexports_ckutils_frnbi_scalar_vec",
-      "confidence_score": 1.0
+      "target": "src_rcppexports_ckutils_frnbi_scalar_vec"
     },
     {
       "relation": "contains",
@@ -21534,9 +21588,9 @@
       "source_file": "src/RcppExports.cpp",
       "source_location": "L717",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_rcppexports_cpp",
-      "target": "src_rcppexports_ckutils_frzanbi_scalar_vec",
-      "confidence_score": 1.0
+      "target": "src_rcppexports_ckutils_frzanbi_scalar_vec"
     },
     {
       "relation": "contains",
@@ -21554,9 +21608,9 @@
       "source_file": "src/RcppExports.cpp",
       "source_location": "L731",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_rcppexports_cpp",
-      "target": "src_rcppexports_ckutils_frzinbi_scalar_vec",
-      "confidence_score": 1.0
+      "target": "src_rcppexports_ckutils_frzinbi_scalar_vec"
     },
     {
       "relation": "contains",
@@ -24172,9 +24226,9 @@
       "source_file": "inst/include/distr_ZANBI.h",
       "source_location": "L170",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "include_distr_zanbi_frzanbi_scalar",
-      "target": "include_distr_zanbi_fqzanbi_scalar",
-      "confidence_score": 1.0
+      "target": "include_distr_zanbi_fqzanbi_scalar"
     },
     {
       "relation": "contains",
@@ -24213,9 +24267,9 @@
       "source_file": "inst/include/distr_ZINBI.h",
       "source_location": "L157",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "include_distr_zinbi_frzinbi_scalar",
-      "target": "include_distr_zinbi_fqzinbi_scalar",
-      "confidence_score": 1.0
+      "target": "include_distr_zinbi_fqzinbi_scalar"
     },
     {
       "relation": "contains",
@@ -32915,9 +32969,9 @@
       "source_file": "NEWS.md",
       "source_location": "L113",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_bug_fixes",
-      "target": "ckutils_news_codeblock_1",
-      "confidence_score": 1.0
+      "target": "ckutils_news_codeblock_1"
     },
     {
       "relation": "contains",
@@ -32995,8 +33049,18 @@
       "source_file": "NEWS.md",
       "source_location": "L205",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_29",
-      "target": "ckutils_news_bug_fixes_205",
+      "target": "ckutils_news_bug_fixes_205"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L209",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_29",
+      "target": "ckutils_news_bug_fixes_209",
       "confidence_score": 1.0
     },
     {
@@ -33008,16 +33072,6 @@
       "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_29",
       "target": "ckutils_news_bug_fixes_79"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "NEWS.md",
-      "source_location": "L205",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "ckutils_news_ckutils_0_1_25",
-      "target": "ckutils_news_bug_fixes_205"
     },
     {
       "relation": "contains",
@@ -33065,8 +33119,18 @@
       "source_file": "NEWS.md",
       "source_location": "L228",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_28",
-      "target": "ckutils_news_bug_fixes_228",
+      "target": "ckutils_news_bug_fixes_228"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L232",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes_232",
       "confidence_score": 1.0
     },
     {
@@ -33155,8 +33219,18 @@
       "source_file": "NEWS.md",
       "source_location": "L243",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_27",
-      "target": "ckutils_news_bug_fixes_243",
+      "target": "ckutils_news_bug_fixes_243"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L247",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_27",
+      "target": "ckutils_news_bug_fixes_247",
       "confidence_score": 1.0
     },
     {
@@ -33233,6 +33307,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "NEWS.md",
+      "source_location": "L205",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_205"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
       "source_location": "L246",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -33255,8 +33339,18 @@
       "source_file": "NEWS.md",
       "source_location": "L299",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_25",
-      "target": "ckutils_news_bug_fixes_299",
+      "target": "ckutils_news_bug_fixes_299"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L303",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_303",
       "confidence_score": 1.0
     },
     {
@@ -33315,8 +33409,18 @@
       "source_file": "NEWS.md",
       "source_location": "L309",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_25",
-      "target": "ckutils_news_documentation_309",
+      "target": "ckutils_news_documentation_309"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L313",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_documentation_313",
       "confidence_score": 1.0
     },
     {
@@ -33385,8 +33489,18 @@
       "source_file": "NEWS.md",
       "source_location": "L274",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_25",
-      "target": "ckutils_news_new_features_274",
+      "target": "ckutils_news_new_features_274"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L278",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_new_features_278",
       "confidence_score": 1.0
     },
     {
@@ -39878,5 +39992,5 @@
       "weight": 0.85
     }
   ],
-  "built_at_commit": "b12295082d881be47b064b536f5ee29c1a328538"
+  "built_at_commit": "9b99eec1d17f5dad1b9cbcf80df5668a154fd7ed"
 }

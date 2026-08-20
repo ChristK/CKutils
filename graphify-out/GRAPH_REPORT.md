@@ -1,16 +1,16 @@
 # Graph Report - CKutils  (2026-08-20)
 
 ## Corpus Check
-- 132 files · ~199,903 words
+- 134 files · ~202,467 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1382 nodes · 2462 edges · 134 communities (110 shown, 24 thin omitted)
+- 1388 nodes · 2468 edges · 132 communities (108 shown, 24 thin omitted)
 - Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 162 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b1229508`
+- Built from commit: `9b99eec1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,14 +43,12 @@
 - [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
 - [[_COMMUNITY_Inst Include Recycling|Inst Include Recycling]]
-- [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
 - [[_COMMUNITY_RNG distribution generators (R)|RNG distribution generators (R)]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
 - [[_COMMUNITY_Src Lookup Dt|Src Lookup Dt]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
-- [[_COMMUNITY_Community 35|Community 35]]
 - [[_COMMUNITY_cklut sharded writer (C++)|cklut sharded writer (C++)]]
 - [[_COMMUNITY_Check Before Push|Check Before Push]]
 - [[_COMMUNITY_Src Scramble Trajectories|Src Scramble Trajectories]]
@@ -128,8 +126,8 @@
 4. `TypedReader` - 36 edges
 5. `ParquetRowSource` - 33 edges
 6. `ParquetTypedRowSource` - 32 edges
-7. `TypedWriter` - 29 edges
-8. `CKutils 0.1.25` - 27 edges
+7. `CKutils 0.1.25` - 30 edges
+8. `TypedWriter` - 29 edges
 9. `Reader` - 24 edges
 10. `TypedSchema` - 24 edges
 
@@ -161,7 +159,7 @@
 - **cklut subsystem (docs + R drop-in + validation)** — cklut_readme_drop_in, readme_cklut, validation_validate_drop_in_driver [INFERRED 0.85]
 - **cklut validation harness (oracle + generator + drop-in)** — validation_reference_lookup_lookup_dt_ref, validation_gen_expected_driver, validation_validate_drop_in_driver [INFERRED 0.85]
 
-## Communities (134 total, 24 thin omitted)
+## Communities (132 total, 24 thin omitted)
 
 ### Community 0 - "cklut R API"
 Cohesion: 0.06
@@ -172,8 +170,8 @@ Cohesion: 0.05
 Nodes (44): benchmark_distribution, build_param_list, generate_test_data, get_function_names, fdBCPEo, fdBCT, fdBNB, fdDEL (+36 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.33
-Nodes (10): IntegerVector, NumericVector, fdZINBI(), fdZINBI_scalar(), fpZINBI(), fpZINBI_scalar(), fqZINBI(), fqZINBI_scalar() (+2 more)
+Cohesion: 0.40
+Nodes (4): fdZABNB(), fpZABNB(), _CKutils_fdZABNB(), _CKutils_fpZABNB()
 
 ### Community 3 - "misc R utilities"
 Cohesion: 0.07
@@ -200,8 +198,8 @@ Cohesion: 0.09
 Nodes (22): Array, FileReader, Schema, shared_ptr, string, Table, unique_ptr, vector (+14 more)
 
 ### Community 9 - "cklut typed build engine (src)"
-Cohesion: 0.13
-Nodes (30): cklut(), CsvTypedRowSource(), class, namespace, std, next(), restart(), select() (+22 more)
+Cohesion: 0.09
+Nodes (42): cklut(), CsvTypedRowSource(), class, namespace, std, next(), restart(), select() (+34 more)
 
 ### Community 10 - "cklut typed Parquet source (C++)"
 Cohesion: 0.09
@@ -216,8 +214,8 @@ Cohesion: 0.13
 Nodes (11): uint32_t, TypedReader, base_, dict_, fdiv_, get_as_string, sch_, shards_ (+3 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.28
-Nodes (14): IntegerVector, NumericVector, fdDEL(), fdDEL_scalar(), fpDEL(), fpDEL_hlp_fn(), fpDEL_scalar(), fqDEL() (+6 more)
+Cohesion: 0.27
+Nodes (15): IsNaN(), IntegerVector, NumericVector, fdDEL(), fdDEL_scalar(), fpDEL(), fpDEL_hlp_fn(), fpDEL_scalar() (+7 more)
 
 ### Community 14 - "cklut typed core (C++)"
 Cohesion: 0.18
@@ -236,8 +234,8 @@ Cohesion: 0.26
 Nodes (10): CharacterVector, IntegerVector, LogicalVector, NumericVector, string, StringVector, shift_bypidBool(), shift_bypidInt() (+2 more)
 
 ### Community 18 - "DEL distribution + SIMD (C++)"
-Cohesion: 0.17
-Nodes (17): IsNaN(), IntegerVector, NumericVector, fdBNB(), fdBNB_scalar(), fpBNB(), fpBNB_scalar(), fqBNB() (+9 more)
+Cohesion: 0.23
+Nodes (12): IntegerVector, NumericVector, fdBNB(), fdBNB_scalar(), fpBNB(), fpBNB_scalar(), fqBNB(), fqBNB_scalar() (+4 more)
 
 ### Community 19 - "cklut typed writer (C++)"
 Cohesion: 0.24
@@ -260,8 +258,8 @@ Cohesion: 0.35
 Nodes (12): compute_alpha(), compute_cvec(), compute_lbes(), IntegerVector, NumericVector, fcdfSICHEL_scalar(), fdSICHEL(), fpSICHEL() (+4 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.31
-Nodes (11): fpNBI_scalar(), IntegerVector, NumericVector, fdZANBI(), fdZANBI_scalar(), fpZANBI(), fpZANBI_scalar(), fqZANBI() (+3 more)
+Cohesion: 0.12
+Nodes (30): IntegerVector, NumericVector, fdNBI(), fdNBI_scalar(), fpNBI(), fpNBI_scalar(), fqNBI(), fqNBI_scalar() (+22 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.42
@@ -274,10 +272,6 @@ Nodes (14): at(), Dim, min, size, encode_one(), int64_t, T, vector (+6 more)
 ### Community 27 - "Inst Include Recycling"
 Cohesion: 0.14
 Nodes (13): recycle_vectors(), to_numeric_vector(), true_type(), NumericVector, RecycledVectors3, RecycledVectors4, RecycledVectors5, T (+5 more)
-
-### Community 28 - "Community 28"
-Cohesion: 0.36
-Nodes (9): IntegerVector, NumericVector, fdNBI(), fdNBI_scalar(), fpNBI(), fqNBI(), fqNBI_scalar(), frNBI() (+1 more)
 
 ### Community 29 - "cklut sharded writer (C++)"
 Cohesion: 0.22
@@ -302,10 +296,6 @@ Nodes (8): DataFrame, CharacterVector, IntegerVector, List, SEXP, dtsubset(), fc
 ### Community 34 - "cklut sharded writer (C++)"
 Cohesion: 0.22
 Nodes (9): FastDivU64, ADD, d, magic, more, SHIFT, get_u32(), get_u64() (+1 more)
-
-### Community 35 - "Community 35"
-Cohesion: 0.58
-Nodes (7): compute_log_c(), NumericVector, fdBCPEo(), fdBCPEo_hlp_f_T(), fpBCPEo(), fqBCPEo(), fqBCPEo_hlp_q_T()
 
 ### Community 36 - "cklut sharded writer (C++)"
 Cohesion: 0.17
@@ -360,8 +350,8 @@ Cohesion: 0.50
 Nodes (3): FileMapRW, base_, len_
 
 ### Community 85 - "BNB family distribution (C++)"
-Cohesion: 0.07
-Nodes (93): DllInfo, RcppExport, cklut_build_cpp(), cklut_gather_cpp(), cklut_open_cpp(), cklut_rownum_cpp(), cklut_schema_cpp(), CharacterVector (+85 more)
+Cohesion: 0.08
+Nodes (88): DllInfo, RcppExport, compute_log_c(), NumericVector, fdBCPEo(), fdBCPEo_hlp_f_T(), fpBCPEo(), fqBCPEo() (+80 more)
 
 ### Community 86 - "SICHEL/ZISICHEL distribution (C++)"
 Cohesion: 0.05
@@ -416,8 +406,8 @@ Cohesion: 0.22
 Nodes (8): CFLAGS, CXX11FLAGS, CXX14FLAGS, CXX17FLAGS, CXX20FLAGS, CXXFLAGS, _R_CHECK_COMPILATION_FLAGS_KNOWN_, check-before-push.sh script
 
 ### Community 99 - "Community 99"
-Cohesion: 0.08
-Nodes (24): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+16 more)
+Cohesion: 0.07
+Nodes (27): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+19 more)
 
 ### Community 100 - "Community 100"
 Cohesion: 0.47
@@ -472,39 +462,39 @@ Cohesion: 0.50
 Nodes (3): code:bash (GRAPHIFY_WHISPER_MODEL=base  # or whatever --whisper-model t), graphify reference: transcribe video and audio, Step 2.5 - Transcribe video / audio files (only if video files detected)
 
 ### Community 130 - "Community 130"
+Cohesion: 0.18
+Nodes (11): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+3 more)
+
+### Community 131 - "Community 131"
 Cohesion: 0.20
 Nodes (10): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+2 more)
 
-### Community 131 - "Community 131"
-Cohesion: 0.22
-Nodes (9): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes (+1 more)
-
 ### Community 132 - "Community 132"
-Cohesion: 0.25
-Nodes (8): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, CKutils 0.1.29, code:cpp (// was: frZANBI_scalar(mu, sigma, nu)          -- drew from )
+Cohesion: 0.29
+Nodes (7): Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, Bug fixes, CKutils 0.1.29
 
 ### Community 133 - "Community 133"
-Cohesion: 0.50
-Nodes (3): CKutils 0.1.30, Documentation, New features
+Cohesion: 0.33
+Nodes (5): Bug fixes, CKutils 0.1.30, code:cpp (// was: frZANBI_scalar(mu, sigma, nu)          -- drew from ), Documentation, New features
 
 ## Knowledge Gaps
-- **489 isolated node(s):** `check-before-push.sh script`, `CFLAGS`, `CXXFLAGS`, `CXX11FLAGS`, `CXX14FLAGS` (+484 more)
+- **495 isolated node(s):** `check-before-push.sh script`, `CFLAGS`, `CXXFLAGS`, `CXX11FLAGS`, `CXX14FLAGS` (+490 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `IsNaN()` connect `DEL distribution + SIMD (C++)` to `Community 2`, `Community 35`, `Community 100`, `cklut R bindings (src)`, `misc C++ helpers`, `DPO distribution + SIMD (C++)`, `Community 108`, `Community 13`, `Community 92`, `BNB family distribution (C++)`, `Community 23`, `Community 24`, `Community 25`, `Community 28`?**
-  _High betweenness centrality (0.021) - this node is a cross-community bridge._
+- **Why does `IsNaN()` connect `Community 13` to `Community 2`, `Community 100`, `cklut R bindings (src)`, `misc C++ helpers`, `cklut typed build engine (src)`, `DPO distribution + SIMD (C++)`, `Community 108`, `DEL distribution + SIMD (C++)`, `BNB family distribution (C++)`, `Community 23`, `Community 24`, `Community 25`, `Community 92`?**
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **Why does `ParquetRowSource` connect `cklut Parquet source (C++)` to `Community 102`, `Community 103`?**
-  _High betweenness centrality (0.021) - this node is a cross-community bridge._
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **Why does `TypedRowSource` connect `Community 104` to `Community 105`, `cklut typed Parquet source (C++)`, `cklut typed build (C++)`, `cklut typed C++ tests`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
 - **Are the 39 inferred relationships involving `IsNaN()` (e.g. with `cklut_build_cpp()` and `cklut_gather_cpp()`) actually correct?**
   _`IsNaN()` has 39 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `check-before-push.sh script`, `CFLAGS`, `CXXFLAGS` to the rest of the system?**
-  _489 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _495 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `cklut R API` be split into smaller, more focused modules?**
   _Cohesion score 0.05727644652250146 - nodes in this community are weakly interconnected._
 - **Should `gamlss distribution benchmark` be split into smaller, more focused modules?**

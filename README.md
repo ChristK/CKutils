@@ -121,6 +121,16 @@ below `CK_MAX_COUNT` in anything performance-sensitive.
 `recycling_helpers.h` carries the authoritative statement of all of the above,
 and each `distr_*.h` repeats the part that applies to it.
 
+The two saturation directions are not symmetric in their consequences: on
+x86-64 you get a wrong number, on AArch64 a non-terminating loop. Both are
+checked on real hardware — `inst/tinytest/test-arch-int-conversion.R` runs on
+arm64 macOS, arm64 Linux and x86-64 Linux in the `arch-int-conversion`
+workflow, asserting that every guarded call returns `NA` *and* returns
+promptly, so the hang mode is caught as well as the wrong-value mode. That
+workflow also runs `.github/scripts/arch_cast_probe.R`, which compiles a
+deliberately unguarded cast and prints which way the CPU actually saturates —
+so the per-architecture claims above are measured rather than inferred.
+
 ## License
 
 GPL-3 | See [LICENSE.md](LICENSE.md) for details
