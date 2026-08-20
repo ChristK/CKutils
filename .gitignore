@@ -38,3 +38,6 @@ graphify-out/manifest.json
 graphify-out/.graphify_python
 graphify-out/.graphify_root
 graphify-out/[0-9]*/
+
+# Claude Code process scripts (exploration, diagnostics, benchmarks)
+claude_process/

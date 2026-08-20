@@ -345,7 +345,7 @@
       "source_file": "src/distr_ZISICHEL.cpp",
       "source_location": "L1",
       "id": "src_distr_zisichel_cpp",
-      "community": 108,
+      "community": 100,
       "norm_label": "distr_zisichel.cpp"
     },
     {
@@ -354,16 +354,16 @@
       "source_file": "src/distr_ZISICHEL.cpp",
       "source_location": "L61",
       "id": "src_distr_zisichel_fqzisichel",
-      "community": 108,
+      "community": 100,
       "norm_label": "fqzisichel()"
     },
     {
       "label": "fpZISICHEL()",
       "file_type": "code",
       "source_file": "src/distr_ZISICHEL.cpp",
-      "source_location": "L178",
+      "source_location": "L166",
       "id": "src_distr_zisichel_fpzisichel",
-      "community": 108,
+      "community": 100,
       "norm_label": "fpzisichel()"
     },
     {
@@ -525,7 +525,7 @@
       "source_file": "src/counts.cpp",
       "source_location": "L41",
       "id": "src_counts_isnan",
-      "community": 28,
+      "community": 18,
       "norm_label": "isnan()"
     },
     {
@@ -732,7 +732,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L1",
       "id": "src_misc_functions_cpp",
-      "community": 6,
+      "community": 92,
       "norm_label": "misc_functions.cpp"
     },
     {
@@ -741,7 +741,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L44",
       "id": "src_misc_functions_fquantile",
-      "community": 6,
+      "community": 92,
       "norm_label": "fquantile()"
     },
     {
@@ -750,7 +750,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L165",
       "id": "src_misc_functions_fquantile_byid",
-      "community": 6,
+      "community": 92,
       "norm_label": "fquantile_byid()"
     },
     {
@@ -759,7 +759,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L272",
       "id": "src_misc_functions_count_if",
-      "community": 6,
+      "community": 92,
       "norm_label": "count_if()"
     },
     {
@@ -768,7 +768,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L305",
       "id": "src_misc_functions_prop_if",
-      "community": 6,
+      "community": 92,
       "norm_label": "prop_if()"
     },
     {
@@ -777,7 +777,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L346",
       "id": "src_misc_functions_fclamp",
-      "community": 6,
+      "community": 92,
       "norm_label": "fclamp()"
     },
     {
@@ -786,7 +786,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L435",
       "id": "src_misc_functions_fclamp_int",
-      "community": 6,
+      "community": 92,
       "norm_label": "fclamp_int()"
     },
     {
@@ -795,7 +795,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L497",
       "id": "src_misc_functions_fequal",
-      "community": 6,
+      "community": 92,
       "norm_label": "fequal()"
     },
     {
@@ -804,7 +804,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L523",
       "id": "src_misc_functions_fnormalise",
-      "community": 6,
+      "community": 92,
       "norm_label": "fnormalise()"
     },
     {
@@ -813,7 +813,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L557",
       "id": "src_misc_functions_lin_interpolation",
-      "community": 6,
+      "community": 92,
       "norm_label": "lin_interpolation()"
     },
     {
@@ -822,7 +822,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L596",
       "id": "src_misc_functions_carry_forward",
-      "community": 6,
+      "community": 92,
       "norm_label": "carry_forward()"
     },
     {
@@ -831,7 +831,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L678",
       "id": "src_misc_functions_carry_forward_incr",
-      "community": 6,
+      "community": 92,
       "norm_label": "carry_forward_incr()"
     },
     {
@@ -840,7 +840,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L779",
       "id": "src_misc_functions_carry_backward_decr",
-      "community": 6,
+      "community": 92,
       "norm_label": "carry_backward_decr()"
     },
     {
@@ -849,7 +849,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L827",
       "id": "src_misc_functions_mk_new_simulant_markers",
-      "community": 6,
+      "community": 92,
       "norm_label": "mk_new_simulant_markers()"
     },
     {
@@ -858,7 +858,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L894",
       "id": "src_misc_functions_identify_longdead",
-      "community": 6,
+      "community": 92,
       "norm_label": "identify_longdead()"
     },
     {
@@ -867,7 +867,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L952",
       "id": "src_misc_functions_identify_invitees",
-      "community": 6,
+      "community": 92,
       "norm_label": "identify_invitees()"
     },
     {
@@ -876,7 +876,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L1029",
       "id": "src_misc_functions_hc_effect",
-      "community": 6,
+      "community": 92,
       "norm_label": "hc_effect()"
     },
     {
@@ -885,7 +885,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L1068",
       "id": "src_misc_functions_antilogit",
-      "community": 6,
+      "community": 92,
       "norm_label": "antilogit()"
     },
     {
@@ -894,7 +894,7 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L1",
       "id": "src_distr_bnb_cpp",
-      "community": 92,
+      "community": 18,
       "norm_label": "distr_bnb.cpp"
     },
     {
@@ -903,25 +903,25 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L72",
       "id": "src_distr_bnb_fdbnb",
-      "community": 92,
+      "community": 18,
       "norm_label": "fdbnb()"
     },
     {
       "label": "fpBNB()",
       "file_type": "code",
       "source_file": "src/distr_BNB.cpp",
-      "source_location": "L145",
+      "source_location": "L147",
       "id": "src_distr_bnb_fpbnb",
-      "community": 92,
+      "community": 18,
       "norm_label": "fpbnb()"
     },
     {
       "label": "fqBNB()",
       "file_type": "code",
       "source_file": "src/distr_BNB.cpp",
-      "source_location": "L220",
+      "source_location": "L224",
       "id": "src_distr_bnb_fqbnb",
-      "community": 92,
+      "community": 18,
       "norm_label": "fqbnb()"
     },
     {
@@ -930,7 +930,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L1",
       "id": "src_distr_del_cpp",
-      "community": 18,
+      "community": 13,
       "norm_label": "distr_del.cpp"
     },
     {
@@ -939,7 +939,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L44",
       "id": "src_distr_del_is_aligned",
-      "community": 18,
+      "community": 13,
       "norm_label": "is_aligned()"
     },
     {
@@ -948,7 +948,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L49",
       "id": "src_distr_del_has_avx2",
-      "community": 18,
+      "community": 13,
       "norm_label": "has_avx2()"
     },
     {
@@ -957,7 +957,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L62",
       "id": "src_distr_del_simd_exp_4",
-      "community": 18,
+      "community": 13,
       "norm_label": "simd_exp_4()"
     },
     {
@@ -966,7 +966,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L80",
       "id": "src_distr_del_simd_log_4",
-      "community": 18,
+      "community": 13,
       "norm_label": "simd_log_4()"
     },
     {
@@ -975,34 +975,34 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L158",
       "id": "src_distr_del_fddel",
-      "community": 18,
+      "community": 13,
       "norm_label": "fddel()"
     },
     {
       "label": "fpDEL()",
       "file_type": "code",
       "source_file": "src/distr_DEL.cpp",
-      "source_location": "L295",
+      "source_location": "L304",
       "id": "src_distr_del_fpdel",
-      "community": 18,
+      "community": 13,
       "norm_label": "fpdel()"
     },
     {
       "label": "fqDEL_search()",
       "file_type": "code",
       "source_file": "src/distr_DEL.cpp",
-      "source_location": "L425",
+      "source_location": "L442",
       "id": "src_distr_del_fqdel_search",
-      "community": 18,
+      "community": 13,
       "norm_label": "fqdel_search()"
     },
     {
       "label": "fqDEL()",
       "file_type": "code",
       "source_file": "src/distr_DEL.cpp",
-      "source_location": "L539",
+      "source_location": "L560",
       "id": "src_distr_del_fqdel",
-      "community": 18,
+      "community": 13,
       "norm_label": "fqdel()"
     },
     {
@@ -1011,7 +1011,7 @@
       "source_file": "src/distr_MN4.cpp",
       "source_location": "L1",
       "id": "src_distr_mn4_cpp",
-      "community": 28,
+      "community": 25,
       "norm_label": "distr_mn4.cpp"
     },
     {
@@ -1020,34 +1020,34 @@
       "source_file": "src/distr_MN4.cpp",
       "source_location": "L88",
       "id": "src_distr_mn4_fdmn4",
-      "community": 28,
+      "community": 25,
       "norm_label": "fdmn4()"
     },
     {
       "label": "fpMN4()",
       "file_type": "code",
       "source_file": "src/distr_MN4.cpp",
-      "source_location": "L183",
+      "source_location": "L181",
       "id": "src_distr_mn4_fpmn4",
-      "community": 28,
+      "community": 25,
       "norm_label": "fpmn4()"
     },
     {
       "label": "fqMN4()",
       "file_type": "code",
       "source_file": "src/distr_MN4.cpp",
-      "source_location": "L278",
+      "source_location": "L274",
       "id": "src_distr_mn4_fqmn4",
-      "community": 28,
+      "community": 25,
       "norm_label": "fqmn4()"
     },
     {
       "label": "frMN4()",
       "file_type": "code",
       "source_file": "src/distr_MN4.cpp",
-      "source_location": "L347",
+      "source_location": "L343",
       "id": "src_distr_mn4_frmn4",
-      "community": 28,
+      "community": 25,
       "norm_label": "frmn4()"
     },
     {
@@ -1056,7 +1056,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L1",
       "id": "src_distr_sichel_cpp",
-      "community": 13,
+      "community": 23,
       "norm_label": "distr_sichel.cpp"
     },
     {
@@ -1065,34 +1065,34 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L77",
       "id": "src_distr_sichel_fdsichel",
-      "community": 13,
+      "community": 23,
       "norm_label": "fdsichel()"
     },
     {
       "label": "fpSICHEL()",
       "file_type": "code",
       "source_file": "src/distr_SICHEL.cpp",
-      "source_location": "L167",
+      "source_location": "L168",
       "id": "src_distr_sichel_fpsichel",
-      "community": 13,
+      "community": 23,
       "norm_label": "fpsichel()"
     },
     {
       "label": "fqSICHEL_search()",
       "file_type": "code",
       "source_file": "src/distr_SICHEL.cpp",
-      "source_location": "L217",
+      "source_location": "L219",
       "id": "src_distr_sichel_fqsichel_search",
-      "community": 13,
+      "community": 23,
       "norm_label": "fqsichel_search()"
     },
     {
       "label": "fqSICHEL()",
       "file_type": "code",
       "source_file": "src/distr_SICHEL.cpp",
-      "source_location": "L300",
+      "source_location": "L302",
       "id": "src_distr_sichel_fqsichel",
-      "community": 13,
+      "community": 23,
       "norm_label": "fqsichel()"
     },
     {
@@ -1101,7 +1101,7 @@
       "source_file": "src/distr_ZANBI.cpp",
       "source_location": "L1",
       "id": "src_distr_zanbi_cpp",
-      "community": 85,
+      "community": 24,
       "norm_label": "distr_zanbi.cpp"
     },
     {
@@ -1110,35 +1110,26 @@
       "source_file": "src/distr_ZANBI.cpp",
       "source_location": "L75",
       "id": "src_distr_zanbi_fdzanbi",
-      "community": 85,
+      "community": 24,
       "norm_label": "fdzanbi()"
     },
     {
       "label": "fpZANBI()",
       "file_type": "code",
       "source_file": "src/distr_ZANBI.cpp",
-      "source_location": "L148",
+      "source_location": "L150",
       "id": "src_distr_zanbi_fpzanbi",
-      "community": 85,
+      "community": 24,
       "norm_label": "fpzanbi()"
     },
     {
       "label": "fqZANBI()",
       "file_type": "code",
       "source_file": "src/distr_ZANBI.cpp",
-      "source_location": "L220",
+      "source_location": "L224",
       "id": "src_distr_zanbi_fqzanbi",
-      "community": 85,
+      "community": 24,
       "norm_label": "fqzanbi()"
-    },
-    {
-      "label": "frZANBI()",
-      "file_type": "code",
-      "source_file": "src/distr_ZANBI.cpp",
-      "source_location": "L293",
-      "id": "src_distr_zanbi_frzanbi",
-      "community": 85,
-      "norm_label": "frzanbi()"
     },
     {
       "label": "distr_ZINBI.cpp",
@@ -1146,7 +1137,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L1",
       "id": "src_distr_zinbi_cpp",
-      "community": 24,
+      "community": 2,
       "norm_label": "distr_zinbi.cpp"
     },
     {
@@ -1155,35 +1146,26 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L67",
       "id": "src_distr_zinbi_fdzinbi",
-      "community": 24,
+      "community": 2,
       "norm_label": "fdzinbi()"
     },
     {
       "label": "fpZINBI()",
       "file_type": "code",
       "source_file": "src/distr_ZINBI.cpp",
-      "source_location": "L142",
+      "source_location": "L144",
       "id": "src_distr_zinbi_fpzinbi",
-      "community": 24,
+      "community": 2,
       "norm_label": "fpzinbi()"
     },
     {
       "label": "fqZINBI()",
       "file_type": "code",
       "source_file": "src/distr_ZINBI.cpp",
-      "source_location": "L217",
+      "source_location": "L221",
       "id": "src_distr_zinbi_fqzinbi",
-      "community": 24,
+      "community": 2,
       "norm_label": "fqzinbi()"
-    },
-    {
-      "label": "frZINBI()",
-      "file_type": "code",
-      "source_file": "src/distr_ZINBI.cpp",
-      "source_location": "L294",
-      "id": "src_distr_zinbi_frzinbi",
-      "community": 24,
-      "norm_label": "frzinbi()"
     },
     {
       "label": "shift_bypid.cpp",
@@ -1333,7 +1315,7 @@
       "label": "fqDPO_search()",
       "file_type": "code",
       "source_file": "src/distr_DPO.cpp",
-      "source_location": "L305",
+      "source_location": "L313",
       "id": "src_distr_dpo_fqdpo_search",
       "community": 11,
       "norm_label": "fqdpo_search()"
@@ -1342,7 +1324,7 @@
       "label": "fpDPO()",
       "file_type": "code",
       "source_file": "src/distr_DPO.cpp",
-      "source_location": "L400",
+      "source_location": "L413",
       "id": "src_distr_dpo_fpdpo",
       "community": 11,
       "norm_label": "fpdpo()"
@@ -1351,7 +1333,7 @@
       "label": "fqDPO()",
       "file_type": "code",
       "source_file": "src/distr_DPO.cpp",
-      "source_location": "L509",
+      "source_location": "L530",
       "id": "src_distr_dpo_fqdpo",
       "community": 11,
       "norm_label": "fqdpo()"
@@ -1362,7 +1344,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L1",
       "id": "src_distr_nbi_cpp",
-      "community": 23,
+      "community": 28,
       "norm_label": "distr_nbi.cpp"
     },
     {
@@ -1371,35 +1353,26 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L73",
       "id": "src_distr_nbi_fdnbi",
-      "community": 23,
+      "community": 28,
       "norm_label": "fdnbi()"
     },
     {
       "label": "fpNBI()",
       "file_type": "code",
       "source_file": "src/distr_NBI.cpp",
-      "source_location": "L143",
+      "source_location": "L145",
       "id": "src_distr_nbi_fpnbi",
-      "community": 23,
+      "community": 28,
       "norm_label": "fpnbi()"
     },
     {
       "label": "fqNBI()",
       "file_type": "code",
       "source_file": "src/distr_NBI.cpp",
-      "source_location": "L213",
+      "source_location": "L217",
       "id": "src_distr_nbi_fqnbi",
-      "community": 23,
+      "community": 28,
       "norm_label": "fqnbi()"
-    },
-    {
-      "label": "frNBI()",
-      "file_type": "code",
-      "source_file": "src/distr_NBI.cpp",
-      "source_location": "L294",
-      "id": "src_distr_nbi_frnbi",
-      "community": 23,
-      "norm_label": "frnbi()"
     },
     {
       "label": "distr_ZABNB.cpp",
@@ -1407,16 +1380,34 @@
       "source_file": "src/distr_ZABNB.cpp",
       "source_location": "L1",
       "id": "src_distr_zabnb_cpp",
-      "community": 2,
+      "community": 18,
       "norm_label": "distr_zabnb.cpp"
+    },
+    {
+      "label": "fdZABNB()",
+      "file_type": "code",
+      "source_file": "src/distr_ZABNB.cpp",
+      "source_location": "L80",
+      "id": "src_distr_zabnb_fdzabnb",
+      "community": 18,
+      "norm_label": "fdzabnb()"
+    },
+    {
+      "label": "fpZABNB()",
+      "file_type": "code",
+      "source_file": "src/distr_ZABNB.cpp",
+      "source_location": "L161",
+      "id": "src_distr_zabnb_fpzabnb",
+      "community": 18,
+      "norm_label": "fpzabnb()"
     },
     {
       "label": "fqZABNB()",
       "file_type": "code",
       "source_file": "src/distr_ZABNB.cpp",
-      "source_location": "L74",
+      "source_location": "L238",
       "id": "src_distr_zabnb_fqzabnb",
-      "community": 92,
+      "community": 18,
       "norm_label": "fqzabnb()"
     },
     {
@@ -1425,7 +1416,7 @@
       "source_file": "src/distr_ZIBNB.cpp",
       "source_location": "L1",
       "id": "src_distr_zibnb_cpp",
-      "community": 2,
+      "community": 6,
       "norm_label": "distr_zibnb.cpp"
     },
     {
@@ -1434,7 +1425,7 @@
       "source_file": "src/distr_ZIBNB.cpp",
       "source_location": "L74",
       "id": "src_distr_zibnb_fqzibnb",
-      "community": 2,
+      "community": 6,
       "norm_label": "fqzibnb()"
     },
     {
@@ -1443,7 +1434,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L1",
       "id": "src_distr_bcpeo_cpp",
-      "community": 100,
+      "community": 35,
       "norm_label": "distr_bcpeo.cpp"
     },
     {
@@ -1452,7 +1443,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L41",
       "id": "src_distr_bcpeo_compute_log_c",
-      "community": 100,
+      "community": 35,
       "norm_label": "compute_log_c()"
     },
     {
@@ -1461,7 +1452,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L46",
       "id": "src_distr_bcpeo_fdbcpeo_hlp_f_t",
-      "community": 100,
+      "community": 35,
       "norm_label": "fdbcpeo_hlp_f_t()"
     },
     {
@@ -1470,7 +1461,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L79",
       "id": "src_distr_bcpeo_fqbcpeo_hlp_q_t",
-      "community": 100,
+      "community": 35,
       "norm_label": "fqbcpeo_hlp_q_t()"
     },
     {
@@ -1479,7 +1470,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L152",
       "id": "src_distr_bcpeo_fdbcpeo",
-      "community": 100,
+      "community": 35,
       "norm_label": "fdbcpeo()"
     },
     {
@@ -1488,7 +1479,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L268",
       "id": "src_distr_bcpeo_fpbcpeo",
-      "community": 100,
+      "community": 35,
       "norm_label": "fpbcpeo()"
     },
     {
@@ -1497,7 +1488,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L397",
       "id": "src_distr_bcpeo_fqbcpeo",
-      "community": 100,
+      "community": 35,
       "norm_label": "fqbcpeo()"
     },
     {
@@ -1560,7 +1551,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L1",
       "id": "src_recycling_helpers_h",
-      "community": 2,
+      "community": 6,
       "norm_label": "recycling_helpers.h"
     },
     {
@@ -1569,7 +1560,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L67",
       "id": "src_recycling_helpers_true_type",
-      "community": 2,
+      "community": 6,
       "norm_label": "true_type()"
     },
     {
@@ -1578,7 +1569,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L74",
       "id": "src_recycling_helpers_to_numeric_vector",
-      "community": 2,
+      "community": 6,
       "norm_label": "to_numeric_vector()"
     },
     {
@@ -1587,8 +1578,26 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L126",
       "id": "src_recycling_helpers_recycle_vectors",
-      "community": 2,
+      "community": 6,
       "norm_label": "recycle_vectors()"
+    },
+    {
+      "label": "count_to_int()",
+      "file_type": "code",
+      "source_file": "src/recycling_helpers.h",
+      "source_location": "L291",
+      "id": "src_recycling_helpers_count_to_int",
+      "community": 6,
+      "norm_label": "count_to_int()"
+    },
+    {
+      "label": "check_prob()",
+      "file_type": "code",
+      "source_file": "src/recycling_helpers.h",
+      "source_location": "L365",
+      "id": "src_recycling_helpers_check_prob",
+      "community": 6,
+      "norm_label": "check_prob()"
     },
     {
       "label": "cklut_typed.h",
@@ -1758,7 +1767,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L1",
       "id": "src_distr_bct_cpp",
-      "community": 35,
+      "community": 108,
       "norm_label": "distr_bct.cpp"
     },
     {
@@ -1767,7 +1776,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L42",
       "id": "src_distr_bct_fdbct_normal_approx",
-      "community": 35,
+      "community": 108,
       "norm_label": "fdbct_normal_approx()"
     },
     {
@@ -1776,7 +1785,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L58",
       "id": "src_distr_bct_fdbct_t_logdens",
-      "community": 35,
+      "community": 108,
       "norm_label": "fdbct_t_logdens()"
     },
     {
@@ -1785,7 +1794,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L65",
       "id": "src_distr_bct_fdbct_t_cdf",
-      "community": 35,
+      "community": 108,
       "norm_label": "fdbct_t_cdf()"
     },
     {
@@ -1794,7 +1803,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L203",
       "id": "src_distr_bct_fdbct",
-      "community": 35,
+      "community": 108,
       "norm_label": "fdbct()"
     },
     {
@@ -1803,7 +1812,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L296",
       "id": "src_distr_bct_fpbct",
-      "community": 35,
+      "community": 108,
       "norm_label": "fpbct()"
     },
     {
@@ -1812,7 +1821,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L407",
       "id": "src_distr_bct_fqbct",
-      "community": 35,
+      "community": 108,
       "norm_label": "fqbct()"
     },
     {
@@ -2095,19 +2104,10 @@
       "norm_label": "_ckutils_fqnbi()"
     },
     {
-      "label": "_CKutils_frNBI()",
-      "file_type": "code",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L462",
-      "id": "src_rcppexports_ckutils_frnbi",
-      "community": 85,
-      "norm_label": "_ckutils_frnbi()"
-    },
-    {
       "label": "_CKutils_fdSICHEL()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L475",
+      "source_location": "L462",
       "id": "src_rcppexports_ckutils_fdsichel",
       "community": 85,
       "norm_label": "_ckutils_fdsichel()"
@@ -2116,7 +2116,7 @@
       "label": "_CKutils_fpSICHEL()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L490",
+      "source_location": "L477",
       "id": "src_rcppexports_ckutils_fpsichel",
       "community": 85,
       "norm_label": "_ckutils_fpsichel()"
@@ -2125,16 +2125,34 @@
       "label": "_CKutils_fqSICHEL()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L506",
+      "source_location": "L493",
       "id": "src_rcppexports_ckutils_fqsichel",
       "community": 85,
       "norm_label": "_ckutils_fqsichel()"
     },
     {
+      "label": "_CKutils_fdZABNB()",
+      "file_type": "code",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L509",
+      "id": "src_rcppexports_ckutils_fdzabnb",
+      "community": 18,
+      "norm_label": "_ckutils_fdzabnb()"
+    },
+    {
+      "label": "_CKutils_fpZABNB()",
+      "file_type": "code",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L525",
+      "id": "src_rcppexports_ckutils_fpzabnb",
+      "community": 18,
+      "norm_label": "_ckutils_fpzabnb()"
+    },
+    {
       "label": "_CKutils_fqZABNB()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L522",
+      "source_location": "L542",
       "id": "src_rcppexports_ckutils_fqzabnb",
       "community": 85,
       "norm_label": "_ckutils_fqzabnb()"
@@ -2143,7 +2161,7 @@
       "label": "_CKutils_fdZANBI()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L539",
+      "source_location": "L559",
       "id": "src_rcppexports_ckutils_fdzanbi",
       "community": 85,
       "norm_label": "_ckutils_fdzanbi()"
@@ -2152,7 +2170,7 @@
       "label": "_CKutils_fpZANBI()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L554",
+      "source_location": "L574",
       "id": "src_rcppexports_ckutils_fpzanbi",
       "community": 85,
       "norm_label": "_ckutils_fpzanbi()"
@@ -2161,25 +2179,16 @@
       "label": "_CKutils_fqZANBI()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L570",
+      "source_location": "L590",
       "id": "src_rcppexports_ckutils_fqzanbi",
       "community": 85,
       "norm_label": "_ckutils_fqzanbi()"
     },
     {
-      "label": "_CKutils_frZANBI()",
-      "file_type": "code",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L586",
-      "id": "src_rcppexports_ckutils_frzanbi",
-      "community": 85,
-      "norm_label": "_ckutils_frzanbi()"
-    },
-    {
       "label": "_CKutils_fqZIBNB()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L600",
+      "source_location": "L606",
       "id": "src_rcppexports_ckutils_fqzibnb",
       "community": 85,
       "norm_label": "_ckutils_fqzibnb()"
@@ -2188,7 +2197,7 @@
       "label": "_CKutils_fdZINBI()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L617",
+      "source_location": "L623",
       "id": "src_rcppexports_ckutils_fdzinbi",
       "community": 85,
       "norm_label": "_ckutils_fdzinbi()"
@@ -2197,7 +2206,7 @@
       "label": "_CKutils_fpZINBI()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L632",
+      "source_location": "L638",
       "id": "src_rcppexports_ckutils_fpzinbi",
       "community": 85,
       "norm_label": "_ckutils_fpzinbi()"
@@ -2206,25 +2215,16 @@
       "label": "_CKutils_fqZINBI()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L648",
+      "source_location": "L654",
       "id": "src_rcppexports_ckutils_fqzinbi",
       "community": 85,
       "norm_label": "_ckutils_fqzinbi()"
     },
     {
-      "label": "_CKutils_frZINBI()",
-      "file_type": "code",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L664",
-      "id": "src_rcppexports_ckutils_frzinbi",
-      "community": 85,
-      "norm_label": "_ckutils_frzinbi()"
-    },
-    {
       "label": "_CKutils_fqZISICHEL()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L678",
+      "source_location": "L670",
       "id": "src_rcppexports_ckutils_fqzisichel",
       "community": 85,
       "norm_label": "_ckutils_fqzisichel()"
@@ -2233,7 +2233,7 @@
       "label": "_CKutils_fpZISICHEL()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L695",
+      "source_location": "L687",
       "id": "src_rcppexports_ckutils_fpzisichel",
       "community": 85,
       "norm_label": "_ckutils_fpzisichel()"
@@ -2242,7 +2242,7 @@
       "label": "_CKutils_fct_to_int_cpp()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L712",
+      "source_location": "L704",
       "id": "src_rcppexports_ckutils_fct_to_int_cpp",
       "community": 85,
       "norm_label": "_ckutils_fct_to_int_cpp()"
@@ -2251,7 +2251,7 @@
       "label": "_CKutils_starts_from_1_cpp()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L724",
+      "source_location": "L716",
       "id": "src_rcppexports_ckutils_starts_from_1_cpp",
       "community": 85,
       "norm_label": "_ckutils_starts_from_1_cpp()"
@@ -2260,7 +2260,7 @@
       "label": "_CKutils_dtsubset()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L739",
+      "source_location": "L731",
       "id": "src_rcppexports_ckutils_dtsubset",
       "community": 85,
       "norm_label": "_ckutils_dtsubset()"
@@ -2269,7 +2269,7 @@
       "label": "_CKutils_fquantile()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L752",
+      "source_location": "L744",
       "id": "src_rcppexports_ckutils_fquantile",
       "community": 85,
       "norm_label": "_ckutils_fquantile()"
@@ -2278,7 +2278,7 @@
       "label": "_CKutils_fquantile_byid()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L765",
+      "source_location": "L757",
       "id": "src_rcppexports_ckutils_fquantile_byid",
       "community": 85,
       "norm_label": "_ckutils_fquantile_byid()"
@@ -2287,7 +2287,7 @@
       "label": "_CKutils_count_if()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L780",
+      "source_location": "L772",
       "id": "src_rcppexports_ckutils_count_if",
       "community": 85,
       "norm_label": "_ckutils_count_if()"
@@ -2296,7 +2296,7 @@
       "label": "_CKutils_prop_if()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L792",
+      "source_location": "L784",
       "id": "src_rcppexports_ckutils_prop_if",
       "community": 85,
       "norm_label": "_ckutils_prop_if()"
@@ -2305,7 +2305,7 @@
       "label": "_CKutils_fclamp()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L804",
+      "source_location": "L796",
       "id": "src_rcppexports_ckutils_fclamp",
       "community": 85,
       "norm_label": "_ckutils_fclamp()"
@@ -2314,7 +2314,7 @@
       "label": "_CKutils_fclamp_int()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L818",
+      "source_location": "L810",
       "id": "src_rcppexports_ckutils_fclamp_int",
       "community": 85,
       "norm_label": "_ckutils_fclamp_int()"
@@ -2323,7 +2323,7 @@
       "label": "_CKutils_fequal()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L832",
+      "source_location": "L824",
       "id": "src_rcppexports_ckutils_fequal",
       "community": 85,
       "norm_label": "_ckutils_fequal()"
@@ -2332,7 +2332,7 @@
       "label": "_CKutils_fnormalise()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L844",
+      "source_location": "L836",
       "id": "src_rcppexports_ckutils_fnormalise",
       "community": 85,
       "norm_label": "_ckutils_fnormalise()"
@@ -2341,7 +2341,7 @@
       "label": "_CKutils_lin_interpolation()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L855",
+      "source_location": "L847",
       "id": "src_rcppexports_ckutils_lin_interpolation",
       "community": 85,
       "norm_label": "_ckutils_lin_interpolation()"
@@ -2350,7 +2350,7 @@
       "label": "_CKutils_carry_forward()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L870",
+      "source_location": "L862",
       "id": "src_rcppexports_ckutils_carry_forward",
       "community": 85,
       "norm_label": "_ckutils_carry_forward()"
@@ -2359,7 +2359,7 @@
       "label": "_CKutils_carry_forward_incr()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L884",
+      "source_location": "L876",
       "id": "src_rcppexports_ckutils_carry_forward_incr",
       "community": 85,
       "norm_label": "_ckutils_carry_forward_incr()"
@@ -2368,7 +2368,7 @@
       "label": "_CKutils_carry_backward_decr()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L899",
+      "source_location": "L891",
       "id": "src_rcppexports_ckutils_carry_backward_decr",
       "community": 85,
       "norm_label": "_ckutils_carry_backward_decr()"
@@ -2377,7 +2377,7 @@
       "label": "_CKutils_mk_new_simulant_markers()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L912",
+      "source_location": "L904",
       "id": "src_rcppexports_ckutils_mk_new_simulant_markers",
       "community": 85,
       "norm_label": "_ckutils_mk_new_simulant_markers()"
@@ -2386,7 +2386,7 @@
       "label": "_CKutils_identify_longdead()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L923",
+      "source_location": "L915",
       "id": "src_rcppexports_ckutils_identify_longdead",
       "community": 85,
       "norm_label": "_ckutils_identify_longdead()"
@@ -2395,7 +2395,7 @@
       "label": "_CKutils_identify_invitees()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L935",
+      "source_location": "L927",
       "id": "src_rcppexports_ckutils_identify_invitees",
       "community": 85,
       "norm_label": "_ckutils_identify_invitees()"
@@ -2404,7 +2404,7 @@
       "label": "_CKutils_hc_effect()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L950",
+      "source_location": "L942",
       "id": "src_rcppexports_ckutils_hc_effect",
       "community": 85,
       "norm_label": "_ckutils_hc_effect()"
@@ -2413,7 +2413,7 @@
       "label": "_CKutils_antilogit()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L963",
+      "source_location": "L955",
       "id": "src_rcppexports_ckutils_antilogit",
       "community": 85,
       "norm_label": "_ckutils_antilogit()"
@@ -2422,7 +2422,7 @@
       "label": "_CKutils_fscramble_trajectories()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L974",
+      "source_location": "L966",
       "id": "src_rcppexports_ckutils_fscramble_trajectories",
       "community": 85,
       "norm_label": "_ckutils_fscramble_trajectories()"
@@ -2431,7 +2431,7 @@
       "label": "_CKutils_shift_bypidNum()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L988",
+      "source_location": "L980",
       "id": "src_rcppexports_ckutils_shift_bypidnum",
       "community": 85,
       "norm_label": "_ckutils_shift_bypidnum()"
@@ -2440,7 +2440,7 @@
       "label": "_CKutils_shift_bypidInt()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L1002",
+      "source_location": "L994",
       "id": "src_rcppexports_ckutils_shift_bypidint",
       "community": 85,
       "norm_label": "_ckutils_shift_bypidint()"
@@ -2449,7 +2449,7 @@
       "label": "_CKutils_shift_bypidBool()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L1016",
+      "source_location": "L1008",
       "id": "src_rcppexports_ckutils_shift_bypidbool",
       "community": 85,
       "norm_label": "_ckutils_shift_bypidbool()"
@@ -2458,7 +2458,7 @@
       "label": "_CKutils_shift_bypidStr()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L1030",
+      "source_location": "L1022",
       "id": "src_rcppexports_ckutils_shift_bypidstr",
       "community": 85,
       "norm_label": "_ckutils_shift_bypidstr()"
@@ -2467,7 +2467,7 @@
       "label": "R_init_CKutils()",
       "file_type": "code",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L1118",
+      "source_location": "L1109",
       "id": "src_rcppexports_r_init_ckutils",
       "community": 85,
       "norm_label": "r_init_ckutils()"
@@ -2548,7 +2548,7 @@
       "label": "fqBNB_search()",
       "file_type": "code",
       "source_file": "inst/include/distr_BNB.h",
-      "source_location": "L101",
+      "source_location": "L114",
       "id": "include_distr_bnb_fqbnb_search",
       "community": 113,
       "norm_label": "fqbnb_search()"
@@ -2566,7 +2566,7 @@
       "label": "ftofydel2_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_DEL.h",
-      "source_location": "L54",
+      "source_location": "L70",
       "id": "include_distr_del_ftofydel2_scalar",
       "community": 118,
       "norm_label": "ftofydel2_scalar()"
@@ -2575,7 +2575,7 @@
       "label": "fpDEL_hlp_fn()",
       "file_type": "code",
       "source_file": "inst/include/distr_DEL.h",
-      "source_location": "L105",
+      "source_location": "L121",
       "id": "include_distr_del_fpdel_hlp_fn",
       "community": 118,
       "norm_label": "fpdel_hlp_fn()"
@@ -2593,7 +2593,7 @@
       "label": "fdDPOgetC5_C_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_DPO.h",
-      "source_location": "L34",
+      "source_location": "L46",
       "id": "include_distr_dpo_fddpogetc5_c_scalar",
       "community": 122,
       "norm_label": "fddpogetc5_c_scalar()"
@@ -2611,7 +2611,7 @@
       "label": "fdMN4_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_MN4.h",
-      "source_location": "L34",
+      "source_location": "L42",
       "id": "include_distr_mn4_fdmn4_scalar",
       "community": 114,
       "norm_label": "fdmn4_scalar()"
@@ -2620,7 +2620,7 @@
       "label": "fpMN4_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_MN4.h",
-      "source_location": "L58",
+      "source_location": "L66",
       "id": "include_distr_mn4_fpmn4_scalar",
       "community": 114,
       "norm_label": "fpmn4_scalar()"
@@ -2629,7 +2629,7 @@
       "label": "fqMN4_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_MN4.h",
-      "source_location": "L84",
+      "source_location": "L92",
       "id": "include_distr_mn4_fqmn4_scalar",
       "community": 114,
       "norm_label": "fqmn4_scalar()"
@@ -2656,7 +2656,7 @@
       "label": "compute_cvec()",
       "file_type": "code",
       "source_file": "inst/include/distr_SICHEL.h",
-      "source_location": "L38",
+      "source_location": "L48",
       "id": "include_distr_sichel_compute_cvec",
       "community": 107,
       "norm_label": "compute_cvec()"
@@ -2665,7 +2665,7 @@
       "label": "compute_alpha()",
       "file_type": "code",
       "source_file": "inst/include/distr_SICHEL.h",
-      "source_location": "L43",
+      "source_location": "L53",
       "id": "include_distr_sichel_compute_alpha",
       "community": 107,
       "norm_label": "compute_alpha()"
@@ -2674,7 +2674,7 @@
       "label": "compute_lbes()",
       "file_type": "code",
       "source_file": "inst/include/distr_SICHEL.h",
-      "source_location": "L48",
+      "source_location": "L58",
       "id": "include_distr_sichel_compute_lbes",
       "community": 107,
       "norm_label": "compute_lbes()"
@@ -2683,7 +2683,7 @@
       "label": "ftofySICHEL2_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_SICHEL.h",
-      "source_location": "L53",
+      "source_location": "L63",
       "id": "include_distr_sichel_ftofysichel2_scalar",
       "community": 107,
       "norm_label": "ftofysichel2_scalar()"
@@ -2692,7 +2692,7 @@
       "label": "fcdfSICHEL_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_SICHEL.h",
-      "source_location": "L75",
+      "source_location": "L85",
       "id": "include_distr_sichel_fcdfsichel_scalar",
       "community": 107,
       "norm_label": "fcdfsichel_scalar()"
@@ -2719,7 +2719,7 @@
       "label": "fdZANBI_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_ZANBI.h",
-      "source_location": "L36",
+      "source_location": "L44",
       "id": "include_distr_zanbi_fdzanbi_scalar",
       "community": 97,
       "norm_label": "fdzanbi_scalar()"
@@ -2728,7 +2728,7 @@
       "label": "fpZANBI_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_ZANBI.h",
-      "source_location": "L61",
+      "source_location": "L75",
       "id": "include_distr_zanbi_fpzanbi_scalar",
       "community": 97,
       "norm_label": "fpzanbi_scalar()"
@@ -2737,7 +2737,7 @@
       "label": "fqZANBI_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_ZANBI.h",
-      "source_location": "L92",
+      "source_location": "L106",
       "id": "include_distr_zanbi_fqzanbi_scalar",
       "community": 97,
       "norm_label": "fqzanbi_scalar()"
@@ -2746,7 +2746,7 @@
       "label": "frZANBI_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_ZANBI.h",
-      "source_location": "L132",
+      "source_location": "L146",
       "id": "include_distr_zanbi_frzanbi_scalar",
       "community": 97,
       "norm_label": "frzanbi_scalar()"
@@ -2773,7 +2773,7 @@
       "label": "fdZINBI_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_ZINBI.h",
-      "source_location": "L36",
+      "source_location": "L44",
       "id": "include_distr_zinbi_fdzinbi_scalar",
       "community": 97,
       "norm_label": "fdzinbi_scalar()"
@@ -2782,7 +2782,7 @@
       "label": "fqZINBI_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_ZINBI.h",
-      "source_location": "L90",
+      "source_location": "L101",
       "id": "include_distr_zinbi_fqzinbi_scalar",
       "community": 97,
       "norm_label": "fqzinbi_scalar()"
@@ -2791,7 +2791,7 @@
       "label": "frZINBI_scalar()",
       "file_type": "code",
       "source_file": "inst/include/distr_ZINBI.h",
-      "source_location": "L124",
+      "source_location": "L135",
       "id": "include_distr_zinbi_frzinbi_scalar",
       "community": 97,
       "norm_label": "frzinbi_scalar()"
@@ -2840,6 +2840,24 @@
       "id": "include_recycling_helpers_recycle_vectors",
       "community": 27,
       "norm_label": "recycle_vectors()"
+    },
+    {
+      "label": "count_to_int()",
+      "file_type": "code",
+      "source_file": "inst/include/recycling_helpers.h",
+      "source_location": "L291",
+      "id": "include_recycling_helpers_count_to_int",
+      "community": 27,
+      "norm_label": "count_to_int()"
+    },
+    {
+      "label": "check_prob()",
+      "file_type": "code",
+      "source_file": "inst/include/recycling_helpers.h",
+      "source_location": "L365",
+      "id": "include_recycling_helpers_check_prob",
+      "community": 27,
+      "norm_label": "check_prob()"
     },
     {
       "label": "settings.local.json",
@@ -5946,55 +5964,19 @@
       "norm_label": "news.md"
     },
     {
-      "label": "CKutils 0.1.28",
+      "label": "CKutils 0.1.30",
       "file_type": "document",
       "source_file": "NEWS.md",
       "source_location": "L1",
-      "id": "ckutils_news_ckutils_0_1_28",
+      "id": "ckutils_news_ckutils_0_1_30",
       "community": 99,
-      "norm_label": "ckutils 0.1.28"
-    },
-    {
-      "label": "Bug fixes",
-      "file_type": "document",
-      "source_file": "NEWS.md",
-      "source_location": "L3",
-      "id": "ckutils_news_bug_fixes",
-      "community": 99,
-      "norm_label": "bug fixes"
-    },
-    {
-      "label": "CKutils 0.1.27",
-      "file_type": "document",
-      "source_file": "NEWS.md",
-      "source_location": "L16",
-      "id": "ckutils_news_ckutils_0_1_27",
-      "community": 99,
-      "norm_label": "ckutils 0.1.27"
-    },
-    {
-      "label": "Bug fixes",
-      "file_type": "document",
-      "source_file": "NEWS.md",
-      "source_location": "L18",
-      "id": "ckutils_news_bug_fixes_18",
-      "community": 99,
-      "norm_label": "bug fixes"
-    },
-    {
-      "label": "CKutils 0.1.25",
-      "file_type": "document",
-      "source_file": "NEWS.md",
-      "source_location": "L47",
-      "id": "ckutils_news_ckutils_0_1_25",
-      "community": 99,
-      "norm_label": "ckutils 0.1.25"
+      "norm_label": "ckutils 0.1.30"
     },
     {
       "label": "New features",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L49",
+      "source_location": "L3",
       "id": "ckutils_news_new_features",
       "community": 99,
       "norm_label": "new features"
@@ -6003,8 +5985,8 @@
       "label": "Bug fixes",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L74",
-      "id": "ckutils_news_bug_fixes_74",
+      "source_location": "L39",
+      "id": "ckutils_news_bug_fixes",
       "community": 99,
       "norm_label": "bug fixes"
     },
@@ -6012,8 +5994,98 @@
       "label": "Documentation",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L84",
+      "source_location": "L136",
       "id": "ckutils_news_documentation",
+      "community": 99,
+      "norm_label": "documentation"
+    },
+    {
+      "label": "CKutils 0.1.29",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L168",
+      "id": "ckutils_news_ckutils_0_1_29",
+      "community": 99,
+      "norm_label": "ckutils 0.1.29"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L170",
+      "id": "ckutils_news_bug_fixes_170",
+      "community": 99,
+      "norm_label": "bug fixes"
+    },
+    {
+      "label": "CKutils 0.1.28",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L191",
+      "id": "ckutils_news_ckutils_0_1_28",
+      "community": 99,
+      "norm_label": "ckutils 0.1.28"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L193",
+      "id": "ckutils_news_bug_fixes_193",
+      "community": 99,
+      "norm_label": "bug fixes"
+    },
+    {
+      "label": "CKutils 0.1.27",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L206",
+      "id": "ckutils_news_ckutils_0_1_27",
+      "community": 99,
+      "norm_label": "ckutils 0.1.27"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L208",
+      "id": "ckutils_news_bug_fixes_208",
+      "community": 99,
+      "norm_label": "bug fixes"
+    },
+    {
+      "label": "CKutils 0.1.25",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L237",
+      "id": "ckutils_news_ckutils_0_1_25",
+      "community": 99,
+      "norm_label": "ckutils 0.1.25"
+    },
+    {
+      "label": "New features",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L239",
+      "id": "ckutils_news_new_features_239",
+      "community": 99,
+      "norm_label": "new features"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L264",
+      "id": "ckutils_news_bug_fixes_264",
+      "community": 99,
+      "norm_label": "bug fixes"
+    },
+    {
+      "label": "Documentation",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L274",
+      "id": "ckutils_news_documentation_274",
       "community": 99,
       "norm_label": "documentation"
     },
@@ -6021,7 +6093,7 @@
       "label": "Testing and coverage",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L91",
+      "source_location": "L281",
       "id": "ckutils_news_testing_and_coverage",
       "community": 99,
       "norm_label": "testing and coverage"
@@ -6030,7 +6102,7 @@
       "label": "Notes",
       "file_type": "document",
       "source_file": "NEWS.md",
-      "source_location": "L104",
+      "source_location": "L294",
       "id": "ckutils_news_notes",
       "community": 99,
       "norm_label": "notes"
@@ -6117,10 +6189,64 @@
       "norm_label": "code:r (ck  <- cklut_build(lookup_tbl, \"dist\", keys = c(\"year\", \"age)"
     },
     {
-      "label": "License",
+      "label": "Using the C++ kernels from another package",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L65",
+      "id": "ckutils_readme_using_the_c_kernels_from_another_package",
+      "community": 96,
+      "norm_label": "using the c++ kernels from another package"
+    },
+    {
+      "label": "code:r (# DESCRIPTION)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L71",
+      "id": "ckutils_readme_codeblock_4",
+      "community": 96,
+      "norm_label": "code:r (# description)"
+    },
+    {
+      "label": "code:cpp (#include <distr_BNB.h>)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L76",
+      "id": "ckutils_readme_codeblock_5",
+      "community": 96,
+      "norm_label": "code:cpp (#include <distr_bnb.h>)"
+    },
+    {
+      "label": "Caller contract: bound your counts",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L83",
+      "id": "ckutils_readme_caller_contract_bound_your_counts",
+      "community": 96,
+      "norm_label": "caller contract: bound your counts"
+    },
+    {
+      "label": "code:block6 (0 <= x, q <= CK_MAX_COUNT      // CK_MAX_COUNT == INT_MAX - )",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L90",
+      "id": "ckutils_readme_codeblock_6",
+      "community": 96,
+      "norm_label": "code:block6 (0 <= x, q <= ck_max_count      // ck_max_count == int_max - )"
+    },
+    {
+      "label": "code:cpp (int q_i;)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L97",
+      "id": "ckutils_readme_codeblock_7",
+      "community": 96,
+      "norm_label": "code:cpp (int q_i;)"
+    },
+    {
+      "label": "License",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L124",
       "id": "ckutils_readme_license",
       "community": 96,
       "norm_label": "license"
@@ -7794,6 +7920,339 @@
       "label": "Bug fixes",
       "file_type": "document",
       "source_file": "NEWS.md",
+      "source_location": "L152",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_152"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L175",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_175"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L190",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_190"
+    },
+    {
+      "label": "New features",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L221",
+      "community": 99,
+      "norm_label": "new features",
+      "id": "ckutils_news_new_features_221"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L246",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_246"
+    },
+    {
+      "label": "Documentation",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L256",
+      "community": 99,
+      "norm_label": "documentation",
+      "id": "ckutils_news_documentation_256"
+    },
+    {
+      "label": "frZANBI()",
+      "file_type": "code",
+      "source_file": "src/distr_ZANBI.cpp",
+      "source_location": "L297",
+      "community": 24,
+      "norm_label": "frzanbi()",
+      "id": "src_distr_zanbi_frzanbi"
+    },
+    {
+      "label": "frZINBI()",
+      "file_type": "code",
+      "source_file": "src/distr_ZINBI.cpp",
+      "source_location": "L298",
+      "community": 2,
+      "norm_label": "frzinbi()",
+      "id": "src_distr_zinbi_frzinbi"
+    },
+    {
+      "label": "frNBI()",
+      "file_type": "code",
+      "source_file": "src/distr_NBI.cpp",
+      "source_location": "L290",
+      "community": 28,
+      "norm_label": "frnbi()",
+      "id": "src_distr_nbi_frnbi"
+    },
+    {
+      "label": "_CKutils_frNBI()",
+      "file_type": "code",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L462",
+      "community": 85,
+      "norm_label": "_ckutils_frnbi()",
+      "id": "src_rcppexports_ckutils_frnbi"
+    },
+    {
+      "label": "_CKutils_frZANBI()",
+      "file_type": "code",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L619",
+      "community": 85,
+      "norm_label": "_ckutils_frzanbi()",
+      "id": "src_rcppexports_ckutils_frzanbi"
+    },
+    {
+      "label": "_CKutils_frZINBI()",
+      "file_type": "code",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L697",
+      "community": 85,
+      "norm_label": "_ckutils_frzinbi()",
+      "id": "src_rcppexports_ckutils_frzinbi"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L111",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_111"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L134",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_134"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L149",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_149"
+    },
+    {
+      "label": "New features",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L180",
+      "community": 99,
+      "norm_label": "new features",
+      "id": "ckutils_news_new_features_180"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L205",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_205"
+    },
+    {
+      "label": "Documentation",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L215",
+      "community": 99,
+      "norm_label": "documentation",
+      "id": "ckutils_news_documentation_215"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L79",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_79"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L102",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_102"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L117",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_117"
+    },
+    {
+      "label": "New features",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L148",
+      "community": 99,
+      "norm_label": "new features",
+      "id": "ckutils_news_new_features_148"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L173",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_173"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L65",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_65"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L80",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_80"
+    },
+    {
+      "label": "New features",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L111",
+      "community": 99,
+      "norm_label": "new features",
+      "id": "ckutils_news_new_features_111"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L136",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_136"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L61",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_61"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L76",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_76"
+    },
+    {
+      "label": "New features",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L107",
+      "community": 99,
+      "norm_label": "new features",
+      "id": "ckutils_news_new_features_107"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L132",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_132"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L52",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_52"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L67",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_67"
+    },
+    {
+      "label": "New features",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L98",
+      "community": 99,
+      "norm_label": "new features",
+      "id": "ckutils_news_new_features_98"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L123",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_123"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L18",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_18"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
+      "source_location": "L74",
+      "community": 99,
+      "norm_label": "bug fixes",
+      "id": "ckutils_news_bug_fixes_74"
+    },
+    {
+      "label": "Bug fixes",
+      "file_type": "document",
+      "source_file": "NEWS.md",
       "source_location": "L59",
       "community": 99,
       "norm_label": "bug fixes",
@@ -8111,7 +8570,7 @@
       "source_file": "cklut/cklut.hpp",
       "source_location": "L393",
       "_origin": "ast",
-      "community": 21,
+      "community": 36,
       "norm_label": "unique_ptr",
       "id": "cklut_cklut_hpp_unique_ptr"
     },
@@ -9439,7 +9898,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 100,
+      "community": 35,
       "norm_label": "distr_bcpeo.cpp",
       "id": "src_distr_bcpeo"
     },
@@ -9449,7 +9908,7 @@
       "source_file": "src/distr_BCPEo.cpp",
       "source_location": "L152",
       "_origin": "ast",
-      "community": 100,
+      "community": 35,
       "norm_label": "numericvector",
       "id": "src_distr_bcpeo_cpp_numericvector"
     },
@@ -9459,7 +9918,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 35,
+      "community": 108,
       "norm_label": "distr_bct.cpp",
       "id": "src_distr_bct"
     },
@@ -9469,7 +9928,7 @@
       "source_file": "src/distr_BCT.cpp",
       "source_location": "L203",
       "_origin": "ast",
-      "community": 35,
+      "community": 108,
       "norm_label": "numericvector",
       "id": "src_distr_bct_cpp_numericvector"
     },
@@ -9479,7 +9938,7 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "distr_bnb.cpp",
       "id": "src_distr_bnb_cpp_src_distr_bnb"
     },
@@ -9489,7 +9948,7 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L36",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "fdbnb_scalar()",
       "id": "src_distr_bnb_fdbnb_scalar"
     },
@@ -9499,7 +9958,7 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L96",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "numericvector",
       "id": "src_distr_bnb_cpp_numericvector"
     },
@@ -9509,7 +9968,7 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L128",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "fpbnb_scalar()",
       "id": "src_distr_bnb_fpbnb_scalar"
     },
@@ -9519,7 +9978,7 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L198",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "integervector",
       "id": "src_distr_bnb_cpp_integervector"
     },
@@ -9529,7 +9988,7 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L231",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "fqbnb_search()",
       "id": "src_distr_bnb_fqbnb_search"
     },
@@ -9539,7 +9998,7 @@
       "source_file": "src/distr_BNB.cpp",
       "source_location": "L261",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "fqbnb_scalar()",
       "id": "src_distr_bnb_fqbnb_scalar"
     },
@@ -9549,7 +10008,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 18,
+      "community": 13,
       "norm_label": "distr_del.cpp",
       "id": "src_distr_del"
     },
@@ -9559,7 +10018,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L95",
       "_origin": "ast",
-      "community": 18,
+      "community": 13,
       "norm_label": "fdpo_scalar()",
       "id": "src_distr_del_fdpo_scalar"
     },
@@ -9569,7 +10028,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L113",
       "_origin": "ast",
-      "community": 18,
+      "community": 13,
       "norm_label": "ftofydel2_scalar()",
       "id": "src_distr_del_ftofydel2_scalar"
     },
@@ -9579,7 +10038,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L202",
       "_origin": "ast",
-      "community": 18,
+      "community": 13,
       "norm_label": "numericvector",
       "id": "src_distr_del_cpp_numericvector"
     },
@@ -9589,7 +10048,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L202",
       "_origin": "ast",
-      "community": 18,
+      "community": 13,
       "norm_label": "integervector",
       "id": "src_distr_del_cpp_integervector"
     },
@@ -9599,7 +10058,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L267",
       "_origin": "ast",
-      "community": 18,
+      "community": 13,
       "norm_label": "fddel_scalar()",
       "id": "src_distr_del_fddel_scalar"
     },
@@ -9609,7 +10068,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L289",
       "_origin": "ast",
-      "community": 18,
+      "community": 13,
       "norm_label": "fpdel_hlp_fn()",
       "id": "src_distr_del_fpdel_hlp_fn"
     },
@@ -9619,7 +10078,7 @@
       "source_file": "src/distr_DEL.cpp",
       "source_location": "L503",
       "_origin": "ast",
-      "community": 18,
+      "community": 13,
       "norm_label": "fpdel_scalar()",
       "id": "src_distr_del_fpdel_scalar"
     },
@@ -9749,7 +10208,7 @@
       "source_file": "src/distr_MN4.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 28,
+      "community": 25,
       "norm_label": "distr_mn4.cpp",
       "id": "src_distr_mn4"
     },
@@ -9759,7 +10218,7 @@
       "source_file": "src/distr_MN4.cpp",
       "source_location": "L35",
       "_origin": "ast",
-      "community": 28,
+      "community": 25,
       "norm_label": "fdmn4_scalar()",
       "id": "src_distr_mn4_fdmn4_scalar"
     },
@@ -9769,7 +10228,7 @@
       "source_file": "src/distr_MN4.cpp",
       "source_location": "L59",
       "_origin": "ast",
-      "community": 28,
+      "community": 25,
       "norm_label": "fpmn4_scalar()",
       "id": "src_distr_mn4_fpmn4_scalar"
     },
@@ -9779,7 +10238,7 @@
       "source_file": "src/distr_MN4.cpp",
       "source_location": "L85",
       "_origin": "ast",
-      "community": 28,
+      "community": 25,
       "norm_label": "fqmn4_scalar()",
       "id": "src_distr_mn4_fqmn4_scalar"
     },
@@ -9789,7 +10248,7 @@
       "source_file": "src/distr_MN4.cpp",
       "source_location": "L161",
       "_origin": "ast",
-      "community": 28,
+      "community": 25,
       "norm_label": "numericvector",
       "id": "src_distr_mn4_cpp_numericvector"
     },
@@ -9799,7 +10258,7 @@
       "source_file": "src/distr_MN4.cpp",
       "source_location": "L161",
       "_origin": "ast",
-      "community": 28,
+      "community": 25,
       "norm_label": "integervector",
       "id": "src_distr_mn4_cpp_integervector"
     },
@@ -9809,7 +10268,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 23,
+      "community": 28,
       "norm_label": "distr_nbi.cpp",
       "id": "src_distr_nbi_cpp_src_distr_nbi"
     },
@@ -9819,7 +10278,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L36",
       "_origin": "ast",
-      "community": 23,
+      "community": 28,
       "norm_label": "fdnbi_scalar()",
       "id": "src_distr_nbi_fdnbi_scalar"
     },
@@ -9829,7 +10288,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L89",
       "_origin": "ast",
-      "community": 23,
+      "community": 28,
       "norm_label": "numericvector",
       "id": "src_distr_nbi_cpp_numericvector"
     },
@@ -9849,7 +10308,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L206",
       "_origin": "ast",
-      "community": 24,
+      "community": 28,
       "norm_label": "fqnbi_scalar()",
       "id": "src_distr_nbi_fqnbi_scalar"
     },
@@ -9859,7 +10318,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L261",
       "_origin": "ast",
-      "community": 23,
+      "community": 28,
       "norm_label": "integervector",
       "id": "src_distr_nbi_cpp_integervector"
     },
@@ -9869,7 +10328,7 @@
       "source_file": "src/distr_NBI.cpp",
       "source_location": "L305",
       "_origin": "ast",
-      "community": 23,
+      "community": 2,
       "norm_label": "frnbi_scalar()",
       "id": "src_distr_nbi_frnbi_scalar"
     },
@@ -9879,7 +10338,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "distr_sichel.cpp",
       "id": "src_distr_sichel_cpp_src_distr_sichel"
     },
@@ -9889,7 +10348,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L32",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "compute_cvec()",
       "id": "src_distr_sichel_compute_cvec"
     },
@@ -9899,7 +10358,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L37",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "compute_alpha()",
       "id": "src_distr_sichel_compute_alpha"
     },
@@ -9909,7 +10368,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L42",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "compute_lbes()",
       "id": "src_distr_sichel_compute_lbes"
     },
@@ -9919,7 +10378,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L47",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "ftofysichel2_scalar()",
       "id": "src_distr_sichel_ftofysichel2_scalar"
     },
@@ -9929,7 +10388,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L110",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "numericvector",
       "id": "src_distr_sichel_cpp_numericvector"
     },
@@ -9939,7 +10398,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L160",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "fcdfsichel_scalar()",
       "id": "src_distr_sichel_fcdfsichel_scalar"
     },
@@ -9949,7 +10408,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L263",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "fpsichel_scalar()",
       "id": "src_distr_sichel_fpsichel_scalar"
     },
@@ -9959,7 +10418,7 @@
       "source_file": "src/distr_SICHEL.cpp",
       "source_location": "L352",
       "_origin": "ast",
-      "community": 13,
+      "community": 23,
       "norm_label": "integervector",
       "id": "src_distr_sichel_cpp_integervector"
     },
@@ -9969,7 +10428,7 @@
       "source_file": "src/distr_ZABNB.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "distr_zabnb.cpp",
       "id": "src_distr_zabnb"
     },
@@ -9979,7 +10438,7 @@
       "source_file": "src/distr_ZABNB.cpp",
       "source_location": "L36",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "fqzabnb_scalar()",
       "id": "src_distr_zabnb_fqzabnb_scalar"
     },
@@ -9989,7 +10448,7 @@
       "source_file": "src/distr_ZABNB.cpp",
       "source_location": "L97",
       "_origin": "ast",
-      "community": 92,
+      "community": 18,
       "norm_label": "numericvector",
       "id": "src_distr_zabnb_cpp_numericvector"
     },
@@ -9999,7 +10458,7 @@
       "source_file": "src/distr_ZANBI.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 85,
+      "community": 24,
       "norm_label": "distr_zanbi.cpp",
       "id": "src_distr_zanbi"
     },
@@ -10009,7 +10468,7 @@
       "source_file": "src/distr_ZANBI.cpp",
       "source_location": "L30",
       "_origin": "ast",
-      "community": 85,
+      "community": 24,
       "norm_label": "fdzanbi_scalar()",
       "id": "src_distr_zanbi_fdzanbi_scalar"
     },
@@ -10019,7 +10478,7 @@
       "source_file": "src/distr_ZANBI.cpp",
       "source_location": "L89",
       "_origin": "ast",
-      "community": 85,
+      "community": 24,
       "norm_label": "numericvector",
       "id": "src_distr_zanbi_cpp_numericvector"
     },
@@ -10029,7 +10488,7 @@
       "source_file": "src/distr_ZANBI.cpp",
       "source_location": "L122",
       "_origin": "ast",
-      "community": 85,
+      "community": 24,
       "norm_label": "fpzanbi_scalar()",
       "id": "src_distr_zanbi_fpzanbi_scalar"
     },
@@ -10049,7 +10508,7 @@
       "source_file": "src/distr_ZANBI.cpp",
       "source_location": "L288",
       "_origin": "ast",
-      "community": 85,
+      "community": 24,
       "norm_label": "integervector",
       "id": "src_distr_zanbi_cpp_integervector"
     },
@@ -10059,7 +10518,7 @@
       "source_file": "src/distr_ZANBI.cpp",
       "source_location": "L322",
       "_origin": "ast",
-      "community": 85,
+      "community": 2,
       "norm_label": "frzanbi_scalar()",
       "id": "src_distr_zanbi_frzanbi_scalar"
     },
@@ -10069,7 +10528,7 @@
       "source_file": "src/distr_ZIBNB.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "distr_zibnb.cpp",
       "id": "src_distr_zibnb"
     },
@@ -10079,7 +10538,7 @@
       "source_file": "src/distr_ZIBNB.cpp",
       "source_location": "L36",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "fqzibnb_scalar()",
       "id": "src_distr_zibnb_fqzibnb_scalar"
     },
@@ -10089,7 +10548,7 @@
       "source_file": "src/distr_ZIBNB.cpp",
       "source_location": "L93",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "numericvector",
       "id": "src_distr_zibnb_cpp_numericvector"
     },
@@ -10099,7 +10558,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 24,
+      "community": 2,
       "norm_label": "distr_zinbi.cpp",
       "id": "src_distr_zinbi"
     },
@@ -10109,7 +10568,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L30",
       "_origin": "ast",
-      "community": 24,
+      "community": 28,
       "norm_label": "fdzinbi_scalar()",
       "id": "src_distr_zinbi_fdzinbi_scalar"
     },
@@ -10119,7 +10578,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L90",
       "_origin": "ast",
-      "community": 24,
+      "community": 2,
       "norm_label": "numericvector",
       "id": "src_distr_zinbi_cpp_numericvector"
     },
@@ -10129,7 +10588,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L123",
       "_origin": "ast",
-      "community": 24,
+      "community": 2,
       "norm_label": "fpzinbi_scalar()",
       "id": "src_distr_zinbi_fpzinbi_scalar"
     },
@@ -10139,7 +10598,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L219",
       "_origin": "ast",
-      "community": 24,
+      "community": 2,
       "norm_label": "fqzinbi_scalar()",
       "id": "src_distr_zinbi_fqzinbi_scalar"
     },
@@ -10149,7 +10608,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L279",
       "_origin": "ast",
-      "community": 24,
+      "community": 2,
       "norm_label": "integervector",
       "id": "src_distr_zinbi_cpp_integervector"
     },
@@ -10159,7 +10618,7 @@
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L313",
       "_origin": "ast",
-      "community": 24,
+      "community": 2,
       "norm_label": "frzinbi_scalar()",
       "id": "src_distr_zinbi_frzinbi_scalar"
     },
@@ -10169,7 +10628,7 @@
       "source_file": "src/distr_ZISICHEL.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 108,
+      "community": 100,
       "norm_label": "distr_zisichel.cpp",
       "id": "src_distr_zisichel"
     },
@@ -10179,7 +10638,7 @@
       "source_file": "src/distr_ZISICHEL.cpp",
       "source_location": "L60",
       "_origin": "ast",
-      "community": 108,
+      "community": 100,
       "norm_label": "integervector",
       "id": "src_distr_zisichel_cpp_integervector"
     },
@@ -10189,7 +10648,7 @@
       "source_file": "src/distr_ZISICHEL.cpp",
       "source_location": "L60",
       "_origin": "ast",
-      "community": 108,
+      "community": 100,
       "norm_label": "numericvector",
       "id": "src_distr_zisichel_cpp_numericvector"
     },
@@ -10259,7 +10718,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 6,
+      "community": 92,
       "norm_label": "misc_functions.cpp",
       "id": "src_misc_functions"
     },
@@ -10269,7 +10728,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L44",
       "_origin": "ast",
-      "community": 6,
+      "community": 92,
       "norm_label": "numericvector",
       "id": "src_misc_functions_cpp_numericvector"
     },
@@ -10279,7 +10738,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L137",
       "_origin": "ast",
-      "community": 6,
+      "community": 92,
       "norm_label": "list",
       "id": "src_misc_functions_cpp_list"
     },
@@ -10289,7 +10748,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L137",
       "_origin": "ast",
-      "community": 6,
+      "community": 92,
       "norm_label": "stringvector",
       "id": "src_misc_functions_cpp_stringvector"
     },
@@ -10299,7 +10758,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L244",
       "_origin": "ast",
-      "community": 6,
+      "community": 92,
       "norm_label": "logicalvector",
       "id": "src_misc_functions_cpp_logicalvector"
     },
@@ -10309,7 +10768,7 @@
       "source_file": "src/misc_functions.cpp",
       "source_location": "L407",
       "_origin": "ast",
-      "community": 6,
+      "community": 92,
       "norm_label": "integervector",
       "id": "src_misc_functions_cpp_integervector"
     },
@@ -10319,7 +10778,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "recycling_helpers.h",
       "id": "src_recycling_helpers"
     },
@@ -10329,7 +10788,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L62",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "numericvector",
       "id": "src_recycling_helpers_h_numericvector"
     },
@@ -10339,7 +10798,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L62",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "t",
       "id": "src_recycling_helpers_h_t"
     },
@@ -10349,7 +10808,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L107",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "recycledvectors3",
       "id": "src_recycling_helpers_h_recycledvectors3"
     },
@@ -10359,7 +10818,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L107",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "t1",
       "id": "src_recycling_helpers_h_t1"
     },
@@ -10369,7 +10828,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L107",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "t2",
       "id": "src_recycling_helpers_h_t2"
     },
@@ -10379,7 +10838,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L107",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "t3",
       "id": "src_recycling_helpers_h_t3"
     },
@@ -10389,7 +10848,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L142",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "recycledvectors4",
       "id": "src_recycling_helpers_h_recycledvectors4"
     },
@@ -10399,7 +10858,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L142",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "t4",
       "id": "src_recycling_helpers_h_t4"
     },
@@ -10409,7 +10868,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L181",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "recycledvectors5",
       "id": "src_recycling_helpers_h_recycledvectors5"
     },
@@ -10419,7 +10878,7 @@
       "source_file": "src/recycling_helpers.h",
       "source_location": "L181",
       "_origin": "ast",
-      "community": 2,
+      "community": 6,
       "norm_label": "t5",
       "id": "src_recycling_helpers_h_t5"
     },
@@ -14448,6 +14907,28 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/distr_ZABNB.cpp",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "src_distr_zabnb_fdzabnb",
+      "target": "src_counts_isnan"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/distr_ZABNB.cpp",
+      "source_location": "L188",
+      "weight": 1.0,
+      "source": "src_distr_zabnb_fpzabnb",
+      "target": "src_counts_isnan"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/distr_ZABNB.cpp",
       "source_location": "L105",
       "weight": 1.0,
       "source": "src_distr_zabnb_fqzabnb",
@@ -17362,60 +17843,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/distr_ZANBI.cpp",
-      "source_location": "L377",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_distr_zanbi",
-      "target": "src_distr_zanbi_frzanbi"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_ZANBI.cpp",
-      "source_location": "L377",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "src_distr_zanbi_frzanbi",
-      "target": "src_distr_zanbi_cpp_integervector"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_ZANBI.cpp",
-      "source_location": "L377",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "src_distr_zanbi_frzanbi",
-      "target": "src_distr_zanbi_cpp_numericvector"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_ZANBI.cpp",
-      "source_location": "L401",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_distr_zanbi_frzanbi",
-      "target": "src_distr_zanbi_frzanbi_scalar"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L594",
-      "weight": 1.0,
-      "source": "src_rcppexports_ckutils_frzanbi",
-      "target": "src_distr_zanbi_frzanbi"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "src/distr_ZINBI.cpp",
       "source_location": "L67",
       "weight": 1.0,
@@ -17603,60 +18030,6 @@
       "weight": 1.0,
       "source": "src_rcppexports_ckutils_fqzinbi",
       "target": "src_distr_zinbi_fqzinbi"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_ZINBI.cpp",
-      "source_location": "L363",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_distr_zinbi",
-      "target": "src_distr_zinbi_frzinbi"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_ZINBI.cpp",
-      "source_location": "L363",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "src_distr_zinbi_frzinbi",
-      "target": "src_distr_zinbi_cpp_integervector"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_ZINBI.cpp",
-      "source_location": "L363",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "src_distr_zinbi_frzinbi",
-      "target": "src_distr_zinbi_cpp_numericvector"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_ZINBI.cpp",
-      "source_location": "L387",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_distr_zinbi_frzinbi",
-      "target": "src_distr_zinbi_frzinbi_scalar"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L672",
-      "weight": 1.0,
-      "source": "src_rcppexports_ckutils_frzinbi",
-      "target": "src_distr_zinbi_frzinbi"
     },
     {
       "relation": "contains",
@@ -18612,56 +18985,22 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/distr_NBI.cpp",
-      "source_location": "L353",
+      "source_file": "src/distr_ZABNB.cpp",
+      "source_location": "L80",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_distr_nbi_cpp_src_distr_nbi",
-      "target": "src_distr_nbi_frnbi"
+      "source": "src_distr_zabnb_cpp",
+      "target": "src_distr_zabnb_fdzabnb"
     },
     {
-      "relation": "references",
+      "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/distr_NBI.cpp",
-      "source_location": "L353",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "src_distr_nbi_frnbi",
-      "target": "src_distr_nbi_cpp_integervector"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_NBI.cpp",
-      "source_location": "L353",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "src_distr_nbi_frnbi",
-      "target": "src_distr_nbi_cpp_numericvector"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/distr_NBI.cpp",
-      "source_location": "L375",
+      "source_file": "src/distr_ZABNB.cpp",
+      "source_location": "L159",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_distr_nbi_frnbi",
-      "target": "src_distr_nbi_frnbi_scalar"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L469",
-      "weight": 1.0,
-      "source": "src_rcppexports_ckutils_frnbi",
-      "target": "src_distr_nbi_frnbi"
+      "source": "src_distr_zabnb_cpp",
+      "target": "src_distr_zabnb_fpzabnb"
     },
     {
       "relation": "contains",
@@ -18683,6 +19022,28 @@
       "confidence_score": 1.0,
       "source": "src_distr_zabnb_cpp",
       "target": "src_recycling_helpers_h"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L532",
+      "weight": 1.0,
+      "source": "src_rcppexports_ckutils_fdzabnb",
+      "target": "src_distr_zabnb_fdzabnb"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L549",
+      "weight": 1.0,
+      "source": "src_rcppexports_ckutils_fpzabnb",
+      "target": "src_distr_zabnb_fpzabnb"
     },
     {
       "relation": "contains",
@@ -19406,6 +19767,26 @@
       "confidence_score": 1.0,
       "source": "src_distr_bct_cpp",
       "target": "src_recycling_helpers_h"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/recycling_helpers.h",
+      "source_location": "L310",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_recycling_helpers_h",
+      "target": "src_recycling_helpers_check_prob"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/recycling_helpers.h",
+      "source_location": "L291",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_recycling_helpers_h",
+      "target": "src_recycling_helpers_count_to_int"
     },
     {
       "relation": "contains",
@@ -20601,6 +20982,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/RcppExports.cpp",
+      "source_location": "L522",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_rcppexports_cpp",
+      "target": "src_rcppexports_ckutils_fdzabnb"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
       "source_location": "L539",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -20726,6 +21117,16 @@
       "confidence_score": 1.0,
       "source": "src_rcppexports_cpp",
       "target": "src_rcppexports_ckutils_fpsichel"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L538",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_rcppexports_cpp",
+      "target": "src_rcppexports_ckutils_fpzabnb"
     },
     {
       "relation": "contains",
@@ -22051,38 +22452,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L462",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_rcppexports",
-      "target": "src_rcppexports_ckutils_frnbi"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L462",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "src_rcppexports_ckutils_frnbi",
-      "target": "rcppexport"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L462",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "src_rcppexports_ckutils_frnbi",
-      "target": "src_rcppexports_cpp_sexp"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
       "source_location": "L475",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -22307,38 +22676,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/RcppExports.cpp",
-      "source_location": "L586",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_rcppexports",
-      "target": "src_rcppexports_ckutils_frzanbi"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L586",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "src_rcppexports_ckutils_frzanbi",
-      "target": "rcppexport"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L586",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "src_rcppexports_ckutils_frzanbi",
-      "target": "src_rcppexports_cpp_sexp"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
       "source_location": "L600",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -22461,38 +22798,6 @@
       "context": "parameter_type",
       "confidence_score": 1.0,
       "source": "src_rcppexports_ckutils_fqzinbi",
-      "target": "src_rcppexports_cpp_sexp"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L664",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_rcppexports",
-      "target": "src_rcppexports_ckutils_frzinbi"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L664",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "src_rcppexports_ckutils_frzinbi",
-      "target": "rcppexport"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "src/RcppExports.cpp",
-      "source_location": "L664",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "src_rcppexports_ckutils_frzinbi",
       "target": "src_rcppexports_cpp_sexp"
     },
     {
@@ -23679,6 +23984,26 @@
       "confidence_score": 1.0,
       "source": "inst_include_distr_zinbi_h",
       "target": "include_distr_zinbi_frzinbi_scalar"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "inst/include/recycling_helpers.h",
+      "source_location": "L310",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "inst_include_recycling_helpers_h",
+      "target": "include_recycling_helpers_check_prob"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "inst/include/recycling_helpers.h",
+      "source_location": "L291",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "inst_include_recycling_helpers_h",
+      "target": "include_recycling_helpers_count_to_int"
     },
     {
       "relation": "contains",
@@ -32288,9 +32613,49 @@
       "source_file": "NEWS.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "news_md",
-      "target": "ckutils_news_ckutils_0_1_28",
-      "confidence_score": 1.0
+      "target": "ckutils_news_ckutils_0_1_28"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "news_md",
+      "target": "ckutils_news_ckutils_0_1_29"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "news_md",
+      "target": "ckutils_news_ckutils_0_1_30"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_30",
+      "target": "ckutils_news_bug_fixes"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L77",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_30",
+      "target": "ckutils_news_documentation"
     },
     {
       "relation": "contains",
@@ -32298,9 +32663,19 @@
       "source_file": "NEWS.md",
       "source_location": "L3",
       "weight": 1.0,
-      "source": "ckutils_news_ckutils_0_1_28",
-      "target": "ckutils_news_bug_fixes",
-      "confidence_score": 1.0
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_30",
+      "target": "ckutils_news_new_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L34",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_new_features"
     },
     {
       "relation": "contains",
@@ -32316,10 +32691,290 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "NEWS.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L29",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_29",
+      "target": "ckutils_news_bug_fixes"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L69",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_documentation"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L111",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_29",
+      "target": "ckutils_news_bug_fixes_111"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L152",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_29",
+      "target": "ckutils_news_bug_fixes_152"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L170",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_29",
+      "target": "ckutils_news_bug_fixes_170",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L79",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_29",
+      "target": "ckutils_news_bug_fixes_79"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L102",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes_102"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L134",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes_134"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L175",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes_175"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L193",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes_193",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L52",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes_52"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L61",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes_61"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L65",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_28",
+      "target": "ckutils_news_bug_fixes_65"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L117",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_27",
+      "target": "ckutils_news_bug_fixes_117"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L149",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_27",
+      "target": "ckutils_news_bug_fixes_149"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_27",
-      "target": "ckutils_news_bug_fixes_18",
+      "target": "ckutils_news_bug_fixes_18"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L190",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_27",
+      "target": "ckutils_news_bug_fixes_190"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L208",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_27",
+      "target": "ckutils_news_bug_fixes_208",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_27",
+      "target": "ckutils_news_bug_fixes_67"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L76",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_27",
+      "target": "ckutils_news_bug_fixes_76"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L80",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_27",
+      "target": "ckutils_news_bug_fixes_80"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L123",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_123"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L132",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_132"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L136",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_136"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L173",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_173"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L205",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_205"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L246",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_246"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L264",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_bug_fixes_264",
       "confidence_score": 1.0
     },
     {
@@ -32338,29 +32993,109 @@
       "source_file": "NEWS.md",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_25",
-      "target": "ckutils_news_bug_fixes_74",
+      "target": "ckutils_news_bug_fixes_74"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L215",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_documentation_215"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L256",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_documentation_256"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L274",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_documentation_274",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "NEWS.md",
-      "source_location": "L69",
+      "source_location": "L107",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_25",
-      "target": "ckutils_news_documentation"
+      "target": "ckutils_news_new_features_107"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "NEWS.md",
-      "source_location": "L34",
+      "source_location": "L111",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "ckutils_news_ckutils_0_1_25",
-      "target": "ckutils_news_new_features"
+      "target": "ckutils_news_new_features_111"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L148",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_new_features_148"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L180",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_new_features_180"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L221",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_new_features_221"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L239",
+      "weight": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_new_features_239",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NEWS.md",
+      "source_location": "L98",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_news_ckutils_0_1_25",
+      "target": "ckutils_news_new_features_98"
     },
     {
       "relation": "contains",
@@ -32446,6 +33181,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
+      "source_location": "L65",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_readme_ckutils",
+      "target": "ckutils_readme_using_the_c_kernels_from_another_package"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
       "source_location": "L24",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -32471,6 +33216,56 @@
       "confidence_score": 1.0,
       "source": "ckutils_readme_larger_than_ram_lookups_cklut",
       "target": "ckutils_readme_codeblock_3"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L83",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_readme_using_the_c_kernels_from_another_package",
+      "target": "ckutils_readme_caller_contract_bound_your_counts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L71",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_readme_using_the_c_kernels_from_another_package",
+      "target": "ckutils_readme_codeblock_4"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L76",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_readme_using_the_c_kernels_from_another_package",
+      "target": "ckutils_readme_codeblock_5"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L90",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_readme_caller_contract_bound_your_counts",
+      "target": "ckutils_readme_codeblock_6"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L97",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ckutils_readme_caller_contract_bound_your_counts",
+      "target": "ckutils_readme_codeblock_7"
     },
     {
       "relation": "contains",
@@ -34181,6 +34976,264 @@
       "confidence_score": 1.0,
       "source": "validation_readme_validate_against_the_real_function",
       "target": "validation_readme_codeblock_4"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_ZANBI.cpp",
+      "source_location": "L377",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_distr_zanbi",
+      "target": "src_distr_zanbi_frzanbi"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_ZANBI.cpp",
+      "source_location": "L377",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "src_distr_zanbi_frzanbi",
+      "target": "src_distr_zanbi_cpp_integervector"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_ZANBI.cpp",
+      "source_location": "L377",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "src_distr_zanbi_frzanbi",
+      "target": "src_distr_zanbi_cpp_numericvector"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_ZANBI.cpp",
+      "source_location": "L401",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_distr_zanbi_frzanbi",
+      "target": "src_distr_zanbi_frzanbi_scalar"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L594",
+      "weight": 1.0,
+      "source": "src_rcppexports_ckutils_frzanbi",
+      "target": "src_distr_zanbi_frzanbi"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_ZINBI.cpp",
+      "source_location": "L363",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_distr_zinbi",
+      "target": "src_distr_zinbi_frzinbi"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_ZINBI.cpp",
+      "source_location": "L363",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "src_distr_zinbi_frzinbi",
+      "target": "src_distr_zinbi_cpp_integervector"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_ZINBI.cpp",
+      "source_location": "L363",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "src_distr_zinbi_frzinbi",
+      "target": "src_distr_zinbi_cpp_numericvector"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_ZINBI.cpp",
+      "source_location": "L387",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_distr_zinbi_frzinbi",
+      "target": "src_distr_zinbi_frzinbi_scalar"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L672",
+      "weight": 1.0,
+      "source": "src_rcppexports_ckutils_frzinbi",
+      "target": "src_distr_zinbi_frzinbi"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_NBI.cpp",
+      "source_location": "L353",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_distr_nbi_cpp_src_distr_nbi",
+      "target": "src_distr_nbi_frnbi"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_NBI.cpp",
+      "source_location": "L353",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "src_distr_nbi_frnbi",
+      "target": "src_distr_nbi_cpp_integervector"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_NBI.cpp",
+      "source_location": "L353",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "src_distr_nbi_frnbi",
+      "target": "src_distr_nbi_cpp_numericvector"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/distr_NBI.cpp",
+      "source_location": "L375",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_distr_nbi_frnbi",
+      "target": "src_distr_nbi_frnbi_scalar"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L469",
+      "weight": 1.0,
+      "source": "src_rcppexports_ckutils_frnbi",
+      "target": "src_distr_nbi_frnbi"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L462",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_rcppexports",
+      "target": "src_rcppexports_ckutils_frnbi"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L462",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "src_rcppexports_ckutils_frnbi",
+      "target": "rcppexport"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L462",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "src_rcppexports_ckutils_frnbi",
+      "target": "src_rcppexports_cpp_sexp"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L586",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_rcppexports",
+      "target": "src_rcppexports_ckutils_frzanbi"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L586",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "src_rcppexports_ckutils_frzanbi",
+      "target": "rcppexport"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L586",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "src_rcppexports_ckutils_frzanbi",
+      "target": "src_rcppexports_cpp_sexp"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L664",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_rcppexports",
+      "target": "src_rcppexports_ckutils_frzinbi"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L664",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "src_rcppexports_ckutils_frzinbi",
+      "target": "rcppexport"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "src/RcppExports.cpp",
+      "source_location": "L664",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "src_rcppexports_ckutils_frzinbi",
+      "target": "src_rcppexports_cpp_sexp"
     },
     {
       "relation": "defines",
@@ -38523,5 +39576,5 @@
       "weight": 0.85
     }
   ],
-  "built_at_commit": "c086fc420ef2dc65b332b69f6525f6ab63df60a1"
+  "built_at_commit": "96b894e88fb60649c164949b69f22e70ad0254b3"
 }
