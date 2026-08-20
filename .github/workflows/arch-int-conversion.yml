@@ -1,0 +1,148 @@
+# =============================================================================
+# Architecture-sensitive integer-conversion checks for CKutils
+# =============================================================================
+#
+# Why this workflow exists
+# ------------------------
+# CKutils' distribution wrappers convert a recycled double count (x or q) to
+# the int its scalar kernels take. Converting a double that lies outside the int
+# range is undefined behaviour, and it resolves DIFFERENTLY per architecture:
+#
+#   x86-64 (cvttsd2si)  saturates to INT_MIN, so a huge count silently read as
+#                       negative and, for example, fpZABNB(2^31, ...) returned 0
+#                       for a CDF whose true value is ~1. A wrong number.
+#
+#   AArch64 (fcvtzs)    saturates toward the sign, so a large positive double
+#                       becomes INT_MAX. That value then enters the
+#                       `for (int i = 0; i <= q; i++)` accumulation in
+#                       fpBNB_scalar / fpDPO_scalar / fpDEL_hlp_fn, where i++ at
+#                       INT_MAX is signed overflow and the loop cannot exit.
+#                       A hang, which no value-comparison test would catch.
+#
+# count_to_int() in recycling_helpers.h removes the conversion entirely, so both
+# architectures must now return NA. This workflow proves that on real arm64
+# hardware rather than by reasoning from the architecture manuals -- which is
+# how the AArch64 half of the claim in NEWS.md and README.md started life.
+#
+# It runs on BOTH architectures so the two can be compared: the probe prints the
+# saturation direction it observes, and says so loudly if that contradicts what
+# the documentation states.
+#
+# Note this duplicates no coverage from R-CMD-check.yml: that workflow runs the
+# whole suite (including these tests) on several platforms, while this one is a
+# fast, focused job that also runs the deliberately-undefined probe, which is
+# not shipped in the package and so cannot run as part of R CMD check.
+# =============================================================================
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+name: arch-int-conversion
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  arch-int-conversion:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.label }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # --- AArch64: the architecture this workflow exists for ---
+          - {os: macos-latest,     label: 'arm64 macOS (Apple Silicon)'}
+          - {os: ubuntu-24.04-arm, label: 'arm64 Linux'}
+          # --- x86-64 control: the guard must behave identically here ---
+          - {os: ubuntu-latest,    label: 'x86-64 Linux (control)'}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Report runner architecture
+        run: |
+          echo "uname -m : $(uname -m)"
+          echo "runner   : ${{ runner.os }} / ${{ runner.arch }}"
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev
+
+      # Only what these tests need: the package's hard dependencies plus
+      # tinytest. gamlss.dist is not required here -- the architecture tests
+      # compare against exact values, not against a reference implementation.
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::tinytest, any::Rcpp
+          needs: check
+
+      - name: Install CKutils
+        run: R CMD INSTALL --preclean --no-multiarch .
+        shell: bash
+
+      # The focused suite. Asserts NA on every platform AND prompt return, so
+      # the AArch64 hang mode is caught as well as the x86-64 wrong-value mode.
+      - name: Architecture integer-conversion tests
+        run: |
+          Rscript -e '
+            library(tinytest)
+            library(CKutils)
+            res <- run_test_file("inst/tinytest/test-arch-int-conversion.R", verbose = 1)
+            print(res)
+            if (any(!sapply(res, isTRUE))) quit(status = 1L)
+          '
+        shell: bash
+
+      # The probe compiles a deliberately-unguarded cast and reports which way
+      # this CPU saturates. Informational about the direction; it fails only if
+      # a guarded CKutils call misbehaves, since the guard is what the package
+      # actually promises.
+      - name: Measure the saturation direction on this CPU
+        run: Rscript .github/scripts/arch_cast_probe.R | tee arch_probe.txt
+        shell: bash
+
+      - name: Publish the probe result to the job summary
+        if: always()
+        run: |
+          {
+            echo "### ${{ matrix.label }} — \`$(uname -m)\`"
+            echo ""
+            echo '```'
+            cat arch_probe.txt 2>/dev/null || echo "probe produced no output"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+      # The whole suite on arm64, so anything else architecture-sensitive shows
+      # up here too rather than only in the slower R-CMD-check matrix.
+      - name: Full tinytest suite
+        run: |
+          Rscript -e '
+            library(tinytest)
+            library(CKutils)
+            res <- run_test_dir("inst/tinytest", verbose = 0)
+            print(res)
+            failed <- res[!sapply(res, isTRUE)]
+            if (length(failed)) { print(failed); quit(status = 1L) }
+          '
+        shell: bash

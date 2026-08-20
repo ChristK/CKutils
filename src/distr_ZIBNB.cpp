@@ -86,7 +86,7 @@ NumericVector fqZIBNB(const NumericVector& p,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
-    if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0001) stop("p must be >=0 and <=1");
+    check_prob(recycled.vec1[i], log_p, 1.0001, "p must be >=0 and <=1");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
     if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");

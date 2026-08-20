@@ -99,13 +99,11 @@ NumericVector fdMN4(const IntegerVector& x,
   NumericVector x_num = recycled.vec1;
   IntegerVector x_int(n);
   for (int i = 0; i < n; i++) {
-    // NaN/NA x -> NA: static_cast<int>(NaN) is out-of-range float-to-int UB.
-    // Mark with NA_INTEGER so the main loop can skip the cast value.
-    if (ISNAN(x_num[i])) {
-      x_int[i] = NA_INTEGER;
-      continue;
-    }
-    x_int[i] = static_cast<int>(x_num[i]);
+      // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+      // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+      // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    // Mark an unusable value with NA_INTEGER so the main loop skips it.
+    if (!count_to_int(x_num[i], x_int[i])) x_int[i] = NA_INTEGER;
   }
 
   NumericVector out(n);
@@ -195,13 +193,11 @@ NumericVector fpMN4(const IntegerVector& q,
   NumericVector q_num = recycled.vec1;
   IntegerVector q_int(n);
   for (int i = 0; i < n; i++) {
-    // NaN/NA q -> NA: static_cast<int>(NaN) is out-of-range float-to-int UB.
-    // Mark with NA_INTEGER so the main loop can skip the cast value.
-    if (ISNAN(q_num[i])) {
-      q_int[i] = NA_INTEGER;
-      continue;
-    }
-    q_int[i] = static_cast<int>(q_num[i]);
+      // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+      // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+      // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    // Mark an unusable value with NA_INTEGER so the main loop skips it.
+    if (!count_to_int(q_num[i], q_int[i])) q_int[i] = NA_INTEGER;
   }
 
   NumericVector out(n);

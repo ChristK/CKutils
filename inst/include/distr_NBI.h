@@ -26,6 +26,14 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // directly from its own C++ (e.g. in a hot per-row loop) without linking
 // against CKutils.so. The vectorised, Rcpp-exported wrappers (declared at the
 // bottom) live in src/distr_NBI.cpp and call these same inline scalars.
+//
+// CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
+// kernels in this package do no bounds checking; the caller owns
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// The NBI kernels specifically are safe for any int, because they are closed
+// form (R::dnbinom / R::pnbinom / R::dpois / R::ppois) rather than accumulating
+// over 0..q. The contract still matters for the BNB, DPO, DEL and SICHEL
+// kernels, some of which do not return at all when it is violated.
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (dnbinom_mu, ...)
 #include <cmath>
@@ -100,20 +108,29 @@ inline int fqNBI_scalar(const double& p,
 }
 
 // SIMD-optimised NBI random generation scalar function
-inline int frNBI_scalar(const double& mu = 1.0,
+// SIMD-optimised NBI random generation scalar function
+//
+// Inverts the NBI CDF at a uniform u in [0, 1).//
+// The uniform is supplied by the caller rather than drawn here. That is what
+// makes this kernel agree with the exported R frNBI() exactly: that function is
+// fqNBI(dqrng::dqrunif(n), ...), so the same uniform yields the same variate, and
+// feeding this kernel dqrng uniforms reproduces frNBI() value for value under one
+// dqset.seed(). Keeping the RNG out of the kernel also lets a caller hoist the
+// generator out of a hot loop, and imposes no dqrng dependency on a
+// LinkingTo: CKutils consumer.
+//
+// NOTE: before CKutils 0.1.30 this took (mu, sigma) and drew from R's own
+// stream via R::rpois/R::rnbinom, which produced a DIFFERENT sample from the
+// exported frNBI() even under a fixed seed. Nothing in the package called it.
+inline int frNBI_scalar(const double& u,
+                        const double& mu = 1.0,
                         const double& sigma = 1.0) {
     // Parameter validation (uncommented for performance)
     // if (mu    <= 0) stop("mu must be greater than 0");
     // if (sigma <= 0) stop("sigma must be greater than 0");
+    // if (u < 0.0 || u > 1.0) stop("u must be a uniform in [0, 1]");
 
-    // For very small sigma values, use Poisson approximation
-    if (sigma < 1e-4) {
-        return R::rpois(mu);
-    }
-
-    // Standard NBI generation using negative binomial
-    const double size = 1.0 / sigma;
-    return R::rnbinom(size, size / (size + mu));
+    return fqNBI_scalar(u, mu, sigma, true, false);
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_NBI.cpp)
@@ -133,9 +150,5 @@ Rcpp::IntegerVector fqNBI(const Rcpp::NumericVector& p,
                           const Rcpp::NumericVector& sigma,
                           const bool& lower_tail,
                           const bool& log_p);
-
-Rcpp::IntegerVector frNBI(const int& n,
-                          const Rcpp::NumericVector& mu,
-                          const Rcpp::NumericVector& sigma);
 
 #endif // DISTR_NBI_H

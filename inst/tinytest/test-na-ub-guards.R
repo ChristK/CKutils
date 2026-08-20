@@ -45,6 +45,10 @@ expect_equal(length(fget_C(integer(0), 2, 1)), 0L,
              info = "fget_C zero-length x returns length 0")
 expect_equal(length(fget_C(0:3, numeric(0), 1)), 0L,
              info = "fget_C zero-length mu returns length 0")
+expect_equal(length(fdZABNB(integer(0), 1, 1, 1, 0.1)), 0L,
+             info = "fdZABNB zero-length x recycles to length 0")
+expect_equal(length(fpZABNB(integer(0), 1, 1, 1, 0.1)), 0L,
+             info = "fpZABNB zero-length q recycles to length 0")
 
 # =============================================================================
 # Density / CDF: NaN/NA quantile -> NA (static_cast<int>(NaN) was UB)
@@ -54,6 +58,10 @@ expect_true(is.na(suppressWarnings(fpNBI(NA_integer_, 1, 1))), info = "fpNBI NA 
 expect_true(is.na(suppressWarnings(fdDPO(NA_integer_, 2, 1))), info = "fdDPO NA x -> NA")
 expect_true(is.na(suppressWarnings(fpDPO(NA_integer_, 2, 1))), info = "fpDPO NA q -> NA")
 expect_true(is.na(suppressWarnings(fdSICHEL(NA_integer_, 1, 1, 1))), info = "fdSICHEL NA x -> NA")
+expect_true(is.na(suppressWarnings(fdZABNB(NA_integer_, 1, 1, 1, 0.1))), info = "fdZABNB NA x -> NA")
+expect_true(is.na(suppressWarnings(fpZABNB(NA_integer_, 1, 1, 1, 0.1))), info = "fpZABNB NA q -> NA")
+expect_true(is.na(fdZABNB(NaN, 1, 1, 1, 0.1)), info = "fdZABNB NaN x -> NA")
+expect_true(is.na(fpZABNB(NaN, 1, 1, 1, 0.1)), info = "fpZABNB NaN q -> NA")
 
 # Finite inputs unaffected (density still matches a direct scalar evaluation)
 expect_equal(fdNBI(c(0L, 1L, 2L), 1, 1), fdNBI(c(0L, 1L, 2L), 1, 1),
@@ -68,10 +76,59 @@ expect_true(is.na(suppressWarnings(fqNBI(NaN, 1, 1))),      info = "fqNBI NaN p 
 expect_true(is.na(suppressWarnings(fqMN4(NaN, 1, 1, 1))),   info = "fqMN4 NaN p -> NA")
 expect_true(is.na(suppressWarnings(fqDEL(NaN, 1, 1, 1))),   info = "fqDEL NaN p -> NA")
 expect_true(is.na(suppressWarnings(fqSICHEL(NaN, 1, 1, 1))),info = "fqSICHEL NaN p -> NA")
+expect_true(is.na(suppressWarnings(fqZABNB(NaN, 1, 1, 1, 0.1))), info = "fqZABNB NaN p -> NA")
+expect_true(is.na(suppressWarnings(fqZABNB(NA_real_, 1, 1, 1, 0.1))), info = "fqZABNB NA p -> NA")
+expect_true(is.na(fqZABNB(0.5, NaN, 1, 1, 0.1)), info = "fqZABNB NaN mu -> NA")
+expect_true(is.na(fqZABNB(0.5, 1, 1, 1, NaN)), info = "fqZABNB NaN tau -> NA")
 
 # Valid quantiles still correct (match base R where the special case reduces to Poisson)
 expect_equal(fqDPO(0.5, 5, 1), as.numeric(qpois(0.5, 5)),
              info = "fqDPO finite p matches qpois at sigma=1")
+
+# =============================================================================
+# count_to_int: an x/q too large to convert to int -> NA
+#
+# static_cast<int> of a double outside the int range is undefined behaviour and
+# it is not benign: x86-64 saturates to INT_MIN, so a huge count silently read
+# as negative (fpZABNB(2^31, ...) returned 0 for a CDF whose true value is ~1),
+# while AArch64 saturates to INT_MAX, which walks the 0..q accumulation loops.
+# All the fd*/fp* wrappers now route the conversion through count_to_int().
+# =============================================================================
+big_counts <- c(2^31, 4e9, 1e10, Inf)
+guarded <- list(
+  fdNBI    = list(1, 1),          fpNBI      = list(1, 1),
+  fdBNB    = list(2, 1, 1),       fpBNB      = list(2, 1, 1),
+  fdZANBI  = list(2, 1, 0.1),     fpZANBI    = list(2, 1, 0.1),
+  fdZINBI  = list(2, 1, 0.1),     fpZINBI    = list(2, 1, 0.1),
+  fdZABNB  = list(2, 1, 1, 0.1),  fpZABNB    = list(2, 1, 1, 0.1),
+  fdSICHEL = list(1, 1, -0.5),    fpSICHEL   = list(1, 1, -0.5),
+  fdDPO    = list(2, 1),          fpDPO      = list(2, 1),
+  fdDEL    = list(2, 1, 0.5),     fpDEL      = list(2, 1, 0.5),
+  fdMN4    = list(1, 1, 1),       fpMN4      = list(1, 1, 1),
+  fpZISICHEL = list(1, 1, -0.5, 0.1)
+)
+for (nm in names(guarded)) {
+  vals <- vapply(big_counts, function(z)
+    as.numeric(suppressWarnings(do.call(get(nm), c(list(z), guarded[[nm]])))),
+    numeric(1))
+  expect_true(all(is.na(vals)),
+              info = paste(nm, "maps an unrepresentable count to NA"))
+}
+
+# Values below the boundary are unaffected
+expect_true(is.finite(fdBNB(1e6, 2, 1, 1)), info = "fdBNB large-but-valid x still computed")
+expect_true(is.finite(fdNBI(1e6, 1, 1)),    info = "fdNBI large-but-valid x still computed")
+expect_true(is.finite(fpNBI(1e5, 1, 1)),    info = "fpNBI large-but-valid q still computed")
+
+# The same guard on the R::qpois fast path of the quantile searches: qpois
+# returns a double that exceeds INT_MAX for a large mu, and the unguarded cast
+# used to return INT_MIN, i.e. a negative quantile.
+expect_true(is.na(suppressWarnings(fqDPO(0.999, 3e9, 1))),
+            info = "fqDPO qpois fast path rejects an unrepresentable quantile")
+expect_true(is.na(suppressWarnings(fqDEL(0.5, 5e9, 1e-5, 0.5))),
+            info = "fqDEL qpois fast path rejects an unrepresentable quantile")
+expect_equal(fqDPO(0.5, 5, 1), 5, info = "fqDPO ordinary case unaffected")
+expect_true(is.infinite(fqDPO(1, 5, 1)), info = "fqDPO p = 1 is still Inf")
 
 # =============================================================================
 # cklut: out-of-range gather row index -> NA (was out-of-bounds mmap read)

@@ -26,6 +26,14 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // directly from its own C++ (e.g. in a hot per-row loop) without linking
 // against CKutils.so. The vectorised, Rcpp-exported wrappers (declared at the
 // bottom) live in src/distr_MN4.cpp and call these same inline scalars.
+//
+// CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
+// kernels in this package do no bounds checking; the caller owns
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// The MN4 kernels specifically are safe for any int, because the support is the
+// four categories 1:4 and anything outside it returns a density of 0. The
+// contract still matters for the BNB, DPO, DEL and SICHEL kernels, some of
+// which do not return at all when it is violated.
 
 #include <Rcpp.h>   // brings in the R:: namespace and Rcpp vector types
 #include <cmath>

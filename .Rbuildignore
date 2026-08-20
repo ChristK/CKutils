@@ -21,3 +21,5 @@
 ^cklut/.*$
 ^graphify-out$
 ^graphify-out/.*$
+^claude_process$
+^claude_process/.*$

@@ -36,6 +36,7 @@ export(fdDPO)
 export(fdMN4)
 export(fdNBI)
 export(fdSICHEL)
+export(fdZABNB)
 export(fdZANBI)
 export(fdZINBI)
 export(fequal)
@@ -49,6 +50,7 @@ export(fpDPO)
 export(fpMN4)
 export(fpNBI)
 export(fpSICHEL)
+export(fpZABNB)
 export(fpZANBI)
 export(fpZINBI)
 export(fpZISICHEL)
@@ -120,48 +122,64 @@ export(write_parquet_dt)
 import(data.table)
 import(fst)
 importFrom(Rcpp,sourceCpp)
-importFrom(arrow,arrow_table)
-importFrom(arrow,open_dataset)
-importFrom(arrow,write_dataset)
-importFrom(arrow,write_parquet)
-importFrom(callr,rcmd)
-importFrom(callr,rscript)
-importFrom(data.table,":=")
-importFrom(data.table,.BY)
-importFrom(data.table,.EACHI)
-importFrom(data.table,.GRP)
-importFrom(data.table,.I)
-importFrom(data.table,.N)
-importFrom(data.table,.NGRP)
-importFrom(data.table,.SD)
-importFrom(data.table,fwrite)
-importFrom(dqrng,dqrnorm)
-importFrom(dqrng,dqrunif)
-importFrom(graphics,abline)
-importFrom(graphics,legend)
-importFrom(graphics,lines)
-importFrom(graphics,par)
-importFrom(graphics,plot)
-importFrom(graphics,title)
-importFrom(jsonlite,fromJSON)
-importFrom(jsonlite,toJSON)
+importFrom(arrow,
+  arrow_table,
+  open_dataset,
+  write_dataset,
+  write_parquet
+)
+importFrom(callr,
+  rcmd,
+  rscript
+)
+importFrom(data.table,
+  ":=",
+  .BY,
+  .EACHI,
+  .GRP,
+  .I,
+  .N,
+  .NGRP,
+  .SD,
+  fwrite
+)
+importFrom(dqrng,
+  dqrnorm,
+  dqrunif
+)
+importFrom(graphics,
+  abline,
+  legend,
+  lines,
+  par,
+  plot,
+  title
+)
+importFrom(jsonlite,
+  fromJSON,
+  toJSON
+)
 importFrom(methods,as)
-importFrom(stats,.checkMFClasses)
-importFrom(stats,delete.response)
-importFrom(stats,density)
-importFrom(stats,dt)
-importFrom(stats,model.frame)
-importFrom(stats,model.matrix)
-importFrom(stats,na.omit)
-importFrom(stats,plogis)
-importFrom(stats,pnorm)
-importFrom(stats,predict)
-importFrom(utils,available.packages)
-importFrom(utils,changedFiles)
-importFrom(utils,fileSnapshot)
-importFrom(utils,head)
-importFrom(utils,install.packages)
-importFrom(utils,installed.packages)
-importFrom(utils,packageVersion)
-importFrom(utils,tail)
+importFrom(stats,
+  .checkMFClasses,
+  delete.response,
+  density,
+  dt,
+  model.frame,
+  model.matrix,
+  na.omit,
+  plogis,
+  pnorm,
+  predict
+)
+importFrom(utils,
+  available.packages,
+  changedFiles,
+  fileSnapshot,
+  head,
+  install.packages,
+  installed.packages,
+  packageVersion,
+  tail
+)
 useDynLib(CKutils, .registration = TRUE)

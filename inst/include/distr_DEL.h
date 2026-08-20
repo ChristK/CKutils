@@ -27,6 +27,22 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // hot per-row loop) without linking against CKutils.so. The vectorised,
 // Rcpp-exported wrappers (declared at the bottom) live in src/distr_DEL.cpp and
 // call these same inline scalars.
+//
+// CALLER CONTRACT (unguarded on purpose -- see recycling_helpers.h for the full
+// statement). These kernels do no bounds checking, so the caller must ensure
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// before calling them; count_to_int() in recycling_helpers.h does that test.
+// The vectorised wrappers below already apply it, but a package using
+// LinkingTo: CKutils to call the scalars directly does not get it. Here:
+//   * fpDEL_hlp_fn (and fpDEL_scalar through it) accumulates with
+//     `for (int i = 0; i <= q; i++)`, so q == INT_MAX overflows i and the call
+//     NEVER RETURNS. It is also O(q) in time, so a large-but-legal q is slow
+//     rather than wrong.
+//   * fdDEL_scalar evaluates lgamma(x + 1), so x == INT_MAX wraps the argument
+//     to INT_MIN and returns a silently wrong density.
+//   * ftofydel2_scalar sizes its std::vector<double> workspace as y + 2, so it
+//     allocates O(y) memory -- tens of gigabytes for a large y -- and that size
+//     expression overflows to a negative int at the boundary.
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (dpois, dnbinom_mu, ...)
 #include <cmath>

@@ -27,6 +27,16 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // in a hot per-row loop) without linking against CKutils.so. The vectorised,
 // Rcpp-exported wrappers (declared at the bottom) live in src/distr_SICHEL.cpp
 // and call these same inline scalars.
+//
+// CALLER CONTRACT (unguarded on purpose -- see recycling_helpers.h for the full
+// statement). These kernels do no bounds checking, so the caller must ensure
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// before calling them; count_to_int() in recycling_helpers.h does that test.
+// The vectorised wrappers below already apply it, but a package using
+// LinkingTo: CKutils to call the scalars directly does not get it. Both
+// fdSICHEL_scalar and fpSICHEL_scalar size two std::vector<double> workspaces
+// as y + 1, so they allocate O(y) memory -- tens of gigabytes for a large y --
+// and that size expression overflows to a negative int at y == INT_MAX.
 
 #include <Rcpp.h>
 #include <cmath>

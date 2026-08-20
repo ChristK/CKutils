@@ -27,6 +27,14 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // directly from its own C++ (e.g. in a hot per-row loop) without linking
 // against CKutils.so. The vectorised, Rcpp-exported wrappers (declared at the
 // bottom) live in src/distr_ZANBI.cpp and call these same inline scalars.
+//
+// CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
+// kernels in this package do no bounds checking; the caller owns
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// The ZANBI kernels specifically are safe for any int, because the NBI kernels
+// they delegate to are closed form. The contract still matters for the BNB,
+// DPO, DEL and SICHEL kernels, some of which do not return at all when it is
+// violated.
 
 #include <Rcpp.h>
 #include <cmath>
@@ -51,7 +59,13 @@ inline double fdZANBI_scalar(const int& x,
         // For x > 0: P(X = x) = (1-nu) * f_NBI(x) / (1 - f_NBI(0))
         const double log_f0 = fdNBI_scalar(0, mu, sigma, true);
         const double log_fx = fdNBI_scalar(x, mu, sigma, true);
-        log_density = std::log(1.0 - nu) + log_fx - std::log(1.0 - std::exp(log_f0));
+        // log1p(-nu) and log(-expm1(log_f0)) are the numerically stable forms of
+        // gamlss.dist's log(1 - nu) and log(1 - f_NBI(0)). Identical in exact
+        // arithmetic, but the literal differences cancel catastrophically: for a
+        // tiny nu, 1 - nu rounds to exactly 1 and the log to 0, and for a small
+        // mu (where f_NBI(0) -> 1) 1 - exp(log_f0) can round to exactly 0 and
+        // send the density to -Inf. Matches fdZABNB_scalar.
+        log_density = std::log1p(-nu) + log_fx - std::log(-std::expm1(log_f0));
     }
 
     return log_p ? log_density : std::exp(log_density);
@@ -129,27 +143,31 @@ inline int fqZANBI_scalar(const double& p,
 }
 
 // SIMD-optimised ZANBI random generation scalar function
-inline int frZANBI_scalar(const double& mu,
+// Inverts the ZANBI CDF at a uniform u in [0, 1).//
+// The uniform is supplied by the caller rather than drawn here. That is what
+// makes this kernel agree with the exported R frZANBI() exactly: that function is
+// fqZANBI(dqrng::dqrunif(n), ...), so the same uniform yields the same variate, and
+// feeding this kernel dqrng uniforms reproduces frZANBI() value for value under one
+// dqset.seed(). Keeping the RNG out of the kernel also lets a caller hoist the
+// generator out of a hot loop, and imposes no dqrng dependency on a
+// LinkingTo: CKutils consumer.
+//
+// NOTE: before CKutils 0.1.30 this took (mu, sigma, nu) and sampled by
+// rejection from R's own stream -- a different sample from the exported
+// frZANBI() even under a fixed seed, and a loop that spins unboundedly as
+// mu -> 0 because almost every draw from the untruncated NBI is a zero.
+// Nothing in the package called it.
+inline int frZANBI_scalar(const double& u,
+                          const double& mu,
                           const double& sigma,
                           const double& nu) {
     // Parameter validation (uncommented for performance)
     // if (mu    <= 0.0) stop("mu must be greater than 0");
     // if (sigma <= 0.0) stop("sigma must be greater than 0");
     // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
+    // if (u < 0.0 || u > 1.0) stop("u must be a uniform in [0, 1]");
 
-    // Generate uniform random number
-    const double u = R::runif(0.0, 1.0);
-
-    if (u < nu) {
-        return 0;  // Zero-altered part
-    } else {
-        // Generate from truncated NBI (excluding zero)
-        int x;
-        do {
-            x = frNBI_scalar(mu, sigma);
-        } while (x == 0);
-        return x;
-    }
+    return fqZANBI_scalar(u, mu, sigma, nu, true, false);
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_ZANBI.cpp)
@@ -172,10 +190,5 @@ Rcpp::IntegerVector fqZANBI(const Rcpp::NumericVector& p,
                            const Rcpp::NumericVector& nu,
                            const bool& lower_tail,
                            const bool& log_p);
-
-Rcpp::IntegerVector frZANBI(const int& n,
-                           const Rcpp::NumericVector& mu,
-                           const Rcpp::NumericVector& sigma,
-                           const Rcpp::NumericVector& nu);
 
 #endif // DISTR_ZANBI_H

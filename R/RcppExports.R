@@ -1315,40 +1315,6 @@ fqNBI <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqNBI`, p, mu, sigma, lower_tail, log_p)
 }
 
-#' Negative Binomial Type I Distribution Random Generation
-#'
-#' Random generation for the Negative Binomial type I (NBI) distribution
-#' with parameters mu (mean) and sigma (dispersion).
-#'
-#' @param n number of observations.
-#' @param mu vector of positive means.
-#' @param sigma vector of positive dispersion parameters.
-#'
-#' @details
-#' Random variates are generated using the negative binomial distribution
-#' with size parameter \eqn{1/\sigma} and mean parameter \eqn{\mu}.
-#'
-#' For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
-#'
-#' @return A numeric vector of random variates.
-#' 
-#' @references
-#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
-#' Chapman and Hall/CRC.
-#'
-#' @examples
-#' # Generate random variates
-#' frNBI(10, mu=2, sigma=1)
-#' 
-#' # Vector inputs with recycling
-#' frNBI(5, mu=c(1,2), sigma=0.5)
-#'
-#' @export
-frNBI <- function(n, mu, sigma) {
-    .Call(`_CKutils_frNBI`, n, mu, sigma)
-}
-
 #' Sichel Distribution Density
 #'
 #' Probability density function for the Sichel distribution with parameters 
@@ -1464,6 +1430,89 @@ fpSICHEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @export
 fqSICHEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqSICHEL`, p, mu, sigma, nu, lower_tail, log_p)
+}
+
+#' Zero Adjusted Beta Negative Binomial Density
+#'
+#' Probability mass function for the Zero Adjusted (Hurdle) Beta Negative
+#' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
+#' nu (shape), and tau (hurdle probability).
+#'
+#' @param x vector of (non-negative integer) quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of positive shape parameters.
+#' @param tau vector of hurdle probabilities (0 < tau < 1).
+#' @param log logical; if TRUE, densities are returned as log(density).
+#'
+#' @details
+#' The zero adjusted (hurdle) beta negative binomial distribution has two parts:
+#' a point mass at zero and a zero-truncated BNB distribution for positive
+#' values. The probability mass function is:
+#' \deqn{P(Y = 0) = \tau}
+#' \deqn{P(Y = y) = (1-\tau) \frac{f_{BNB}(y|\mu,\sigma,\nu)}{1 - f_{BNB}(0|\mu,\sigma,\nu)} \quad \text{for } y > 0}
+#' where \eqn{f_{BNB}} is the BNB probability mass function. Note that the zero
+#' probability is exactly \eqn{\tau}, unlike the zero inflated (ZIBNB) case
+#' where it is \eqn{\tau + (1-\tau) f_{BNB}(0)}.
+#'
+#' @return A numeric vector of densities.
+#'
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R,
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fdZABNB(c(0,1,2,3), mu=2, sigma=1, nu=1, tau=0.1)
+#'
+#' # Vector inputs with recycling
+#' fdZABNB(0:5, mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+#'
+#' @export
+fdZABNB <- function(x, mu, sigma, nu, tau, log = FALSE) {
+    .Call(`_CKutils_fdZABNB`, x, mu, sigma, nu, tau, log)
+}
+
+#' Zero Adjusted Beta Negative Binomial Distribution Function
+#'
+#' Cumulative distribution function for the Zero Adjusted (Hurdle) Beta Negative
+#' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
+#' nu (shape), and tau (hurdle probability).
+#'
+#' @param q vector of quantiles.
+#' @param mu vector of positive means.
+#' @param sigma vector of positive dispersion parameters.
+#' @param nu vector of positive shape parameters.
+#' @param tau vector of hurdle probabilities (0 < tau < 1).
+#' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
+#'   otherwise, P[X > x].
+#' @param log_p logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @details
+#' The cumulative distribution function for the zero adjusted (hurdle) beta
+#' negative binomial distribution is:
+#' \deqn{F(0) = \tau}
+#' \deqn{F(q) = \tau + (1-\tau) \frac{F_{BNB}(q|\mu,\sigma,\nu) - F_{BNB}(0|\mu,\sigma,\nu)}{1 - F_{BNB}(0|\mu,\sigma,\nu)} \quad \text{for } q > 0}
+#' where \eqn{F_{BNB}} is the BNB cumulative distribution function.
+#'
+#' @return A numeric vector of cumulative probabilities.
+#'
+#' @references
+#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R,
+#' Chapman and Hall/CRC.
+#'
+#' @examples
+#' # Single values
+#' fpZABNB(c(0,1,2,3), mu=2, sigma=1, nu=1, tau=0.1)
+#'
+#' # Vector inputs with recycling
+#' fpZABNB(0:5, mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+#'
+#' @export
+fpZABNB <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
+    .Call(`_CKutils_fpZABNB`, q, mu, sigma, nu, tau, lower_tail, log_p)
 }
 
 #' Zero Adjusted Beta Negative Binomial Quantile Function
@@ -1613,40 +1662,6 @@ fqZANBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqZANBI`, p, mu, sigma, nu, lower_tail, log_p)
 }
 
-#' Zero-Altered Negative Binomial Type I Distribution Random Generation
-#'
-#' Random generation for the Zero-Altered Negative Binomial type I (ZANBI)
-#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
-#'
-#' @param n number of observations.
-#' @param mu vector of positive means.
-#' @param sigma vector of positive dispersion parameters.
-#' @param nu vector of zero-alteration probabilities (0 < nu < 1).
-#'
-#' @details
-#' Random variates are generated using a rejection approach: with probability \eqn{\nu}
-#' the value is 0, and with probability \eqn{1-\nu} the value is drawn from the
-#' standard NBI distribution truncated at zero (i.e., excluding zero).
-#'
-#' @return A numeric vector of random variates.
-#' 
-#' @references
-#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
-#' Chapman and Hall/CRC.
-#'
-#' @examples
-#' # Generate random variates
-#' frZANBI(10, mu=2, sigma=1, nu=0.1)
-#' 
-#' # Vector inputs with recycling
-#' frZANBI(5, mu=c(1,2), sigma=0.5, nu=0.1)
-#'
-#' @export
-frZANBI <- function(n, mu, sigma, nu) {
-    .Call(`_CKutils_frZANBI`, n, mu, sigma, nu)
-}
-
 #' Zero Inflated Beta Negative Binomial Quantile Function
 #'
 #' Quantile function for the Zero Inflated Beta Negative Binomial (ZIBNB) distribution
@@ -1793,40 +1808,6 @@ fqZINBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqZINBI`, p, mu, sigma, nu, lower_tail, log_p)
 }
 
-#' Zero-Inflated Negative Binomial Type I Distribution Random Generation
-#'
-#' Random generation for the Zero-Inflated Negative Binomial type I (ZINBI)
-#' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
-#'
-#' @param n number of observations.
-#' @param mu vector of positive means.
-#' @param sigma vector of positive dispersion parameters.
-#' @param nu vector of zero-inflation probabilities (0 < nu < 1).
-#'
-#' @details
-#' Random variates are generated using a mixture approach: with probability \eqn{\nu}
-#' the value is 0, and with probability \eqn{1-\nu} the value is drawn from the
-#' standard NBI distribution.
-#'
-#' @return A numeric vector of random variates.
-#' 
-#' @references
-#' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-#' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
-#' Chapman and Hall/CRC.
-#'
-#' @examples
-#' # Generate random variates
-#' frZINBI(10, mu=2, sigma=1, nu=0.1)
-#' 
-#' # Vector inputs with recycling
-#' frZINBI(5, mu=c(1,2), sigma=0.5, nu=0.1)
-#'
-#' @export
-frZINBI <- function(n, mu, sigma, nu) {
-    .Call(`_CKutils_frZINBI`, n, mu, sigma, nu)
-}
-
 #' Zero-Inflated Sichel Distribution Quantile Function
 #'
 #' Quantile function for the zero-inflated Sichel distribution with parameters 
@@ -1893,6 +1874,18 @@ fqZISICHEL <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) 
 #' @export
 fpZISICHEL <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fpZISICHEL`, q, mu, sigma, nu, tau, lower_tail, log_p)
+}
+
+.frNBI_scalar_vec <- function(u, mu, sigma) {
+    .Call(`_CKutils_frNBI_scalar_vec`, u, mu, sigma)
+}
+
+.frZANBI_scalar_vec <- function(u, mu, sigma, nu) {
+    .Call(`_CKutils_frZANBI_scalar_vec`, u, mu, sigma, nu)
+}
+
+.frZINBI_scalar_vec <- function(u, mu, sigma, nu) {
+    .Call(`_CKutils_frZINBI_scalar_vec`, u, mu, sigma, nu)
 }
 
 #' Convert Factor to Integer (C++ Version)

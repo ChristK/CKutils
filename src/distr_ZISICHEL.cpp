@@ -83,31 +83,19 @@ IntegerVector fqZISICHEL(NumericVector p,
         }
     }
 
-    // Validate parameters after recycling
-    if (log_p) {
-      for (int i = 0; i < n; i++)
-      {
-        if (is_nan_input[i]) continue;
-        if (recycled.vec2[i] <= 0.0)
-          stop("mu must be greater than 0");
-        if (recycled.vec3[i] <= 0.0)
-          stop("sigma must be greater than 0");
-        if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0)
-          stop("tau must be between 0 and 1");
-      }
-    } else {
-      for (int i = 0; i < n; i++)
-      {
-        if (is_nan_input[i]) continue;
-        if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0001)
-          stop("p must be between 0 and 1");
-        if (recycled.vec2[i] <= 0.0)
-          stop("mu must be greater than 0");
-        if (recycled.vec3[i] <= 0.0)
-          stop("sigma must be greater than 0");
-        if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0)
-          stop("tau must be between 0 and 1");
-      }
+    // Validate parameters after recycling. check_prob() ranges p on whichever
+    // scale the caller supplied it, so the log_p case is validated rather than
+    // skipped.
+    for (int i = 0; i < n; i++)
+    {
+      if (is_nan_input[i]) continue;
+      check_prob(recycled.vec1[i], log_p, 1.0001, "p must be between 0 and 1");
+      if (recycled.vec2[i] <= 0.0)
+        stop("mu must be greater than 0");
+      if (recycled.vec3[i] <= 0.0)
+        stop("sigma must be greater than 0");
+      if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0)
+        stop("tau must be between 0 and 1");
     }
 
 
@@ -201,8 +189,11 @@ NumericVector fpZISICHEL(const NumericVector& q,
     }
 
     for (int i = 0; i < n; i++) {
-        if (ISNAN(recycled.vec1[i])) continue;  // already set to NA_REAL above
-        const int qi = static_cast<int>(recycled.vec1[i]);
+        // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+        // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+        // undefined behaviour and it is not benign on either x86-64 or AArch64.
+        int qi;
+        if (!count_to_int(recycled.vec1[i], qi)) { cdf[i] = NA_REAL; continue; }
         const double mui = recycled.vec2[i];
         const double sigmai = recycled.vec3[i];
         const double nui = recycled.vec4[i];
