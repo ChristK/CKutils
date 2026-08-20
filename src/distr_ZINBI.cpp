@@ -270,4 +270,7 @@ IntegerVector fqZINBI(const NumericVector& p,
 // alphabetically, R/rng_distr.R was sourced after R/RcppExports.R and silently
 // overwrote it, leaving dead compiled code and a man page with two identical
 // \usage entries. The per-element frZINBI_scalar() remains available (inline) in
-// inst/include/distr_ZINBI.h for a LinkingTo: CKutils consumer.
+// inst/include/distr_ZINBI.h for a LinkingTo: CKutils consumer, and now inverts
+// fqZINBI_scalar() from a caller-supplied uniform -- the same construction frZINBI()
+// uses -- so the two agree draw for draw under one dqset.seed(). See the
+// parity tests in inst/tinytest/test-rng_distr.R.

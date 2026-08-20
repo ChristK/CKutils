@@ -78,3 +78,53 @@ a <- frDPO(50, mu = 3, sigma = 1)
 dqrng::dqset.seed(99)
 b <- frDPO(50, mu = 3, sigma = 1)
 expect_equal(a, b, info = "frDPO is reproducible under a fixed dqrng seed")
+
+
+# =============================================================================
+# Header-only RNG scalars must agree with the exported R samplers
+#
+# frNBI_scalar / frZANBI_scalar / frZINBI_scalar are inline kernels in
+# inst/include/ for LinkingTo: CKutils consumers. Before 0.1.30 they drew from
+# R's own stream by rejection/direct sampling, so a C++ consumer got a DIFFERENT
+# sample from the exported R frNBI()/frZANBI()/frZINBI() even under a fixed
+# seed. They now invert the same CDF from a caller-supplied uniform, which is
+# exactly what the R functions do with dqrng::dqrunif(), so the two must agree
+# draw for draw. Reached through the internal .fr*_scalar_vec bridges.
+# =============================================================================
+if (requireNamespace("dqrng", quietly = TRUE)) {
+  n_par <- 1000L
+  parity_cases <- list(
+    list(nm = "frNBI",   R = frNBI,   p = list(mu = 2, sigma = 1),
+         C = function(u, p) CKutils:::.frNBI_scalar_vec(u, p$mu, p$sigma)),
+    list(nm = "frNBI",   R = frNBI,   p = list(mu = 5, sigma = 1e-6),
+         C = function(u, p) CKutils:::.frNBI_scalar_vec(u, p$mu, p$sigma)),
+    list(nm = "frZANBI", R = frZANBI, p = list(mu = 2, sigma = 1, nu = 0.1),
+         C = function(u, p) CKutils:::.frZANBI_scalar_vec(u, p$mu, p$sigma, p$nu)),
+    list(nm = "frZANBI", R = frZANBI, p = list(mu = 0.3, sigma = 2, nu = 0.5),
+         C = function(u, p) CKutils:::.frZANBI_scalar_vec(u, p$mu, p$sigma, p$nu)),
+    list(nm = "frZINBI", R = frZINBI, p = list(mu = 2, sigma = 1, nu = 0.1),
+         C = function(u, p) CKutils:::.frZINBI_scalar_vec(u, p$mu, p$sigma, p$nu)),
+    list(nm = "frZINBI", R = frZINBI, p = list(mu = 0.3, sigma = 2, nu = 0.5),
+         C = function(u, p) CKutils:::.frZINBI_scalar_vec(u, p$mu, p$sigma, p$nu))
+  )
+  for (k in seq_along(parity_cases)) {
+    cs <- parity_cases[[k]]
+    lbl <- paste0(cs$nm, " case ", k)
+    dqrng::dqset.seed(4242)
+    from_R <- do.call(cs$R, c(list(n_par), cs$p))
+    dqrng::dqset.seed(4242)
+    from_C <- cs$C(dqrng::dqrunif(n_par), cs$p)
+    expect_identical(
+      as.integer(from_C), as.integer(from_R),
+      info = paste(lbl, "- scalar kernel matches the exported R sampler under one seed")
+    )
+  }
+
+  # The old frZANBI_scalar rejection loop spun as mu -> 0 (nearly every draw
+  # from the untruncated NBI is a zero); the inverse-CDF form cannot.
+  el <- system.time(
+    z <- CKutils:::.frZANBI_scalar_vec(dqrng::dqrunif(5000), 1e-8, 1, 0.1)
+  )[["elapsed"]]
+  expect_true(el < 10 && all(is.finite(z)),
+              info = "frZANBI_scalar returns promptly at mu = 1e-8 (no rejection loop)")
+}

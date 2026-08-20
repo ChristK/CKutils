@@ -699,6 +699,47 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// frNBI_scalar_vec
+IntegerVector frNBI_scalar_vec(const NumericVector& u, const double& mu, const double& sigma);
+RcppExport SEXP _CKutils_frNBI_scalar_vec(SEXP uSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const double& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(frNBI_scalar_vec(u, mu, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// frZANBI_scalar_vec
+IntegerVector frZANBI_scalar_vec(const NumericVector& u, const double& mu, const double& sigma, const double& nu);
+RcppExport SEXP _CKutils_frZANBI_scalar_vec(SEXP uSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const double& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    rcpp_result_gen = Rcpp::wrap(frZANBI_scalar_vec(u, mu, sigma, nu));
+    return rcpp_result_gen;
+END_RCPP
+}
+// frZINBI_scalar_vec
+IntegerVector frZINBI_scalar_vec(const NumericVector& u, const double& mu, const double& sigma, const double& nu);
+RcppExport SEXP _CKutils_frZINBI_scalar_vec(SEXP uSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const double& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    rcpp_result_gen = Rcpp::wrap(frZINBI_scalar_vec(u, mu, sigma, nu));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fct_to_int_cpp
 IntegerVector fct_to_int_cpp(SEXP x, bool inplace);
 RcppExport SEXP _CKutils_fct_to_int_cpp(SEXP xSEXP, SEXP inplaceSEXP) {
@@ -1078,6 +1119,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fqZINBI", (DL_FUNC) &_CKutils_fqZINBI, 6},
     {"_CKutils_fqZISICHEL", (DL_FUNC) &_CKutils_fqZISICHEL, 7},
     {"_CKutils_fpZISICHEL", (DL_FUNC) &_CKutils_fpZISICHEL, 7},
+    {"_CKutils_frNBI_scalar_vec", (DL_FUNC) &_CKutils_frNBI_scalar_vec, 3},
+    {"_CKutils_frZANBI_scalar_vec", (DL_FUNC) &_CKutils_frZANBI_scalar_vec, 4},
+    {"_CKutils_frZINBI_scalar_vec", (DL_FUNC) &_CKutils_frZINBI_scalar_vec, 4},
     {"_CKutils_fct_to_int_cpp", (DL_FUNC) &_CKutils_fct_to_int_cpp, 2},
     {"_CKutils_starts_from_1_cpp", (DL_FUNC) &_CKutils_starts_from_1_cpp, 5},
     {"_CKutils_dtsubset", (DL_FUNC) &_CKutils_dtsubset, 3},

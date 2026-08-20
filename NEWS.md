@@ -97,6 +97,41 @@
   the package calls them any more, so they are no longer reachable from R and
   the `.Call`-based tests that used to cover them have been removed.
 
+* **`frNBI_scalar()`, `frZANBI_scalar()`, `frZINBI_scalar()` now match the
+  exported R samplers exactly** (breaking change to the header-only C++ API).
+  These inline kernels drew from R's own stream -- `R::runif()`, `R::rpois()`,
+  `R::rnbinom()`, with rejection sampling for the zero-adjusted cases -- while
+  the exported `frNBI()`/`frZANBI()`/`frZINBI()` invert the CDF at
+  `dqrng::dqrunif()` uniforms. A `LinkingTo: CKutils` consumer calling the
+  kernels therefore got a *different sample* from an R user calling the
+  documented function of the same name, even under a fixed seed, and the two
+  could not be reconciled.
+
+  Each kernel now takes the uniform as its first argument and inverts the
+  corresponding `fq*_scalar()`, which is precisely what the R function does:
+
+  ```cpp
+  // was: frZANBI_scalar(mu, sigma, nu)          -- drew from R's stream
+  // now: frZANBI_scalar(u, mu, sigma, nu)       == fqZANBI_scalar(u, ...)
+  ```
+
+  Feeding them `dqrng` uniforms now reproduces the R samplers draw for draw
+  under one `dqset.seed()`; `inst/tinytest/test-rng_distr.R` asserts that
+  identity over several parameter settings. Keeping the RNG outside the kernel
+  also lets a caller hoist the generator out of a hot loop, and avoids imposing
+  a `dqrng` dependency on consumers of `inst/include/distr_*.h`.
+
+  It also removes a latent hang: `frZANBI_scalar()` sampled the zero-truncated
+  NBI with `do { x = frNBI_scalar(...); } while (x == 0);`, which spins as
+  `mu -> 0` because almost every draw from the untruncated NBI is a zero. The
+  inverse-CDF form is constant-work.
+
+  Nothing in CKutils called these kernels, and the only known downstream
+  consumer (IMPACTncd_Engl) uses `fqZANBI_scalar()`/`fpZANBI_scalar()` and is
+  unaffected. They are reachable from R for testing through the internal
+  `.frNBI_scalar_vec()` / `.frZANBI_scalar_vec()` / `.frZINBI_scalar_vec()`
+  bridges, which are deliberately not exported.
+
 * **`fdZANBI()`: accurate density for a small `mu`.** The positive branch now
   divides by `log(-expm1(log f_NBI(0)))` instead of `log(1 - f_NBI(0))` -- the
   construction `fdZABNB()` already used, and identical in exact arithmetic. The

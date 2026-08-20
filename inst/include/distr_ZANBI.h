@@ -143,27 +143,31 @@ inline int fqZANBI_scalar(const double& p,
 }
 
 // SIMD-optimised ZANBI random generation scalar function
-inline int frZANBI_scalar(const double& mu,
+// Inverts the ZANBI CDF at a uniform u in [0, 1).//
+// The uniform is supplied by the caller rather than drawn here. That is what
+// makes this kernel agree with the exported R frZANBI() exactly: that function is
+// fqZANBI(dqrng::dqrunif(n), ...), so the same uniform yields the same variate, and
+// feeding this kernel dqrng uniforms reproduces frZANBI() value for value under one
+// dqset.seed(). Keeping the RNG out of the kernel also lets a caller hoist the
+// generator out of a hot loop, and imposes no dqrng dependency on a
+// LinkingTo: CKutils consumer.
+//
+// NOTE: before CKutils 0.1.30 this took (mu, sigma, nu) and sampled by
+// rejection from R's own stream -- a different sample from the exported
+// frZANBI() even under a fixed seed, and a loop that spins unboundedly as
+// mu -> 0 because almost every draw from the untruncated NBI is a zero.
+// Nothing in the package called it.
+inline int frZANBI_scalar(const double& u,
+                          const double& mu,
                           const double& sigma,
                           const double& nu) {
     // Parameter validation (uncommented for performance)
     // if (mu    <= 0.0) stop("mu must be greater than 0");
     // if (sigma <= 0.0) stop("sigma must be greater than 0");
     // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
+    // if (u < 0.0 || u > 1.0) stop("u must be a uniform in [0, 1]");
 
-    // Generate uniform random number
-    const double u = R::runif(0.0, 1.0);
-
-    if (u < nu) {
-        return 0;  // Zero-altered part
-    } else {
-        // Generate from truncated NBI (excluding zero)
-        int x;
-        do {
-            x = frNBI_scalar(mu, sigma);
-        } while (x == 0);
-        return x;
-    }
+    return fqZANBI_scalar(u, mu, sigma, nu, true, false);
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_ZANBI.cpp)

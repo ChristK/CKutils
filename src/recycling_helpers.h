@@ -347,7 +347,10 @@ inline bool count_to_int(const double& v, int& value) {
 // The kernels that are safe for any int, because they are closed form or
 // bounded by their support, are: fdNBI_scalar / fpNBI_scalar (and so the ZANBI
 // and ZINBI scalars built on them), fdMN4_scalar / fpMN4_scalar, and the
-// fq*_search quantile searches, which cap their own iteration count.
+// fq*_search quantile searches, which cap their own iteration count. The
+// frNBI_scalar / frZANBI_scalar / frZINBI_scalar samplers are safe too: they
+// take a uniform and invert the corresponding fq*_scalar, so they inherit that
+// bound and hold no RNG state of their own.
 
 // Validate a probability argument of a quantile function on the scale the
 // caller actually supplied it.

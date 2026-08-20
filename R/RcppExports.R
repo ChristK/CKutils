@@ -1876,6 +1876,18 @@ fpZISICHEL <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) 
     .Call(`_CKutils_fpZISICHEL`, q, mu, sigma, nu, tau, lower_tail, log_p)
 }
 
+.frNBI_scalar_vec <- function(u, mu, sigma) {
+    .Call(`_CKutils_frNBI_scalar_vec`, u, mu, sigma)
+}
+
+.frZANBI_scalar_vec <- function(u, mu, sigma, nu) {
+    .Call(`_CKutils_frZANBI_scalar_vec`, u, mu, sigma, nu)
+}
+
+.frZINBI_scalar_vec <- function(u, mu, sigma, nu) {
+    .Call(`_CKutils_frZINBI_scalar_vec`, u, mu, sigma, nu)
+}
+
 #' Convert Factor to Integer (C++ Version)
 #'
 #' This function converts a factor (an integer vector with a "levels" attribute)
