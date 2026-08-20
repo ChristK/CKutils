@@ -91,13 +91,15 @@ NumericVector fdZINBI(const NumericVector& x,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
-    // UB, and a NaN x slips past the `< 0` check (NaN comparisons are false).
-    if (ISNAN(recycled.vec1[i])) {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int x_i;
+    if (!count_to_int(recycled.vec1[i], x_i)) {
       out[i] = NA_REAL;
       continue;
     }
-    out[i] = fdZINBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
+    out[i] = fdZINBI_scalar(x_i, recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], log);
   }
 
@@ -167,13 +169,15 @@ NumericVector fpZINBI(const NumericVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
-    // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
-    if (ISNAN(recycled.vec1[i])) {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int q_i;
+    if (!count_to_int(recycled.vec1[i], q_i)) {
       out[i] = NA_REAL;
       continue;
     }
-    out[i] = fpZINBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
+    out[i] = fpZINBI_scalar(q_i, recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 
@@ -232,7 +236,7 @@ IntegerVector fqZINBI(const NumericVector& p,
     // the range checks here because every NaN comparison is false anyway.
     if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
         ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) continue;
-    if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0) stop("p must be >=0 and <=1");
+    check_prob(recycled.vec1[i], log_p, 1.0, "p must be >=0 and <=1");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
     if (recycled.vec4[i] <= 0.0 || recycled.vec4[i] >= 1.0) stop("nu must be between 0 and 1");
@@ -259,64 +263,11 @@ IntegerVector fqZINBI(const NumericVector& p,
   return out;
 }
 
-
-//' Zero-Inflated Negative Binomial Type I Distribution Random Generation
-//'
-//' Random generation for the Zero-Inflated Negative Binomial type I (ZINBI)
-//' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
-//'
-//' @param n number of observations.
-//' @param mu vector of positive means.
-//' @param sigma vector of positive dispersion parameters.
-//' @param nu vector of zero-inflation probabilities (0 < nu < 1).
-//'
-//' @details
-//' Random variates are generated using a mixture approach: with probability \eqn{\nu}
-//' the value is 0, and with probability \eqn{1-\nu} the value is drawn from the
-//' standard NBI distribution.
-//'
-//' @return A numeric vector of random variates.
-//' 
-//' @references
-//' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
-//' Chapman and Hall/CRC.
-//'
-//' @examples
-//' # Generate random variates
-//' frZINBI(10, mu=2, sigma=1, nu=0.1)
-//' 
-//' # Vector inputs with recycling
-//' frZINBI(5, mu=c(1,2), sigma=0.5, nu=0.1)
-//'
-//' @export
-// [[Rcpp::export]]
-IntegerVector frZINBI(const int& n,
-                      const NumericVector& mu,
-                      const NumericVector& sigma,
-                      const NumericVector& nu)
-{
-  if (n <= 0) stop("n must be a positive integer");
-  
-  // Recycle mu, sigma, and nu to length n
-  NumericVector n_vec(n, 1.0);  // Create a vector of 1s for recycling
-  auto recycled = recycle_vectors(n_vec, mu, sigma, nu);
-  
-  // Validate parameters after recycling
-  for (int i = 0; i < n; i++)
-  {
-    if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
-    if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
-    if (recycled.vec4[i] <= 0.0 || recycled.vec4[i] >= 1.0) stop("nu must be between 0 and 1");
-  }
-
-  IntegerVector out(n);
-
-  SIMD_HINT
-  for (int i = 0; i < n; i++)
-  {
-    out[i] = frZINBI_scalar(recycled.vec2[i], recycled.vec3[i], recycled.vec4[i]);
-  }
-
-  return out;
-}
+// NOTE: there is deliberately no vectorised, Rcpp-exported frZINBI() here.
+// The exported frZINBI() is the R implementation in R/rng_distr.R, which draws
+// from dqrng::dqrunif() and inverts fqZINBI(). A C++ wrapper of the same name
+// used to be exported from this file as well; because R/ is collated
+// alphabetically, R/rng_distr.R was sourced after R/RcppExports.R and silently
+// overwrote it, leaving dead compiled code and a man page with two identical
+// \usage entries. The per-element frZINBI_scalar() remains available (inline) in
+// inst/include/distr_ZINBI.h for a LinkingTo: CKutils consumer.

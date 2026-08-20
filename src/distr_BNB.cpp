@@ -97,13 +97,15 @@ NumericVector fdBNB(const NumericVector& x,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
-    // UB. Only the value cast to int (x = vec1) needs guarding.
-    if (ISNAN(recycled.vec1[i])) {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int x_i;
+    if (!count_to_int(recycled.vec1[i], x_i)) {
       out[i] = NA_REAL;
       continue;
     }
-    out[i] = fdBNB_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
+    out[i] = fdBNB_scalar(x_i, recycled.vec2[i],
                           recycled.vec3[i], recycled.vec4[i], log);
   }
 
@@ -171,13 +173,15 @@ NumericVector fpBNB(const IntegerVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
-    // UB. Only the value cast to int (q = vec1) needs guarding.
-    if (ISNAN(recycled.vec1[i])) {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int q_i;
+    if (!count_to_int(recycled.vec1[i], q_i)) {
       out[i] = NA_REAL;
       continue;
     }
-    out[i] = fpBNB_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
+    out[i] = fpBNB_scalar(q_i, recycled.vec2[i],
                           recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 
@@ -236,7 +240,7 @@ NumericVector fqBNB(const NumericVector& p,
     // comparisons are false) before we can map it to NA.
     if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
         ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) continue;
-    if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0001) stop("p must be >=0 and <=1");
+    check_prob(recycled.vec1[i], log_p, 1.0001, "p must be >=0 and <=1");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
     if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");

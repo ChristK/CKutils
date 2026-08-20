@@ -25,6 +25,14 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // Rcpp-exported wrappers (declared at the bottom) live in
 // src/distr_ZISICHEL.cpp and call the inline SICHEL scalars
 // (fpSICHEL_scalar) defined in distr_SICHEL.h.
+//
+// CALLER CONTRACT (see recycling_helpers.h for the full statement). The
+// *_scalar kernels in this package do no bounds checking; the caller owns
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// The vectorised wrappers below already apply it via count_to_int(), but a
+// package using LinkingTo: CKutils to call the scalars directly does not get
+// it. fpSICHEL_scalar, which these wrappers delegate to, allocates O(y) memory
+// and overflows its workspace size at y == INT_MAX.
 
 #include <Rcpp.h>
 #include "distr_SICHEL.h"   // ZISICHEL wrappers call the inline SICHEL scalars

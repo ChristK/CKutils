@@ -24,6 +24,10 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // expose header-only. Only the vectorised declarations are provided here, for
 // reference. No `using namespace Rcpp;` so a downstream LinkingTo consumer's
 // namespace is not polluted.
+//
+// The count caller contract documented in recycling_helpers.h does not apply
+// here: BCT is continuous, takes its quantiles as doubles, and converts nothing
+// to int.
 
 #include <Rcpp.h>
 

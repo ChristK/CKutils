@@ -27,6 +27,14 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // directly from its own C++ (e.g. in a hot per-row loop) without linking
 // against CKutils.so. The vectorised, Rcpp-exported wrappers (declared at the
 // bottom) live in src/distr_ZIBNB.cpp and call these same inline scalars.
+//
+// CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
+// kernels in this package do no bounds checking; the caller owns
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// fqZIBNB_scalar itself is safe: the fqBNB_search it delegates to caps its own
+// iteration count. The contract matters for the BNB, DPO, DEL and SICHEL
+// density and CDF kernels, some of which do not return at all when it is
+// violated.
 
 #include <Rcpp.h>
 #include <cmath>

@@ -27,10 +27,95 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // directly from its own C++ (e.g. in a hot per-row loop) without linking
 // against CKutils.so. The vectorised, Rcpp-exported wrappers (declared at the
 // bottom) live in src/distr_ZABNB.cpp and call these same inline scalars.
+//
+// CALLER CONTRACT (unguarded on purpose -- see recycling_helpers.h for the full
+// statement). These kernels do no bounds checking, so the caller must ensure
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// before calling them; count_to_int() in recycling_helpers.h does that test.
+// The vectorised fdZABNB/fpZABNB wrappers below already apply it, but a package
+// using LinkingTo: CKutils to call the scalars directly does not get it. The
+// hazards are inherited from the BNB kernels these delegate to:
+// fpZABNB_scalar -> fpBNB_scalar NEVER RETURNS at q == INT_MAX, and
+// fdZABNB_scalar -> fdBNB_scalar is silently wrong at x == INT_MAX.
+//
+// Parameterisation follows gamlss.dist::dZABNB/pZABNB/qZABNB (Rigby et al.
+// 2019): tau is the hurdle probability, i.e. P(Y = 0) = tau exactly, and the
+// positive part is the BNB(mu, sigma, nu) mass renormalised by 1 - f_BNB(0).
+// This differs from ZIBNB, where the zero mass is tau + (1-tau) f_BNB(0).
 
 #include <Rcpp.h>
 #include <cmath>
 #include "distr_BNB.h"   // ZABNB scalars are defined in terms of the BNB scalars
+
+// dZABNB ----
+inline double fdZABNB_scalar(const int& x,
+                             const double& mu = 1.0,
+                             const double& sigma = 1.0,
+                             const double& nu = 1.0,
+                             const double& tau = 0.1,
+                             const bool& log_p = false)
+{
+    // Parameter validation (commented out for performance; the vectorised
+    // wrapper fdZABNB validates before entering the hot loop)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (nu    <= 0.0) stop("nu must be greater than 0");
+    // if (tau   <= 0.0 || tau >= 1.0) stop("tau must be >0 and <1");
+    // if (x      < 0) stop("x must be >=0");
+
+    // P(Y = 0) = tau exactly (hurdle), so return tau itself rather than
+    // round-tripping it through exp(log(tau)) as gamlss.dist does -- that
+    // round trip is off by up to 1 ulp for no benefit.
+    if (x == 0) return log_p ? std::log(tau) : tau;
+
+    // For x > 0: P(X = x) = (1-tau) * f_BNB(x) / (1 - f_BNB(0))
+    const double log_f0 = fdBNB_scalar(0, mu, sigma, nu, true);
+    const double log_fx = fdBNB_scalar(x, mu, sigma, nu, true);
+    // log1p(-tau) and log(-expm1(log_f0)) are the numerically stable forms of
+    // gamlss.dist's log(1 - tau) and log(1 - f_BNB(0)): the literal differences
+    // cancel catastrophically for a tiny tau, and for a small mu (where
+    // f_BNB(0) -> 1, so 1 - exp(log_f0) can round to exactly 0 and send the
+    // density to -Inf). Identical in exact arithmetic.
+    const double log_density =
+        std::log1p(-tau) + log_fx - std::log(-std::expm1(log_f0));
+
+    return log_p ? log_density : std::exp(log_density);
+}
+
+// pZABNB ----
+inline double fpZABNB_scalar(const int& q,
+                             const double& mu = 1.0,
+                             const double& sigma = 1.0,
+                             const double& nu = 1.0,
+                             const double& tau = 0.1,
+                             const bool& lower_tail = true,
+                             const bool& log_p = false)
+{
+    // Parameter validation (commented out for performance; the vectorised
+    // wrapper fpZABNB validates before entering the hot loop)
+    // if (mu    <= 0.0) stop("mu must be greater than 0");
+    // if (sigma <= 0.0) stop("sigma must be greater than 0");
+    // if (nu    <= 0.0) stop("nu must be greater than 0");
+    // if (tau   <= 0.0 || tau >= 1.0) stop("tau must be >0 and <1");
+    // if (q      < 0) stop("q must be >=0");
+
+    double cdf;
+    if (q < 0) {
+        cdf = 0.0;
+    } else if (q == 0) {
+        cdf = tau;
+    } else {
+        // F(q) = tau + (1-tau) * (F_BNB(q) - F_BNB(0)) / (1 - F_BNB(0))
+        const double cdf0 = fpBNB_scalar(0, mu, sigma, nu, true, false);
+        const double cdf1 = fpBNB_scalar(q, mu, sigma, nu, true, false);
+        cdf = tau + ((1.0 - tau) * (cdf1 - cdf0) / (1.0 - cdf0));
+    }
+
+    if (!lower_tail) cdf = 1.0 - cdf;
+    if (log_p) cdf = std::log(cdf);
+
+    return cdf;
+}
 
 // qZABNB ----
 inline double fqZABNB_scalar(const double& p,
@@ -68,6 +153,21 @@ inline double fqZABNB_scalar(const double& p,
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_ZABNB.cpp)
+Rcpp::NumericVector fdZABNB(const Rcpp::NumericVector& x,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const Rcpp::NumericVector& tau,
+                           const bool& log);
+
+Rcpp::NumericVector fpZABNB(const Rcpp::NumericVector& q,
+                           const Rcpp::NumericVector& mu,
+                           const Rcpp::NumericVector& sigma,
+                           const Rcpp::NumericVector& nu,
+                           const Rcpp::NumericVector& tau,
+                           const bool& lower_tail,
+                           const bool& log_p);
+
 Rcpp::NumericVector fqZABNB(const Rcpp::NumericVector& p,
                            const Rcpp::NumericVector& mu,
                            const Rcpp::NumericVector& sigma,

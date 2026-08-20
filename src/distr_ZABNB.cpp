@@ -33,9 +33,173 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 using namespace Rcpp;
 
-// qZABNB ----
+// Zero adjusted (hurdle) BNB functions
 // ZABNB *_scalar definitions now live (inline) in inst/include/distr_ZABNB.h so
 // that downstream LinkingTo: CKutils consumers can call them directly.
+
+
+//' Zero Adjusted Beta Negative Binomial Density
+//'
+//' Probability mass function for the Zero Adjusted (Hurdle) Beta Negative
+//' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
+//' nu (shape), and tau (hurdle probability).
+//'
+//' @param x vector of (non-negative integer) quantiles.
+//' @param mu vector of positive means.
+//' @param sigma vector of positive dispersion parameters.
+//' @param nu vector of positive shape parameters.
+//' @param tau vector of hurdle probabilities (0 < tau < 1).
+//' @param log logical; if TRUE, densities are returned as log(density).
+//'
+//' @details
+//' The zero adjusted (hurdle) beta negative binomial distribution has two parts:
+//' a point mass at zero and a zero-truncated BNB distribution for positive
+//' values. The probability mass function is:
+//' \deqn{P(Y = 0) = \tau}
+//' \deqn{P(Y = y) = (1-\tau) \frac{f_{BNB}(y|\mu,\sigma,\nu)}{1 - f_{BNB}(0|\mu,\sigma,\nu)} \quad \text{for } y > 0}
+//' where \eqn{f_{BNB}} is the BNB probability mass function. Note that the zero
+//' probability is exactly \eqn{\tau}, unlike the zero inflated (ZIBNB) case
+//' where it is \eqn{\tau + (1-\tau) f_{BNB}(0)}.
+//'
+//' @return A numeric vector of densities.
+//'
+//' @references
+//' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R,
+//' Chapman and Hall/CRC.
+//'
+//' @examples
+//' # Single values
+//' fdZABNB(c(0,1,2,3), mu=2, sigma=1, nu=1, tau=0.1)
+//'
+//' # Vector inputs with recycling
+//' fdZABNB(0:5, mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+//'
+//' @export
+// [[Rcpp::export]]
+NumericVector fdZABNB(const NumericVector& x,
+                      const NumericVector& mu,
+                      const NumericVector& sigma,
+                      const NumericVector& nu,
+                      const NumericVector& tau,
+                      const bool& log = false)
+{
+  // Recycle vectors to common length
+  auto recycled = recycle_vectors(x, mu, sigma, nu, tau);
+  const int n = recycled.n;
+
+  // Validate parameters after recycling
+  for (int i = 0; i < n; i++)
+  {
+    if (recycled.vec1[i] < 0) stop("x must be >=0");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
+    if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");
+    if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0) stop("tau must be >0 and <1");
+  }
+
+  NumericVector out(n);
+
+  SIMD_HINT
+  for (int i = 0; i < n; i++)
+  {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int x_i;
+    if (!count_to_int(recycled.vec1[i], x_i)) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fdZABNB_scalar(x_i, recycled.vec2[i],
+                            recycled.vec3[i], recycled.vec4[i], recycled.vec5[i],
+                            log);
+  }
+
+  return out;
+}
+
+
+//' Zero Adjusted Beta Negative Binomial Distribution Function
+//'
+//' Cumulative distribution function for the Zero Adjusted (Hurdle) Beta Negative
+//' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
+//' nu (shape), and tau (hurdle probability).
+//'
+//' @param q vector of quantiles.
+//' @param mu vector of positive means.
+//' @param sigma vector of positive dispersion parameters.
+//' @param nu vector of positive shape parameters.
+//' @param tau vector of hurdle probabilities (0 < tau < 1).
+//' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
+//'   otherwise, P[X > x].
+//' @param log_p logical; if TRUE, probabilities p are given as log(p).
+//'
+//' @details
+//' The cumulative distribution function for the zero adjusted (hurdle) beta
+//' negative binomial distribution is:
+//' \deqn{F(0) = \tau}
+//' \deqn{F(q) = \tau + (1-\tau) \frac{F_{BNB}(q|\mu,\sigma,\nu) - F_{BNB}(0|\mu,\sigma,\nu)}{1 - F_{BNB}(0|\mu,\sigma,\nu)} \quad \text{for } q > 0}
+//' where \eqn{F_{BNB}} is the BNB cumulative distribution function.
+//'
+//' @return A numeric vector of cumulative probabilities.
+//'
+//' @references
+//' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019)
+//' Distributions for modelling location, scale, and shape: Using GAMLSS in R,
+//' Chapman and Hall/CRC.
+//'
+//' @examples
+//' # Single values
+//' fpZABNB(c(0,1,2,3), mu=2, sigma=1, nu=1, tau=0.1)
+//'
+//' # Vector inputs with recycling
+//' fpZABNB(0:5, mu=c(1,2), sigma=0.5, nu=c(1,1.5), tau=0.1)
+//'
+//' @export
+// [[Rcpp::export]]
+NumericVector fpZABNB(const NumericVector& q,
+                      const NumericVector& mu,
+                      const NumericVector& sigma,
+                      const NumericVector& nu,
+                      const NumericVector& tau,
+                      const bool& lower_tail = true,
+                      const bool& log_p = false)
+{
+  // Recycle vectors to common length
+  auto recycled = recycle_vectors(q, mu, sigma, nu, tau);
+  const int n = recycled.n;
+
+  // Validate parameters after recycling
+  for (int i = 0; i < n; i++)
+  {
+    if (recycled.vec1[i] < 0) stop("q must be >=0");
+    if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
+    if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
+    if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");
+    if (recycled.vec5[i] <= 0.0 || recycled.vec5[i] >= 1.0) stop("tau must be >0 and <1");
+  }
+
+  NumericVector out(n);
+
+  SIMD_HINT
+  for (int i = 0; i < n; i++)
+  {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int q_i;
+    if (!count_to_int(recycled.vec1[i], q_i)) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    out[i] = fpZABNB_scalar(q_i, recycled.vec2[i],
+                            recycled.vec3[i], recycled.vec4[i], recycled.vec5[i],
+                            lower_tail, log_p);
+  }
+
+  return out;
+}
 
 
 //' Zero Adjusted Beta Negative Binomial Quantile Function
@@ -86,7 +250,7 @@ NumericVector fqZABNB(const NumericVector& p,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
-    if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0) stop("p must be >=0 and <=1");
+    check_prob(recycled.vec1[i], log_p, 1.0, "p must be >=0 and <=1");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
     if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");

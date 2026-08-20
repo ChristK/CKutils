@@ -92,13 +92,15 @@ NumericVector fdNBI(const NumericVector& x,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    // NaN/NA x -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
-    // UB, and a NaN x slips past the `< 0` check (NaN comparisons are false).
-    if (ISNAN(recycled.vec1[i])) {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int x_i;
+    if (!count_to_int(recycled.vec1[i], x_i)) {
       out[i] = NA_REAL;
       continue;
     }
-    out[i] = fdNBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
+    out[i] = fdNBI_scalar(x_i, recycled.vec2[i],
                           recycled.vec3[i], log_p);
   }
 
@@ -163,13 +165,15 @@ NumericVector fpNBI(const NumericVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
-    // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
-    // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
-    if (ISNAN(recycled.vec1[i])) {
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    int q_i;
+    if (!count_to_int(recycled.vec1[i], q_i)) {
       out[i] = NA_REAL;
       continue;
     }
-    out[i] = fpNBI_scalar(static_cast<int>(recycled.vec1[i]), recycled.vec2[i],
+    out[i] = fpNBI_scalar(q_i, recycled.vec2[i],
                           recycled.vec3[i], lower_tail, log_p);
   }
 
@@ -220,26 +224,18 @@ IntegerVector fqNBI(const NumericVector& p,
   auto recycled = recycle_vectors(p, mu, sigma);
   const int n = recycled.n;
   
-  // Validate parameters after recycling
-  if (log_p) {
-    for (int i = 0; i < n; i++)
-    {
-      if (recycled.vec2[i] <= 0.0)
-        stop("mu must be greater than 0");
-      if (recycled.vec3[i] <= 0.0)
-        stop("sigma must be greater than 0");
-    }
-  } else {
+  // Validate parameters after recycling. check_prob() ranges p on whichever
+  // scale the caller supplied it, so the log_p case is validated rather than
+  // skipped (it used to be exempt only because the natural-scale [0,1] test
+  // rejects every legitimate log(p) < 0).
   for (int i = 0; i < n; i++)
   {
-    if (recycled.vec1[i] < 0.0 || recycled.vec1[i] > 1.0)
-      stop("p must be >=0 and <=1");
+    check_prob(recycled.vec1[i], log_p, 1.0, "p must be >=0 and <=1");
     if (recycled.vec2[i] <= 0.0)
       stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0)
       stop("sigma must be greater than 0");
   }
-}
 
   IntegerVector out(n);
 
@@ -260,61 +256,11 @@ IntegerVector fqNBI(const NumericVector& p,
   return out;
 }
 
-//' Negative Binomial Type I Distribution Random Generation
-//'
-//' Random generation for the Negative Binomial type I (NBI) distribution
-//' with parameters mu (mean) and sigma (dispersion).
-//'
-//' @param n number of observations.
-//' @param mu vector of positive means.
-//' @param sigma vector of positive dispersion parameters.
-//'
-//' @details
-//' Random variates are generated using the negative binomial distribution
-//' with size parameter \eqn{1/\sigma} and mean parameter \eqn{\mu}.
-//'
-//' For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
-//'
-//' @return A numeric vector of random variates.
-//' 
-//' @references
-//' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
-//' Distributions for modelling location, scale, and shape: Using GAMLSS in R, 
-//' Chapman and Hall/CRC.
-//'
-//' @examples
-//' # Generate random variates
-//' frNBI(10, mu=2, sigma=1)
-//' 
-//' # Vector inputs with recycling
-//' frNBI(5, mu=c(1,2), sigma=0.5)
-//'
-//' @export
-// [[Rcpp::export]]
-IntegerVector frNBI(const int& n,
-                    const NumericVector& mu,
-                    const NumericVector& sigma)
-{
-  if (n <= 0) stop("n must be a positive integer");
-  
-  // Recycle mu and sigma to length n
-  NumericVector n_vec(n, 1.0);  // Create a vector of 1s for recycling
-  auto recycled = recycle_vectors(n_vec, mu, sigma);
-  
-  // Validate parameters after recycling
-  for (int i = 0; i < n; i++)
-  {
-    if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
-    if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
-  }
-
-  IntegerVector out(n);
-
-  SIMD_HINT
-  for (int i = 0; i < n; i++)
-  {
-    out[i] = frNBI_scalar(recycled.vec2[i], recycled.vec3[i]);
-  }
-
-  return out;
-}
+// NOTE: there is deliberately no vectorised, Rcpp-exported frNBI() here.
+// The exported frNBI() is the R implementation in R/rng_distr.R, which draws
+// from dqrng::dqrunif() and inverts fqNBI(). A C++ wrapper of the same name
+// used to be exported from this file as well; because R/ is collated
+// alphabetically, R/rng_distr.R was sourced after R/RcppExports.R and silently
+// overwrote it, leaving dead compiled code and a man page with two identical
+// \usage entries. The per-element frNBI_scalar() remains available (inline) in
+// inst/include/distr_NBI.h for a LinkingTo: CKutils consumer.

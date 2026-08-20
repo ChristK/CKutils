@@ -200,6 +200,19 @@ benchmark_distribution <- function(distribution,
     if ("sigma" %in% detected_params) {
       config$ranges[["sigma"]] <- c(0.1, 2)
     }
+  } else if (distribution %in% c("ZABNB", "ZIBNB")) {
+    # Zero Adjusted / Zero Inflated Beta Negative Binomial: mu, sigma, nu all
+    # > 0 and tau is a probability in (0, 1) -- the hurdle probability for
+    # ZABNB, the zero-inflation probability for ZIBNB.
+    if ("nu" %in% detected_params) {
+      config$ranges[["nu"]] <- c(0.1, 2)
+    }
+    if ("sigma" %in% detected_params) {
+      config$ranges[["sigma"]] <- c(0.1, 2)
+    }
+    if ("tau" %in% detected_params) {
+      config$ranges[["tau"]] <- c(0.05, 0.5)
+    }
   } else if (distribution == "MN4") {
     # Multinomial 4-parameter: nu must be > 0, sigma > 0
     if ("nu" %in% detected_params) {
@@ -212,7 +225,7 @@ benchmark_distribution <- function(distribution,
   
   # Try to determine if distribution is discrete or continuous
   # First check if it's a known discrete distribution
-  discrete_distributions <- c("DPO", "PO", "NBI", "NBII", "BNB", "DEL", "ZINB", "ZIP", "ZIB", "BB", "BI", "GEO", "YULE", "SICHEL", "LG", "ZANBI", "MN4")
+  discrete_distributions <- c("DPO", "PO", "NBI", "NBII", "BNB", "DEL", "ZINB", "ZIP", "ZIB", "BB", "BI", "GEO", "YULE", "SICHEL", "LG", "ZANBI", "ZINBI", "ZABNB", "ZIBNB", "ZISICHEL", "MN4")
   continuous_distributions <- c("BCT", "BCPE", "BCPEo", "BCTo", "GA", "GG", "IG", "LO", "NO", "WEI", "WEI2", "WEI3", "EXP", "LOGNO", "TF")
   
   if (distribution %in% discrete_distributions) {

@@ -287,7 +287,15 @@ NumericVector fdDPO(const IntegerVector &x,
       if (recycled.vec3[i] <= 0.0)
         stop("sigma must be greater than 0");
 
-      lh[i] = fdDPO_scalar(static_cast<int>(recycled.vec1[i]),
+      // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+      // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+      // undefined behaviour and it is not benign on either x86-64 or AArch64.
+      int x_i;
+      if (!count_to_int(recycled.vec1[i], x_i)) {
+        lh[i] = NA_REAL;
+        continue;
+      }
+      lh[i] = fdDPO_scalar(x_i,
                           recycled.vec2[i], recycled.vec3[i], log_);
     }
   }
@@ -312,9 +320,14 @@ int fqDPO_search(const double& p,
   if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma)) {
     return NA_INTEGER;
   }
-  // Fast path for near-Poisson case
+  // Fast path for near-Poisson case. R::qpois returns a double, and for a
+  // large mu that double exceeds INT_MAX, so cast it through the same guard as
+  // the count arguments: an unguarded cast is out-of-range UB and was returning
+  // INT_MIN, i.e. a negative quantile (fqDPO(0.999, 3e9, 1) gave -2147483648
+  // where the true quantile is 3000169260).
   if (std::abs(sigma - 1.0) < 1e-6) {
-    return static_cast<int>(R::qpois(p, mu, true, false));
+    int q_i;
+    return count_to_int(R::qpois(p, mu, true, false), q_i) ? q_i : NA_INTEGER;
   }
   
   // Incremental search: compute CDF incrementally by adding densities
@@ -429,7 +442,15 @@ NumericVector fpDPO(const IntegerVector &q,
       if (recycled.vec3[i] <= 0.0)
         stop("sigma must be greater than 0");
 
-      cdf[i] = fpDPO_scalar(static_cast<int>(recycled.vec1[i]),
+      // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+      // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+      // undefined behaviour and it is not benign on either x86-64 or AArch64.
+      int q_i;
+      if (!count_to_int(recycled.vec1[i], q_i)) {
+        cdf[i] = NA_REAL;
+        continue;
+      }
+      cdf[i] = fpDPO_scalar(q_i,
                            recycled.vec2[i], recycled.vec3[i], lower_tail, log_p);
     }
   }
@@ -559,7 +580,11 @@ NumericVector fqDPO(NumericVector p,
         const double mu_val = recycled.vec2[i];
         const double sigma_val = recycled.vec3[i];
         
-        QQQ[i] = fqDPO_search(p_i, mu_val, sigma_val);
+        // fqDPO_search reports "not representable" as NA_INTEGER; assigning
+        // that int straight into a NumericVector would store INT_MIN as a
+        // finite -2147483648 rather than NA.
+        const int q_i = fqDPO_search(p_i, mu_val, sigma_val);
+        QQQ[i] = (q_i == NA_INTEGER) ? NA_REAL : static_cast<double>(q_i);
       }
     }
   }

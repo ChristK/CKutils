@@ -26,6 +26,18 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // directly from its own C++ (e.g. in a hot per-row loop) without linking
 // against CKutils.so. The vectorised, Rcpp-exported wrappers (declared at the
 // bottom) live in src/distr_DPO.cpp and call these same inline scalars.
+//
+// CALLER CONTRACT (unguarded on purpose -- see recycling_helpers.h for the full
+// statement). These kernels do no bounds checking, so the caller must ensure
+//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+// before calling them; count_to_int() in recycling_helpers.h does that test.
+// The vectorised wrappers below already apply it, but a package using
+// LinkingTo: CKutils to call the scalars directly does not get it. Here:
+//   * fpDPO_scalar accumulates with `for (int i = 0; i <= q; i++)`, so
+//     q == INT_MAX overflows i and the call NEVER RETURNS. It is also O(q) in
+//     time, so a large-but-legal q is slow rather than wrong.
+//   * fdDPO_scalar evaluates lgammafn(x + 1), so x == INT_MAX wraps the
+//     argument to INT_MIN and returns a silently wrong density.
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (lgammafn, dpois, ppois, ...)
 #include <cmath>

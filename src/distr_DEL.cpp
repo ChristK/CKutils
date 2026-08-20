@@ -199,8 +199,17 @@ NumericVector fdDEL(const IntegerVector &x,
       if (recycled.vec4[i] <= 0.0 || recycled.vec4[i] >= 1.0)
         stop("nu must be between 0 and 1");
 
+      // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+      // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+      // undefined behaviour and it is not benign on either x86-64 or AArch64.
+      int x_i;
+      if (!count_to_int(recycled.vec1[i], x_i)) {
+        logfy[i] = NA_REAL;
+        continue;
+      }
+
       if (recycled.vec3[i] < 1e-04) {
-        logfy[i] = R::dpois(static_cast<int>(recycled.vec1[i]), recycled.vec2[i], (int)log_);
+        logfy[i] = R::dpois(x_i, recycled.vec2[i], (int)log_);
       } else {
         // Optimized computation with precomputed constants
         const double mu_val = recycled.vec2[i];
@@ -210,7 +219,7 @@ NumericVector fdDEL(const IntegerVector &x,
         
         double logpy0 = -mu_val * nu_val - (1.0 / sigma_val) * 
                        log(1.0 + mu_val * sigma_val * one_minus_nu);
-        double S = ftofydel2_scalar(static_cast<int>(recycled.vec1[i]), 
+        double S = ftofydel2_scalar(x_i,
                                    mu_val, sigma_val, nu_val);
         logfy[i] = logpy0 - lgamma(recycled.vec1[i] + 1) + S;
         if (!log_)
@@ -327,7 +336,15 @@ NumericVector fpDEL(const IntegerVector &q,
       if (recycled.vec4[i] <= 0.0 || recycled.vec4[i] >= 1)
         stop("nu must be between 0 and 1");
 
-      cdf[i] = fpDEL_hlp_fn(static_cast<int>(recycled.vec1[i]),
+      // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+      // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+      // undefined behaviour and it is not benign on either x86-64 or AArch64.
+      int q_i;
+      if (!count_to_int(recycled.vec1[i], q_i)) {
+        cdf[i] = NA_REAL;
+        continue;
+      }
+      cdf[i] = fpDEL_hlp_fn(q_i,
                            recycled.vec2[i], recycled.vec3[i], recycled.vec4[i]);
     }
   }
@@ -433,9 +450,13 @@ int fqDEL_search(const double &p,
   if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) {
     return NA_INTEGER;
   }
-  // For very small sigma, use Poisson distribution directly
+  // For very small sigma, use Poisson distribution directly. R::qpois returns
+  // a double that exceeds INT_MAX for a large mu, so route it through the same
+  // guard as the count arguments rather than casting blind (an unguarded cast
+  // is out-of-range UB and yields INT_MIN, i.e. a negative quantile).
   if (sigma < 1e-04) {
-    return static_cast<int>(R::qpois(p, mu, true, false));
+    int q_i;
+    return count_to_int(R::qpois(p, mu, true, false), q_i) ? q_i : NA_INTEGER;
   }
   
   // Incremental search: compute CDF incrementally by adding densities
@@ -593,7 +614,11 @@ NumericVector fqDEL(NumericVector p,
         const double sigma_val = recycled.vec3[i];
         const double nu_val = recycled.vec4[i];
         
-        QQQ[i] = fqDEL_search(p_i, mu_val, sigma_val, nu_val);
+        // fqDEL_search reports "not representable" as NA_INTEGER; assigning
+        // that int straight into a NumericVector would store INT_MIN as a
+        // finite -2147483648 rather than NA.
+        const int q_i = fqDEL_search(p_i, mu_val, sigma_val, nu_val);
+        QQQ[i] = (q_i == NA_INTEGER) ? NA_REAL : static_cast<double>(q_i);
       }
     }
   }
