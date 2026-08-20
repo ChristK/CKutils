@@ -1,4 +1,4 @@
-# CKutils 0.1.30
+# CKutils 0.1.31
 
 ## New features
 
@@ -25,13 +25,16 @@
     previously defined no scalars at all; `fpZISICHEL()` inlined the formula.
     Both wrappers now delegate to the scalars, as the rest of the family does.
 
-* **Documentation fix.** The caller contract added earlier in this release
+* **Documentation fix.** The caller contract added in 0.1.30
   named `fdSICHEL_scalar()` and `fpZISICHEL_scalar()` as O(y)-allocating
   kernels, but neither existed at the time. The contract now names the
   functions that actually allocate -- `ftofydel2_scalar()`,
   `ftofySICHEL2_scalar()` and `fcdfSICHEL_scalar()` -- and lists the density
   and CDF kernels that inherit the behaviour through them.
 
+# CKutils 0.1.30
+
+## New features
 
 * **`fdZABNB()`** and **`fpZABNB()`**: the Zero Adjusted (hurdle) Beta Negative
   Binomial distribution now has a density and a distribution function to go with
