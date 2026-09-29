@@ -40,7 +40,13 @@
   - No state, no cache, no new arguments or options: a dataset rewritten or
     re-laid-out on disk is read exactly as a first read would be.
   - The check costs a `normalizePath()`, one directory listing and, for a
-    directory with no `key=value` entry, one `stat` per entry.
+    directory with no `key=value` entry, one `stat` per entry: 10-160 us for
+    the layouts measured (3 ms for a 2,000-entry directory).
+  - Measured in IMPACTncd_Engl2026 (one windowed chunk, n = 10,000, run side
+    by side with 0.1.31): the baseline run 593 -> 516 s (-13%) and a scenario
+    arm 174 -> 143 s, with bit-identical output. Every one of the model's 3,938
+    directory reads skips the failing attempt; its 48 file reads are opened as
+    before.
   - New tests (`test-parquet_first_open.R`) pin which layouts skip, that every
     skipped attempt really fails under the installed arrow (a tripwire for a
     future arrow that decides differently), and that every read is identical
