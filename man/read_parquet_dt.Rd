@@ -23,7 +23,9 @@ Use `arrow::Expression$field_ref("colname")` to reference columns.
 Example: `arrow::Expression$field_ref("year") >= 2018`}
 
 \item{partitioning}{Partitioning spec for datasets. Default "hive" is typical for col=value/ layouts.
-If opening fails with this, the function automatically retries without partitioning.}
+If opening fails with this, the function automatically retries without partitioning.
+With the default `"hive"`, the open that is certain to fail is not attempted
+(see Details); the result is the same.}
 
 \item{as_data_table}{Logical; if TRUE returns data.table; if FALSE returns data.frame.}
 
@@ -50,6 +52,31 @@ The key restoration logic follows this priority:
   \item If no metadata keys found and `keys_fallback` is provided, use `keys_fallback`
   \item Keys are only applied if all key columns exist in the resulting data.table
 }
+
+The dataset is opened with
+`arrow::open_dataset(path, format = "parquet", partitioning = partitioning)`
+and, if that fails, with `arrow::open_dataset(path, format = "parquet")`,
+which discovers Hive-style (`key=value`) partitions itself. arrow takes the
+default `partitioning = "hive"` as the name of a partition field, so for a
+directory the first attempt fails whenever the directory is Hive-partitioned
+or flat, and its cost grows with the number of files (about 25 ms for a
+100-file dataset). When `partitioning` is `"hive"` and `path` is one local
+directory, `read_parquet_dt()` therefore checks first whether that attempt is
+certain to fail, from the directory's path and one non-recursive listing of
+it, and if so opens with the fallback straight away:
+\itemize{
+  \item a segment of the (normalised) path, or an entry directly under the
+    directory, is a `key=value` whose key is not `"hive"` and contains no
+    `\%` (arrow URI-unescapes keys); or
+  \item there is no `key=value` there at all, and no subdirectory or
+    symbolic link directly under the directory.
+}
+Otherwise both attempts are made as before. In particular a directory whose
+files sit in subdirectories that are not `key=value` still gets the extra
+`hive` column that the first attempt gives it, and a partition key literally
+named `hive`, or a directory below one named `hive=...`, is handled as
+before. The check needs no state, so a dataset rewritten or re-laid-out on
+disk is read exactly as a first read would be.
 }
 \examples{
 \dontrun{

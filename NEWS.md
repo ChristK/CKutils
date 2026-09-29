@@ -1,3 +1,51 @@
+# CKutils 0.1.32
+
+## Performance
+
+* **`read_parquet_dt()` no longer attempts an open that is certain to fail.**
+  It opens with `open_dataset(path, partitioning = partitioning)` and, on
+  error, with `open_dataset(path)`, which discovers Hive-style (`key=value`)
+  partitions itself. arrow takes the default `partitioning = "hive"` as the
+  *name* of a partition field, so on every Hive-partitioned and every flat
+  directory the first attempt failed -- after listing everything below the
+  directory, so it cost about 0.27 ms per file: ~26 ms for a 98-file table,
+  ~5.7 s for a 20,000-file tree.
+
+  With `partitioning = "hive"` and one local directory, `read_parquet_dt()`
+  now first checks whether that attempt is certain to fail under arrow's own
+  rules, from the normalised path and one non-recursive listing of the
+  directory, and if so opens with the fallback directly. It is certain to fail
+  when
+
+  - a segment of the path, or an entry directly under the directory, is a
+    `key=value` whose key is not `hive` (and contains no `%`, which arrow would
+    unescape) -- e.g. every Hive-partitioned dataset, and any directory below
+    a `key=value` directory; or
+  - there is no `key=value` there at all, and no subdirectory or symbolic
+    link directly under the directory (a flat or empty directory).
+
+  Everything else takes the two-step open exactly as before. So a directory
+  whose files sit in subdirectories that are not `key=value` still gets the
+  extra `hive` column the first attempt gives it, and a partition key
+  literally named `hive` -- or a directory below an ancestor named
+  `hive=...` -- is read as before. A file, a vector of paths, a URI and any
+  other `partitioning` value are opened as before.
+
+  - **Results are unchanged**: data, types, factor levels, column order, keys,
+    and errors (class, message and call). The one visible difference is in an
+    error's backtrace: when the fallback itself fails after a skipped attempt
+    (e.g. a directory of files that are not parquet), `rlang::last_trace()`
+    no longer shows the four frames of the failed first attempt's `tryCatch()`
+    handler.
+  - No state, no cache, no new arguments or options: a dataset rewritten or
+    re-laid-out on disk is read exactly as a first read would be.
+  - The check costs a `normalizePath()`, one directory listing and, for a
+    directory with no `key=value` entry, one `stat` per entry.
+  - New tests (`test-parquet_first_open.R`) pin which layouts skip, that every
+    skipped attempt really fails under the installed arrow (a tripwire for a
+    future arrow that decides differently), and that every read is identical
+    to the two-step open, errors included, on 53 layouts.
+
 # CKutils 0.1.31
 
 ## New features

@@ -284,9 +284,10 @@ expect_equal(data.table::key(samp_fb), c("id", "age"),
 
 # Pre-built partitioned dataset (partitioned by sex=F/M).
 # NOTE: open_dataset() with explicit partitioning="hive" errors in this arrow
-# version when partitions are auto-detected; read_parquet_dt's internal
-# tryCatch falls back to open_dataset() without partitioning, exercising that
-# recovery branch.
+# version when partitions are auto-detected, so read_parquet_dt() opens it
+# without partitioning: since 0.1.32 directly (the failing attempt is skipped),
+# before through its tryCatch fallback. test-parquet_first_open.R covers both
+# the skip and the two-step open, fallback included.
 sample_part <- system.file("testdata", "partitioned_test",
                            package = "CKutils")
 expect_true(nzchar(sample_part) && dir.exists(sample_part),

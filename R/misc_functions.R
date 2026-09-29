@@ -668,6 +668,8 @@ write_parquet_dt <- function(
 #'   Example: `arrow::Expression$field_ref("year") >= 2018`
 #' @param partitioning Partitioning spec for datasets. Default "hive" is typical for col=value/ layouts.
 #'   If opening fails with this, the function automatically retries without partitioning.
+#'   With the default `"hive"`, the open that is certain to fail is not attempted
+#'   (see Details); the result is the same.
 #' @param as_data_table Logical; if TRUE returns data.table; if FALSE returns data.frame.
 #' @param keys_fallback Optional character vector of column names to use as data.table keys
 #'   if no key metadata is found in the parquet file. This allows specifying default keys
@@ -686,6 +688,31 @@ write_parquet_dt <- function(
 #'   \item If no metadata keys found and `keys_fallback` is provided, use `keys_fallback`
 #'   \item Keys are only applied if all key columns exist in the resulting data.table
 #' }
+#'
+#' The dataset is opened with
+#' `arrow::open_dataset(path, format = "parquet", partitioning = partitioning)`
+#' and, if that fails, with `arrow::open_dataset(path, format = "parquet")`,
+#' which discovers Hive-style (`key=value`) partitions itself. arrow takes the
+#' default `partitioning = "hive"` as the name of a partition field, so for a
+#' directory the first attempt fails whenever the directory is Hive-partitioned
+#' or flat, and its cost grows with the number of files (about 25 ms for a
+#' 100-file dataset). When `partitioning` is `"hive"` and `path` is one local
+#' directory, `read_parquet_dt()` therefore checks first whether that attempt is
+#' certain to fail, from the directory's path and one non-recursive listing of
+#' it, and if so opens with the fallback straight away:
+#' \itemize{
+#'   \item a segment of the (normalised) path, or an entry directly under the
+#'     directory, is a `key=value` whose key is not `"hive"` and contains no
+#'     `\%` (arrow URI-unescapes keys); or
+#'   \item there is no `key=value` there at all, and no subdirectory or
+#'     symbolic link directly under the directory.
+#' }
+#' Otherwise both attempts are made as before. In particular a directory whose
+#' files sit in subdirectories that are not `key=value` still gets the extra
+#' `hive` column that the first attempt gives it, and a partition key literally
+#' named `hive`, or a directory below one named `hive=...`, is handled as
+#' before. The check needs no state, so a dataset rewritten or re-laid-out on
+#' disk is read exactly as a first read would be.
 #'
 #' @return data.table (default) or data.frame
 #' @examples
@@ -733,13 +760,19 @@ read_parquet_dt <- function(
     stop("Package 'data.table' is required but not installed.")
   }
 
-  # Open dataset (directory, file, or vector of files)
-  ds <- tryCatch(
-    open_dataset(path, format = "parquet", partitioning = partitioning),
-    error = function(e) {
-      open_dataset(path, format = "parquet")
-    }
-  )
+  # Open dataset (directory, file, or vector of files). Skip the first attempt
+  # only when it is certain to fail (.pq_first_open_fails()): the fallback is
+  # then what the two-step open would have returned.
+  ds <- if (.pq_first_open_fails(path, partitioning)) {
+    open_dataset(path, format = "parquet")
+  } else {
+    tryCatch(
+      open_dataset(path, format = "parquet", partitioning = partitioning),
+      error = function(e) {
+        open_dataset(path, format = "parquet")
+      }
+    )
+  }
 
   # Use ScannerBuilder for projection and filtering
 
@@ -794,6 +827,69 @@ read_parquet_dt <- function(
   }
 
   df
+}
+
+# Is open_dataset(path, format = "parquet", partitioning = partitioning) CERTAIN
+# to fail? TRUE lets read_parquet_dt() skip that attempt and go straight to its
+# fallback, open_dataset(path, format = "parquet") -- which is exactly what the
+# two-step open returns whenever the first attempt fails. FALSE (the answer for
+# anything uncertain) keeps the two-step open, so a wrong FALSE costs time only
+# and only a wrong TRUE could change a result.
+#
+# What arrow (>= 22; handle_partitioning()) does for ONE local directory and a
+# character `partitioning` -- verified against arrow 25.0.1 on 60 layouts:
+#  1. it lists every entry below normalizePath(path), recursively and with
+#     directories, as FULL paths, and parses every segment of every one of them
+#     -- the directory's ancestors, the directory itself, each subdirectory and
+#     file name -- as a Hive `key=value`: key = the text before the first "=",
+#     URI-unescaped;
+#  2. if any key was found, the open aborts unless the set of key names is
+#     exactly `partitioning`;
+#  3. if none was found, it builds a directory partitioning with the one field
+#     `partitioning`, which fails ("No non-null segments ...") unless some
+#     discovered file lies below a subdirectory.
+# From the ancestors and ONE non-recursive listing, with partitioning = "hive":
+#  (a) a key name that is certainly not "hive" -- no "%", so unescaping cannot
+#      change it -- among the path's own segments or the directory's entries
+#      => step 2 aborts;
+#  (b) no key there at all, and no entry that is or may be a directory (a
+#      symlink, or a listing error, counts as "may be") => there is no key
+#      anywhere and no file below a subdirectory => step 3 fails.
+# Everything else stays with the two-step open: a key that is, or may unescape
+# to, "hive" (the first attempt can then succeed, e.g. under an ancestor
+# directory named "hive=1" it adds a `hive` column), and a subdirectory that is
+# not `key=value` (the nested non-Hive layout, which the first attempt returns
+# with a spurious `hive` column).
+# Any error or warning in the check itself answers FALSE.
+.pq_first_open_fails <- function(path, partitioning) {
+  if (!identical(partitioning, "hive") || length(path) != 1L) return(FALSE)
+  tryCatch({
+    # a URI is arrow's business; a file (or nothing) is opened without partitioning
+    if (is.na(path) || grepl("://", path, fixed = TRUE, useBytes = TRUE) ||
+        !dir.exists(path)) {
+      return(FALSE)
+    }
+    # arrow's own normalisation (arrow:::clean_path_abs)
+    np <- enc2utf8(normalizePath(path, winslash = "/", mustWork = FALSE))
+    if (!dir.exists(np)) return(FALSE)
+    key_names <- function(s) {
+      s <- s[grepl("=", s, fixed = TRUE, useBytes = TRUE)]
+      vapply(strsplit(s, "=", fixed = TRUE, useBytes = TRUE),
+             function(x) if (length(x)) x[1L] else "", "")
+    }
+    surely_not_hive <- function(k) {
+      any(k != "hive" & !grepl("%", k, fixed = TRUE, useBytes = TRUE))
+    }
+    k <- key_names(strsplit(np, "/", fixed = TRUE, useBytes = TRUE)[[1L]])
+    if (surely_not_hive(k)) return(TRUE)
+    ent <- list.files(np, all.files = TRUE, no.. = TRUE)
+    k <- c(k, key_names(ent))
+    if (surely_not_hive(k)) return(TRUE)
+    if (length(k)) return(FALSE)
+    e <- file.path(np, ent)
+    rl <- Sys.readlink(e)                # "" = not a symlink, NA = error
+    !any(dir.exists(e) | is.na(rl) | nzchar(rl))
+  }, error = function(e) FALSE, warning = function(w) FALSE)
 }
 
 
