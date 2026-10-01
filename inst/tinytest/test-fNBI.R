@@ -115,7 +115,10 @@ expect_equal(cdf_ck_upper, cdf_gamlss_upper, tolerance = tolerance,
 
 # Test 9: CDF edge cases - very small sigma
 cdf_ck_small <- fpNBI(data$q[1:50], data$mu[1:50], small_sigma)
-cdf_gamlss_small <- pNBI(data$q[1:50], data$mu[1:50], small_sigma)
+# Below sigma = 1e-4 the NBI is evaluated as its Poisson limit, by design in
+# both packages; gamlss.dist 6.1-11 gets that branch wrong (off by up to 1,
+# vectorised and scalar alike), so the reference is the limit itself.
+cdf_gamlss_small <- ppois(data$q[1:50], data$mu[1:50])
 expect_equal(cdf_ck_small, cdf_gamlss_small, tolerance = tolerance,
              info = "NBI CDF with small sigma should match gamlss.dist pNBI")
 

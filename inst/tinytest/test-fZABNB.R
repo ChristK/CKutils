@@ -16,6 +16,13 @@ tolerance <- sqrt(.Machine$double.eps)
 # parameter vectors are supplied together (the same class of bug documented in
 # test-fZANBI.R). Every reference value below is therefore computed one element
 # at a time and compared against our vectorised call.
+# gamlss.dist 6.1-11's pZABNB is not the cumulative sum of its own dZABNB
+# (off by up to 0.99); dZABNB is right (it matches fdZABNB to 1e-15). The CDF
+# reference is therefore the cumulative sum of gamlss.dist's PMF, scalar calls.
+ref_cdf_zabnb <- function(q, mu, sigma, nu, tau) {
+  vapply(seq_along(q), function(i) sum(vapply(0:q[i], function(y)
+    gamlss.dist::dZABNB(y, mu[i], sigma[i], nu[i], tau[i]), 0)), 0)
+}
 ref_scalar <- function(FUN, first, ...) {
   args <- list(...)
   vapply(seq_along(first), function(i) {
@@ -98,7 +105,7 @@ expect_equal(
 # Test 5: ZABNB CDF basic correctness
 expect_equal(
   fpZABNB(data$q, data$mu, data$sigma, data$nu, data$tau),
-  ref_scalar(gamlss.dist::pZABNB, data$q, data$mu, data$sigma, data$nu, data$tau),
+  ref_cdf_zabnb(data$q, data$mu, data$sigma, data$nu, data$tau),
   tolerance = tolerance,
   info = "ZABNB CDF should match gamlss.dist pZABNB (vectorised vs elementwise)"
 )
@@ -106,7 +113,7 @@ expect_equal(
 # Test 6: upper tail
 expect_equal(
   fpZABNB(data$q, data$mu, data$sigma, data$nu, data$tau, lower_tail = FALSE),
-  1 - ref_scalar(gamlss.dist::pZABNB, data$q, data$mu, data$sigma, data$nu, data$tau),
+  1 - ref_cdf_zabnb(data$q, data$mu, data$sigma, data$nu, data$tau),
   tolerance = tolerance,
   info = "ZABNB CDF with lower_tail = FALSE should be the survival function"
 )
@@ -114,7 +121,7 @@ expect_equal(
 # Test 7: log scale
 expect_equal(
   fpZABNB(data$q, data$mu, data$sigma, data$nu, data$tau, log_p = TRUE),
-  log(ref_scalar(gamlss.dist::pZABNB, data$q, data$mu, data$sigma, data$nu, data$tau)),
+  log(ref_cdf_zabnb(data$q, data$mu, data$sigma, data$nu, data$tau)),
   tolerance = tolerance,
   info = "ZABNB log-CDF should match log(pZABNB)"
 )

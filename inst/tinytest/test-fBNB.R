@@ -155,7 +155,14 @@ tau_test <- runif(20, 0.01, 0.3)
 
 # Test 9: ZIBNB quantile
 qtl_zi_ck <- fqZIBNB(p_test, mu_test, sigma_test, nu_test, tau_test)
-qtl_zi_ref <- gamlss.dist::qZIBNB(p_test, mu_test, sigma_test, nu_test, tau_test)
+# gamlss.dist 6.1-11's qZIBNB is not the inverse of its own pZIBNB (wrong
+# on ~40% of draws); pZIBNB is right. The quantile reference is the definition,
+# min{y : F(y) >= p}, on gamlss.dist's CDF.
+qtl_zi_ref <- vapply(seq_along(p_test), function(i) {
+  y <- 0
+  while (gamlss.dist::pZIBNB(y, mu_test[i], sigma_test[i], nu_test[i], tau_test[i]) < p_test[i] - 1e-12 && y < 1e6) y <- y + 1
+  y
+}, 0)
 
 expect_equal(
   qtl_zi_ck,

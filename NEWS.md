@@ -1,5 +1,15 @@
 # CKutils 0.1.32
 
+## Tests
+
+* The distribution tests no longer take as reference the gamlss.dist 6.1-11
+  (CRAN 2026-09-10) functions that are wrong there: its d{DPO,DEL,ZINBI}() when
+  the parameters vary along the vectors, pNBI() below sigma = 1e-4, pZABNB(),
+  qZIBNB() and dZISICHEL(). The references are now implementation-independent
+  (base R's dnbinom()/ppois(), the zero-inflation identity, CDF = cumsum(PMF),
+  quantile = min{y : F(y) >= p}) or gamlss.dist's constant-parameter calls.
+  CKutils' own results are unchanged: they meet every one of these to <= 1e-15.
+
 ## Performance
 
 * **`read_parquet_dt()` no longer attempts an open that is certain to fail.**

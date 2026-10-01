@@ -10,6 +10,22 @@ suppressMessages(library(gamlss.dist))
 
 # Set tolerance for floating point comparisons
 tolerance <- sqrt(.Machine$double.eps)
+
+# gamlss.dist 6.1-11 (CRAN 2026-09-10) evaluates d{FAM}() WRONGLY when the
+# parameters vary along the vectors (NAs or wrong values -- warnings such as
+# "number of items to replace is not a multiple of replacement length" from its
+# own code). Its constant-parameter path is right (checked against the
+# normalisation and element-by-element calls), so where a test grid mixes
+# parameter sets the reference is evaluated one parameter set at a time.
+ref_per_set <- function(fun, x, set, ..., extra = list()) {
+  pars <- list(...)
+  out <- numeric(length(x))
+  for (s in unique(set)) {
+    i <- which(set == s)
+    out[i] <- do.call(fun, c(list(x[i]), lapply(pars, function(p) p[i][1L]), extra))
+  }
+  out
+}
 # Use more relaxed tolerance for extreme tail log probabilities
 log_tail_tolerance <- 1e-2  # Allow larger differences in extreme log tail regions where numerical precision matters
 
@@ -39,14 +55,15 @@ test_grid$mu <- basic_params$mu[test_grid$param_idx]
 test_grid$sigma <- basic_params$sigma[test_grid$param_idx]
 
 ck_dens_all <- fdDPO(test_grid$x, mu = test_grid$mu, sigma = test_grid$sigma)
-gamlss_dens_all <- dDPO(test_grid$x, mu = test_grid$mu, sigma = test_grid$sigma)
+gamlss_dens_all <- ref_per_set(dDPO, test_grid$x, test_grid$param_idx, mu = test_grid$mu, sigma = test_grid$sigma)
 
 expect_equal(ck_dens_all, gamlss_dens_all, tolerance = tolerance, 
             info = "Vectorized density comparison - all parameter sets")
 
 # Test 2: Log density comparison - vectorized
 ck_log_dens_all <- fdDPO(test_grid$x, mu = test_grid$mu, sigma = test_grid$sigma, log_ = TRUE)
-gamlss_log_dens_all <- dDPO(test_grid$x, mu = test_grid$mu, sigma = test_grid$sigma, log = TRUE)
+gamlss_log_dens_all <- ref_per_set(dDPO, test_grid$x, test_grid$param_idx, mu = test_grid$mu, sigma = test_grid$sigma,
+                                   extra = list(log = TRUE))
 
 expect_equal(ck_log_dens_all, gamlss_log_dens_all, tolerance = tolerance, 
             info = "Vectorized log density comparison - all parameter sets")
@@ -335,7 +352,8 @@ boundary_test_grid <- expand.grid(x = 0:5, sigma = sigma_boundary)
 boundary_test_grid$mu <- 2  # Fixed mu value
 
 ck_dens_boundary_all <- fdDPO(boundary_test_grid$x, mu = boundary_test_grid$mu, sigma = boundary_test_grid$sigma)
-gamlss_dens_boundary_all <- dDPO(boundary_test_grid$x, mu = boundary_test_grid$mu, sigma = boundary_test_grid$sigma)
+gamlss_dens_boundary_all <- ref_per_set(dDPO, boundary_test_grid$x, boundary_test_grid$sigma,
+                                        mu = boundary_test_grid$mu, sigma = boundary_test_grid$sigma)
 
 expect_equal(ck_dens_boundary_all, gamlss_dens_boundary_all, tolerance = tolerance, 
             info = "Vectorized boundary sigma values - all sigma values")
@@ -351,7 +369,8 @@ small_test_grid$mu <- small_params$mu[small_test_grid$param_idx]
 small_test_grid$sigma <- small_params$sigma[small_test_grid$param_idx]
 
 ck_dens_small_all <- fdDPO(small_test_grid$x, mu = small_test_grid$mu, sigma = small_test_grid$sigma)
-gamlss_dens_small_all <- dDPO(small_test_grid$x, mu = small_test_grid$mu, sigma = small_test_grid$sigma)
+gamlss_dens_small_all <- ref_per_set(dDPO, small_test_grid$x, small_test_grid$param_idx,
+                                     mu = small_test_grid$mu, sigma = small_test_grid$sigma)
 
 expect_equal(ck_dens_small_all, gamlss_dens_small_all, tolerance = tolerance, 
             info = "Vectorized small parameter values - all parameter sets")
@@ -368,7 +387,8 @@ large_test_grid$mu <- large_params$mu[large_test_grid$param_idx]
 large_test_grid$sigma <- large_params$sigma[large_test_grid$param_idx]
 
 ck_dens_large_all <- fdDPO(large_test_grid$x, mu = large_test_grid$mu, sigma = large_test_grid$sigma)
-gamlss_dens_large_all <- dDPO(large_test_grid$x, mu = large_test_grid$mu, sigma = large_test_grid$sigma)
+gamlss_dens_large_all <- ref_per_set(dDPO, large_test_grid$x, large_test_grid$param_idx,
+                                     mu = large_test_grid$mu, sigma = large_test_grid$sigma)
 
 expect_equal(ck_dens_large_all, gamlss_dens_large_all, tolerance = tolerance, 
             info = "Vectorized large parameter values - all parameter sets")

@@ -47,7 +47,12 @@ edge_data <- generate_edge_case_data()
 
 # Test 19: ZINBI PDF basic correctness
 pdf_zinbi_ck <- fdZINBI(data$x, data$mu, data$sigma, data$nu)
-pdf_zinbi_gamlss <- dZINBI(data$x, data$mu, data$sigma, data$nu)
+# gamlss.dist 6.1-11's dZINBI is wrong when the parameters vary along the
+# vectors (rel. diff 1.86 on this data); its scalar calls are right. The
+# reference is the zero-inflation identity on base R's negative binomial
+# (NBI(mu, sigma) = NB(size = 1/sigma, mu)), which fdZINBI meets to 1e-16.
+pdf_zinbi_gamlss <- ifelse(data$x == 0, data$nu, 0) +
+  (1 - data$nu) * dnbinom(data$x, size = 1 / data$sigma, mu = data$mu)
 expect_equal(
     pdf_zinbi_ck,
     pdf_zinbi_gamlss,

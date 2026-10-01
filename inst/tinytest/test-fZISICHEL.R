@@ -120,12 +120,17 @@ if (requireNamespace("gamlss.dist", quietly = TRUE)) {
   mu_zs  <- runif(n_zs, 0.5, 5);  sg_zs  <- runif(n_zs, 0.1, 2)
   nu_zs  <- runif(n_zs, -1.5, 1.5); tau_zs <- runif(n_zs, 0.01, 0.8)
   tol_zs <- sqrt(.Machine$double.eps)
+  # gamlss.dist 6.1-11's dZISICHEL is wrong (off by up to 1; its pZISICHEL and
+  # dSICHEL are right). The density reference is the zero-inflation identity
+  # on gamlss.dist's dSICHEL: P(0) = tau + (1 - tau) f(0), P(y) = (1 - tau) f(y).
+  zis_ref <- ifelse(x_zs == 0, tau_zs, 0) +
+    (1 - tau_zs) * elt_zs(gamlss.dist::dSICHEL, x_zs, mu_zs, sg_zs, nu_zs)
 
   expect_equal(fdZISICHEL(x_zs, mu_zs, sg_zs, nu_zs, tau_zs),
-               elt_zs(gamlss.dist::dZISICHEL, x_zs, mu_zs, sg_zs, nu_zs, tau_zs),
+               zis_ref,
                tolerance = tol_zs, info = "fdZISICHEL matches gamlss.dist dZISICHEL")
   expect_equal(fdZISICHEL(x_zs, mu_zs, sg_zs, nu_zs, tau_zs, log = TRUE),
-               log(elt_zs(gamlss.dist::dZISICHEL, x_zs, mu_zs, sg_zs, nu_zs, tau_zs)),
+               log(zis_ref),
                tolerance = tol_zs, info = "fdZISICHEL log scale matches")
 
   # fdSICHEL now delegates to the extracted fdSICHEL_scalar; it must be unchanged

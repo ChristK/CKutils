@@ -10,6 +10,22 @@ suppressMessages(library(gamlss.dist))
 
 # Set tolerance for floating point comparisons
 tolerance <- sqrt(.Machine$double.eps)
+
+# gamlss.dist 6.1-11 (CRAN 2026-09-10) evaluates d{FAM}() WRONGLY when the
+# parameters vary along the vectors (NAs or wrong values -- warnings such as
+# "number of items to replace is not a multiple of replacement length" from its
+# own code). Its constant-parameter path is right (checked against the
+# normalisation and element-by-element calls), so where a test grid mixes
+# parameter sets the reference is evaluated one parameter set at a time.
+ref_per_set <- function(fun, x, set, ..., extra = list()) {
+  pars <- list(...)
+  out <- numeric(length(x))
+  for (s in unique(set)) {
+    i <- which(set == s)
+    out[i] <- do.call(fun, c(list(x[i]), lapply(pars, function(p) p[i][1L]), extra))
+  }
+  out
+}
 # Use more relaxed tolerance for extreme tail log probabilities
 log_tail_tolerance <- 1e-2  # Allow larger differences in extreme log tail regions where numerical precision matters
 
@@ -351,8 +367,9 @@ small_test_grid$nu <- small_params$nu[small_test_grid$param_idx]
 
 ck_dens_small_all <- fdDEL(small_test_grid$x, mu = small_test_grid$mu, 
                           sigma = small_test_grid$sigma, nu = small_test_grid$nu)
-gamlss_dens_small_all <- dDEL(small_test_grid$x, mu = small_test_grid$mu, 
-                             sigma = small_test_grid$sigma, nu = small_test_grid$nu)
+gamlss_dens_small_all <- ref_per_set(dDEL, small_test_grid$x, small_test_grid$param_idx,
+                                     mu = small_test_grid$mu, sigma = small_test_grid$sigma,
+                                     nu = small_test_grid$nu)
 
 expect_equal(ck_dens_small_all, gamlss_dens_small_all, tolerance = tolerance, 
             info = "Vectorized small parameter values - all parameter sets")
