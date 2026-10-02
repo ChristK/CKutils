@@ -1,3 +1,34 @@
+# CKutils 0.1.33
+
+## Performance
+
+* **`read_parquet_dt()` no longer deep-copies every table it reads.** arrow's
+  `as.data.frame()` is `to_data_frame()` + its R-metadata step +
+  `as.data.frame()`, and `write_parquet_dt()` stores class `data.table`, so the
+  last step dispatched to `as.data.frame.data.table()`: a full copy, made only
+  to be turned back into a data.table by `setDT()`. The data.table path now
+  takes arrow's conversion without that last step (`.pq_arrow_to_df()`).
+  Measured over 642 reads of 191 parquet datasets (IMPACTncd_Engl2026's inputs
+  and model outputs): **-20% read time**, results `identical()`. If arrow ever
+  drops its (unexported) metadata step, the old conversion is used.
+  `as_data_table = FALSE` is unchanged.
+* The copy had a second job, kept: it removed the write-time key (`sorted`) and
+  `index` that arrow restores from the stored metadata. They are now removed by
+  reference with `setattr()`. They must go: `setDT(key = )` trusts a `sorted`
+  attribute that is already present and does not sort, while a multi-partition
+  read returns rows in PATH order (`year=10` before `year=3`) -- keeping them
+  gave a false key on 238 of those 642 reads.
+
+## Tests
+
+* `test-parquet_read_conversion.R`: the false-key variant (the metadata step
+  without the removal) claims the key on an out-of-order multi-partition
+  fixture; `read_parquet_dt()` on it is truly in key order by base `order()`
+  (`forderv()` reuses a stored key, so it cannot check this), also across the
+  `year=9` / `year=10` boundary; no stale index; a custom attribute restored;
+  no deep copy; `as_data_table = FALSE` still a plain data.frame. The existing
+  parquet tests did not catch a false key (737 passed on that variant but one).
+
 # CKutils 0.1.32
 
 ## Tests
