@@ -791,7 +791,10 @@ read_parquet_dt <- function(
 
   scanner <- scan_builder$Finish()
   tab <- scanner$ToTable()
-  df <- as.data.frame(tab)
+  # setDT() refuses an Arrow Table, so it is converted first -- without a copy
+  # for the data.table result (.pq_arrow_to_df()); as_data_table = FALSE keeps
+  # arrow's own as.data.frame().
+  df <- if (as_data_table) .pq_arrow_to_df(tab) else as.data.frame(tab)
 
   if (as_data_table) {
     # Attempt to restore data.table keys from parquet metadata
@@ -826,6 +829,30 @@ read_parquet_dt <- function(
     setDT(df, key = keys)
   }
 
+  df
+}
+
+# An Arrow Table as a data.frame, with NO deep copy and NO stale key.
+#
+# arrow's as.data.frame() is to_data_frame() + its R-metadata step +
+# as.data.frame(). write_parquet_dt() stores the table's R attributes -- class
+# data.table, the key (`sorted`), any `index`, custom ones such as `source` --
+# so the metadata step returns a data.table and the final as.data.frame()
+# dispatched to as.data.frame.data.table(): a deep copy of every table read,
+# whose other job was to strip that key and index. They MUST go:
+# setDT(key = ) trusts a `sorted` attribute already present and does not sort,
+# while a multi-partition read comes back in PATH order (year=10 before
+# year=3), so a kept key is a false one. Here they are removed by reference
+# with setattr(), as as.data.frame.data.table() removed them, and the copy is
+# skipped; every other attribute is restored exactly as before.
+# The metadata step is not exported by arrow: if it is ever gone this returns
+# what read_parquet_dt() always returned (as.data.frame(), with its copy).
+.pq_arrow_to_df <- function(tab) {
+  apply_md <- get0("apply_arrow_r_metadata", envir = asNamespace("arrow"), inherits = FALSE)
+  if (!is.function(apply_md)) return(as.data.frame(tab))
+  df <- apply_md(tab$to_data_frame(), tab$metadata[["r"]])
+  for (a in c("sorted", "index", ".internal.selfref")) data.table::setattr(df, a, NULL)
+  data.table::setattr(df, "class", "data.frame")
   df
 }
 
