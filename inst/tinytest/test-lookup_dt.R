@@ -89,6 +89,76 @@ expect_message(is_valid_lookup_tbl(fixkey_dt, c("id", "cat"), fixkey = TRUE),
 expect_identical(key(fixkey_dt), c("cat", "id"),
                  info = "is_valid_lookup_tbl (fixkey): Key is set by fixkey=TRUE")
 
+# --- is_valid_lookup_tbl checks EVERY key column ---
+# Up to 0.1.33 it returned inside its per-key loop, so the type and
+# consecutive-integer checks ran on the first key only (after sort() and
+# 'year'-first). The row-count check cannot catch a gap: it counts the
+# distinct values present.
+
+# Test 12a: Gap in the second key
+gap2_lt <- CJ(a = 1:2, b = c(1L, 3L))[, val := 1:4]
+expect_error(is_valid_lookup_tbl(gap2_lt, c("a", "b")),
+             pattern = "'b' does not contain consecutive integer values",
+             info = "is_valid_lookup_tbl: Gap in the second key")
+
+# Test 12b: Gap in a key after 'year' (which always goes first)
+gap_age_lt <- CJ(year = 2020:2021, age = c(30L, 35L))[, val := 1:4]
+expect_error(is_valid_lookup_tbl(gap_age_lt, c("year", "age")),
+             pattern = "'age' does not contain consecutive integer values",
+             info = "is_valid_lookup_tbl: Gap in a key after 'year'")
+
+# Test 12c: Gap in the last of three keys
+gap3_lt <- CJ(a = 1:2, b = factor(c("x", "y")), c = c(1L, 2L, 4L))[, val := .I]
+expect_error(is_valid_lookup_tbl(gap3_lt, c("a", "b", "c")),
+             pattern = "'c' does not contain consecutive integer values",
+             info = "is_valid_lookup_tbl: Gap in the last of three keys")
+
+# Test 12d: A double second key gets the type error, not 'should have 0 rows'
+dbl2_lt <- CJ(a = 1:2, b = c(1, 2))[, val := 1:4]
+expect_error(is_valid_lookup_tbl(dbl2_lt, c("a", "b")),
+             pattern = "Column 'b' is not integer",
+             info = "is_valid_lookup_tbl: Double second key gets the type error")
+
+# Test 12e: Consecutive integer keys after 'year' still pass
+ok_lt <- CJ(year = 2020:2021, age = 30:35, sex = factor(c("men", "women")))
+ok_lt[, val := .I]
+expect_true(is_valid_lookup_tbl(ok_lt, c("sex", "age", "year")),
+            info = "is_valid_lookup_tbl: Consecutive integer keys after 'year' pass")
+
+# Test 12f: The key advice is given once per call, not once per key
+n_msg <- 0L
+withCallingHandlers(
+  is_valid_lookup_tbl(CJ(a = 1:2, b = 1:2, c = 1:2, sorted = FALSE)[, val := .I],
+                      c("a", "b", "c")),
+  message = function(m) {
+    n_msg <<- n_msg + 1L
+    invokeRestart("muffleMessage")
+  }
+)
+expect_identical(n_msg, 1L,
+                 info = "is_valid_lookup_tbl: One key message per call")
+
+# Test 12g: fixkey = TRUE leaves a table that fails a check unkeyed
+fixkey_gap <- CJ(a = 1:2, b = c(1L, 3L), sorted = FALSE)[, val := 1:4]
+expect_error(suppressMessages(is_valid_lookup_tbl(fixkey_gap, c("a", "b"), fixkey = TRUE)),
+             pattern = "'b' does not contain consecutive integer values",
+             info = "is_valid_lookup_tbl (fixkey): Gap in the second key is caught")
+expect_null(key(fixkey_gap),
+            info = "is_valid_lookup_tbl (fixkey): Table with a gap left unkeyed")
+fixkey_short <- CJ(id = 1L:2L, cat = factor(letters[1:2]), sorted = FALSE)[-1L]
+expect_error(suppressMessages(is_valid_lookup_tbl(fixkey_short, c("id", "cat"), fixkey = TRUE)),
+             pattern = "should have 4 rows",
+             info = "is_valid_lookup_tbl (fixkey): Missing row is caught")
+expect_null(key(fixkey_short),
+            info = "is_valid_lookup_tbl (fixkey): Table with a missing row left unkeyed")
+
+# Test 12h: lookup_dt() refuses a table with a gap in a key after 'year'
+# (0.1.33 accepted it, then returned the age-35 row for age 31 and failed with
+# 'out of bounds' for age 35)
+expect_error(lookup_dt(data.table(year = 2020L, age = 31L), copy(gap_age_lt)),
+             pattern = "'age' does not contain consecutive integer values",
+             info = "lookup_dt (check_valid=T): Gap in a key after 'year'")
+
 
 # --- Tests for lookup_dt ---
 
@@ -167,6 +237,7 @@ invalid_lt_noncons[, lookup_val := paste0(id_key, factor_key)]
 setkeyv(invalid_lt_noncons, c("factor_key", "id_key"))
 tbl_copy17 <- copy(tbl_to_lookup)
 expect_error(lookup_dt(tbl_copy17, invalid_lt_noncons, merge = TRUE, check_lookup_tbl_validity = TRUE),
+             pattern = "'id_key' does not contain consecutive integer values",
              info = "lookup_dt (check_valid=T, invalid_lt): Error with invalid lookup table (non-consecutive int)")
 
 # Test 18: Error on tbl not a data.table

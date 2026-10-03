@@ -1,3 +1,42 @@
+# CKutils 0.1.34
+
+## Bug fixes
+
+* **`is_valid_lookup_tbl()` now checks every key column, not just the first.**
+  Its `return(TRUE)` sat inside the loop over the key columns, so the two
+  per-column checks -- integer (or factor) storage and consecutive integer
+  values -- ran only on the first key in its sorted order, in which `year`
+  always comes first. The row-count check after them cannot catch a gap: it
+  counts the distinct values present, so a full grid over `age = c(30L, 35L)`
+  has exactly the expected number of rows. Such a table, keyed on `year` and
+  `age`, was accepted, and `lookup_dt()` -- which finds rows by arithmetic on
+  `max - min + 1` values per integer key -- then returned the age-35 row for
+  age 31, a value not in the table, and failed with "Calculated row indices
+  are out of bounds" for age 35 itself. Whether a gap was caught depended on
+  the column names: the same gap in a key that sorts first was. A non-integer
+  key after the first was rejected, but by the row-count check, with the
+  misleading "should have 0 rows". Each now gets its own check, in any
+  position. This is the validation `lookup_dt()` runs when
+  `check_lookup_tbl_validity = TRUE`, its default.
+
+  Tables that 0.1.33 accepted can now be rejected: those with a gap in an
+  integer key other than the first. `lookup_dt()` could not look such a table
+  up correctly.
+* The advice to key the table, and the keying under `fixkey = TRUE`, now come
+  once per call and only after every check has passed, so `fixkey = TRUE` no
+  longer keys a table it then rejects.
+
+## Tests
+
+* `test-lookup_dt.R`: a gap in the second key, in a key after `year` and in the
+  last of three keys; a double second key; consecutive integer keys after
+  `year` still pass; one key message per call; `fixkey = TRUE` leaves a
+  rejected table unkeyed; `lookup_dt()` refuses the `year`/`age` table above.
+  Test 17, labelled "non-consecutive int key", had passed for the wrong reason
+  -- its gapped key sorts second, so the row count rejected the table -- and
+  now pins the message. These tests fail with 0.1.33's validator and pass with
+  this one.
+
 # CKutils 0.1.33
 
 ## Performance

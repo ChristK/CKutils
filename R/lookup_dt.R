@@ -287,7 +287,7 @@ lookup_dt <- function(
 #'
 #' @param lookup_tbl The data.table representing the lookup table.
 #' @param keycols A character vector specifying the key columns in the lookup table.
-#' @param fixkey Logical. If TRUE, the function will automatically set the key of the lookup table to the provided key columns for best performance; default is FALSE.
+#' @param fixkey Logical. If TRUE, the function will automatically set the key of the lookup table to the provided key columns for best performance, once the table has passed every check; default is FALSE.
 #'
 #' @return TRUE if the lookup table is valid; otherwise, an error is raised.
 #'
@@ -342,15 +342,6 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
     stop("Lookup table must have a unique combination of key columns.")
   }
 
-  # Compute the expected number of rows based on unique key combinations
-  expected_rows <- prod(sapply(keycols, function(j) {
-    if (is.integer(lookup_tbl[[j]])) {
-      uniqueN(lookup_tbl[[j]])
-    } else {
-      length(levels(lookup_tbl[[j]]))
-    }
-  }))
-
   # Validate each key column
   for (j in keycols) {
     # Check that the column is of type integer (factors are stored as integers)
@@ -373,32 +364,41 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
         ))
       }
     }
-
-    # Recommend setting the key for best performance if not already set
-    if (!identical(key(lookup_tbl), keycols)) {
-      message(
-        "For best performance, consider setting the key of lookup_tbl to: ",
-        paste(keycols, collapse = ", ")
-      )
-      if (fixkey) {
-        setkeyv(lookup_tbl, keycols)
-        message("Key has been set to: ", paste(keycols, collapse = ", "))
-      }
-    }
-
-    # Verify the lookup table has the expected number of rows
-    if (nrow(lookup_tbl) != expected_rows) {
-      stop(paste0(
-        "Lookup table should have ",
-        expected_rows,
-        " rows based on key combinations, but has ",
-        nrow(lookup_tbl),
-        " rows."
-      ))
-    }
-
-    return(TRUE)
   }
+
+  # Compute the expected number of rows based on unique key combinations
+  expected_rows <- prod(sapply(keycols, function(j) {
+    if (is.integer(lookup_tbl[[j]])) {
+      uniqueN(lookup_tbl[[j]])
+    } else {
+      length(levels(lookup_tbl[[j]]))
+    }
+  }))
+
+  # Verify the lookup table has the expected number of rows
+  if (nrow(lookup_tbl) != expected_rows) {
+    stop(paste0(
+      "Lookup table should have ",
+      expected_rows,
+      " rows based on key combinations, but has ",
+      nrow(lookup_tbl),
+      " rows."
+    ))
+  }
+
+  # Recommend setting the key for best performance if not already set
+  if (!identical(key(lookup_tbl), keycols)) {
+    message(
+      "For best performance, consider setting the key of lookup_tbl to: ",
+      paste(keycols, collapse = ", ")
+    )
+    if (fixkey) {
+      setkeyv(lookup_tbl, keycols)
+      message("Key has been set to: ", paste(keycols, collapse = ", "))
+    }
+  }
+
+  return(TRUE)
 }
 
 
