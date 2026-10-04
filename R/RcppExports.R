@@ -2032,6 +2032,10 @@ starts_from_1_cpp <- function(tbl, on, i, min_lookup, cardinality) {
     .Call(`_CKutils_starts_from_1_cpp`, tbl, on, i, min_lookup, cardinality)
 }
 
+key_order_cpp <- function(x, cols) {
+    .Call(`_CKutils_key_order_cpp`, x, cols)
+}
+
 dtsubset <- function(x, rows, cols) {
     .Call(`_CKutils_dtsubset`, x, rows, cols)
 }

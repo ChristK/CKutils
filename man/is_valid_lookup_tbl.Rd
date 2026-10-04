@@ -9,9 +9,9 @@ is_valid_lookup_tbl(lookup_tbl, keycols, fixkey = FALSE)
 \arguments{
 \item{lookup_tbl}{The data.table representing the lookup table.}
 
-\item{keycols}{A character vector specifying the key columns in the lookup table.}
+\item{keycols}{A character vector of distinct column names: the key columns in the lookup table.}
 
-\item{fixkey}{Logical. If TRUE, the function will automatically set the key of the lookup table to the provided key columns for best performance; default is FALSE.}
+\item{fixkey}{Logical. If TRUE, the function will automatically set the key of the lookup table to \code{keycols} for best performance, in the order \code{lookup_dt} uses (sorted, with "year" first), once the table has passed every check; default is FALSE.}
 }
 \value{
 TRUE if the lookup table is valid; otherwise, an error is raised.
@@ -29,29 +29,28 @@ are appropriately defined and that the table contains all necessary combinations
 values without gaps or duplicates.
 
 Key checks include:
-- Presence of duplicate rows based on key columns.
-- Non-consecutive integer values in key columns (where applicable).
-- Correct number of rows based on the Cartesian product of key levels/values.
+- keycols names distinct columns of lookup_tbl, and the table has rows.
+- Every key column is integer or factor, without NA; an integer key column
+  takes consecutive values, and a factor uses all its levels (the errors name
+  the missing ones).
+- No two rows share a combination of key values.
+- The number of rows is the product of the key columns' numbers of values
+  (of levels, for a factor), so that every combination is present.
 }
 \examples{
 library(data.table)
-# Example 1: Valid lookup table
-valid_lt <- data.table(id = 1:3, category = factor(letters[1:2]), value = runif(6))
-setkeyv(valid_lt, c("id", "category")) # Set keys
-# Manually ensure it meets criteria for a real use case, e.g., all combinations present
-# For this example, let's assume it's structured correctly for its intended keys.
-# is_valid_lookup_tbl(valid_lt, keycols = c("id", "category"))
-# This would typically run if valid_lt had unique combinations of id & category
-# and id was consecutive, category levels were fully represented.
+# Example 1: Valid lookup table (every id x category combination, once)
+valid_lt <- CJ(id = 1:3, category = factor(c("a", "b")))
+valid_lt[, value := runif(.N)]
+is_valid_lookup_tbl(valid_lt, keycols = c("id", "category"))
 
 # Example 2: Invalid lookup table (duplicate keys)
-invalid_lt_dup <- data.table(id = c(1, 1, 2), value = c(10, 20, 30))
+invalid_lt_dup <- data.table(id = c(1L, 1L, 2L), value = c(10, 20, 30))
 try(is_valid_lookup_tbl(invalid_lt_dup, keycols = "id"))
 
-# Example 3: Invalid lookup table (non-consecutive integer key)
-invalid_lt_gap <- data.table(id = c(1, 3, 4), value = c(10, 20, 30))
-setkey(invalid_lt_gap, id)
-# try(is_valid_lookup_tbl(invalid_lt_gap, keycols = "id")) # Will error due to gap
+# Example 3: Invalid lookup table (non-consecutive integer key: no id 2)
+invalid_lt_gap <- data.table(id = c(1L, 3L, 4L), value = c(10, 20, 30))
+try(is_valid_lookup_tbl(invalid_lt_gap, keycols = "id"))
 
 }
 \keyword{internal}

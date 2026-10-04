@@ -57,6 +57,9 @@ the intended join key.
 The \code{check_lookup_tbl_validity} parameter, when \code{TRUE}, invokes
 \code{is_valid_lookup_tbl} to ensure that \code{lookup_tbl} is structured correctly
 for the lookup (e.g., unique keys, consecutive integer values for non-factor keys).
+It also makes \code{lookup_dt} check that the rows of \code{lookup_tbl} follow
+its key columns, rather than trust a key or index it already carries, which
+tools outside data.table (base \code{[[<-}, dplyr verbs) can leave stale.
 
 This function is particularly useful when dealing with large datasets where
 standard merge operations might be less performant or when a more controlled

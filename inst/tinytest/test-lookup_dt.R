@@ -159,6 +159,166 @@ expect_error(lookup_dt(data.table(year = 2020L, age = 31L), copy(gap_age_lt)),
              pattern = "'age' does not contain consecutive integer values",
              info = "lookup_dt (check_valid=T): Gap in a key after 'year'")
 
+# --- is_valid_lookup_tbl: the gap message names the missing values ---
+
+# Test 12i: All of them, when few
+expect_error(is_valid_lookup_tbl(gap_age_lt, c("year", "age")),
+             pattern = "(missing: 31, 32, 33, 34).", fixed = TRUE,
+             info = "is_valid_lookup_tbl: Gap message names the missing values")
+
+# Test 12j: The first ten and the count, when many
+expect_error(is_valid_lookup_tbl(data.table(k = c(1L, 100L), v = 1:2), "k"),
+             pattern = "(missing: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, ... 98 in all).",
+             fixed = TRUE,
+             info = "is_valid_lookup_tbl: Gap message truncates a long list")
+
+# Test 12k: In the key's own class (IDate: dates)
+gap_date_lt <- CJ(a = 1:2, d = as.IDate("2020-01-01") + c(0L, 2L))[, v := 1:4]
+expect_error(is_valid_lookup_tbl(gap_date_lt, c("a", "d")),
+             pattern = "'d' does not contain consecutive integer values (missing: 2020-01-02).",
+             fixed = TRUE,
+             info = "is_valid_lookup_tbl: Gap message shows dates for an IDate key")
+
+# Test 12l: A range wider than an integer neither overflows nor is materialised
+# (0.1.33 failed here with 'missing value where TRUE/FALSE needed')
+expect_error(is_valid_lookup_tbl(data.table(k = c(-.Machine$integer.max, .Machine$integer.max),
+                                            v = 1:2), "k"),
+             pattern = "... 4,294,967,293 in all).", fixed = TRUE,
+             info = "is_valid_lookup_tbl: Gap across the whole integer range")
+
+# --- is_valid_lookup_tbl: NA in a key column ---
+
+# Test 12m: A factor label that is not one of the levels becomes NA. With one
+# per block the row count still matched, and 0.1.33 accepted the table; lookup_dt()
+# then returned the 2021 values swapped, silently.
+typo_lt <- data.table(year = c(2020L, 2020L, 2021L, 2021L),
+                      sex = factor(c("men", "women", "men", "Women"),
+                                   levels = c("men", "women")),
+                      prvl = c(0.10, 0.20, 0.11, 0.21))
+expect_error(is_valid_lookup_tbl(typo_lt, c("year", "sex")),
+             pattern = "'sex' contains NA values (in a factor, often a label that is not one of its levels).",
+             fixed = TRUE,
+             info = "is_valid_lookup_tbl: NA in a factor key")
+typo_pop <- CJ(year = 2020:2021, sex = factor(c("men", "women")))
+expect_error(lookup_dt(typo_pop, copy(typo_lt)),
+             pattern = "'sex' contains NA values",
+             info = "lookup_dt (check_valid=T): NA in a factor key")
+
+# Test 12m2: A factor level that never occurs is named (it used to surface only
+# as a wrong row count)
+unused_lt <- CJ(year = 2020:2021, sex = factor(c("men", "women")))[sex == "men"][, v := 1:2]
+expect_error(is_valid_lookup_tbl(unused_lt, c("year", "sex")),
+             pattern = "'sex' does not contain every level of the factor (missing: women).",
+             fixed = TRUE,
+             info = "is_valid_lookup_tbl: Unused factor level named")
+
+# Test 12n: NA in an integer key
+expect_error(is_valid_lookup_tbl(data.table(k = c(1L, 2L, NA), v = 1:3), "k"),
+             pattern = "'k' contains NA values.", fixed = TRUE,
+             info = "is_valid_lookup_tbl: NA in an integer key")
+
+# Test 12o: NA is reported as NA, not as the duplicates it creates
+na2_lt <- data.table(year = c(2020L, 2020L, 2020L),
+                     sex = factor(c("men", NA, NA), levels = c("men", "women")),
+                     v = 1:3)
+expect_error(is_valid_lookup_tbl(na2_lt, c("year", "sex")),
+             pattern = "'sex' contains NA values",
+             info = "is_valid_lookup_tbl: NA reported before duplicates")
+
+# --- is_valid_lookup_tbl: empty table and malformed keycols ---
+
+# Test 12p: Empty table
+expect_error(is_valid_lookup_tbl(data.table(k = integer(0), v = numeric(0)), "k"),
+             pattern = "Lookup table has no rows.", fixed = TRUE,
+             info = "is_valid_lookup_tbl: Empty table")
+
+# Test 12q: Duplicated, NA and absent key column names
+expect_error(is_valid_lookup_tbl(data.table(k = 1:3, v = 1:3), c("k", "k")),
+             pattern = "keycols must be distinct column names, without NA.", fixed = TRUE,
+             info = "is_valid_lookup_tbl: Duplicated keycols")
+expect_error(is_valid_lookup_tbl(data.table(k = 1:3, v = 1:3), c("k", NA)),
+             pattern = "keycols must be distinct column names, without NA.", fixed = TRUE,
+             info = "is_valid_lookup_tbl: NA in keycols")
+expect_error(is_valid_lookup_tbl(data.table(k = 1:3, v = 1:3), c("k", "nope")),
+             pattern = "keycols not found in lookup_tbl: nope.", fixed = TRUE,
+             info = "is_valid_lookup_tbl: Absent key column")
+
+# --- lookup_dt: stale sort metadata (check_lookup_tbl_validity = TRUE) ---
+
+# Test 12r: A key the rows do not follow (what base [[<- or a dplyr verb can
+# leave behind). setkeyv() trusts a matching key, so 0.1.33 read the wrong rows,
+# silently: here sex is reversed within each year.
+stale_key_lt <- CJ(year = 2020:2021, sex = factor(c("men", "women")))
+stale_key_lt[, v := c("2020m", "2020w", "2021m", "2021w")]
+stale_key_lt <- stale_key_lt[c(2L, 1L, 4L, 3L)]
+setattr(stale_key_lt, "sorted", c("year", "sex"))
+q_stale <- data.table(year = c(2020L, 2021L), sex = factor(c("men", "women")))
+expect_identical(lookup_dt(copy(q_stale), stale_key_lt)$v, c("2020m", "2021w"),
+                 info = "lookup_dt (check_valid=T): Stale key")
+
+# Test 12s: A stale secondary index: setkeyv() reuses it the same way
+stale_idx_lt <- CJ(year = 2020:2021, sex = factor(c("men", "women")))
+stale_idx_lt[, v := c("2020m", "2020w", "2021m", "2021w")]
+setkey(stale_idx_lt, NULL)
+setindexv(stale_idx_lt, c("year", "sex"))
+# base [[<- recodes the factor but keeps the index (data.table cannot see it)
+stale_idx_lt[["sex"]] <- factor(stale_idx_lt[["sex"]], levels = c("women", "men"))
+q_stale_idx <- data.table(year = c(2020L, 2021L),
+                          sex = factor(c("men", "women"), levels = c("women", "men")))
+expect_identical(suppressMessages(lookup_dt(copy(q_stale_idx), stale_idx_lt))$v,
+                 c("2020m", "2021w"),
+                 info = "lookup_dt (check_valid=T): Stale index")
+
+# Test 12s2: Rows already in key order, carrying a stale index whose order
+# would swap them (an index made on another row order, carried over as base R
+# and dplyr carry attributes). Trusting it, setkeyv() swapped the sorted rows.
+sorted_lt <- CJ(year = 2020:2021, sex = factor(c("men", "women")))
+sorted_lt[, v := c("2020m", "2020w", "2021m", "2021w")]
+setkey(sorted_lt, NULL)
+swapped_lt <- sorted_lt[c(2L, 1L, 4L, 3L)]
+setindexv(swapped_lt, c("year", "sex"))
+setattr(sorted_lt, "index", attr(swapped_lt, "index"))
+expect_identical(suppressMessages(lookup_dt(copy(q_stale), sorted_lt))$v,
+                 c("2020m", "2021w"),
+                 info = "lookup_dt (check_valid=T): Stale index on rows in key order")
+
+# Test 12t: A stale key hiding a duplicate. duplicated(by = keys) trusts a key
+# that the keys prefix and compares adjacent rows only, so it missed the second
+# (2021, women): one row too many there, one missing for (2020, women), and the
+# row count still right. 0.1.33 accepted the table and read the wrong rows.
+dupkey_lt <- data.table(year = c(2020L, 2021L, 2021L, 2021L),
+                        sex = factor(c("men", "women", "men", "women")),
+                        v = 1:4)
+setattr(dupkey_lt, "sorted", c("year", "sex"))
+expect_error(is_valid_lookup_tbl(copy(dupkey_lt), c("year", "sex")),
+             pattern = "unique combination of key columns",
+             info = "is_valid_lookup_tbl: Duplicate hidden by a stale key")
+expect_error(lookup_dt(copy(q_stale), copy(dupkey_lt)),
+             pattern = "unique combination of key columns",
+             info = "lookup_dt (check_valid=T): Duplicate hidden by a stale key")
+
+# Test 12u: fixkey = TRUE sorts by the rows, not by a stale index (setkeyv()
+# reused it, and keyed rows that do not follow the key)
+fk_idx <- CJ(year = 2020:2021, sex = factor(c("men", "women")))
+fk_idx[, v := c("2020m", "2020w", "2021m", "2021w")]
+setkey(fk_idx, NULL)
+setindexv(fk_idx, c("year", "sex"))
+fk_idx[["sex"]] <- factor(fk_idx[["sex"]], levels = c("women", "men"))
+suppressMessages(is_valid_lookup_tbl(fk_idx, c("year", "sex"), fixkey = TRUE))
+expect_identical(fk_idx$v, c("2020w", "2020m", "2021w", "2021m"),
+                 info = "is_valid_lookup_tbl (fixkey): Sorts past a stale index")
+
+# Test 12v: ... and repairs a stale key that already names the key columns
+fk_key <- CJ(year = 2020:2021, sex = factor(c("men", "women")))
+fk_key[, v := c("2020m", "2020w", "2021m", "2021w")]
+fk_key <- fk_key[c(2L, 1L, 4L, 3L)]
+setattr(fk_key, "sorted", c("year", "sex"))
+expect_message(is_valid_lookup_tbl(fk_key, c("year", "sex"), fixkey = TRUE),
+               pattern = "its key is stale",
+               info = "is_valid_lookup_tbl: Stale key reported")
+expect_identical(fk_key$v, c("2020m", "2020w", "2021m", "2021w"),
+                 info = "is_valid_lookup_tbl (fixkey): Stale key repaired")
+
 
 # --- Tests for lookup_dt ---
 

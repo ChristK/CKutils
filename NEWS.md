@@ -23,8 +23,61 @@
   integer key other than the first. `lookup_dt()` could not look such a table
   up correctly.
 * The advice to key the table, and the keying under `fixkey = TRUE`, now come
-  once per call and only after every check has passed, so `fixkey = TRUE` no
-  longer keys a table it then rejects.
+  only after every check has passed, so `fixkey = TRUE` no longer keys a table
+  it then rejects.
+* **`is_valid_lookup_tbl()` rejects NA in a key column.** A factor label that
+  is not one of the levels becomes NA. With one such row in each block the row
+  count still matched, the table was accepted, and `lookup_dt()` -- which
+  reads factor codes by position -- returned shifted values without a
+  warning, often for the cells the table held as well: in a year x age x sex
+  x qimd table in which the last qimd level, "5 least deprived", was written
+  "5", all 60 lookups were wrong. The message names the column and, for a factor, the likely cause. NA
+  in an integer key, which `lookup_dt()` already refused, is now reported by
+  the validator too.
+* It also rejects `keycols` that are duplicated, NA or not columns of the
+  table, which gave a wrong row count, were silently dropped, or failed inside
+  data.table; and an empty table, which it accepted when the keys were integer
+  (`lookup_dt()` refused it itself).
+* The gap error names the missing values, e.g. `(missing: 31, 32, 33, 34)`: the
+  first ten, and how many in all, in the key's own class, so that an `IDate`
+  key shows dates. A key whose values span more than the integer range no
+  longer fails with "missing value where TRUE/FALSE needed". Likewise, a factor
+  key in which a level never occurs is reported by name, rather than as a
+  wrong row count.
+* **Key order and duplicates are read from the rows, not from a key or index
+  that `lookup_tbl` already carries.** Base `[[<-` and dplyr verbs keep
+  data.table's `sorted` and `index` attributes after changing values or the
+  row order. `setkeyv()` trusts them and skips the sort, and `duplicated()`
+  trusts a key that the key columns prefix, comparing adjacent rows only. So a
+  stale key or index made `lookup_dt()` read the wrong rows -- silently, or
+  failing with "Cardinality must be positive" -- and a stale key could hide a
+  duplicate from `is_valid_lookup_tbl()`. Now one pass over the rows, in C++
+  (`key_order_cpp()`), tells whether they are in key order and whether two
+  neighbours are equal; rows out of key order are checked for duplicates on a
+  new table of the key columns, without key or index. Under validation,
+  `lookup_dt()` then marks the key if the rows follow it, or else drops key and
+  indices, so that `setkeyv()` really sorts. `fixkey = TRUE` likewise sorts by
+  the rows, and repairs a stale key that already names the key columns; the
+  key advice says when the key is stale.
+
+## Performance
+
+* Validation now takes less time than in 0.1.33, while checking every key.
+  With `sort()` and `diff()` on every integer key, as first fixed,
+  `is_valid_lookup_tbl()` took 1.58 times as long as 0.1.33. Now it tests a key
+  for gaps without sorting -- an integer key is consecutive when its number of
+  distinct values, which the row-count check needs anyway, equals
+  `max - min + 1` -- and counts a factor's codes with `tabulate()`, as `anyNA()`
+  on a factor allocates a logical vector as long as the column; and the one
+  C++ pass over the rows (`key_order_cpp()`) replaces `duplicated()` for the
+  duplicate check whenever the rows are in key order, as they are once
+  `lookup_dt()` has keyed the table. On a 3.9M-row table (chd_incd, years
+  13-43, ages 30-99) the validator takes 0.063 s (0.1.33: 0.092 s; first fix:
+  0.145 s), on a 12.3M-row one (the bmi exposure table) 0.203 s (0.285 s;
+  0.450 s); a validated lookup of 1e6 rows takes 0.122 s (0.153 s; 0.200 s)
+  and 0.293 s (0.385 s; 0.546 s). The C++ pass itself takes 0.013 s and
+  0.043 s. All figures single-threaded, the median of 3 fresh R processes, on
+  the key columns of IMPACTncd_Engl's tables, already keyed.
 
 ## Tests
 
@@ -35,6 +88,16 @@
   Test 17, labelled "non-consecutive int key", had passed for the wrong reason
   -- its gapped key sorts second, so the row count rejected the table -- and
   now pins the message. These tests fail with 0.1.33's validator and pass with
+  this one, apart from two that 0.1.33 passes too: consecutive integer keys
+  after `year`, and one key message per call.
+* `test-lookup_dt.R`, Tests 12i-12v: the missing values in the gap message
+  (few, many, an `IDate` key, a range wider than an integer); NA in a factor
+  key, in `is_valid_lookup_tbl()` and through `lookup_dt()`; an unused factor
+  level, by name; NA in an integer key; NA reported as NA rather than as the
+  duplicates it creates; an empty table; duplicated, NA and absent `keycols`; a
+  stale key, a stale index, and a stale index on rows in key order; a
+  duplicate hidden by a stale key; `fixkey = TRUE` past a stale index and with
+  a stale key. All 21 fail with the loop fix as first committed, and pass with
   this one.
 
 # CKutils 0.1.33

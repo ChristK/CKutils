@@ -194,6 +194,47 @@ IntegerVector starts_from_1_cpp(DataFrame tbl, CharacterVector on, int i, List m
     }
 }
 
+// How are the rows of x ordered by the integer (or factor) columns cols,
+// compared column by column? 0: not in ascending order; 1: in ascending order,
+// with two equal neighbours (a duplicate); 2: strictly ascending. One pass over
+// the rows, no allocation. NA_INTEGER is INT_MIN, so NA sorts first, as in
+// data.table. is_valid_lookup_tbl() and lookup_dt() use it instead of trusting
+// a key or index, which tools outside data.table (base [[<-, dplyr verbs) can
+// leave stale.
+// [[Rcpp::export]]
+int key_order_cpp(DataFrame x, CharacterVector cols)
+{
+    const R_xlen_t k = cols.size();
+    std::vector<const int*> col(k);
+    R_xlen_t n = 0;
+    for (R_xlen_t c = 0; c < k; c++)
+    {
+        const std::string name = as<std::string>(cols[c]);
+        SEXP v = x[name];
+        if (TYPEOF(v) != INTSXP)
+        {
+            stop("Column '" + name + "' must be integer or factor");
+        }
+        col[c] = INTEGER(v);
+        n = XLENGTH(v);
+    }
+
+    int state = 2;
+    for (R_xlen_t i = 1; i < n; i++)
+    {
+        R_xlen_t c = 0;
+        for (; c < k; c++)
+        {
+            const int prev = col[c][i - 1];
+            const int cur = col[c][i];
+            if (prev < cur) break;    // in order from this column on
+            if (prev > cur) return 0; // out of order
+        }
+        if (c == k) state = 1;        // equal in every column
+    }
+    return state;
+}
+
 // from https://github.com/Rdatatable/data.table/issues/4643
 
 // [[Rcpp::export]]

@@ -60,6 +60,9 @@
 #' The \code{check_lookup_tbl_validity} parameter, when \code{TRUE}, invokes
 #' \code{is_valid_lookup_tbl} to ensure that \code{lookup_tbl} is structured correctly
 #' for the lookup (e.g., unique keys, consecutive integer values for non-factor keys).
+#' It also makes \code{lookup_dt} check that the rows of \code{lookup_tbl} follow
+#' its key columns, rather than trust a key or index it already carries, which
+#' tools outside data.table (base \code{[[<-}, dplyr verbs) can leave stale.
 #'
 #' This function is particularly useful when dealing with large datasets where
 #' standard merge operations might be less performant or when a more controlled
@@ -166,7 +169,18 @@ lookup_dt <- function(
 
   # Optionally validate lookup_tbl structure
   if (check_lookup_tbl_validity) {
-    is_valid_lookup_tbl(lookup_tbl, on)
+    key_order <- .validate_lookup_tbl(lookup_tbl, on)
+    # Tools outside data.table (base [[<-, dplyr verbs) can leave a key or an
+    # index that the rows no longer follow. setkeyv() would trust it, and the
+    # row arithmetic below would read the wrong rows. The validation has read
+    # the rows (one pass): if they are in key order, mark the key, so that
+    # setkeyv() has nothing to do; if not, drop key and indices, so that it
+    # really sorts.
+    if (key_order == 2L) {
+      setattr(lookup_tbl, "sorted", on)
+    } else {
+      setkeyv(lookup_tbl, NULL)
+    }
   }
 
   # Prepare lookup_tbl by setting its key to the common columns
@@ -286,8 +300,8 @@ lookup_dt <- function(
 #' number of rows based on all possible combinations of key values.
 #'
 #' @param lookup_tbl The data.table representing the lookup table.
-#' @param keycols A character vector specifying the key columns in the lookup table.
-#' @param fixkey Logical. If TRUE, the function will automatically set the key of the lookup table to the provided key columns for best performance, once the table has passed every check; default is FALSE.
+#' @param keycols A character vector of distinct column names: the key columns in the lookup table.
+#' @param fixkey Logical. If TRUE, the function will automatically set the key of the lookup table to \code{keycols} for best performance, in the order \code{lookup_dt} uses (sorted, with "year" first), once the table has passed every check; default is FALSE.
 #'
 #' @return TRUE if the lookup table is valid; otherwise, an error is raised.
 #'
@@ -298,33 +312,40 @@ lookup_dt <- function(
 #' values without gaps or duplicates.
 #'
 #' Key checks include:
-#' - Presence of duplicate rows based on key columns.
-#' - Non-consecutive integer values in key columns (where applicable).
-#' - Correct number of rows based on the Cartesian product of key levels/values.
+#' - keycols names distinct columns of lookup_tbl, and the table has rows.
+#' - Every key column is integer or factor, without NA; an integer key column
+#'   takes consecutive values, and a factor uses all its levels (the errors name
+#'   the missing ones).
+#' - No two rows share a combination of key values.
+#' - The number of rows is the product of the key columns' numbers of values
+#'   (of levels, for a factor), so that every combination is present.
 #'
 #' @examples
 #' library(data.table)
-#' # Example 1: Valid lookup table
-#' valid_lt <- data.table(id = 1:3, category = factor(letters[1:2]), value = runif(6))
-#' setkeyv(valid_lt, c("id", "category")) # Set keys
-#' # Manually ensure it meets criteria for a real use case, e.g., all combinations present
-#' # For this example, let's assume it's structured correctly for its intended keys.
-#' # is_valid_lookup_tbl(valid_lt, keycols = c("id", "category"))
-#' # This would typically run if valid_lt had unique combinations of id & category
-#' # and id was consecutive, category levels were fully represented.
+#' # Example 1: Valid lookup table (every id x category combination, once)
+#' valid_lt <- CJ(id = 1:3, category = factor(c("a", "b")))
+#' valid_lt[, value := runif(.N)]
+#' is_valid_lookup_tbl(valid_lt, keycols = c("id", "category"))
 #'
 #' # Example 2: Invalid lookup table (duplicate keys)
-#' invalid_lt_dup <- data.table(id = c(1, 1, 2), value = c(10, 20, 30))
+#' invalid_lt_dup <- data.table(id = c(1L, 1L, 2L), value = c(10, 20, 30))
 #' try(is_valid_lookup_tbl(invalid_lt_dup, keycols = "id"))
 #'
-#' # Example 3: Invalid lookup table (non-consecutive integer key)
-#' invalid_lt_gap <- data.table(id = c(1, 3, 4), value = c(10, 20, 30))
-#' setkey(invalid_lt_gap, id)
-#' # try(is_valid_lookup_tbl(invalid_lt_gap, keycols = "id")) # Will error due to gap
+#' # Example 3: Invalid lookup table (non-consecutive integer key: no id 2)
+#' invalid_lt_gap <- data.table(id = c(1L, 3L, 4L), value = c(10, 20, 30))
+#' try(is_valid_lookup_tbl(invalid_lt_gap, keycols = "id"))
 #'
 #' @keywords internal utilities validation
 #' @export
 is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
+  .validate_lookup_tbl(lookup_tbl, keycols, fixkey)
+  TRUE
+}
+
+# is_valid_lookup_tbl()'s checks. Returns, invisibly, how the rows are ordered by
+# the key columns (key_order_cpp()), which lookup_dt() uses so that it does not
+# read the rows a second time.
+.validate_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
   if (!is.data.table(lookup_tbl)) {
     stop("lookup_tbl should be a data.table.")
   }
@@ -332,20 +353,30 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
   if (missing(keycols) || length(keycols) == 0L) {
     stop("keycols argument is missing.")
   }
+  if (!is.character(keycols) || anyNA(keycols) || anyDuplicated(keycols)) {
+    stop("keycols must be distinct column names, without NA.")
+  }
+  absent <- setdiff(keycols, names(lookup_tbl))
+  if (length(absent)) {
+    stop("keycols not found in lookup_tbl: ", paste(absent, collapse = ", "), ".")
+  }
+
+  if (nrow(lookup_tbl) == 0L) {
+    stop("Lookup table has no rows.")
+  }
 
   # Sort key columns and prioritize 'year' if present
   keycols <- sort(keycols)
   keycols <- keycols[order(match(keycols, "year"))]
 
-  # Ensure unique combinations of key columns
-  if (any(duplicated(lookup_tbl, by = keycols))) {
-    stop("Lookup table must have a unique combination of key columns.")
-  }
+  # Validate each key column, and count the values it takes
+  n_vals <- numeric(length(keycols))
+  for (i in seq_along(keycols)) {
+    j <- keycols[[i]]
+    x <- lookup_tbl[[j]]
 
-  # Validate each key column
-  for (j in keycols) {
     # Check that the column is of type integer (factors are stored as integers)
-    if (typeof(lookup_tbl[[j]]) != "integer") {
+    if (typeof(x) != "integer") {
       stop(paste0(
         "Lookup table key columns must be of type integer (or factor). Column '",
         j,
@@ -353,29 +384,65 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
       ))
     }
 
-    # For integer columns, ensure the values form a consecutive sequence
-    if (is.integer(lookup_tbl[[j]])) {
-      x <- sort(lookup_tbl[[j]])
-      if (length(x) > 1 && any(diff(x) > 1L)) {
+    # lookup_dt() finds rows by arithmetic on the key values, which NA breaks.
+    # The values of an integer key must fill [min, max]; a factor must use
+    # every level.
+    if (is.integer(x)) {
+      if (anyNA(x)) {
+        stop(paste0("Lookup table key column '", j, "' contains NA values."))
+      }
+      # as.numeric(): no integer overflow, and no date arithmetic on IDate keys
+      n_vals[[i]] <- uniqueN(x)
+      if (as.numeric(max(x)) - as.numeric(min(x)) + 1 != n_vals[[i]]) {
         stop(paste0(
           "Lookup table key column '",
           j,
-          "' does not contain consecutive integer values."
+          "' does not contain consecutive integer values",
+          .missing_key_values(x),
+          "."
+        ))
+      }
+    } else {
+      # A factor. tabulate() counts its codes in one pass, skipping NA; anyNA()
+      # would allocate a logical vector as long as the column (is.na() on a
+      # classed vector).
+      n_vals[[i]] <- nlevels(x)
+      counts <- tabulate(x, nbins = n_vals[[i]])
+      if (sum(counts) != length(x)) {
+        stop(paste0(
+          "Lookup table key column '",
+          j,
+          "' contains NA values (in a factor, often a label that is not one of its levels)."
+        ))
+      }
+      if (any(counts == 0L)) {
+        unused <- levels(x)[counts == 0L]
+        stop(paste0(
+          "Lookup table key column '",
+          j,
+          "' does not contain every level of the factor",
+          .missing_note(unused[seq_len(min(length(unused), 10L))], length(unused)),
+          "."
         ))
       }
     }
   }
 
-  # Compute the expected number of rows based on unique key combinations
-  expected_rows <- prod(sapply(keycols, function(j) {
-    if (is.integer(lookup_tbl[[j]])) {
-      uniqueN(lookup_tbl[[j]])
-    } else {
-      length(levels(lookup_tbl[[j]]))
-    }
-  }))
+  # Ensure unique combinations of key columns. One pass over the rows tells
+  # whether they are in key order and, if so, whether two neighbours are
+  # equal. Not duplicated(by = keycols): it trusts a key that keycols prefix and
+  # then compares adjacent rows only, so a key left stale by tools outside
+  # data.table (base [[<-, dplyr verbs) hid duplicates. Rows out of key order
+  # are checked on a new table of the key columns, which has no key or index.
+  key_order <- key_order_cpp(lookup_tbl, keycols)
+  if (key_order == 1L ||
+      (key_order == 0L &&
+       anyDuplicated(setDT(`names<-`(lapply(keycols, function(k) lookup_tbl[[k]]), keycols))))) {
+    stop("Lookup table must have a unique combination of key columns.")
+  }
 
   # Verify the lookup table has the expected number of rows
+  expected_rows <- prod(n_vals)
   if (nrow(lookup_tbl) != expected_rows) {
     stop(paste0(
       "Lookup table should have ",
@@ -386,19 +453,56 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
     ))
   }
 
-  # Recommend setting the key for best performance if not already set
-  if (!identical(key(lookup_tbl), keycols)) {
+  # Recommend setting the key for best performance if not already set, or if
+  # the key is stale (the rows do not follow it)
+  if (!identical(key(lookup_tbl), keycols) || key_order == 0L) {
     message(
       "For best performance, consider setting the key of lookup_tbl to: ",
-      paste(keycols, collapse = ", ")
+      paste(keycols, collapse = ", "),
+      if (identical(key(lookup_tbl), keycols)) " (its key is stale: the rows do not follow it)"
     )
     if (fixkey) {
-      setkeyv(lookup_tbl, keycols)
+      # Mark the key if the rows already follow it; else sort them, trusting
+      # no key or index (setkeyv() would reuse a stale one)
+      if (key_order == 2L) {
+        setattr(lookup_tbl, "sorted", keycols)
+      } else {
+        setkeyv(lookup_tbl, NULL)
+        setkeyv(lookup_tbl, keycols)
+      }
       message("Key has been set to: ", paste(keycols, collapse = ", "))
     }
   }
 
-  return(TRUE)
+  invisible(key_order)
+}
+
+# The values in the range of the integer key x that x lacks, for the message of
+# is_valid_lookup_tbl(): the first `show` of them, in the key's own class (so
+# that e.g. IDate keys show dates), and how many in all. Runs only once the
+# check has failed; never materialises the range.
+.missing_key_values <- function(x, show = 10L) {
+  u <- as.numeric(sort(unique(x)))
+  gap <- diff(u) - 1
+  vals <- numeric(0)
+  for (k in which(gap > 0)) {
+    vals <- c(vals, u[[k]] + seq_len(min(gap[[k]], show - length(vals))))
+    if (length(vals) >= show) break
+  }
+  .missing_note(as.character(structure(as.integer(vals), class = oldClass(x))), sum(gap))
+}
+
+# " (missing: a, b, ... n in all)": the values shown and, if there are more,
+# how many in all
+.missing_note <- function(shown, n_missing) {
+  paste0(
+    " (missing: ",
+    paste(shown, collapse = ", "),
+    if (n_missing > length(shown)) {
+      paste0(", ... ", format(n_missing, big.mark = ",", scientific = FALSE), " in all")
+    },
+    ")"
+  )
 }
 
 

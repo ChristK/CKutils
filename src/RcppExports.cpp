@@ -816,6 +816,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// key_order_cpp
+int key_order_cpp(DataFrame x, CharacterVector cols);
+RcppExport SEXP _CKutils_key_order_cpp(SEXP xSEXP, SEXP colsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type x(xSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type cols(colsSEXP);
+    rcpp_result_gen = Rcpp::wrap(key_order_cpp(x, cols));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dtsubset
 SEXP dtsubset(SEXP x, SEXP rows, SEXP cols);
 RcppExport SEXP _CKutils_dtsubset(SEXP xSEXP, SEXP rowsSEXP, SEXP colsSEXP) {
@@ -1176,6 +1188,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_frZINBI_scalar_vec", (DL_FUNC) &_CKutils_frZINBI_scalar_vec, 4},
     {"_CKutils_fct_to_int_cpp", (DL_FUNC) &_CKutils_fct_to_int_cpp, 2},
     {"_CKutils_starts_from_1_cpp", (DL_FUNC) &_CKutils_starts_from_1_cpp, 5},
+    {"_CKutils_key_order_cpp", (DL_FUNC) &_CKutils_key_order_cpp, 2},
     {"_CKutils_dtsubset", (DL_FUNC) &_CKutils_dtsubset, 3},
     {"_CKutils_fquantile", (DL_FUNC) &_CKutils_fquantile, 3},
     {"_CKutils_fquantile_byid", (DL_FUNC) &_CKutils_fquantile_byid, 5},
