@@ -49,16 +49,19 @@
 #'   holding the dense lookup table.
 #' @param out_base Output path prefix; the manifest \code{<out_base>.ckmeta} and
 #'   payload shards \code{<out_base>.NNNN.ckdat} are written next to it.
-#' @param keys Character vector of key (dimension) columns. Numeric keys must be
-#'   consecutive integers; factor/character keys use their level order. The
-#'   remaining columns become value columns.
+#' @param keys Character vector of key (dimension) columns, which must not hold
+#'   NA. Numeric keys must be consecutive whole numbers within the integer range
+#'   (not integer64); factor/character keys use their level order. The remaining
+#'   columns become value columns.
 #' @param values Character vector of value columns (default: all non-key columns).
 #' @param value_types Optional named character vector overriding the inferred
 #'   storage type of any value column. One of
 #'   \code{"f64","f32","i32","i64","lgl","str"}.
 #' @param max_bytes Shard size cap in bytes (default 100 MB).
 #' @param check Logical; if \code{TRUE} (default) validate that the table is a
-#'   dense, unique, consecutive grid (as \code{lookup_dt} requires).
+#'   dense, unique, consecutive grid (as \code{lookup_dt} requires), with whole
+#'   numbers in its numeric keys. An empty table, and NA or non-finite key
+#'   values, are refused whatever its value.
 #'
 #' @return Invisibly, a \code{cklut} handle (as returned by \code{\link{cklut_open}}).
 #' @seealso \code{\link{cklut_lookup}}, \code{\link{cklut_to_csv}}
@@ -89,6 +92,10 @@ cklut_build <- function(x, out_base, keys, values = NULL,
   keys <- .cklut_order_keys(keys)
   if (is.null(values)) values <- setdiff(names(x), keys)
   if (length(values) == 0L) stop("cklut_build: no value columns")
+  # Checked whatever `check` says: a key dimension with no values makes the C++
+  # divide by zero (SIGFPE kills the R session), and an NA key gives it an NA
+  # size or index
+  if (nrow(x) == 0L) stop("cklut_build: the table has no rows")
 
   # ---- key dimension metadata + per-row 0-based dense indices ----------------
   nd <- length(keys)
@@ -98,6 +105,12 @@ cklut_build <- function(x, out_base, keys, values = NULL,
   dim_index <- vector("list", nd)
   for (i in seq_len(nd)) {
     col <- x[[keys[i]]]
+    if (anyNA(col) || (is.numeric(col) && !all(is.finite(col))))
+      stop("cklut_build: key '", keys[i], "' contains NA or non-finite values")
+    # bit64's integer64 passes is.numeric(), but its values are bit patterns
+    # that the numeric branch would read as tiny doubles
+    if (inherits(col, "integer64"))
+      stop("cklut_build: key '", keys[i], "' is integer64; convert it to integer or double")
     if (is.factor(col)) {
       lv <- levels(col)
       dim_is_string[i] <- TRUE; dim_cats[[i]] <- lv
@@ -109,7 +122,14 @@ cklut_build <- function(x, out_base, keys, values = NULL,
       dim_min[i] <- 0; dim_size[i] <- length(lv)
       dim_index[[i]] <- match(col, lv) - 1L
     } else if (is.numeric(col)) {
+      # as.integer() below would truncate 1.5 to 1, so that two key values
+      # share one cell
+      if (check && any(col != round(col)))
+        stop("cklut_build: numeric key '", keys[i], "' must hold whole numbers")
       mn <- min(col); mx <- max(col)
+      # as.integer() below gives NA outside the integer range
+      if (max(abs(c(mn, mx))) > .Machine$integer.max)
+        stop("cklut_build: numeric key '", keys[i], "' is outside the integer range")
       dim_is_string[i] <- FALSE; dim_cats[[i]] <- NULL
       dim_min[i] <- mn; dim_size[i] <- mx - mn + 1
       dim_index[[i]] <- as.integer(col) - as.integer(mn)

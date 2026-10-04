@@ -136,6 +136,66 @@ expect_error(cklut_build(copy(dup), tempfile("ckbad8"), keys = keys,
              pattern = "not a dense grid|not unique",
              info = "build: duplicated keys / dense check")
 
+# An empty table, and NA or non-finite keys, are refused whatever `check` says.
+# A last key dimension that came out with no values made the C++ divide by
+# zero, which killed the R session (SIGFPE): e.g. an empty table whose last key
+# is a factor with no levels or a character column, or with check = FALSE an
+# all-NA factor or character key.
+expect_error(cklut_build(data.table(f = factor(character(0)), v = numeric(0)),
+                         tempfile("ckbad9"), keys = "f"),
+             pattern = "the table has no rows",
+             info = "build: empty table, factor key with no levels")
+expect_error(cklut_build(data.table(k = character(0), v = numeric(0)),
+                         tempfile("ckbad9b"), keys = "k"),
+             pattern = "the table has no rows",
+             info = "build: empty table, character key")
+expect_error(cklut_build(data.table(f = factor(c(NA, NA), levels = character(0)), v = 1:2),
+                         tempfile("ckbad10"), keys = "f", check = FALSE),
+             pattern = "key 'f' contains NA or non-finite values",
+             info = "build: all-NA factor with no levels, check = FALSE")
+expect_error(cklut_build(data.table(k = c(1L, NA, 3L), v = 1:3),
+                         tempfile("ckbad11"), keys = "k"),
+             pattern = "key 'k' contains NA or non-finite values",
+             info = "build: NA in an integer key")
+expect_error(cklut_build(data.table(k = integer(0), v = numeric(0)),
+                         tempfile("ckbad11b"), keys = "k", check = FALSE),
+             pattern = "the table has no rows",
+             info = "build: empty table, integer key, check = FALSE")
+expect_error(cklut_build(data.table(k = c(1, Inf), v = 1:2),
+                         tempfile("ckbad11c"), keys = "k", check = FALSE),
+             pattern = "key 'k' contains NA or non-finite values",
+             info = "build: infinite numeric key, check = FALSE")
+
+# A numeric key must lie within the integer range, and integer64 is refused by
+# name (its values are bit patterns that read as tiny doubles)
+expect_error(cklut_build(data.table(k = 3e9 + 0:2, v = 1:3),
+                         tempfile("ckbad11d"), keys = "k"),
+             pattern = "numeric key 'k' is outside the integer range",
+             info = "build: numeric key beyond the integer range")
+if (requireNamespace("bit64", quietly = TRUE)) {
+  expect_error(cklut_build(data.table(k = bit64::as.integer64(1:3), v = 1:3),
+                           tempfile("ckbad11e"), keys = "k", check = FALSE),
+               pattern = "key 'k' is integer64",
+               info = "build: integer64 key")
+}
+
+# check=TRUE: a numeric key must hold whole numbers (1 and 1.5 shared a cell)
+expect_error(cklut_build(data.table(k = c(1, 1.5, 3), v = 1:3),
+                         tempfile("ckbad12"), keys = "k"),
+             pattern = "numeric key 'k' must hold whole numbers",
+             info = "build: fractional numeric key")
+
+# and the C++ itself refuses an innermost dimension with no values
+expect_error(
+  CKutils:::cklut_build_cpp(
+    tempfile("ckbad13"), dim_names = "f", dim_is_string = TRUE,
+    dim_min = 0, dim_size = 0, dim_cats = list(character(0)),
+    dim_index = list(integer(0)), value_names = "v", value_types = 0L,
+    value_data = list(numeric(0)), value_levels = list(NULL),
+    max_bytes = 100 * 1024^2),
+  pattern = "innermost key dimension has no values",
+  info = "build (C++): innermost dimension with no values")
+
 # check=FALSE bypasses the grid validation (non-dense grid builds fine)
 ck_nc <- cklut_build(copy(tbl), tempfile("cknc"), keys = keys, check = FALSE)
 expect_inherits(ck_nc, "cklut", info = "build: check=FALSE skips grid check")

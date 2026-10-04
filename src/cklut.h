@@ -256,6 +256,13 @@ struct Schema {
 // Pick a shard size (rows) that is a multiple of the innermost run and <= max_bytes.
 inline std::uint64_t rows_per_shard(const std::vector<Dim>& dims, std::uint32_t nv, std::uint64_t max_bytes) {
     const std::uint64_t inner = std::uint64_t(dims.back().size);
+    // An innermost dimension with no values (e.g. a factor with no levels)
+    // would divide by zero below, killing the process with SIGFPE.
+    if (inner == 0)
+        throw std::runtime_error("cklut: the innermost key dimension has no values");
+    // ... and so would a table without value columns (row_bytes == 0)
+    if (nv == 0)
+        throw std::runtime_error("cklut: no value columns");
     const std::uint64_t row_bytes = std::uint64_t(nv) * sizeof(double);
     const std::uint64_t max_rows = max_bytes / row_bytes;
     if (max_rows < inner)

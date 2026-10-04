@@ -84,6 +84,21 @@
   `FALSE` with the reason ("imported by gamlss.dist, gamlss") rather than "was
   not attached". The library is looked for where the namespace was loaded
   from (`find.package()`), not only in `.libPaths()`.
+* **`cklut_build()` no longer kills the R session on a key with no values.**
+  When the last key dimension (in cklut order) came out with no values -- e.g.
+  an empty table whose last key is a factor with no levels or a character
+  column, or, with `check = FALSE`, an all-NA factor or character key, or an
+  integer64 key -- the C++ computed shard sizes by an integer division by
+  zero, and the process died with SIGFPE. `cklut_build()` now refuses, whatever
+  `check` says, an empty table, NA or non-finite key values, integer64 keys
+  (whose bit patterns it read as tiny doubles) and numeric keys outside the
+  integer range; and the C++ throws an error for an empty innermost dimension,
+  as the standalone `cklut/` writer now does for a table without value columns
+  (another division by zero; not reachable from R).
+* With `check = TRUE`, `cklut_build()` also refuses a numeric key that is not
+  a whole number. `c(1, 1.5, 3)` passed the row-count and uniqueness checks,
+  and truncation then mapped 1 and 1.5 to the same cell, so a lookup returned
+  the wrong value for one of the cells.
 
 ## Performance
 
@@ -133,6 +148,12 @@
   attached at most 5 times, so a regression fails instead of hanging the test
   run. (A time limit cannot be relied on: when it fires inside the old loop's
   `try()`, the error is swallowed and R clears the limit.)
+* `test-cklut_extra.R`: `cklut_build()` refuses an empty table (factor key with
+  no levels; character key; integer key under `check = FALSE`), an all-NA
+  factor key with no levels and an infinite key under `check = FALSE`, an NA
+  integer key, a fractional numeric key, a numeric key beyond the integer
+  range and an integer64 key; and the C++ refuses an innermost dimension with
+  no values.
 
 # CKutils 0.1.33
 

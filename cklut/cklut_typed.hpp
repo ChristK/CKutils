@@ -133,6 +133,10 @@ static constexpr char kTypedMagic[8] = {'C','K','L','T','Y','P','1','\0'};
 // Pick rows-per-shard: a multiple of the innermost run, with shard bytes <= cap.
 inline std::uint64_t typed_rows_per_shard(const TypedSchema& s, std::uint64_t max_bytes) {
     const std::uint64_t inner = std::uint64_t(s.dims.back().size);
+    // An innermost dimension with no values (e.g. a factor with no levels)
+    // would divide by zero below, killing the process with SIGFPE.
+    if (inner == 0)
+        throw std::runtime_error("cklut: the innermost key dimension has no values");
     const std::uint64_t rb    = s.row_bytes ? s.row_bytes : 1;
     const std::uint64_t max_rows = max_bytes / rb;
     if (max_rows < inner)

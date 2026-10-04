@@ -21,9 +21,10 @@ holding the dense lookup table.}
 \item{out_base}{Output path prefix; the manifest \code{<out_base>.ckmeta} and
 payload shards \code{<out_base>.NNNN.ckdat} are written next to it.}
 
-\item{keys}{Character vector of key (dimension) columns. Numeric keys must be
-consecutive integers; factor/character keys use their level order. The
-remaining columns become value columns.}
+\item{keys}{Character vector of key (dimension) columns, which must not hold
+NA. Numeric keys must be consecutive whole numbers within the integer range
+(not integer64); factor/character keys use their level order. The remaining
+columns become value columns.}
 
 \item{values}{Character vector of value columns (default: all non-key columns).}
 
@@ -34,7 +35,9 @@ storage type of any value column. One of
 \item{max_bytes}{Shard size cap in bytes (default 100 MB).}
 
 \item{check}{Logical; if \code{TRUE} (default) validate that the table is a
-dense, unique, consecutive grid (as \code{lookup_dt} requires).}
+dense, unique, consecutive grid (as \code{lookup_dt} requires), with whole
+numbers in its numeric keys. An empty table, and NA or non-finite key
+values, are refused whatever its value.}
 }
 \value{
 Invisibly, a \code{cklut} handle (as returned by \code{\link{cklut_open}}).
