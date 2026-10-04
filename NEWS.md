@@ -112,6 +112,21 @@
   more than the integer range gets "range too large" instead of "missing value
   where TRUE/FALSE needed", and a key whose last value lies below its first is
   reported as not a full grid.
+* **`fdDPO()`, `fpDPO()` and `fqDPO()` no longer go wrong at a large `mu`**
+  (with `sigma != 1`). The normalising constant is the inverse of a sum over
+  y = 0, 1, ... whose mass lies around `mu`, and the sum stopped at
+  `max(3 * x, 500)`. For a small x and `mu` beyond ~300 it missed the mass:
+  densities in the left tail came out many orders of magnitude too large (some
+  5e7 times at `mu = 1000`, `sigma = 10`, x = 0), and from `mu` ~5000 the terms
+  in the window underflowed, so the constant was `Inf`, and with it every
+  `fpDPO()`, while `fqDPO()` returned 0. A large `sigma` lost mass in its heavy
+  tail (2.4% at `mu = 2`, `sigma = 1000`). The sum now runs from 40 standard
+  deviations below `mu` until its terms are negligible, and matches a
+  log-sum-exp normalisation to ~1e-12. It depends on `mu` and `sigma` only, so
+  it is cached once for all x: the old x-dependent window made `fpDPO()` at a
+  large `mu` recompute it for almost every term. gamlss.dist's `dDPO()` sums the
+  same truncated window, so two tests now use an implementation-independent
+  reference. `fget_C()` computes the constant the same way.
 
 ## Documentation
 
@@ -180,6 +195,10 @@
   a factor level that never occurs stop on the row count. `test-lookup_dt.R`
   Tests 32 and 40 now expect that message, instead of the later "Calculated
   row indices are out of bounds", which the row count makes unreachable.
+* `test-fDPO.R`: Tests 21 and 23 compare with `dDPO_lse()`, a log-sum-exp
+  normalisation, instead of gamlss.dist's truncated `dDPO()`; new: densities at
+  `mu = 5000` sum to 1, `fpDPO(0, 5000, 2)` is 0 (was `Inf`), and the left tail
+  at `mu = 1000`, `sigma = 10`.
 
 # CKutils 0.1.33
 

@@ -26,6 +26,21 @@ ref_per_set <- function(fun, x, set, ..., extra = list()) {
   }
   out
 }
+# An implementation-independent DPO density: the normalising constant from the
+# unnormalised terms summed over y = 0..ymax in log space (log-sum-exp).
+# gamlss.dist's dDPO() stops that sum at max(3 * x, 500), so for a large sigma
+# or a large mu it misses mass, and its densities are off: by 2.4% at mu = 2,
+# sigma = 1000, by a factor of ~5e7 at mu = 1000, sigma = 10, x = 0.
+dDPO_lse <- function(x, mu, sigma, ymax = 20000) {
+  lterm <- function(y) {
+    ylogy <- ifelse(y == 0, 0, y * log(y))
+    -0.5 * log(sigma) - mu / sigma - lgamma(y + 1) + ylogy - y +
+      (y * log(mu)) / sigma + y / sigma - ylogy / sigma
+  }
+  lt <- lterm(0:ymax)
+  m <- max(lt)
+  exp(lterm(x) - (m + log(sum(exp(lt - m)))))
+}
 # Use more relaxed tolerance for extreme tail log probabilities
 log_tail_tolerance <- 1e-2  # Allow larger differences in extreme log tail regions where numerical precision matters
 
@@ -352,7 +367,8 @@ boundary_test_grid <- expand.grid(x = 0:5, sigma = sigma_boundary)
 boundary_test_grid$mu <- 2  # Fixed mu value
 
 ck_dens_boundary_all <- fdDPO(boundary_test_grid$x, mu = boundary_test_grid$mu, sigma = boundary_test_grid$sigma)
-gamlss_dens_boundary_all <- ref_per_set(dDPO, boundary_test_grid$x, boundary_test_grid$sigma,
+# reference: dDPO_lse(), as gamlss.dist truncates the normalising sum at sigma = 100, 1000
+gamlss_dens_boundary_all <- ref_per_set(dDPO_lse, boundary_test_grid$x, boundary_test_grid$sigma,
                                         mu = boundary_test_grid$mu, sigma = boundary_test_grid$sigma)
 
 expect_equal(ck_dens_boundary_all, gamlss_dens_boundary_all, tolerance = tolerance, 
@@ -387,11 +403,24 @@ large_test_grid$mu <- large_params$mu[large_test_grid$param_idx]
 large_test_grid$sigma <- large_params$sigma[large_test_grid$param_idx]
 
 ck_dens_large_all <- fdDPO(large_test_grid$x, mu = large_test_grid$mu, sigma = large_test_grid$sigma)
-gamlss_dens_large_all <- ref_per_set(dDPO, large_test_grid$x, large_test_grid$param_idx,
+# reference: dDPO_lse(), as gamlss.dist truncates the normalising sum for all three sets
+gamlss_dens_large_all <- ref_per_set(dDPO_lse, large_test_grid$x, large_test_grid$param_idx,
                                      mu = large_test_grid$mu, sigma = large_test_grid$sigma)
 
 expect_equal(ck_dens_large_all, gamlss_dens_large_all, tolerance = tolerance, 
             info = "Vectorized large parameter values - all parameter sets")
+
+# Test 23b: The normalising constant covers the mass at a large mu (0.1.34): the
+# sum stopped at max(3x, 500), so P(0) at mu = 5000 came out Inf, and with it
+# fpDPO/fqDPO for any q (the right value underflows to 0)
+expect_identical(fpDPO(0L, mu = 5000, sigma = 2), 0,
+                 info = "fpDPO: P(0) at mu = 5000 underflows to 0 (was Inf)")
+expect_equal(sum(fdDPO(0:7000, mu = 5000, sigma = 2)), 1, tolerance = 1e-9,
+             info = "fdDPO: densities at mu = 5000 sum to 1")
+expect_equal(fdDPO(c(0, 5, 1000), mu = 1000, sigma = 10, log_ = TRUE),
+             log(dDPO_lse(c(0, 5, 1000), mu = 1000, sigma = 10)),
+             tolerance = 1e-10,
+             info = "fdDPO: left tail at mu = 1000, sigma = 10 (was ~5e7 times too large)")
 
 # =============================================================================
 # PERFORMANCE AND CONSISTENCY VERIFICATION

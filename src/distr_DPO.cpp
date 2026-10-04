@@ -92,32 +92,6 @@ inline void simd_log_4(const double* input, double* output) {
     }
 }
 
-// Helper function for DPO distribution (from gamlss.dist)
-NumericVector fdDPOgetC5_C(const NumericVector& mu, const NumericVector& sigma,
-                           const int& lmu, const int& ly) {
-  double   sumC, mus, lmus, lsig2, invs, ls;
-  NumericVector ylogofy(ly), lga(ly), ym(ly), ans(lmu);
-
-  int i,j;
-  for (j=0 ; j < ly ; j++) {
-    ylogofy[j] = j * ((j==0)? 1 : log(j));
-    lga[j] = R::lgammafn(j + 1);
-    ym[j] = (j - ylogofy[j]);
-  }
-  for (i=0; i < lmu; i++){
-    sumC = 0;
-    mus = mu[i] / sigma[i];
-    lsig2 = -0.5 * log(sigma[i]);
-    lmus = log(mu[i]) / sigma[i] - 1;
-    invs = 1 / sigma[i];
-    ls = lsig2 - mus;
-    for (j=0 ; j < ly ; j++){
-      sumC += exp(ls - lga[j] + ylogofy[j] + j * lmus + invs * ym[j]);
-    }
-    ans[i] = pow(sumC,-1);
-  }
-  return ans;
-}
 
 // fdDPOgetC5_C_scalar, the DPOCache helper, and fdDPO_scalar now live (inline)
 // in inst/include/distr_DPO.h so that downstream LinkingTo: CKutils consumers
@@ -179,17 +153,16 @@ NumericVector fget_C(const IntegerVector& x,
   }
   int maxV = std::max(Rcpp::max(x) * 3, 500);
   int lmu   = std::max(std::max(x.length(), mu.length()), sigma.length());
-  
-  // Properly recycle mu and sigma to length lmu
-  NumericVector mu_recycled(lmu);
-  NumericVector sigma_recycled(lmu);
-  
+
+  // Per element, through the scalar: its window covers the mass around mu
+  // (see fdDPO_C_window in distr_DPO.h). The old vector version summed every
+  // element to max(3 * max(x), 500) only, in arrays that long.
+  NumericVector out(lmu);
   for (int i = 0; i < lmu; i++) {
-    mu_recycled[i] = mu[i % mu.length()];
-    sigma_recycled[i] = sigma[i % sigma.length()];
+    out[i] = log(fdDPOgetC5_C_scalar(mu[i % mu.length()], sigma[i % sigma.length()],
+                                     1, maxV + 1));
   }
-  
-  return log(fdDPOgetC5_C(mu_recycled, sigma_recycled, lmu, maxV + 1));
+  return out;
 }
 
 //' The DPO Distribution - Density Function

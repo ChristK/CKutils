@@ -41,8 +41,36 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (lgammafn, dpois, ppois, ...)
 #include <cmath>
+#include <algorithm>
 
 // Optimized scalar version for single computation with random parameters
+// The normalising constant is the inverse of a sum of terms over y = 0, 1, ...
+// whose mass lies around mu, with a standard deviation of about
+// sqrt(mu * sigma) (taken as sqrt(mu * max(sigma, 1))). The sum has to cover
+// that mass. Up to 0.1.34 its callers stopped it at max(3 * x, 500): for small
+// x and mu beyond ~300 it missed the mass, so densities in the left tail came
+// out many orders of magnitude too large, and once the terms in that window
+// underflowed the constant was Inf (fpDPO(0, 5000, 2) = Inf, and with it every
+// fpDPO/fqDPO for mu above ~5000 when sigma != 1).
+inline double fdDPO_C_sd(const double& mu, const double& sigma) {
+  return std::sqrt(mu * std::max(sigma, 1.0));
+}
+
+// A window that holds the bulk of the mass: up to 40 standard deviations past
+// mu (at least 501, the old minimum). The sum below does not stop there -- a
+// large sigma has a slowly decaying tail, and at mu = 2, sigma = 1000 the
+// window would still miss 1.7e-6 of the mass -- but at convergence; the window
+// serves as the cache key (it depends on mu and sigma only) and as the point
+// after which a sum that found no mass at all gives up.
+inline int fdDPO_C_window(const double& mu, const double& sigma) {
+  const double w = std::ceil(mu + 40.0 * fdDPO_C_sd(mu, sigma)) + 100.0;
+  return static_cast<int>(std::min(std::max(w, 501.0), 2147483646.0));
+}
+
+// The sum runs from 40 standard deviations below mu (or 0) until its terms,
+// past the largest, are negligible -- not to a fixed `ly`, which is kept for
+// the callers but no longer limits it -- so the result depends on mu and sigma
+// only.
 inline double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
                               const int& lmu, const int& ly) {
   double   sumC, mus, lmus, lsig2, invs, ls;
@@ -71,7 +99,12 @@ inline double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
   double expected_mode = mu / sigma;
   bool pathological = (mu > 800.0 && sigma > 8.0);
 
-  for (int j = 0; j < ly; j++) {
+  // clamped before the cast: for mu beyond the int range the double is too
+  // large for an int (an out-of-range conversion is undefined behaviour)
+  const int j0 = static_cast<int>(std::min(
+      std::max(0.0, std::floor(mu - 40.0 * fdDPO_C_sd(mu, sigma))), 2147483646.0));
+  const int window = std::max(ly, fdDPO_C_window(mu, sigma));
+  for (int j = j0; j < 2147483646; j++) {
     double j_log = (j == 0) ? 1.0 : log(static_cast<double>(j));
     double ylogofy = j * j_log;
     double lga = R::lgammafn(j + 1);
@@ -107,9 +140,20 @@ inline double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
         }
       }
     }
+    // Past the largest term, once the terms are negligible against it: this
+    // ends every tail, also the slowly decaying ones of a large sigma that the
+    // rules above leave running. And a sum that found no mass in the window
+    // (all terms underflowing) gives up rather than run on.
+    if ((j > max_term_pos && term < max_term * 1e-17) ||
+        (j >= window && max_term == 0.0)) {
+      break;
+    }
     prev_term = term;
   }
 
+  // No term summed, or all underflowed (the mass lies beyond the int range):
+  // the constant is unknown, not 1 / 0 = Inf
+  if (!(sumC > 0.0)) return R_NaN;
   return 1.0 / sumC;
 }
 
@@ -170,9 +214,10 @@ inline double fdDPO_scalar(const int& x,
     return R::dpois(x, mu, log_);
   }
 
-  // Use cache for normalizing constant
-  int maxV = std::max(x * 3, 500);
-  double theC = log(DPOCache::get_or_compute(mu, sigma, maxV + 1));
+  // Use cache for normalizing constant. Its window depends on mu and sigma
+  // only (see fdDPO_C_window), not on x, so every x of the same mu and sigma
+  // finds it in the cache
+  double theC = log(DPOCache::get_or_compute(mu, sigma, fdDPO_C_window(mu, sigma)));
 
   double logofx = (x > 0) ? log(static_cast<double>(x)) : 1.0;
 
