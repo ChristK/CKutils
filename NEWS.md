@@ -59,6 +59,17 @@
   indices, so that `setkeyv()` really sorts. `fixkey = TRUE` likewise sorts by
   the rows, and repairs a stale key that already names the key columns; the
   key advice says when the key is stale.
+* **`generate_corr_unifs()` applied its correction for uniform margins twice.**
+  Its loop visited each pair of variables as (i, j) and again as (j, i), and
+  adjusted both entries each time, so every off-diagonal correlation went
+  through `2 * sin(pi * r / 6)` twice. The uniforms thus had correlation
+  `2 * sin(pi * r / 6)` instead of `r`: too far from zero by up to 0.018
+  (largest near |r| = 0.58; 0.518 for a target of 0.5). A near-singular target
+  could also become indefinite, and `chol()` failed with "the leading minor of
+  order 3 is not positive". Each entry is now adjusted once. IMPACTncd_Engl
+  uses it for the exposure rank correlations of its synthetic population: in
+  its 19-exposure matrix, 5 of the 171 pairs were off by more than 0.01, the
+  largest by 0.017, so the model's outputs will shift slightly.
 
 ## Performance
 
@@ -99,6 +110,10 @@
   duplicate hidden by a stale key; `fixkey = TRUE` past a stale index and with
   a stale key. All 21 fail with the loop fix as first committed, and pass with
   this one.
+* `test-misc_functions.R`: at n = 1e6 the realised correlation is within 0.005
+  of its target, which the double correction missed by more than 20 standard
+  errors (the existing test allowed 0.1 at n = 1e4); a near-singular target no
+  longer fails in `chol()`.
 
 # CKutils 0.1.33
 

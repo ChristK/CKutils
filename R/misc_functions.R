@@ -1933,15 +1933,9 @@ generate_corr_unifs <- function(n, M, check_eigenvalues = FALSE) {
   M_original <- M
 
 
-  # adjust correlations for uniforms
-  for (i in seq_len(dim(M)[[1L]])) {
-    for (j in seq_len(dim(M)[[2L]])) {
-      if (i != j) {
-        M[i, j] <- 2 * sin(pi * M[i, j] / 6)
-        M[j, i] <- 2 * sin(pi * M[j, i] / 6)
-      }
-    }
-  }
+  # adjust correlations for uniforms: every off-diagonal entry, once
+  off <- row(M) != col(M)
+  M[off] <- 2 * sin(pi * M[off] / 6)
 
   X <- matrix(dqrnorm(n * dim(M)[[2]]), n)
   colnames(X) <- colnames(M)

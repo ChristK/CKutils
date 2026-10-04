@@ -1223,8 +1223,24 @@ expect_true(all(is.finite(result_neg_cor)), info = "Negative correlations produc
 
 observed_neg_cor <- cor(result_neg_cor)
 expect_true(observed_neg_cor[1, 2] < 0, info = "Negative correlation preserved in sign")
-expect_true(abs(observed_neg_cor[1, 2] - (-0.3)) < 0.15, 
+expect_true(abs(observed_neg_cor[1, 2] - (-0.3)) < 0.15,
             info = "Negative correlation approximately preserved in magnitude")
+
+# The correction 2 * sin(pi * r / 6) is applied to each off-diagonal entry once.
+# Up to 0.1.33 it was applied twice, so a target of 0.5 was delivered as 0.518;
+# at n = 1e6 the standard error is ~0.0008, so that bias was > 20 SE.
+dqset.seed(20261004)
+result_target <- generate_corr_unifs(1e6, M_2x2)
+expect_true(abs(cor(result_target)[1, 2] - 0.5) < 0.005,
+            info = "Correlation hits the target (correction applied once)")
+
+# A near-singular target whose once-adjusted matrix is still positive definite
+# (smallest eigenvalue 0.0018); adjusted twice it was not, and chol() failed
+M_edge <- matrix(c(1,   0.9, 0.9,
+                   0.9, 1,   0.636,
+                   0.9, 0.636, 1), nrow = 3)
+expect_silent(generate_corr_unifs(100, M_edge),
+              info = "Near-singular target: the adjusted matrix stays positive definite")
 
 
 # =============================================================================
