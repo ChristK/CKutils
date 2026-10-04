@@ -100,6 +100,15 @@
   and truncation then mapped 1 and 1.5 to the same cell, so a lookup returned
   the wrong value for one of the cells.
 
+## Documentation
+
+* `lookup_dt()`: `exclude_col` is documented as it behaves. A column named
+  there that both tables have is not ignored, but looked up as a value column,
+  so with `merge = TRUE` it overwrites that column of `tbl` (as IMPACTncd
+  relies on, to refresh distribution parameters). Example 3 said such a column
+  "should be ignored", and showed the caller's values; it now shows the
+  overwritten ones.
+
 ## Performance
 
 * Validation now takes less time than in 0.1.33, while checking every key.

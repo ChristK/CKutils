@@ -31,6 +31,8 @@
 #' @param lookup_tbl A data.table containing the lookup values, with key columns matching those in \code{tbl}.
 #' @param merge Logical. If \code{TRUE}, the lookup results are merged into \code{tbl}; if \code{FALSE}, only the lookup results are returned.
 #' @param exclude_col A character vector specifying column names to exclude from the lookup keys.
+#'   A column named here that both tables have is then a value column: it is returned with the
+#'   other lookup values, so with \code{merge = TRUE} it overwrites that column of \code{tbl}.
 #' @param check_lookup_tbl_validity Logical. If \code{TRUE} (default), validates the structure of \code{lookup_tbl}.
 #'
 #' @return A data.table. When \code{merge = TRUE}, \code{tbl} is returned with additional lookup columns;
@@ -55,7 +57,9 @@
 #'
 #' The \code{exclude_col} parameter allows specific columns to be ignored during the
 #' key matching process, which can be useful if some common columns are not part of
-#' the intended join key.
+#' the intended join key. Such a column is not ignored altogether: if
+#' \code{lookup_tbl} has it, it is looked up like any other value column, so with
+#' \code{merge = TRUE} its values replace those of \code{tbl}.
 #'
 #' The \code{check_lookup_tbl_validity} parameter, when \code{TRUE}, invokes
 #' \code{is_valid_lookup_tbl} to ensure that \code{lookup_tbl} is structured correctly
@@ -110,16 +114,17 @@
 #'                                          levels = c("apple", "banana")),
 #'                            category = c("fruit", "fruit"),
 #'                            supplier_id = c(10, 20),
-#'                            sales_rep_id = c(99, 99)) # This sales_rep_id should be ignored
-#' # We want to lookup 'category' and 'supplier_id' based on 'item' only.
+#'                            sales_rep_id = c(99, 99))
+#' # Look up by 'item' only. sales_rep_id, in both tables, is then not a key
+#' # but a value column: it is looked up too, and replaces sales_data's own.
 #' setkey(item_details, item) # Key for lookup
 #' sales_with_details <- lookup_dt(sales_data, item_details,
 #'                                 exclude_col = "sales_rep_id", merge = TRUE)
 #' print(sales_with_details)
 #' #    region   item sales_rep_id category supplier_id
-#' # 1:  North  apple            1    fruit          10
-#' # 2:  South banana            2    fruit          20
-#' # 3:  North  apple            1    fruit          10
+#' # 1:  North  apple           99    fruit          10
+#' # 2:  South banana           99    fruit          20
+#' # 3:  North  apple           99    fruit          10
 #'
 #' @seealso \code{\link[data.table]{setkeyv}}, \code{\link{is_valid_lookup_tbl}}
 #' @keywords data manipulation utilities
