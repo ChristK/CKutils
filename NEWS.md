@@ -152,6 +152,12 @@
   an argument beyond ~700 (alpha is ~2000 at `mu = 2e6`, 1/sigma is 1000 at
   `sigma = 0.001`); the logs of such values gave NaN. They now use the
   exponentially scaled K; results elsewhere are unchanged.
+* `set_lookup_tbl_key()` sets the key from the rows, as
+  `is_valid_lookup_tbl(fixkey = TRUE)` now does: `setkeyv()` trusted a key or an
+  index left stale by tools outside data.table, and kept or applied a wrong row
+  order under the key. With integer or factor keys one pass over the rows
+  marks a key they already follow; otherwise they are sorted from scratch. It
+  also names absent key columns.
 
 ## Documentation
 
@@ -227,6 +233,8 @@
 * `test-distr_huge_mu.R`: medians beyond 1e6 for BNB, ZIBNB, ZABNB, SICHEL,
   ZISICHEL and DPO, checked by F(q) >= p > F(q - 1); SICHEL at `sigma = 0.001`;
   NA with a warning for p = 1 and for quantiles beyond the int range.
+* `test-lookup_dt.R`, Tests 4b-4d: `set_lookup_tbl_key()` past a stale index,
+  with a stale key, and on a double key column; and an absent key column.
 
 # CKutils 0.1.33
 

@@ -549,6 +549,8 @@ is_valid_lookup_tbl <- function(lookup_tbl, keycols, fixkey = FALSE) {
 #' The \code{set_lookup_tbl_key} function assigns key columns to a lookup table, enhancing
 #' the performance of subsequent lookup operations. It is essential that the specified key
 #' columns are appropriate for the data and that they uniquely identify rows in the table.
+#' The key is set from the rows themselves, not from a key or index the table already
+#' carries, which tools outside data.table (base \code{[[<-}, dplyr verbs) can leave stale.
 #'
 #' @examples
 #' library(data.table)
@@ -569,12 +571,27 @@ set_lookup_tbl_key <- function(lookup_tbl, keycols) {
     stop("keycols argument is missing.")
   }
 
+  absent <- setdiff(keycols, names(lookup_tbl))
+  if (length(absent)) {
+    stop("keycols not found in lookup_tbl: ", paste(absent, collapse = ", "), ".")
+  }
+
   # Ensure keycols are sorted and prioritize 'year' if present
   keycols <- sort(keycols)
   keycols <- keycols[order(match(keycols, "year"))]
 
-  # Set the key for best performance
-  setkeyv(lookup_tbl, keycols)
+  # Set the key for best performance. setkeyv() trusts a key or an index that
+  # tools outside data.table (base [[<-, dplyr verbs) can leave stale, and would
+  # keep or apply a wrong row order. So read the rows: with integer or factor
+  # keys, mark the key if the rows already follow it (one pass); otherwise sort
+  # them, trusting no key or index.
+  int_keys <- all(vapply(keycols, function(j) typeof(lookup_tbl[[j]]) == "integer", NA))
+  if (int_keys && key_order_cpp(lookup_tbl, keycols) > 0L) {
+    setattr(lookup_tbl, "sorted", keycols)
+  } else {
+    setkeyv(lookup_tbl, NULL)
+    setkeyv(lookup_tbl, keycols)
+  }
 
   return(invisible(lookup_tbl))
 }

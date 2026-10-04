@@ -23,6 +23,8 @@ as the key for the data.table.
 The \code{set_lookup_tbl_key} function assigns key columns to a lookup table, enhancing
 the performance of subsequent lookup operations. It is essential that the specified key
 columns are appropriate for the data and that they uniquely identify rows in the table.
+The key is set from the rows themselves, not from a key or index the table already
+carries, which tools outside data.table (base \code{[[<-}, dplyr verbs) can leave stale.
 }
 \examples{
 library(data.table)

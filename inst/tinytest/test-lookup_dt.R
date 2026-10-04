@@ -32,6 +32,39 @@ expect_error(set_lookup_tbl_key(dt4, NULL),
              info = "set_lookup_tbl_key: Error on missing keycols (NULL)")
 expect_error(set_lookup_tbl_key(dt4, character(0)),
              info = "set_lookup_tbl_key: Error on missing keycols (empty character)")
+expect_error(set_lookup_tbl_key(data.table(a = 1:2, v = 1:2), "b"),
+             pattern = "keycols not found in lookup_tbl: b.", fixed = TRUE,
+             info = "set_lookup_tbl_key: Absent key column")
+
+# Test 4b: The key comes from the rows, not from a stale index. setkeyv()
+# reused the index, and keyed rows that do not follow the key.
+sk_idx <- CJ(year = 2020:2021, sex = factor(c("men", "women")))
+sk_idx[, v := c("2020m", "2020w", "2021m", "2021w")]
+setkey(sk_idx, NULL)
+setindexv(sk_idx, c("year", "sex"))
+# base [[<- recodes the factor but keeps the index (data.table cannot see it)
+sk_idx[["sex"]] <- factor(sk_idx[["sex"]], levels = c("women", "men"))
+set_lookup_tbl_key(sk_idx, c("sex", "year"))
+expect_identical(key(sk_idx), c("year", "sex"),
+                 info = "set_lookup_tbl_key: Key set past a stale index")
+expect_identical(sk_idx$v, c("2020w", "2020m", "2021w", "2021m"),
+                 info = "set_lookup_tbl_key: Rows sorted past a stale index")
+
+# Test 4c: ... and a stale key that already names the key columns is repaired
+sk_key <- CJ(year = 2020:2021, sex = factor(c("men", "women")))
+sk_key[, v := c("2020m", "2020w", "2021m", "2021w")]
+sk_key <- sk_key[c(2L, 1L, 4L, 3L)]
+setattr(sk_key, "sorted", c("year", "sex"))
+set_lookup_tbl_key(sk_key, c("year", "sex"))
+expect_identical(sk_key$v, c("2020m", "2020w", "2021m", "2021w"),
+                 info = "set_lookup_tbl_key: Stale key repaired")
+
+# Test 4d: A double key column (no one-pass check) is sorted from scratch
+sk_dbl <- data.table(year = c(2021, 2020), v = 1:2)
+setattr(sk_dbl, "sorted", "year")
+set_lookup_tbl_key(sk_dbl, "year")
+expect_identical(sk_dbl$v, c(2L, 1L),
+                 info = "set_lookup_tbl_key: Stale key on a double column repaired")
 
 # --- Tests for is_valid_lookup_tbl ---
 
