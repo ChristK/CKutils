@@ -39,6 +39,24 @@ expect_error(
   info = "lookup_dt: huge key range triggers 'range too large'"
 )
 
+# --- Not a full grid, validity OFF: the row count is checked anyway ---
+# A gap in a key after 'year' (0.1.33, validity ON or OFF, returned the age-35
+# row for age 31, silently), and a factor level that never occurs.
+lt_gap_off <- CJ(year = 2020:2021, age = c(30L, 35L))[, v := 1:4]
+expect_error(
+  lookup_dt(data.table(year = 2020L, age = 31L), lt_gap_off,
+            check_lookup_tbl_validity = FALSE),
+  pattern = "not a full grid of its key values: it has 4 rows for 12 combinations",
+  info = "lookup_dt (validity OFF): gap in a key after 'year'"
+)
+lt_lvl_off <- CJ(year = 2020:2021, sex = factor(c("men", "women")))[sex == "men"][, v := 1:2]
+expect_error(
+  lookup_dt(data.table(year = 2020L, sex = factor("men", levels = c("men", "women"))),
+            lt_lvl_off, check_lookup_tbl_validity = FALSE),
+  pattern = "not a full grid of its key values: it has 2 rows for 4 combinations",
+  info = "lookup_dt (validity OFF): unused factor level"
+)
+
 # --- Line 190: factor key with different levels in tbl vs lookup_tbl, validity ON ---
 # lookup_tbl is internally valid (2 levels, 2 rows) so is_valid_lookup_tbl passes,
 # but tbl carries an extra level so the in-loop identical(levels) check fires.

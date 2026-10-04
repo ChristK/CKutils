@@ -576,9 +576,10 @@ expect_error(lookup_dt(main_incomplete, incomplete_lookup, merge = TRUE, check_l
              info = "lookup_dt: Detects incomplete lookup table (Windows segfault cause)")
 
 # Test 32: Incomplete lookup table with validation disabled still fails safely
+# (since 0.1.34 on the row count, before the later bounds check)
 expect_error(lookup_dt(main_incomplete, incomplete_lookup, merge = TRUE, check_lookup_tbl_validity = FALSE),
-             pattern = "out of bounds",
-             info = "lookup_dt: Safe failure even with validation disabled (C++ bounds checking)")
+             pattern = "not a full grid of its key values: it has 2 rows for 4 combinations",
+             info = "lookup_dt: Safe failure even with validation disabled")
 
 # Test 33: Complete lookup table works correctly
 complete_lookup <- data.table(
@@ -673,7 +674,7 @@ expect_identical(result39$result_col, "success",
 # Test 40: Error handling with tryCatch functionality
 # Test that the enhanced error messages are informative
 expect_error(lookup_dt(main_incomplete, incomplete_lookup, merge = TRUE, check_lookup_tbl_validity = FALSE),
-             pattern = "out of bounds",
+             pattern = "not a full grid of its key values",
              info = "lookup_dt: Enhanced error messages for debugging")
 
 # Test 42: Performance regression test - ensure fixes don't significantly impact speed

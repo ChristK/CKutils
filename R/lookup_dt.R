@@ -34,6 +34,8 @@
 #'   A column named here that both tables have is then a value column: it is returned with the
 #'   other lookup values, so with \code{merge = TRUE} it overwrites that column of \code{tbl}.
 #' @param check_lookup_tbl_validity Logical. If \code{TRUE} (default), validates the structure of \code{lookup_tbl}.
+#'   If \code{FALSE}, \code{lookup_tbl} is not validated, apart from a few checks that cost
+#'   little: among them, that it has as many rows as its key values have combinations.
 #'
 #' @return A data.table. When \code{merge = TRUE}, \code{tbl} is returned with additional lookup columns;
 #' otherwise, a data.table containing only the lookup results is returned.
@@ -225,11 +227,19 @@ lookup_dt <- function(
       xmax <- last(lookup_tbl[[j]])
       xmin <- first(lookup_tbl[[j]])
       
-      # Check for integer overflow potential
-      if (is.infinite(xmax) || is.infinite(xmin) || xmax - xmin + 1L > .Machine$integer.max) {
+      # Check for integer overflow potential, in double (in integer arithmetic
+      # the span itself overflowed to NA): the span and the values must both
+      # fit in an integer
+      span <- as.numeric(xmax) - as.numeric(xmin) + 1
+      if (!is.finite(span) || span > .Machine$integer.max ||
+          max(abs(as.numeric(c(xmin, xmax)))) > .Machine$integer.max) {
         stop("Column '", j, "' range too large, potential integer overflow")
       }
-      
+      # With the rows in key order, a key of a full grid ends where it is largest
+      if (span < 1) {
+        stop("lookup_tbl is not a full grid of its key values (key column '", j, "').")
+      }
+
       if (
         check_lookup_tbl_validity &&
           (min(tbl[[j]], na.rm = TRUE) < xmin ||
@@ -237,9 +247,21 @@ lookup_dt <- function(
       ) {
         message(j, " has rows in tbl without a match in lookup_tbl!")
       }
-      cardinality[[j]] <- as.integer(xmax - xmin + 1L)
+      cardinality[[j]] <- as.integer(span)
       min_lookup[[j]] <- as.integer(xmin)
     }
+  }
+
+  # The row arithmetic below needs one row per combination of key values.
+  # Checked whatever check_lookup_tbl_validity says, as it costs nothing: it
+  # catches a gap, a missing or extra row, an unused factor level -- though not
+  # everything the full validation does (e.g. NA in a factor key).
+  if (!isTRUE(nrow(lookup_tbl) == prod(cardinality))) {
+    stop(
+      "lookup_tbl is not a full grid of its key values: it has ",
+      nrow(lookup_tbl), " rows for ",
+      format(prod(cardinality), scientific = FALSE), " combinations."
+    )
   }
 
   # Compute the cumulative product of cardinalities (in reverse) for index mapping
@@ -276,10 +298,11 @@ lookup_dt <- function(
     warning("Some row indices are NA, results may be incomplete")
   }
   
-  # Check bounds, handling NA values properly
+  # Check bounds, handling NA values properly. Defensive: with as many rows as
+  # key combinations (checked above), every index is within 1..nrow.
   valid_indices <- !is.na(rownum)
   if (any(valid_indices) && any(rownum[valid_indices] < 1L | rownum[valid_indices] > nrow(lookup_tbl))) {
-    stop("Calculated row indices are out of bounds")
+    stop("Calculated row indices are out of bounds")                 # nocov
   }
 
   # Merge lookup values into tbl or return them separately

@@ -99,6 +99,19 @@
   a whole number. `c(1, 1.5, 3)` passed the row-count and uniqueness checks,
   and truncation then mapped 1 and 1.5 to the same cell, so a lookup returned
   the wrong value for one of the cells.
+* **`lookup_dt()` checks the row count of `lookup_tbl` even with
+  `check_lookup_tbl_validity = FALSE`.** Its row arithmetic needs one row per
+  combination of key values, and it computes the number of combinations
+  anyway, so the check costs nothing. With validation off (IMPACTncd's
+  `logs: no`), a table with a gap in an integer key, a missing row or an
+  unused factor level was read wrong without a warning: the year x age
+  {30, 35} table above returned the age-35 row for age 31. Such tables now
+  stop with "lookup_tbl is not a full grid of its key values". It does not
+  catch everything the full validation does: NA in a factor key, for one.
+  The range check before it now works in double, so an integer key spanning
+  more than the integer range gets "range too large" instead of "missing value
+  where TRUE/FALSE needed", and a key whose last value lies below its first is
+  reported as not a full grid.
 
 ## Documentation
 
@@ -163,6 +176,10 @@
   integer key, a fractional numeric key, a numeric key beyond the integer
   range and an integer64 key; and the C++ refuses an innermost dimension with
   no values.
+* `test-lookup_extra.R`: with validation off, the year x age {30, 35} table and
+  a factor level that never occurs stop on the row count. `test-lookup_dt.R`
+  Tests 32 and 40 now expect that message, instead of the later "Calculated
+  row indices are out of bounds", which the row count makes unreachable.
 
 # CKutils 0.1.33
 

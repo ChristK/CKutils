@@ -23,7 +23,9 @@ lookup_dt(
 A column named here that both tables have is then a value column: it is returned with the
 other lookup values, so with \code{merge = TRUE} it overwrites that column of \code{tbl}.}
 
-\item{check_lookup_tbl_validity}{Logical. If \code{TRUE} (default), validates the structure of \code{lookup_tbl}.}
+\item{check_lookup_tbl_validity}{Logical. If \code{TRUE} (default), validates the structure of \code{lookup_tbl}.
+If \code{FALSE}, \code{lookup_tbl} is not validated, apart from a few checks that cost
+little: among them, that it has as many rows as its key values have combinations.}
 }
 \value{
 A data.table. When \code{merge = TRUE}, \code{tbl} is returned with additional lookup columns;
