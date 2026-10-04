@@ -253,7 +253,7 @@ NumericVector fqBNB(const NumericVector& p,
   {
     // NaN/NA in any argument -> NA. Without this, a NaN p slips past the [0,1]
     // checks and reaches fqBNB_search, whose `cdf >= p` is always false for NaN,
-    // so it would return a wrong, non-NA value (max_iter) instead of NA.
+    // so the search could never stop at p.
     if (ISNAN(recycled.vec1[i]) || ISNAN(recycled.vec2[i]) ||
         ISNAN(recycled.vec3[i]) || ISNAN(recycled.vec4[i])) {
       out[i] = NA_REAL;
@@ -263,5 +263,16 @@ NumericVector fqBNB(const NumericVector& p,
                           recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
   }
 
+  // A non-NA input that gave NA: the search gave up (outside the loop above,
+  // which SIMD_HINT declares free of dependencies between iterations)
+  bool not_found = false;
+  for (int i = 0; i < n && !not_found; i++)
+    not_found = ISNAN(out[i]) && !(ISNAN(recycled.vec1[i]) ||
+        ISNAN(recycled.vec2[i]) ||
+        ISNAN(recycled.vec3[i]) ||
+        ISNAN(recycled.vec4[i]));
+  if (not_found)
+    warning("NAs produced: a quantile was not found (the cumulative probability stops "
+            "short of p)");
   return out;
 }

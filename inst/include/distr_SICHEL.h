@@ -48,8 +48,16 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // Helper functions for SICHEL computations
 
 // Compute cvec efficiently
+// log K_nu(x), from the exponentially scaled Bessel K: R's bessel_k(x, nu, 2)
+// is K_nu(x) * exp(x). The unscaled K (expo = 1) underflows to 0 once x is
+// beyond ~700 -- alpha is ~2000 at mu = 2e6, and 1/sigma is 1000 at
+// sigma = 0.001 -- so its log was -Inf and differences of such logs NaN.
+inline double log_bessel_k(const double& x, const double& nu) {
+    return std::log(R::bessel_k(x, nu, 2)) - x;
+}
+
 inline double compute_cvec(const double& sigma, const double& nu) {
-    return exp(log(R::bessel_k(1.0/sigma, nu + 1.0, 1)) - log(R::bessel_k(1.0/sigma, nu, 1)));
+    return exp(log_bessel_k(1.0/sigma, nu + 1.0) - log_bessel_k(1.0/sigma, nu));
 }
 
 // Compute alpha efficiently
@@ -59,7 +67,7 @@ inline double compute_alpha(const double& sigma, const double& mu, const double&
 
 // Compute lbes efficiently
 inline double compute_lbes(const double& alpha, const double& nu) {
-    return log(R::bessel_k(alpha, nu + 1.0, 1)) - log(R::bessel_k(alpha, nu, 1));
+    return log_bessel_k(alpha, nu + 1.0) - log_bessel_k(alpha, nu);
 }
 
 // Scalar helper function for tofySICHEL computation
@@ -113,8 +121,8 @@ inline double fdSICHEL_scalar(const int& x, const double& mu,
     // x + 1.0 is deliberately computed in double: at x == INT_MAX an int
     // lgamma(x + 1) would wrap the argument to INT_MIN.
     const double logfy = -R::lgammafn(x + 1.0) - nu * std::log(sigma * alpha) +
-                         sumlty + std::log(R::bessel_k(alpha, nu, 1)) -
-                         std::log(R::bessel_k(1.0 / sigma, nu, 1));
+                         sumlty + log_bessel_k(alpha, nu) -
+                         log_bessel_k(1.0 / sigma, nu);
 
     return log_p ? logfy : std::exp(logfy);
 }
@@ -131,8 +139,8 @@ inline double fcdfSICHEL_scalar(const int& y, const double& mu, const double& si
     std::vector<double> lpnew(lyp1);
 
     tynew[0] = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);
-    lpnew[0] = -nu * log(sigma * alpha) + log(R::bessel_k(alpha, nu, 1)) -
-               log(R::bessel_k(1.0/sigma, nu, 1));
+    lpnew[0] = -nu * log(sigma * alpha) + log_bessel_k(alpha, nu) -
+               log_bessel_k(1.0/sigma, nu);
 
     for (int j = 1; j < lyp1; j++) {
         tynew[j] = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tynew[j-1])) *

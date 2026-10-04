@@ -42,6 +42,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (lbeta, lgammafn, ...)
 #include <cmath>
+#include "distr_search.h"
 
 // SIMD-optimised Beta Negative Binomial density scalar function
 inline double fdBNB_scalar(const int& x,
@@ -114,8 +115,7 @@ inline double fpBNB_scalar(const int& q,
 inline int fqBNB_search(const double& p, const double& mu, const double& sigma, const double& nu) {
     // NaN/NA guard: the vector wrapper (fqBNB) already maps NaN args to NA, but
     // guard here too so the search below can never see NaN. For a NaN p the
-    // `cdf >= p` test is always false, so it would otherwise spin to max_iter
-    // and return a wrong, non-NA value.
+    // `cdf >= p` test is always false, so the search could never stop at p.
     if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) {
         return NA_INTEGER;
     }
@@ -130,20 +130,43 @@ inline int fqBNB_search(const double& p, const double& mu, const double& sigma, 
     const double log_beta_n_m = R::lbeta(n_param, m);
     const double log_gamma_k = R::lgammafn(k);
 
+    // log of the term at i; i + 1.0 keeps lgamma's argument out of int arithmetic
+    auto log_term = [&](double i) {
+        return R::lbeta(i + n_param, m + k) - log_beta_n_m -
+               R::lgammafn(i + 1.0) - log_gamma_k + R::lgammafn(i + k);
+    };
+    // A quantile beyond the int range is reported at once, not after scanning
+    // the whole range. The terms rise while
+    //   term(i + 1) / term(i) = (i + n)(i + k) / ((i + n + m + k)(i + 1)) > 1,
+    // i.e. while i < r = (n (k - 1) - m - k) / (m + 1): the largest term is at
+    // ceil(r), or at 0, so F(CK_SEARCH_MAX) <= (CK_SEARCH_MAX + 1) * term there
+    // (with a margin of 1e-3 in the log for its rounding). Closed form: near
+    // INT_MAX, neighbouring log terms differ by less than their rounding noise.
+    const double r = (n_param * (k - 1.0) - m - k) / (m + 1.0);
+    const double mode = std::min(std::max(0.0, std::ceil(r)), static_cast<double>(CK_SEARCH_MAX));
+    if (p > 0.0 && log_term(mode) + std::log(CK_SEARCH_MAX + 1.0) < std::log(p) - 1e-3) {
+        return NA_INTEGER;
+    }
+    // With a large mu, start at the first term that does not underflow
+    // (ck_search_start, distr_search.h)
+    const long long start = (p > 0.0) ? ck_search_start(log_term, mu) : 0;
+
+    // No fixed cap: ck_search_gives_up() (distr_search.h) ends a search that
+    // cannot reach p, and NA_INTEGER is returned rather than a number
     double cdf = 0.0;
-    const int max_iter = 1000000;
-
-    for (int i = 0; i < max_iter; i++) {
-        const double log_prob = R::lbeta(i + n_param, m + k) - log_beta_n_m -
-                               R::lgammafn(i + 1) - log_gamma_k + R::lgammafn(i + k);
-        cdf += std::exp(log_prob);
-
+    double prev_term = -1.0;
+    for (int i = static_cast<int>(start); i <= CK_SEARCH_MAX; i++) {
+        const double term = std::exp(log_term(i));
+        if (ck_search_gives_up(term, prev_term, cdf)) {
+            return NA_INTEGER;
+        }
+        cdf += term;
         if (cdf >= p) {
             return i;
         }
+        prev_term = term;
     }
-
-    return max_iter;
+    return NA_INTEGER;
 }
 
 // qBNB ----
@@ -163,8 +186,10 @@ inline double fqBNB_scalar(const double& p,
     return R_PosInf;
   }
 
-  // Use optimized incremental search
-  return fqBNB_search(p_, mu, sigma, nu);
+  // Use optimized incremental search. It reports "not found" as NA_INTEGER,
+  // which must become NA here: converted to double it would read -2147483648.
+  const int q = fqBNB_search(p_, mu, sigma, nu);
+  return (q == NA_INTEGER) ? NA_REAL : static_cast<double>(q);
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_BNB.cpp)

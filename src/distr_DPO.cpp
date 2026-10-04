@@ -30,6 +30,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <cstring>
 #include "recycling_helpers.h"
 #include "distr_DPO.h"   // canonical header-only scalar definitions
+#include "distr_search.h"   // ck_search_gives_up(), CK_SEARCH_MAX
 // [[Rcpp::plugins(cpp17)]]
 using namespace Rcpp;
 
@@ -303,24 +304,30 @@ int fqDPO_search(const double& p,
     return count_to_int(R::qpois(p, mu, true, false), q_i) ? q_i : NA_INTEGER;
   }
   
-  // Incremental search: compute CDF incrementally by adding densities
+  // Incremental search: compute CDF incrementally by adding densities. No
+  // fixed cap: ck_search_gives_up() (distr_search.h) ends a search that cannot
+  // reach p, and NA_INTEGER is returned rather than a number
+  // With a large mu, start at the first density that does not underflow
+  // (ck_search_start, distr_search.h). For mu beyond the int range the
+  // densities are NaN (their constant cannot be summed), and the search below
+  // gives up at its first term.
+  const long long start = (p > 0.0)
+    ? ck_search_start([&](double q) { return fdDPO_scalar(static_cast<int>(q), mu, sigma, true); }, mu)
+    : 0;
   double cdf = 0.0;
-  int q = 0;
-  
-  // Maximum iteration for safety
-  const int max_iter = 1000000;
-  
-  while (cdf < p && q < max_iter) {
-    double density = fdDPO_scalar(q, mu, sigma, false);
+  double prev_density = -1.0;
+  for (int q = static_cast<int>(start); q <= CK_SEARCH_MAX; q++) {
+    const double density = fdDPO_scalar(q, mu, sigma, false);
+    if (ck_search_gives_up(density, prev_density, cdf)) {
+      return NA_INTEGER;
+    }
     cdf += density;
-    
     if (cdf >= p) {
       return q;
     }
-    q++;
+    prev_density = density;
   }
-  
-  return q;
+  return NA_INTEGER;
 }
 
 //' The DPO Distribution - Cumulative Distribution Function

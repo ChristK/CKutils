@@ -23,6 +23,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include "recycling_helpers.h"
 #include "distr_NBI.h"
 #include "distr_SICHEL.h"   // canonical header-only scalar definitions
+#include "distr_search.h"   // ck_search_gives_up(), CK_SEARCH_MAX
 // [[Rcpp::plugins(cpp17)]]
 
 using namespace Rcpp;
@@ -218,35 +219,45 @@ int fqSICHEL_search(const double& p, const double& mu, const double& sigma, cons
     
     // Initial density and CDF at y=0
     double tynew_prev = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);
-    double lpnew_prev = -nu * log(sigma * alpha) + log(R::bessel_k(alpha, nu, 1)) - 
-                        log(R::bessel_k(1.0/sigma, nu, 1));
-    
-    double cdf = exp(lpnew_prev);
-    
+    double lpnew_prev = -nu * log(sigma * alpha) + log_bessel_k(alpha, nu) -
+                        log_bessel_k(1.0/sigma, nu);
+
+    double term_prev = exp(lpnew_prev);
+    if (!std::isfinite(term_prev)) {
+        return NA_INTEGER;
+    }
+    double cdf = term_prev;
+
     if (cdf >= p) {
         return 0;
     }
-    
-    // Incremental search
-    const int max_iter = 1000000;
+
+    // Incremental search. No fixed cap: ck_search_gives_up() (distr_search.h)
+    // ends a search that cannot reach p, and NA_INTEGER is returned rather than
+    // a number
     const double sigma_alpha_cvec_sq = pow(mu / (sigma * alpha * cvec), 2.0);
-    
-    for (int j = 1; j < max_iter; j++) {
-        double tynew_curr = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tynew_prev)) * 
+
+    for (int j = 1; j <= CK_SEARCH_MAX; j++) {
+        double tynew_curr = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tynew_prev)) *
                            sigma_alpha_cvec_sq;
         double lpnew_curr = lpnew_prev + log(tynew_prev) - log(static_cast<double>(j));
-        
-        cdf += exp(lpnew_curr);
-        
+        const double term = exp(lpnew_curr);
+
+        if (ck_search_gives_up(term, term_prev, cdf)) {
+            return NA_INTEGER;
+        }
+        cdf += term;
+
         if (cdf >= p) {
             return j;
         }
-        
+
         tynew_prev = tynew_curr;
         lpnew_prev = lpnew_curr;
+        term_prev = term;
     }
-    
-    return max_iter;
+
+    return NA_INTEGER;
 }
 
 //' Sichel Distribution Quantile Function
@@ -319,6 +330,7 @@ IntegerVector fqSICHEL(NumericVector p,
     }
     
     IntegerVector QQQ(n);
+    bool not_found = false;  // a non-NA input gave NA
     
     for (int i = 0; i < n; i++) {
         const double pi = p_transformed[i];
@@ -336,14 +348,23 @@ IntegerVector fqSICHEL(NumericVector p,
             continue;
         }
 
+        // The quantile is Inf, which an int cannot hold. Assigning R_PosInf to
+        // an IntegerVector element was an out-of-range float-to-int conversion:
+        // undefined behaviour, that gives INT_MIN (= NA) on x86-64 and
+        // saturates to INT_MAX on AArch64.
         if (pi + 1e-09 >= 1.0) {
-            QQQ[i] = R_PosInf;
+            QQQ[i] = NA_INTEGER;
+            not_found = true;
             continue;
         }
-        
-        // Use optimized incremental search
+
+        // Use optimized incremental search (NA_INTEGER: not found)
         QQQ[i] = fqSICHEL_search(pi, mui, sigmai, nui);
+        if (QQQ[i] == NA_INTEGER) not_found = true;
     }
-    
+
+    if (not_found)
+        warning("NAs produced: a quantile is infinite (p = 1) or was not found "
+                "(the cumulative probability stops short of p)");
     return QQQ;
 }

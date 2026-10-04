@@ -127,6 +127,31 @@
   large `mu` recompute it for almost every term. gamlss.dist's `dDPO()` sums the
   same truncated window, so two tests now use an implementation-independent
   reference. `fget_C()` computes the constant the same way.
+* **The discrete quantile functions no longer return their iteration cap as
+  the quantile.** `fqBNB()`, `fqSICHEL()`, `fqDPO()` and `fqDEL()` -- and
+  `fqZIBNB()`, `fqZABNB()` and `fqZISICHEL()` through them -- add one
+  probability at a time until the CDF reaches p, and stopped after 1e6 terms,
+  returning 1e6 whatever the CDF: at `mu = 2e6` `fqBNB()` returned 1,000,000
+  where the median is 1,039,684 (the CDF at 1e6 being 0.488), and `fqSICHEL()`
+  1,000,000 for 1,351,683. There is no fixed cap now. A search gives up, with
+  NA and a warning, only when the CDF cannot reach p: a term that is not finite,
+  or terms past the largest too small to change the sum. A BNB quantile beyond
+  the int range is reported at once (from the closed-form mode), and BNB and
+  DPO searches at a large `mu` start at the first term that does not
+  underflow. The time grows with the quantile: about 0.1 s per million terms
+  for BNB (`mu = 2e7`: 1 s; a quantile of 1.56e9 at `mu = 3e9`: about 2
+  minutes), about 0.01 s for SICHEL, whose terms come from a recursion -- so a
+  SICHEL quantile beyond the int range is only known to be NA after scanning
+  the range (some 40 s).
+* `fqSICHEL()` and `fqZISICHEL()` return NA, with a warning, for p = 1: the
+  quantile is `Inf`, which an integer cannot hold. They stored `Inf` into the
+  integer result, an out-of-range conversion whose result is undefined: NA on
+  x86-64, 2147483647 on AArch64.
+* **`fdSICHEL()`, `fpSICHEL()` and `fqSICHEL()` work at a large `mu` and a
+  small `sigma`.** They used the unscaled Bessel K, which underflows to 0 for
+  an argument beyond ~700 (alpha is ~2000 at `mu = 2e6`, 1/sigma is 1000 at
+  `sigma = 0.001`); the logs of such values gave NaN. They now use the
+  exponentially scaled K; results elsewhere are unchanged.
 
 ## Documentation
 
@@ -199,6 +224,9 @@
   normalisation, instead of gamlss.dist's truncated `dDPO()`; new: densities at
   `mu = 5000` sum to 1, `fpDPO(0, 5000, 2)` is 0 (was `Inf`), and the left tail
   at `mu = 1000`, `sigma = 10`.
+* `test-distr_huge_mu.R`: medians beyond 1e6 for BNB, ZIBNB, ZABNB, SICHEL,
+  ZISICHEL and DPO, checked by F(q) >= p > F(q - 1); SICHEL at `sigma = 0.001`;
+  NA with a warning for p = 1 and for quantiles beyond the int range.
 
 # CKutils 0.1.33
 

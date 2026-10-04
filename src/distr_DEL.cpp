@@ -30,6 +30,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <cstring>
 #include "recycling_helpers.h"
 #include "distr_DEL.h"   // header-only scalar definitions (fdPO_scalar, ftofydel2_scalar, fdDEL_scalar, fpDEL_hlp_fn, fpDEL_scalar)
+#include "distr_search.h"   // ck_search_gives_up(), CK_SEARCH_MAX
 // [[Rcpp::plugins(cpp17)]]
 using namespace Rcpp;
 
@@ -459,32 +460,30 @@ int fqDEL_search(const double &p,
     return count_to_int(R::qpois(p, mu, true, false), q_i) ? q_i : NA_INTEGER;
   }
   
-  // Incremental search: compute CDF incrementally by adding densities
-  double cdf = 0.0;
-  int q = 0;
-  
   // Precompute constants for density calculation
   const double one_minus_nu = 1.0 - nu;
-  const double logpy0 = -mu * nu - (1.0 / sigma) * 
+  const double logpy0 = -mu * nu - (1.0 / sigma) *
                         log(1.0 + mu * sigma * one_minus_nu);
-  
-  // Start summing densities until CDF >= p
-  // Use a maximum iteration count for safety
-  const int max_iter = 1000000;
-  
-  while (cdf < p && q < max_iter) {
+
+  // Incremental search: sum densities until CDF >= p. No fixed cap:
+  // ck_search_gives_up() (distr_search.h) ends a search that cannot reach p,
+  // and NA_INTEGER is returned rather than a number
+  double cdf = 0.0;
+  double prev_density = -1.0;
+  for (int q = 0; q <= CK_SEARCH_MAX; q++) {
     double S = ftofydel2_scalar(q, mu, sigma, nu);
-    double log_density = logpy0 - lgamma(q + 1) + S;
+    double log_density = logpy0 - lgamma(q + 1.0) + S;
     double density = exp(log_density);
+    if (ck_search_gives_up(density, prev_density, cdf)) {
+      return NA_INTEGER;
+    }
     cdf += density;
-    
     if (cdf >= p) {
       return q;
     }
-    q++;
+    prev_density = density;
   }
-  
-  return q;
+  return NA_INTEGER;
 }
 
 //' Quantile Function for the Delaporte Distribution
