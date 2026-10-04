@@ -44,6 +44,36 @@ expect_message(
   info = "detach_package: Shows message for non-attached package"
 )
 
+# Test 4: When detach() refuses (package:base never detaches), it stops at once
+# and returns FALSE with the reason. Up to 0.1.33 it looped forever, printing
+# "Detached package: base". Here search() reports the package attached only 5
+# times, so that such a regression fails instead of hanging the test run. (A
+# time limit cannot be relied on: when it fires inside the old loop's try(),
+# the error is swallowed and R clears the limit.)
+n_search <- 0L
+detach_package_guarded <- detach_package
+environment(detach_package_guarded) <- list2env(
+  list(search = function() {
+    n_search <<- n_search + 1L
+    if (n_search > 5L) character(0) else base::search()
+  }),
+  parent = environment(detach_package)
+)
+msgs_base <- character(0)
+res_base <- withCallingHandlers(
+  detach_package_guarded("base"),
+  message = function(m) {
+    msgs_base <<- c(msgs_base, conditionMessage(m))
+    invokeRestart("muffleMessage")
+  }
+)
+expect_identical(res_base, FALSE,
+                 info = "detach_package: Returns FALSE when detach() refuses")
+expect_identical(n_search, 1L,
+                 info = "detach_package: Gives up after the first refusal")
+expect_true(length(msgs_base) == 1L && grepl("^Could not detach package base: .+", msgs_base),
+            info = "detach_package: One message, with the reason")
+
 # =============================================================================
 # Tests for dependencies function
 # =============================================================================

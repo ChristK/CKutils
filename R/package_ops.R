@@ -26,7 +26,10 @@
 #'
 #' @return Invisibly returns \code{TRUE} if the package was detached, or if its
 #' namespace was loaded-but-not-attached and got unloaded; \code{FALSE} if it
-#' was neither attached nor loaded.
+#' was neither attached nor loaded, if \code{detach()} refused to detach it, or
+#' if its loaded-but-not-attached namespace could not be unloaded (e.g. another
+#' loaded namespace imports it); a message gives the reason. The package's
+#' shared library is unloaded only once its namespace is.
 #'
 #' @details If the specified package is attached multiple times (e.g., via
 #' multiple `library()` calls), it will be fully detached. A message is
@@ -53,16 +56,39 @@ detach_package <- function(pkg) {
 
   search_item <- paste0("package:", pkg)
   detached <- FALSE
+  # Where the package was loaded from, read while its namespace is loaded:
+  # find.package() looks at loaded namespaces before the libraries
+  # (system.file() only in .libPaths())
+  pkg_path <- find.package(pkg, quiet = TRUE)
+  # The shared library goes only once the namespace has: unloading it from a
+  # namespace that stays loaded (another loaded namespace imports it) breaks
+  # every later call into its compiled code
+  unload_dll <- function() {
+    if (!isNamespaceLoaded(pkg)) {
+      try(library.dynam.unload(pkg, pkg_path), silent = TRUE)
+    }
+  }
 
   while (search_item %in% search()) {
-    try(
+    # detach() refuses e.g. a package that another attached package depends
+    # on. Stop then: nothing else in this loop changes search(), so it would
+    # never end.
+    ok <- tryCatch(
       {
         detach(search_item, unload = TRUE, character.only = TRUE)
-        library.dynam.unload(pkg, system.file(package = pkg))
-        unloadNamespace(pkg)
+        TRUE
       },
-      silent = TRUE
+      error = function(e) {
+        message(sprintf("Could not detach package %s: %s", pkg, conditionMessage(e)))
+        FALSE
+      }
     )
+    if (!ok) {
+      return(invisible(FALSE))
+    }
+    # detach(unload = TRUE) has unloaded the namespace as well, unless another
+    # loaded namespace imports it (then it only warns)
+    unload_dll()
     message(sprintf("Detached package: %s", pkg))
     detached <- TRUE
   }
@@ -75,12 +101,18 @@ detach_package <- function(pkg) {
   # is too late to unload (unloadNamespace() runs .onUnload, which reads the
   # already-replaced .rdb).
   if (!detached && isNamespaceLoaded(pkg)) {
-    try(library.dynam.unload(pkg, system.file(package = pkg)), silent = TRUE)
     try(unloadNamespace(pkg), silent = TRUE)
-    if (!isNamespaceLoaded(pkg)) {
-      message(sprintf("Unloaded namespace: %s", pkg))
-      detached <- TRUE
+    if (isNamespaceLoaded(pkg)) {
+      users <- getNamespaceUsers(pkg)
+      message(sprintf(
+        "Could not unload namespace %s%s", pkg,
+        if (length(users)) paste0(": it is imported by ", paste(users, collapse = ", ")) else ""
+      ))
+      return(invisible(FALSE))
     }
+    unload_dll()
+    message(sprintf("Unloaded namespace: %s", pkg))
+    detached <- TRUE
   }
 
   if (!detached) {

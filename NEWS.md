@@ -70,6 +70,20 @@
   uses it for the exposure rank correlations of its synthetic population: in
   its 19-exposure matrix, 5 of the 171 pairs were off by more than 0.01, the
   largest by 0.017, so the model's outputs will shift slightly.
+* **`detach_package()` no longer loops forever when `detach()` refuses.**
+  `detach()` errors for a package that another attached package depends on,
+  and for `base`. The loop swallowed the error and tried again, forever,
+  printing "Detached package: <pkg>" each time. It now stops, says why, and
+  returns `FALSE`.
+* `detach_package()` unloads a package's shared library only once its
+  namespace is gone. When another loaded namespace imports the package (MASS,
+  imported by gamlss), the namespace stays loaded; its shared library was
+  unloaded all the same, and every later call into its compiled code failed
+  with "NULL value passed as symbol address" until R restarted. It now keeps
+  the library, and for a namespace that was loaded but not attached returns
+  `FALSE` with the reason ("imported by gamlss.dist, gamlss") rather than "was
+  not attached". The library is looked for where the namespace was loaded
+  from (`find.package()`), not only in `.libPaths()`.
 
 ## Performance
 
@@ -114,6 +128,11 @@
   of its target, which the double correction missed by more than 20 standard
   errors (the existing test allowed 0.1 at n = 1e4); a near-singular target no
   longer fails in `chol()`.
+* `test-package_ops.R`: `detach_package("base")` returns `FALSE` after one
+  attempt, with the reason. `search()` is wrapped to report the package
+  attached at most 5 times, so a regression fails instead of hanging the test
+  run. (A time limit cannot be relied on: when it fires inside the old loop's
+  `try()`, the error is swallowed and R clears the limit.)
 
 # CKutils 0.1.33
 

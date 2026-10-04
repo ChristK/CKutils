@@ -13,7 +13,10 @@ detach.}
 \value{
 Invisibly returns \code{TRUE} if the package was detached, or if its
 namespace was loaded-but-not-attached and got unloaded; \code{FALSE} if it
-was neither attached nor loaded.
+was neither attached nor loaded, if \code{detach()} refused to detach it, or
+if its loaded-but-not-attached namespace could not be unloaded (e.g. another
+loaded namespace imports it); a message gives the reason. The package's
+shared library is unloaded only once its namespace is.
 }
 \description{
 Detaches a loaded R package cleanly from the current session.
