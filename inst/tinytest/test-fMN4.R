@@ -229,7 +229,9 @@ expect_equal(
 # =============================================================================
 
 # Test 18: Random generation basic functionality
-set.seed(123)
+# frMN4 draws from dqrng, so it is seeded with dqrng::dqset.seed(); the
+# gamlss.dist reference draws from base R, so it is seeded with set.seed().
+dqrng::dqset.seed(123)
 r_ck <- frMN4(1000, mu = 1, sigma = 1, nu = 1)
 set.seed(123)
 r_ref <- rMN4(1000, mu = 1, sigma = 1, nu = 1)
@@ -246,7 +248,7 @@ expect_true(
 )
 
 # Test 19: Random generation with different parameters
-set.seed(456)
+dqrng::dqset.seed(456)
 r_ck2 <- frMN4(1000, mu = 2, sigma = 0.5, nu = 1)
 
 expect_true(
@@ -303,9 +305,9 @@ expect_equal(
 )
 
 # Test 24: Parameter recycling in random generation
-set.seed(789)
+dqrng::dqset.seed(789)
 r_recycle <- frMN4(4, mu = 1, sigma = 1, nu = 1)
-set.seed(789)
+dqrng::dqset.seed(789)
 r_no_recycle <- frMN4(4, mu = c(1, 1, 1, 1), sigma = c(1, 1, 1, 1), nu = c(1, 1, 1, 1))
 
 expect_equal(
@@ -512,4 +514,182 @@ expect_error(
   frMN4(0, 1, 1, 1),
   "positive integer",
   info = "Random generation: n = 0 errors"
+)
+
+# =============================================================================
+# RANDOM GENERATION DRAWS FROM dqrng
+# =============================================================================
+# frMN4() is fqMN4(dqrng::dqrunif(n), mu, sigma, nu), the way the other fr*
+# functions are built. It used to be a C++ function drawing from R's runif(), so
+# it followed set.seed() and ignored dqrng::dqset.seed(): two calls under one
+# dqset.seed() were not reproducible. Each expectation whose outcome depends on
+# the draws seeds dqrng first, so none depends on the state a previous test left
+# behind.
+
+# MN4 category probabilities, and whether the observed category frequencies of x
+# are all within `se` standard errors of them.
+mn4_probs <- function(mu, sigma, nu) c(mu, sigma, nu, 1) / (1 + mu + sigma + nu)
+freq_within_se <- function(x, p, se = 5) {
+  N <- length(x)
+  obs <- tabulate(x, nbins = 4L) / N
+  all(abs(obs - p) < se * sqrt(p * (1 - p) / N))
+}
+
+# Test 38: Reproducible under dqrng::dqset.seed()
+dqrng::dqset.seed(1)
+dq_a <- frMN4(100, 1, 2, 3)
+dqrng::dqset.seed(1)
+dq_b <- frMN4(100, 1, 2, 3)
+
+expect_identical(
+  dq_a,
+  dq_b,
+  info = "Random generation: reproducible under dqrng::dqset.seed()"
+)
+
+# Test 39: Draw for draw, frMN4 is fqMN4 at the dqrng uniforms
+dqrng::dqset.seed(7)
+dq_u <- dqrng::dqrunif(50)
+dqrng::dqset.seed(7)
+
+expect_identical(
+  frMN4(50, 1, 2, 3),
+  fqMN4(dq_u, 1, 2, 3),
+  info = "Random generation: equals fqMN4 at dqrunif under one dqset.seed()"
+)
+
+# ... also with recycled parameters whose lengths differ
+dqrng::dqset.seed(8)
+dq_u <- dqrng::dqrunif(60)
+dqrng::dqset.seed(8)
+
+expect_identical(
+  frMN4(60, mu = c(0.5, 2), sigma = c(2, 0.5, 1), nu = c(3, 1)),
+  fqMN4(dq_u, mu = c(0.5, 2), sigma = c(2, 0.5, 1), nu = c(3, 1)),
+  info = "Random generation: recycled parameters follow fqMN4 draw for draw"
+)
+
+# Test 40: Category frequencies of 1e5 draws match the MN4 probabilities, within
+# 5 standard errors. Distinct probabilities, so a swapped category shows up.
+dq_N <- 1e5
+dqrng::dqset.seed(40)
+dq_big <- frMN4(dq_N, mu = 0.5, sigma = 2, nu = 3)
+
+expect_true(
+  all(dq_big %in% 1:4),
+  info = "Random generation: 1e5 draws all in 1:4"
+)
+
+expect_true(
+  freq_within_se(dq_big, mn4_probs(0.5, 2, 3)),
+  info = "Random generation: category frequencies match the MN4 probabilities"
+)
+
+# The check can fail: the frequencies are far from the probabilities of a
+# distribution with mu and sigma swapped.
+expect_false(
+  freq_within_se(dq_big, mn4_probs(2, 0.5, 3)),
+  info = "Random generation: frequency check rejects the wrong probabilities"
+)
+
+# Test 41: ... with recycled parameters, draw i uses parameter set ((i - 1) %% 2) + 1
+dqrng::dqset.seed(41)
+dq_rec <- frMN4(dq_N, mu = c(0.5, 2), sigma = c(2, 0.5), nu = c(3, 1))
+
+expect_true(
+  freq_within_se(dq_rec[c(TRUE, FALSE)], mn4_probs(0.5, 2, 3)),
+  info = "Random generation: odd draws follow the first parameter set"
+)
+
+expect_true(
+  freq_within_se(dq_rec[c(FALSE, TRUE)], mn4_probs(2, 0.5, 1)),
+  info = "Random generation: even draws follow the second parameter set"
+)
+
+# ... and parameters of unequal lengths are recycled by R's standard rules, each
+# on its own: draw i has mu[i %% 3], sigma[i %% 2] (i from 0). The values make
+# each combination give one category all but surely: mu huge -> 1; mu tiny and
+# sigma huge -> 2; mu, sigma and nu all tiny -> 4. (The C++ frMN4 first recycled
+# all parameters to the longest length and then cycled that, which gives
+# 2 1 2 2 1 2 2 1 2 here.)
+dqrng::dqset.seed(411)
+expect_identical(
+  frMN4(9, mu = c(1e-9, 1e9, 1e-9), sigma = c(1e9, 1e-9), nu = 1e-9),
+  c(2L, 1L, 2L, 4L, 1L, 4L, 2L, 1L, 2L),
+  info = "Random generation: parameters of unequal lengths follow R's recycling"
+)
+
+# The result is as long as the longest of n and the parameters (as for the other
+# fr* functions): a parameter longer than n is not cut.
+expect_identical(
+  length(frMN4(3, mu = 1:5, sigma = 1, nu = 1)),
+  5L,
+  info = "Random generation: a parameter longer than n gives its length"
+)
+
+# Test 42: The result is an integer vector
+expect_identical(
+  typeof(frMN4(5, 1, 1, 1)),
+  "integer",
+  info = "Random generation: returns an integer vector"
+)
+
+# Test 43: frMN4 does not use up base R's random numbers: the numbers runif()
+# gives after it are those it gives without it
+dqrng::dqset.seed(43)
+set.seed(11)
+base_ref <- runif(3)
+set.seed(11)
+invisible(frMN4(100, 1, 2, 3))
+base_after <- runif(3)
+
+expect_identical(
+  base_after,
+  base_ref,
+  info = "Random generation: leaves base R's random number stream alone"
+)
+
+# Test 44: ... and set.seed() has no effect on the draws
+dqrng::dqset.seed(44)
+set.seed(1)
+seed_1 <- frMN4(100, 1, 2, 3)
+dqrng::dqset.seed(44)
+set.seed(2)
+seed_2 <- frMN4(100, 1, 2, 3)
+
+expect_identical(
+  seed_1,
+  seed_2,
+  info = "Random generation: set.seed() does not control the draws"
+)
+
+# Test 45: n must be a single number, at least 1 and below 2^31; anything else
+# stops with the one message
+for (bad_n in list(NA, NA_integer_, NA_real_, NaN, c(5, 5), numeric(0), 0.5,
+                   "5", Inf, -Inf, 2^31)) {
+  expect_error(
+    suppressWarnings(frMN4(bad_n, 1, 1, 1)),
+    "n must be a positive integer",
+    info = paste("Random generation: n =", deparse(bad_n), "stops")
+  )
+}
+
+# Test 46: A non-integer n is truncated to an integer
+expect_identical(
+  length(frMN4(5.9, 1, 1, 1)),
+  5L,
+  info = "Random generation: n = 5.9 gives 5 values"
+)
+
+# Test 47: A non-positive parameter gives NA, with a warning
+expect_warning(
+  dq_bad <- frMN4(3, mu = -1, sigma = 1, nu = 1),
+  "NAs were produced",
+  info = "Random generation: a non-positive mu warns"
+)
+
+expect_identical(
+  dq_bad,
+  rep(NA_integer_, 3),
+  info = "Random generation: a non-positive mu gives NA"
 )

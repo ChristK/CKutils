@@ -301,77 +301,16 @@ IntegerVector fqMN4(const NumericVector& p,
   return out;
 }
 
-//' Multinomial Distribution with 4 Categories - Random Generation
-//'
-//' Random generation for the multinomial distribution with 4 categories,
-//' optimised for performance with SIMD vectorisation and parameter recycling.
-//'
-//' @param n number of random values to generate.
-//' @param mu vector of (positive) parameters for category 1.
-//' @param sigma vector of (positive) parameters for category 2.
-//' @param nu vector of (positive) parameters for category 3.
-//'
-//' @details
-//' Random values are generated using the quantile function method:
-//' generate uniform random variables and apply the quantile function.
-//'
-//' Parameters are recycled to the length n following R's standard recycling rules.
-//' A zero-length \code{mu}, \code{sigma} or \code{nu} gives a zero-length result,
-//' \code{integer(0)}.
-//'
-//' @return An integer vector of random values.
-//'
-//' @references
-//' Rigby, R. A. and Stasinopoulos, D. M. (2005). Generalized additive models
-//' for location, scale and shape. Applied Statistics, 54, 507-554.
-//'
-//' @note
-//' This implementation is based on the gamlss.dist package rMN4 function
-//' but optimised for performance with SIMD vectorisation and parameter recycling.
-//'
-//' @examples
-//' # Basic usage
-//' frMN4(10, mu = 1, sigma = 1, nu = 1)
-//' 
-//' # With different parameters
-//' frMN4(10, mu = 2, sigma = 1, nu = 0.5)
-//' 
-//' # Parameter recycling
-//' frMN4(10, mu = c(1, 2), sigma = c(1, 0.5), nu = c(1, 2))
-//'
-//' @seealso \code{\link{fdMN4}}, \code{\link{fpMN4}}, \code{\link{fqMN4}}
-//' @export
-// [[Rcpp::export]]
-IntegerVector frMN4(const int& n,
-                    const NumericVector& mu,
-                    const NumericVector& sigma,
-                    const NumericVector& nu) {
-  
-  if (n <= 0) stop("n must be a positive integer");
-  
-  // Use existing recycling infrastructure for parameters
-  auto recycled = recycle_vectors(mu, sigma, nu);
-  const int param_len = recycled.n;
-
-  // Zero-length rule (see recycle_vectors() in recycling_helpers.h): a
-  // zero-length parameter gives a zero-length result, as in the other fr*
-  // functions. Return before the loop below, where i % param_len would be an
-  // integer modulo by zero (SIGFPE, which kills the R session).
-  if (param_len == 0) return IntegerVector(0);
-  
-  // Generate uniform random numbers
-  NumericVector u = runif(n);
-  
-  IntegerVector out(n);
-  
-  // SIMD-optimised main computation loop
-  SIMD_HINT
-  for (int i = 0; i < n; i++) {
-    int param_idx = i % param_len;  // Cycle through parameter values
-    out[i] = fqMN4_scalar(u[i], recycled.vec1[param_idx], recycled.vec2[param_idx], recycled.vec3[param_idx], true, false);
-  }
-  
-  if (any(is_na(out))) warning("NAs were produced");
-  return out;
-}
-
+// NOTE: there is deliberately no vectorised, Rcpp-exported frMN4() here.
+// The exported frMN4() is the R implementation in R/rng_distr.R, which draws
+// from dqrng::dqrunif() and inverts fqMN4(), like the other fr* functions.
+// A C++ wrapper of the same name used to be exported from this file. It drew
+// from R's own stream (Rcpp::runif), so it followed set.seed() and ignored
+// dqrng::dqset.seed(): two calls under one dqset.seed() were not reproducible.
+// It must not come back, for the reason given in the note in distr_NBI.cpp:
+// R/ is collated alphabetically, so R/rng_distr.R is sourced after
+// R/RcppExports.R and would silently overwrite a compiled frMN4(), leaving
+// dead code and a man page with two identical \usage entries. There is no
+// frMN4_scalar() in inst/include/distr_MN4.h; a LinkingTo: CKutils consumer
+// that wants one draw takes fqMN4_scalar(u, mu, sigma, nu, true, false) at a
+// uniform u of its own, which is what frMN4() does at dqrng::dqrunif().

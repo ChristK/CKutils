@@ -399,20 +399,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// frMN4
-IntegerVector frMN4(const int& n, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu);
-RcppExport SEXP _CKutils_frMN4(SEXP nSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
-    rcpp_result_gen = Rcpp::wrap(frMN4(n, mu, sigma, nu));
-    return rcpp_result_gen;
-END_RCPP
-}
 // fdNBI
 NumericVector fdNBI(const NumericVector& x, const NumericVector& mu, const NumericVector& sigma, const bool& log_p);
 RcppExport SEXP _CKutils_fdNBI(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP log_pSEXP) {
@@ -1176,7 +1162,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fdMN4", (DL_FUNC) &_CKutils_fdMN4, 5},
     {"_CKutils_fpMN4", (DL_FUNC) &_CKutils_fpMN4, 6},
     {"_CKutils_fqMN4", (DL_FUNC) &_CKutils_fqMN4, 6},
-    {"_CKutils_frMN4", (DL_FUNC) &_CKutils_frMN4, 4},
     {"_CKutils_fdNBI", (DL_FUNC) &_CKutils_fdNBI, 4},
     {"_CKutils_fpNBI", (DL_FUNC) &_CKutils_fpNBI, 5},
     {"_CKutils_fqNBI", (DL_FUNC) &_CKutils_fqNBI, 5},

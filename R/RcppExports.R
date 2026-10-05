@@ -1166,50 +1166,6 @@ fqMN4 <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fqMN4`, p, mu, sigma, nu, lower_tail, log_p)
 }
 
-#' Multinomial Distribution with 4 Categories - Random Generation
-#'
-#' Random generation for the multinomial distribution with 4 categories,
-#' optimised for performance with SIMD vectorisation and parameter recycling.
-#'
-#' @param n number of random values to generate.
-#' @param mu vector of (positive) parameters for category 1.
-#' @param sigma vector of (positive) parameters for category 2.
-#' @param nu vector of (positive) parameters for category 3.
-#'
-#' @details
-#' Random values are generated using the quantile function method:
-#' generate uniform random variables and apply the quantile function.
-#'
-#' Parameters are recycled to the length n following R's standard recycling rules.
-#' A zero-length \code{mu}, \code{sigma} or \code{nu} gives a zero-length result,
-#' \code{integer(0)}.
-#'
-#' @return An integer vector of random values.
-#'
-#' @references
-#' Rigby, R. A. and Stasinopoulos, D. M. (2005). Generalized additive models
-#' for location, scale and shape. Applied Statistics, 54, 507-554.
-#'
-#' @note
-#' This implementation is based on the gamlss.dist package rMN4 function
-#' but optimised for performance with SIMD vectorisation and parameter recycling.
-#'
-#' @examples
-#' # Basic usage
-#' frMN4(10, mu = 1, sigma = 1, nu = 1)
-#' 
-#' # With different parameters
-#' frMN4(10, mu = 2, sigma = 1, nu = 0.5)
-#' 
-#' # Parameter recycling
-#' frMN4(10, mu = c(1, 2), sigma = c(1, 0.5), nu = c(1, 2))
-#'
-#' @seealso \code{\link{fdMN4}}, \code{\link{fpMN4}}, \code{\link{fqMN4}}
-#' @export
-frMN4 <- function(n, mu, sigma, nu) {
-    .Call(`_CKutils_frMN4`, n, mu, sigma, nu)
-}
-
 #' Negative Binomial Type I Distribution Density
 #'
 #' Probability density function for the Negative Binomial type I (NBI) distribution

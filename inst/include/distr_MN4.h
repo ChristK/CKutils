@@ -139,9 +139,4 @@ Rcpp::IntegerVector fqMN4(const Rcpp::NumericVector& p,
                           const bool& lower_tail,
                           const bool& log_p);
 
-Rcpp::IntegerVector frMN4(const int& n,
-                          const Rcpp::NumericVector& mu,
-                          const Rcpp::NumericVector& sigma,
-                          const Rcpp::NumericVector& nu);
-
 #endif // DISTR_MN4_H

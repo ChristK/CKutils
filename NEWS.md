@@ -247,6 +247,20 @@
   tail is `1 - P(X > q)`. Elsewhere the lower tail is unchanged bit for bit,
   which covers the IMPACTncd models (`mu >= 0.46`, through
   `fpZANBI_scalar()`).
+* **`frMN4()` draws from dqrng, like the other twelve `fr*` functions; its
+  random stream changes.** It was a C++ function that called R's `runif()`, so
+  it followed `set.seed()` and ignored `dqrng::dqset.seed()`: two calls under one
+  `dqset.seed()` gave different draws. It is now the R function
+  `fqMN4(dqrng::dqrunif(n), mu, sigma, nu)`, the construction of the others, so
+  its draws are reproducible under `dqset.seed()` and leave base R's stream
+  alone; a given seed gives different draws than before, from the same
+  distribution. As for the other `fr*`, unequal parameter lengths follow R's
+  recycling rules and the result is as long as the longest of `n` and the
+  parameters; a non-numeric or vector `n` stops with "n must be a positive
+  integer". The compiled `frMN4()` and its declaration in
+  `inst/include/distr_MN4.h` are gone (a `LinkingTo` consumer takes
+  `fqMN4_scalar()` at a uniform of its own). The models call `fqMN4()`, not
+  `frMN4()`.
 
 ## Documentation
 
@@ -402,6 +416,11 @@
   exact geometric references, as ratios or logs (a plain `expect_equal()` with a
   reference far below its tolerance cannot fail); `fpZANBI()` at `mu = 1e-17` is
   in [0, 1]; both tails sum to 1.
+* `test-fMN4.R`, Tests 38-47: `frMN4()` is reproducible under `dqset.seed()`,
+  equals `fqMN4(dqrunif(n))` draw for draw, ignores `set.seed()` and leaves base
+  R's stream alone, matches the MN4 probabilities, and validates `n`; Tests 18,
+  19 and 24 are seeded with `dqset.seed()`. A mutation check (14 deliberately
+  broken variants) showed each is caught.
 
 # CKutils 0.1.33
 
