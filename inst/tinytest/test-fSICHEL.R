@@ -397,3 +397,79 @@ for (pr in list(c(0.02, 0.5, -20), c(0.1, 0.5, -15), c(0.05, 0.1, -40))) {
                                  ", sigma = ", pr[2], ", nu = ", pr[3]))
 }
 
+
+# =============================================================================
+# A tiny sigma: the recursion starts from ratios of scaled Bessel K
+# =============================================================================
+# The recursion starts from c = K_{nu+1}(1/sigma) / K_nu(1/sigma), lbes =
+# log(K_{nu+1}(alpha) / K_nu(alpha)) and log f(0). Each used to be a difference
+# of two log K_nu(x) = log(scaled K) - x, which cancels the shift x only after
+# rounding at the size of x: the difference kept ulp(x), 1.2e-4 at sigma = 1e-12
+# (x = 1/sigma = 1e12). They are now ratios of scaled K's, in which no x is left.
+#
+# At sigma = 1e-12 the Sichel is the Poisson up to its excess variance
+# mu^2 sigma, so fpSICHEL has to be ppois to within the true distance between
+# the two. That distance is 1.1e-11 at mu = 90, q = 60:120 (the first-order term
+# of the mixture, below, and a Poisson-GIG mixture integrated numerically by
+# integrate() agree on it to 1e-15, for both nu), so 1e-10 is an honest bound.
+# The difference of logs gave 4.0e-9 (nu = -0.5) and 3.9e-9 (nu = 0.7).
+q_tiny <- 60:120
+for (nu_tiny in c(-0.5, 0.7)) {
+  expect_true(max(abs(fpSICHEL(q_tiny, 90, 1e-12, nu_tiny) - ppois(q_tiny, 90))) < 1e-10,
+              info = paste("fpSICHEL is ppois to 1e-10 at sigma = 1e-12, mu = 90, nu =", nu_tiny))
+}
+
+# Sharper. Y | g ~ Poisson(mu g) with E[g] = 1 and Var[g] = sigma + O(sigma^2),
+# so F(q) - ppois(q, mu) = (mu^2 sigma / 2) d^2 ppois / d mu^2 + O(sigma^2) =
+# -(sigma mu / 2) dpois(q, mu) (q - mu): a closed form with no Bessel function
+# in it. fpSICHEL follows it to 2e-15 (nu = -0.5) and 7e-15 (nu = 0.7); the
+# difference of logs was 4e-9 off.
+for (nu_tiny in c(-0.5, 0.7)) {
+  gap_tiny <- fpSICHEL(q_tiny, 90, 1e-12, nu_tiny) - ppois(q_tiny, 90)
+  expect_true(max(abs(gap_tiny + (1e-12 * 90 / 2) * dpois(q_tiny, 90) * (q_tiny - 90))) < 1e-13,
+              info = paste("fpSICHEL - ppois is the first-order effect of the mixing variance, nu =", nu_tiny))
+}
+
+# The same for the density, which forms the start value itself (fdSICHEL_scalar):
+# fdSICHEL / dpois - 1 is, to first order, (sigma / 2) ((y - mu)^2 - y). The
+# difference of logs added log K(alpha) to a sum of size ~100 before subtracting
+# log K(1/sigma), which rounded that sum to the grid of ulp(1e12) = 1.2e-4: the
+# density was 6e-5 off, some 4e8 times the 1.4e-13 it is now (the bound leaves 70
+# times that for the rounding of lgamma(y + 1) - sum(log tofY), ~1e-13 at y = 120).
+for (nu_tiny in c(-0.5, 0.7)) {
+  rel_tiny <- fdSICHEL(q_tiny, 90, 1e-12, nu_tiny) / dpois(q_tiny, 90) - 1
+  expect_true(max(abs(rel_tiny - (1e-12 / 2) * ((q_tiny - 90)^2 - q_tiny))) < 1e-11,
+              info = paste("fdSICHEL / dpois - 1 is the first-order effect of the mixing variance, nu =", nu_tiny))
+}
+
+# And the quantile search, which forms the start value itself too
+# (fqSICHEL_search): it has to agree with fpSICHEL's kernel to better than
+# 1e-12 in relative terms, or a p just below F(q) would not give q, or one just
+# above it q + 1. (fqSICHEL(F) == q alone would hold for a start that is off in
+# one direction, whatever its error.)
+for (nu_tiny in c(-0.5, 0.7)) {
+  F_tiny <- fpSICHEL(q_tiny, 90, 1e-12, nu_tiny)
+  expect_identical(fqSICHEL(F_tiny * (1 - 1e-12), 90, 1e-12, nu_tiny), q_tiny,
+                   info = paste("fqSICHEL(F(q) (1 - 1e-12)) is q at sigma = 1e-12, nu =", nu_tiny))
+  expect_identical(fqSICHEL(F_tiny * (1 + 1e-12), 90, 1e-12, nu_tiny), q_tiny + 1L,
+                   info = paste("fqSICHEL(F(q) (1 + 1e-12)) is q + 1 at sigma = 1e-12, nu =", nu_tiny))
+}
+
+# The models' sigma (0.016 to 6.83), where the change is at the rounding level
+# (a CDF moves by < 2e-13): fdSICHEL and fpSICHEL at the corners and the middle
+# of the models' box (mu 1.16-3.46, sigma 0.016-6.83, nu -14.74 to -1.2) against
+# gamlss.dist, which forms the same Bessel ratios as differences of logs.
+# The CDF is compared by absolute difference (it lies in [0, 1]), the density
+# by relative difference. Where j + nu < 0 the forward recursion amplifies a
+# rounding error (by up to ~1e8: at nu = -14.74, x = 12 the density is good to
+# only ~1e-8 to 1e-7, in any implementation of this recursion), so at
+# nu = -14.74 the density is compared up to x = 3.
+gb <- expand.grid(x = c(0, 1, 2, 3, 5, 10, 20), mu = c(1.16, 2.3, 3.46),
+                  sigma = c(0.016, 0.3, 6.83), nu = c(-14.74, -5, -1.2))
+expect_true(max(abs(fpSICHEL(gb$x, gb$mu, gb$sigma, gb$nu) -
+                    pSICHEL(gb$x, gb$mu, gb$sigma, gb$nu))) < 1e-10,
+            info = "fpSICHEL matches gamlss.dist::pSICHEL over the models' box to 1e-10")
+gd <- gb[gb$nu > -14 | gb$x <= 3, ]
+expect_true(max(abs(fdSICHEL(gd$x, gd$mu, gd$sigma, gd$nu) /
+                    dSICHEL(gd$x, gd$mu, gd$sigma, gd$nu) - 1)) < 1e-10,
+            info = "fdSICHEL matches gamlss.dist::dSICHEL over the models' box to 1e-10 (relative)")

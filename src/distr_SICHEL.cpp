@@ -30,9 +30,9 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 using namespace Rcpp;
 
 // SICHEL helper and *_scalar definitions (compute_cvec, compute_alpha,
-// compute_lbes, ftofySICHEL2_scalar, fcdfSICHEL_scalar, fpSICHEL_scalar) now
-// live (inline) in inst/include/distr_SICHEL.h so that downstream
-// LinkingTo: CKutils consumers can call them directly.
+// compute_lbes, compute_lp0, ftofySICHEL2_scalar, fcdfSICHEL_scalar,
+// fpSICHEL_scalar) now live (inline) in inst/include/distr_SICHEL.h so that
+// downstream LinkingTo: CKutils consumers can call them directly.
 
 //' Sichel Distribution Density
 //'
@@ -367,8 +367,7 @@ int fqSICHEL_search(const double& p, const double& mu, const double& sigma, cons
     
     // Initial density and CDF at y=0
     double tynew_prev = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);
-    double lpnew_prev = -nu * log(sigma * alpha) + log_bessel_k(alpha, nu) -
-                        log_bessel_k(1.0/sigma, nu);
+    double lpnew_prev = compute_lp0(sigma, mu, nu, cvec, alpha);
 
     double term_prev = exp(lpnew_prev);
     if (!std::isfinite(term_prev)) {

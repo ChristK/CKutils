@@ -50,18 +50,54 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include "distr_NBI.h"   // fdSICHEL_scalar falls back to the NBI limit
 
 // Helper functions for SICHEL computations
+//
+// The recursion below starts from three quantities that are each a ratio of two
+// modified Bessel functions of the third kind:
+//     c        = K_{nu+1}(1/sigma) / K_nu(1/sigma)                    compute_cvec
+//     lbes     = log(K_{nu+1}(alpha) / K_nu(alpha))                   compute_lbes
+//     log f(0) = -nu log(sigma alpha) + log(K_nu(alpha) / K_nu(1/sigma))
+//                - (alpha - 1/sigma)                                  compute_lp0
+// R's bessel_k(x, nu, 2) is the exponentially scaled K, K_nu(x) * exp(x). The
+// unscaled K (expo = 1) underflows to 0 once x is beyond ~700 -- alpha is ~2000
+// at mu = 2e6, and 1/sigma is 1000 at sigma = 0.001 -- so its log was -Inf and
+// differences of such logs NaN.
+//
+// Each of the three used to be a difference of two log_bessel_k() values,
+// log K_nu(x) = log(scaled K) - x. The shift x cancels in the difference, but
+// only after each log has been rounded, at the size of x: the difference keeps
+// an error of ulp(x), 1.2e-4 at sigma = 1e-12 (x = 1/sigma = 1e12). That moved
+// fpSICHEL(60:120, 90, 1e-12, -0.5) by 4.0e-9, against a true distance of
+// 1.1e-11 from the Poisson it is there. So each is now a ratio of scaled K's,
+// where no x is left to cancel, and the one subtraction that remains in
+// log f(0), alpha - 1/sigma (from exp(alpha) / exp(1/sigma)), is written without
+// one: alpha^2 - 1/sigma^2 = 2 mu / (sigma c), so
+//     alpha - 1/sigma = (2 mu / (sigma c)) / (alpha + 1/sigma).
+// At the models' sigma (>= 0.016) the values move in their last bits: a CDF by
+// < 2e-13 relative, quantiles not at all; a density by about as much, except far
+// out in the tail of a very negative nu, where the recursion amplifies the change
+// while j + nu < 0 (up to 1e-8 at nu = -14.74, x = 12, in the direction of the
+// true value). Below sigma ~ 1e-6 it is the old error that was the larger one.
+//
+// A ratio of two scaled K's can overflow or underflow where a difference of
+// logs does not (R's bessel_k itself overflows to Inf: K_33(1e-8) is beyond
+// 1.8e308). A ratio form is used only if its ratio is a normal number -- not 0,
+// subnormal, Inf or NaN, which have lost bits or all of them -- and its result is
+// finite. Otherwise the old difference of logs is returned, so a case that was
+// finite never turns NaN or Inf, and where the ratio is no use the values are
+// exactly the old ones.
 
-// Compute cvec efficiently
-// log K_nu(x), from the exponentially scaled Bessel K: R's bessel_k(x, nu, 2)
-// is K_nu(x) * exp(x). The unscaled K (expo = 1) underflows to 0 once x is
-// beyond ~700 -- alpha is ~2000 at mu = 2e6, and 1/sigma is 1000 at
-// sigma = 0.001 -- so its log was -Inf and differences of such logs NaN.
+// log K_nu(x), from the exponentially scaled Bessel K. The helpers below return
+// a difference of two of these only as their fallback, not in the ordinary case.
 inline double log_bessel_k(const double& x, const double& nu) {
     return std::log(R::bessel_k(x, nu, 2)) - x;
 }
 
+// Compute cvec efficiently
 inline double compute_cvec(const double& sigma, const double& nu) {
-    return exp(log_bessel_k(1.0/sigma, nu + 1.0) - log_bessel_k(1.0/sigma, nu));
+    const double x = 1.0 / sigma;
+    const double ratio = R::bessel_k(x, nu + 1.0, 2) / R::bessel_k(x, nu, 2);
+    if (std::isnormal(ratio)) return ratio;
+    return exp(log_bessel_k(x, nu + 1.0) - log_bessel_k(x, nu));
 }
 
 // Compute alpha efficiently
@@ -71,7 +107,23 @@ inline double compute_alpha(const double& sigma, const double& mu, const double&
 
 // Compute lbes efficiently
 inline double compute_lbes(const double& alpha, const double& nu) {
+    const double ratio = R::bessel_k(alpha, nu + 1.0, 2) / R::bessel_k(alpha, nu, 2);
+    if (std::isnormal(ratio)) return std::log(ratio);
     return log_bessel_k(alpha, nu + 1.0) - log_bessel_k(alpha, nu);
+}
+
+// log f(0): the log of the pmf at 0, where the recursion starts. cvec and alpha
+// are compute_cvec(sigma, nu) and compute_alpha(sigma, mu, cvec).
+inline double compute_lp0(const double& sigma, const double& mu, const double& nu,
+                          const double& cvec, const double& alpha) {
+    const double x = 1.0 / sigma;
+    const double ratio = R::bessel_k(alpha, nu, 2) / R::bessel_k(x, nu, 2);
+    if (std::isnormal(ratio)) {
+        const double lp0 = -nu * std::log(sigma * alpha) + std::log(ratio) -
+                           (2.0 * mu / (sigma * cvec)) / (alpha + x);
+        if (std::isfinite(lp0)) return lp0;
+    }
+    return -nu * std::log(sigma * alpha) + log_bessel_k(alpha, nu) - log_bessel_k(x, nu);
 }
 
 // Scalar helper function for tofySICHEL computation
@@ -133,10 +185,9 @@ inline double fdSICHEL_scalar(const int& x, const double& mu,
     const double sumlty = ftofySICHEL2_scalar(x, mu, sigma, nu, lbes, cvec);
 
     // x + 1.0 is deliberately computed in double: at x == INT_MAX an int
-    // lgamma(x + 1) would wrap the argument to INT_MIN.
-    const double logfy = -R::lgammafn(x + 1.0) - nu * std::log(sigma * alpha) +
-                         sumlty + log_bessel_k(alpha, nu) -
-                         log_bessel_k(1.0 / sigma, nu);
+    // lgamma(x + 1) would wrap the argument to INT_MIN. compute_lp0() is log f(0).
+    const double logfy = -R::lgammafn(x + 1.0) + sumlty +
+                         compute_lp0(sigma, mu, nu, cvec, alpha);
 
     return log_p ? logfy : std::exp(logfy);
 }
@@ -180,8 +231,7 @@ inline double fcdfSICHEL_scalar(const int& y, const double& mu, const double& si
     const double lbes = compute_lbes(alpha, nu);
 
     double ty = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);   // tynew[0]
-    double lp = -nu * log(sigma * alpha) + log_bessel_k(alpha, nu) -
-                log_bessel_k(1.0/sigma, nu);                                           // lpnew[0]
+    double lp = compute_lp0(sigma, mu, nu, cvec, alpha);                               // lpnew[0]
 
     double term = exp(lp);   // the pmf at 0
     double sumT = 0.0;

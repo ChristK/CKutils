@@ -261,6 +261,18 @@
   `inst/include/distr_MN4.h` are gone (a `LinkingTo` consumer takes
   `fqMN4_scalar()` at a uniform of its own). The models call `fqMN4()`, not
   `frMN4()`.
+* **The SICHEL and ZISICHEL functions are accurate at a very small `sigma`.**
+  The recursion starts from `c = K_{nu+1}(1/sigma) / K_nu(1/sigma)`, from
+  `log(K_{nu+1}(alpha) / K_nu(alpha))` and from the log pmf at 0, and each was a
+  difference of two `log K` values (`log(scaled K) - x`), which kept the
+  rounding of `x = 1/sigma`: at `sigma = 1e-12`, where SICHEL is Poisson to
+  1.1e-11, `fpSICHEL(60:120, 90, 1e-12, -0.5)` was 4.0e-9 from the true CDF and
+  `fdSICHEL()` 6e-5 (relative). Each is now a ratio of scaled K's, and
+  `alpha - 1/sigma` is written without the subtraction; where a ratio overflows
+  or underflows, the old form is used, so no value that was finite becomes
+  `NaN`. At the models' parameters the quantiles are unchanged and the CDF
+  moves by < 2e-13 (relative); far in the tail of a very negative `nu` (near
+  -14.7, counts 7 to 14) a density moves by up to 5e-8, towards the true value.
 
 ## Documentation
 
@@ -421,6 +433,10 @@
   R's stream alone, matches the MN4 probabilities, and validates `n`; Tests 18,
   19 and 24 are seeded with `dqset.seed()`. A mutation check (14 deliberately
   broken variants) showed each is caught.
+* `test-fSICHEL.R`: at `sigma = 1e-12` the CDF and the density against the
+  Poisson plus the first-order effect of the mixing variance (a closed form with
+  no Bessel function), the quantile search against the CDF on both sides of a
+  step, and the models' box against `gamlss.dist`.
 
 # CKutils 0.1.33
 
