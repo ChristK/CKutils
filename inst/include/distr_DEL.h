@@ -33,20 +33,19 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
 // The vectorised wrappers below already apply it, but a package using
-// LinkingTo: CKutils to call the scalars directly does not get it. Here:
-//   * fpDEL_hlp_fn (and fpDEL_scalar through it) accumulates with
-//     `for (int i = 0; i <= q; i++)`, so q == INT_MAX overflows i and the call
-//     NEVER RETURNS. It is also O(q) in time, so a large-but-legal q is slow
-//     rather than wrong.
-//   * fdDEL_scalar evaluates lgamma(x + 1), so x == INT_MAX wraps the argument
-//     to INT_MIN and returns a silently wrong density.
-//   * ftofydel2_scalar sizes its std::vector<double> workspace as y + 2, so it
-//     allocates O(y) memory -- tens of gigabytes for a large y -- and that size
-//     expression overflows to a negative int at the boundary.
+// LinkingTo: CKutils to call the scalars directly does not get it. Here the
+// kernels terminate and use O(1) memory for any int, INT_MAX included, but
+// they are O(x) / O(q) in TIME (one log, one division and, for the CDF, one
+// exp and one lgamma per index), so a large-but-legal count is slow rather
+// than wrong: about a minute at q = 2^31 - 2 for fpDEL_hlp_fn.
+// Before 0.1.34, ftofydel2_scalar rebuilt its recurrence in a std::vector of
+// y + 2 doubles on every call (O(y) memory, and y + 2 overflowed at the
+// boundary), so fpDEL_hlp_fn and the quantile search were O(q^2) in time,
+// fpDEL_hlp_fn's `for (int i = 0; i <= q; i++)` never returned at
+// q == INT_MAX, and fdDEL_scalar's lgamma(x + 1) wrapped at x == INT_MAX.
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (dpois, dnbinom_mu, ...)
 #include <cmath>
-#include <vector>   // ftofydel2_scalar builds a std::vector workspace
 
 // dPO (Poisson) density scalar helper
 inline double fdPO_scalar(const int &x, const double &mu = 1.0, const double &sigma = 1.0, const bool &log_ = false)
@@ -66,33 +65,51 @@ inline double fdPO_scalar(const int &x, const double &mu = 1.0, const double &si
   return fy;
 }
 
-// SIMD optimised ftofydel2 computation (helper used by fdDEL_scalar)
-inline double ftofydel2_scalar(const int &y, const double &mu,
-                       const double &sigma, const double &nu) {
-    if (y <= 0) return 0.0;
-
-    std::vector<double> tofY(y + 2);
-    const double mu_nu = mu * nu;
+// The recurrence of gamlss.dist's tofydel2, carried forward one index at a
+// time. With t_j = (j + 1) f(j + 1) / f(j) and S_j = sum_{k < j} log(t_k),
+//     log f(j) = logpy0 - lgamma(j + 1) + S_j,
+//     logpy0   = -mu nu - (1 / sigma) log(1 + mu sigma (1 - nu)).
+// The state (j, t_j, S_j) advances with the same expressions, in the same
+// order, as the earlier std::vector loop did, so every value is the same
+// double; but it takes O(1) memory and one step per index, where rebuilding
+// t_0..t_{y-1} for every y made the CDF and the quantile search O(q^2).
+// advance() moves j to j + 1: the caller must not advance past INT_MAX.
+// (The Poisson branch, sigma < 1e-4, does not use it.)
+struct CkDELRecurrence {
+  int j;          // the index
+  double t;       // t_j
+  double S;       // S_j
+  double logpy0;  // log f(0)
+  double mu_nu, inv_sigma_1_minus_nu, dum_const;
+  CkDELRecurrence(const double &mu, const double &sigma, const double &nu) {
+    mu_nu = mu * nu;
     const double one_minus_nu = 1.0 - nu;
     const double mu_sigma_1_minus_nu = mu * sigma * one_minus_nu;
     const double sigma_1_minus_nu = sigma * one_minus_nu;
+    t = mu_nu + mu * one_minus_nu / (1.0 + mu_sigma_1_minus_nu);   // t_0
+    inv_sigma_1_minus_nu = 1.0 / sigma_1_minus_nu;
+    dum_const = 1.0 + 1.0 / mu_sigma_1_minus_nu;
+    logpy0 = -mu * nu - (1.0 / sigma) * log(1.0 + mu * sigma * one_minus_nu);
+    S = 0.0;
+    j = 0;
+  }
+  inline void advance() {
+    S += log(t);
+    ++j;
+    t = (j + mu_nu + inv_sigma_1_minus_nu - (mu_nu * j) / t) / dum_const;
+  }
+  // log f(j); j + 1.0, not j + 1, so that j == INT_MAX does not overflow
+  inline double log_density() const { return logpy0 - lgamma(j + 1.0) + S; }
+};
 
-    // Initial value
-    tofY[0] = mu_nu + mu * one_minus_nu / (1.0 + mu_sigma_1_minus_nu);
-
-    double sumT = 0.0;
-    const double inv_sigma_1_minus_nu = 1.0 / sigma_1_minus_nu;
-    const double dum_const = 1.0 + 1.0 / mu_sigma_1_minus_nu;
-
-    // Optimized loop with better cache access patterns
-    for (int j = 1; j < y + 1; j++) {
-        double term = (j + mu_nu + inv_sigma_1_minus_nu -
-                      (mu_nu * j) / tofY[j - 1]) / dum_const;
-        tofY[j] = term;
-        sumT += log(tofY[j - 1]);
-    }
-
-    return sumT;
+// S_y = sum_{j < y} log(t_j) (helper used by fdDEL_scalar): O(y) time, O(1)
+// memory
+inline double ftofydel2_scalar(const int &y, const double &mu,
+                       const double &sigma, const double &nu) {
+    if (y <= 0) return 0.0;
+    CkDELRecurrence r(mu, sigma, nu);
+    while (r.j < y) r.advance();   // ends at j == y, so y == INT_MAX is safe
+    return r.S;
 }
 
 // Optimized scalar density function
@@ -110,40 +127,55 @@ inline double fdDEL_scalar(const int &x,
     double logpy0 = -mu * nu - (1.0 / sigma) *
                     log(1.0 + mu * sigma * one_minus_nu);
     double S = ftofydel2_scalar(x, mu, sigma, nu);
-    logfy = logpy0 - lgamma(x + 1) + S;
+    logfy = logpy0 - lgamma(x + 1.0) + S;   // x + 1.0: no overflow at INT_MAX
     if (!log_)
       logfy = exp(logfy);
   }
   return logfy;
 }
 
-// CDF helper function matching gamlss.dist algorithm exactly
+// The running CDF F(q) = the densities at 0..q added in that order in double
+// precision (gamlss.dist's pDEL is sum(dDEL(0:q, ...)), which R accumulates in
+// long double, so the two agree to rounding, not bit for bit) of ONE parameter
+// set, extendable to a larger q without starting again. fpDEL_hlp_fn is one
+// pass of it; the vector fpDEL keeps one across consecutive elements with the
+// same parameters. The recurrence is built for every sigma (the Poisson branch
+// does not use it), so a NaN sigma gives NaN terms rather than stale state.
+struct CkDELCdf {
+  CkDELRecurrence r;
+  double mu;
+  bool poisson;   // sigma < 1e-04: the terms are Poisson(mu) densities
+  double ans;     // the sum of the densities at 0..q
+  int q;          // the last index added; -1 before the first
+  CkDELCdf(const double &mu_, const double &sigma, const double &nu)
+      : r(mu_, sigma, nu), mu(mu_), poisson(sigma < 1e-04), ans(0.0), q(-1) {}
+  // F(to), for any 0 <= to <= INT_MAX. A `to` below q returns the sum at q.
+  // The loop ends at index `to` before incrementing, so INT_MAX returns.
+  inline double advance_to(const int &to) {
+    while (q < to) {
+      if (poisson) {
+        ++q;
+        ans += R::dpois(q, mu, false);
+      } else {
+        if (q >= 0) r.advance();   // r.j == q + 1
+        ++q;
+        ans += exp(r.log_density());
+      }
+    }
+    return ans;
+  }
+};
+
+// CDF helper: the sum of the densities at 0..q. One recurrence step per
+// index: O(q) time, O(1) memory.
 inline double fpDEL_hlp_fn(const int &q,
                       const double &mu,
                       const double &sigma,
                       const double &nu)
 {
   if (q < 0) return 0.0;
-
-  // Match gamlss.dist algorithm exactly: sum(dDEL(0:q, ...))
-  double ans = 0.0;
-
-  // Use the same small sigma threshold as gamlss.dist
-  const bool use_poisson = (sigma < 1e-04);
-
-  if (use_poisson) {
-    // Use Poisson distribution for small sigma (matching gamlss.dist)
-    for (int i = 0; i <= q; i++) {
-      ans += R::dpois(i, mu, false);
-    }
-  } else {
-    // Sum density values exactly as gamlss.dist does
-    for (int i = 0; i <= q; i++) {
-      ans += fdDEL_scalar(i, mu, sigma, nu, false);
-    }
-  }
-
-  return ans;
+  CkDELCdf cdf(mu, sigma, nu);
+  return cdf.advance_to(q);
 }
 
 // Optimized scalar CDF function

@@ -167,10 +167,18 @@ NumericVector fdDEL(const IntegerVector &x,
   const int n = recycled.n;
   
   NumericVector logfy(n);
-  
+
+  // The recurrence of the last DEL element. The next element continues it
+  // when it has the same (mu, sigma, nu) and an x at or beyond its index, so
+  // fdDEL(0:n, mu, sigma, nu) is O(n) rather than O(n^2); the values are the
+  // same doubles either way.
+  bool have_r = false;
+  CkDELRecurrence r(1.0, 1.0, 0.5);
+  double r_mu = 0.0, r_sigma = 0.0, r_nu = 0.0;
+
   // Process in chunks for better cache performance
   const int chunk_size = 16;
-  
+
   for (int chunk_start = 0; chunk_start < n; chunk_start += chunk_size) {
     int chunk_end = std::min(chunk_start + chunk_size, n);
     
@@ -212,17 +220,17 @@ NumericVector fdDEL(const IntegerVector &x,
       if (recycled.vec3[i] < 1e-04) {
         logfy[i] = R::dpois(x_i, recycled.vec2[i], (int)log_);
       } else {
-        // Optimized computation with precomputed constants
         const double mu_val = recycled.vec2[i];
         const double sigma_val = recycled.vec3[i];
         const double nu_val = recycled.vec4[i];
-        const double one_minus_nu = 1.0 - nu_val;
-        
-        double logpy0 = -mu_val * nu_val - (1.0 / sigma_val) * 
-                       log(1.0 + mu_val * sigma_val * one_minus_nu);
-        double S = ftofydel2_scalar(x_i,
-                                   mu_val, sigma_val, nu_val);
-        logfy[i] = logpy0 - lgamma(recycled.vec1[i] + 1) + S;
+        if (!(have_r && mu_val == r_mu && sigma_val == r_sigma &&
+              nu_val == r_nu && r.j <= x_i)) {
+          r = CkDELRecurrence(mu_val, sigma_val, nu_val);
+          r_mu = mu_val; r_sigma = sigma_val; r_nu = nu_val;
+          have_r = true;
+        }
+        while (r.j < x_i) r.advance();   // r.j == x_i
+        logfy[i] = r.log_density();
         if (!log_)
           logfy[i] = exp(logfy[i]);
       }
@@ -315,6 +323,15 @@ NumericVector fpDEL(const IntegerVector &q,
   
   NumericVector cdf(n);
 
+  // The running CDF of the last element's parameter set. The next element
+  // continues it when it has the same (mu, sigma, nu) and a q at or beyond
+  // the last index added, so fpDEL(0:n, mu, sigma, nu) is O(n) rather than
+  // O(n^2); the same terms are added in the same order, so the values are the
+  // same doubles as fpDEL_hlp_fn's (it is the same code, CkDELCdf).
+  bool have_c = false;
+  double c_mu = 0.0, c_sigma = 0.0, c_nu = 0.0;
+  CkDELCdf run(1.0, 1.0, 0.5);
+
   // Process with chunking for better performance
   const int chunk_size = 32;
   
@@ -345,8 +362,15 @@ NumericVector fpDEL(const IntegerVector &q,
         cdf[i] = NA_REAL;
         continue;
       }
-      cdf[i] = fpDEL_hlp_fn(q_i,
-                           recycled.vec2[i], recycled.vec3[i], recycled.vec4[i]);
+      const double mu_val = recycled.vec2[i];
+      const double sigma_val = recycled.vec3[i];
+      const double nu_val = recycled.vec4[i];
+      if (!(have_c && mu_val == c_mu && sigma_val == c_sigma &&
+            nu_val == c_nu && run.q <= q_i)) {
+        run = CkDELCdf(mu_val, sigma_val, nu_val);
+        c_mu = mu_val; c_sigma = sigma_val; c_nu = nu_val; have_c = true;
+      }
+      cdf[i] = run.advance_to(q_i);
     }
   }
 
@@ -460,30 +484,26 @@ int fqDEL_search(const double &p,
     return count_to_int(R::qpois(p, mu, true, false), q_i) ? q_i : NA_INTEGER;
   }
   
-  // Precompute constants for density calculation
-  const double one_minus_nu = 1.0 - nu;
-  const double logpy0 = -mu * nu - (1.0 / sigma) *
-                        log(1.0 + mu * sigma * one_minus_nu);
-
-  // Incremental search: sum densities until CDF >= p. No fixed cap:
+  // Incremental search: sum densities until CDF >= p, one recurrence step per
+  // index (O(q); the cumulative sums are fpDEL's, bit for bit). No fixed cap:
   // ck_search_gives_up() (distr_search.h) ends a search that cannot reach p,
   // and NA_INTEGER is returned rather than a number
+  CkDELRecurrence r(mu, sigma, nu);
   double cdf = 0.0;
   double prev_density = -1.0;
-  for (int q = 0; q <= CK_SEARCH_MAX; q++) {
-    double S = ftofydel2_scalar(q, mu, sigma, nu);
-    double log_density = logpy0 - lgamma(q + 1.0) + S;
-    double density = exp(log_density);
+  for (;;) {
+    const double density = exp(r.log_density());
     if (ck_search_gives_up(density, prev_density, cdf)) {
       return NA_INTEGER;
     }
     cdf += density;
     if (cdf >= p) {
-      return q;
+      return r.j;
     }
+    if (r.j == CK_SEARCH_MAX) return NA_INTEGER;
     prev_density = density;
+    r.advance();
   }
-  return NA_INTEGER;
 }
 
 //' Quantile Function for the Delaporte Distribution

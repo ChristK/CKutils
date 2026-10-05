@@ -204,6 +204,21 @@
   and 0.293 s (0.385 s; 0.546 s). The C++ pass itself takes 0.013 s and
   0.043 s. All figures single-threaded, the median of 3 fresh R processes, on
   the key columns of IMPACTncd_Engl's tables, already keyed.
+* **`fpDEL()` and `fqDEL()` are O(q), not O(q^2).** `ftofydel2_scalar()`
+  rebuilt gamlss.dist's `tofydel2` recurrence, in a `std::vector` of y + 2
+  doubles, for every y, and `fpDEL()` and the quantile search called it for
+  every count from 0 to q. The recurrence is now carried forward one step per
+  count, in O(1) memory, and the vector `fdDEL()` and `fpDEL()` carry it from
+  one element to the next while `mu`, `sigma` and `nu` repeat (`fpDEL(0:q)` was
+  O(q^3)). The values are the same doubles. A quantile near 1e5
+  (`fqDEL(0.5, 1e5, 0.01, 0.5)`) took 43 s and now takes 3 ms; on 1e6 rows of
+  IMPACTncd's veg parameters `fqDEL()` is 1.4 times and `fpDEL(10, ...)` 2.3
+  times faster.
+* The DEL scalars in `inst/include/distr_DEL.h` (`LinkingTo`) are safe at
+  `INT_MAX` and take O(1) memory: `ftofydel2_scalar()` allocated 8 (y + 2) bytes
+  per call (`std::bad_alloc` at 2147483646), `fpDEL_hlp_fn()` never returned at
+  `INT_MAX`, and `fdDEL_scalar()` wrapped there. They are still O(q) in time:
+  about a minute for the CDF at `INT_MAX`.
 
 ## Tests
 
@@ -259,6 +274,13 @@
   their finite value at `p = 1`. `test-fBCT.R`: `p = 0` and `p = 1` give 0 and
   `Inf` on both scales and tails, for `nu` of either sign; a `p` outside
   [0, 1] and invalid parameters still error.
+* `test-fDEL_linear.R` (new): `fqDEL()` and `fpDEL()` at a median near 1e5
+  against a direct convolution of `dnbinom()` and `ppois()`; `fpDEL(0:2000)` is
+  the running sum of `fdDEL(0:2000)`, bit for bit; the vector forms equal
+  element-by-element calls for ascending, descending and repeated counts;
+  `fqDEL(fpDEL(0:10)) == 0:10` at IMPACTncd's veg parameters; a NaN or NA
+  `sigma` after a valid element stays NA. Its three timing expectations (under
+  5 s; the old code took 12-45 s per call) run only under `at_home()`.
 
 # CKutils 0.1.33
 
