@@ -141,9 +141,13 @@
   a large `mu` start at the first term that does not underflow. The time grows
   with the quantile: about 4 ms per million terms for BNB (`mu = 2e7`: 0.04 s;
   a quantile of 1.56e9 at `mu = 3e9`: about 6 s), about 0.01 s for SICHEL,
-  whose terms come from a recursion -- so a
-  SICHEL quantile beyond the int range is only known to be NA after scanning
-  the range (some 40 s).
+  whose terms come from a recursion. A SICHEL quantile beyond the int range is
+  reported at once too, from a bound on the CDF (SICHEL is a Poisson mixture
+  over a log-concave law): `fqSICHEL(0.5, mu = 1e300, sigma = 1, nu = -0.5)` and
+  `fqZISICHEL()` there are NA in about a millisecond, not after some 40 s that
+  could not be interrupted. Only within about 1% (in `mu`) of the limit, or
+  further out for `p` within 1e-6 of 1 with a heavy tail, is such a quantile
+  known to be NA only after scanning the range.
 * `fqSICHEL()` and `fqZISICHEL()` return NA, with a warning, for p = 1: the
   quantile is `Inf`, which an integer cannot hold. They stored `Inf` into the
   integer result, an out-of-range conversion whose result is undefined: NA on
@@ -348,6 +352,11 @@
   densities at 1e6 and 1.5e9, all of which the build before got wrong;
   `test-fBNB.R`: the CDF equals the sum of the densities, and `fpBNB()` past the
   point where its terms underflow (with a timing bound at home).
+* `test-distr_huge_mu.R`: SICHEL and ZISICHEL quantiles beyond the int range
+  are NA at once (timed at home), and finite quantiles with the bound's gate
+  open stay finite; `test-fSICHEL.R`, Test 35: at N = 2000, over 24 parameter
+  combinations, the bound behind this never claims F(N) < p where the CDF says
+  otherwise, and fires well beyond the boundary.
 
 # CKutils 0.1.33
 

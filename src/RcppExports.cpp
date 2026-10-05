@@ -488,6 +488,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sichel_cdf_below_r
+LogicalVector sichel_cdf_below_r(NumericVector N, NumericVector p, NumericVector mu, NumericVector sigma, NumericVector nu);
+RcppExport SEXP _CKutils_sichel_cdf_below_r(SEXP NSEXP, SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type N(NSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type nu(nuSEXP);
+    rcpp_result_gen = Rcpp::wrap(sichel_cdf_below_r(N, p, mu, sigma, nu));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fqSICHEL
 IntegerVector fqSICHEL(NumericVector p, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& lower_tail, const bool& log_p);
 RcppExport SEXP _CKutils_fqSICHEL(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
@@ -1167,6 +1182,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fqNBI", (DL_FUNC) &_CKutils_fqNBI, 5},
     {"_CKutils_fdSICHEL", (DL_FUNC) &_CKutils_fdSICHEL, 5},
     {"_CKutils_fpSICHEL", (DL_FUNC) &_CKutils_fpSICHEL, 6},
+    {"_CKutils_sichel_cdf_below_r", (DL_FUNC) &_CKutils_sichel_cdf_below_r, 5},
     {"_CKutils_fqSICHEL", (DL_FUNC) &_CKutils_fqSICHEL, 6},
     {"_CKutils_fdZABNB", (DL_FUNC) &_CKutils_fdZABNB, 6},
     {"_CKutils_fpZABNB", (DL_FUNC) &_CKutils_fpZABNB, 7},

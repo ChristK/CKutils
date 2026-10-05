@@ -82,3 +82,39 @@ expect_warning(r <- fqBNB(0.5, mu = 1e300, sigma = 0.5, nu = 1), pattern = "not 
 expect_true(is.na(r), info = "fqBNB: quantile beyond the int range is NA")
 expect_warning(r <- fqDPO(0.5, mu = 3e9, sigma = 2))
 expect_true(is.na(r), info = "fqDPO: quantile beyond the int range is NA")
+
+# --- SICHEL: a quantile beyond the int range is reported at once ---
+# fqSICHEL() and fqZISICHEL() used to scan all 2^31 - 2 terms before giving the NA: 27-40 s,
+# which cannot be interrupted. A bound on the CDF now settles it first (the bound itself is
+# tested in test-fSICHEL.R). The values are always checked, the time bounds only at_home().
+elapsed <- system.time(expect_warning(
+  r <- fqSICHEL(0.5, mu = 1e300, sigma = 1, nu = -0.5), pattern = "not found"))[["elapsed"]]
+expect_true(is.na(r), info = "fqSICHEL: mu = 1e300 is NA")
+if (at_home()) expect_true(elapsed < 5, info = "fqSICHEL: mu = 1e300 is NA at once")
+elapsed <- system.time(expect_warning(
+  r <- fqZISICHEL(0.5, mu = 1e300, sigma = 1, nu = -0.5, tau = 0.1), pattern = "not found"))[["elapsed"]]
+expect_true(is.na(r), info = "fqZISICHEL: mu = 1e300 is NA")
+if (at_home()) expect_true(elapsed < 5, info = "fqZISICHEL: mu = 1e300 is NA at once")
+# left side: F(2^31 - 2) < p although the terms are still rising there (the sum stays 0)
+elapsed <- system.time(expect_warning(
+  r <- fqSICHEL(0.5, mu = 1e10, sigma = 1, nu = -0.5), pattern = "not found"))[["elapsed"]]
+expect_true(is.na(r), info = "fqSICHEL: mu = 1e10 is NA")
+if (at_home()) expect_true(elapsed < 5, info = "fqSICHEL: mu = 1e10 is NA at once")
+# right side: a heavy tail, F(2^31 - 2) = 0.90 < p
+elapsed <- system.time(expect_warning(
+  r <- fqSICHEL(0.999, mu = 1e9, sigma = 10, nu = -0.5), pattern = "not found"))[["elapsed"]]
+expect_true(is.na(r), info = "fqSICHEL: p = 0.999, mu = 1e9, sigma = 10 is NA")
+if (at_home()) expect_true(elapsed < 5, info = "fqSICHEL: p = 0.999, mu = 1e9, sigma = 10 is NA at once")
+
+# The bound must stay silent where the quantile is finite, with the Markov gate open
+# (mu > (1 - p) (2^31 - 1): 107 for p = 1 - 5e-8, 43 for p = 1 - 2e-8). p lies 3.0e-11 above
+# F(7577) and 6.2e-11 below F(7578) (checked against two references independent of the package: a
+# Gamma-inverse-Gaussian closed form and a Poisson-GIG mixture integral), far more than the
+# rounding of the CDF sum on another platform.
+expect_identical(fqSICHEL(1 - 5e-8, mu = 300, sigma = 1, nu = -0.5), 7578L,
+                 info = "fqSICHEL: finite quantile with the gate open")
+# a heavy tail: the quantile is q = 82035, and the package's own CDF brackets p at q
+q <- fqSICHEL(1 - 2e-8, mu = 90, sigma = 50, nu = -0.5)
+expect_false(is.na(q), info = "fqSICHEL: heavy tail with the gate open is not NA")
+expect_true(fpSICHEL(q - 1, 90, 50, -0.5) < 1 - 2e-8, info = "fqSICHEL: heavy tail, F(q - 1) < p")
+expect_true(1 - 2e-8 <= fpSICHEL(q, 90, 50, -0.5), info = "fqSICHEL: heavy tail, p <= F(q)")

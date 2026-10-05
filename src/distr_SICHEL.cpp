@@ -20,6 +20,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <math.h>
 #include <Rmath.h>
 #include <algorithm>
+#include <limits>
 #include "recycling_helpers.h"
 #include "distr_NBI.h"
 #include "distr_SICHEL.h"   // canonical header-only scalar definitions
@@ -198,6 +199,142 @@ NumericVector fpSICHEL(const NumericVector& q,
 
 // fpSICHEL_scalar now lives (inline) in inst/include/distr_SICHEL.h.
 
+namespace {
+
+// Is F(N) = P(Y <= N) < p, for Y ~ SICHEL(mu, sigma, nu)? A sufficient test
+// that costs O(1) (5-55 pieces below), so that the quantile search reports a
+// quantile beyond the int range at once instead of after 2^31 terms.
+//
+// Y is a Poisson mixture: Y | g ~ Poisson(mu g), and V = log(c g) has density
+//     h(v) = exp(phi(v)),  phi(v) = nu v - cosh(v)/sigma - log(2 K_nu(1/sigma)),
+// c = K_{nu+1}(1/sigma) / K_nu(1/sigma) (so E[g] = 1; DLMF 10.32.9 gives the
+// normalisation). phi''(v) = -cosh(v)/sigma < 0 for every real nu and sigma > 0:
+// h is log-concave, so tangent lines of phi lie above it and chords below it.
+// For theta = N (1 + d) > N and x = log(c theta / mu), as P(Pois(l) <= N) falls
+// in l:
+//   F(N)     <= P(V <= x) + P(Pois(theta) <= N)                     (left)
+//   1 - F(N) >= P(V > x) * (1 - P(Pois(theta) <= N))                 (right)
+//   P(Pois(theta) <= N) <= exp(-N (d - log1p(d)))                   (Chernoff)
+// When x is left of the mode of V, P(V <= x) is bounded above by integrating
+// exp(tangent at each piece's midpoint) over pieces of (-inf, x], the last
+// one (-inf, t] by exp(phi(t)) / phi'(t); otherwise P(V > x) is bounded below by
+// integrating exp(chord) over pieces of [x, inf). Either march runs into a
+// decaying tail and stops once the rest is negligible. Every partition gives a
+// valid bound; the piece widths only set how tight it is.
+// Returns true only when F(N) < p - m, m = 1e-3 min(p, 1 - p) + 1e-6 p: the
+// scan's own rounding (relative error up to ~ N 2^-53 = 2.4e-7 after 2^31
+// terms; ~7e-9 measured) can then never be what separates F(N) from p, so the
+// answer is NA only where the scan would also have given NA.
+struct SichelLogV {
+    double nu, sigma, lnorm;   // phi(v) = nu v - 2 sinh(v/2)^2 / sigma - lnorm
+    double phi(double v) const { const double s = std::sinh(0.5 * v); return nu * v - 2.0 * s * s / sigma - lnorm; }
+    double dphi(double v) const { return nu - std::sinh(v) / sigma; }
+    double curv(double v) const { return std::cosh(v) / sigma; }       // -phi''
+};
+inline double ck_lse(double a, double b) {                           // log(e^a + e^b)
+    if (a == -INFINITY) return b;
+    if (b == -INFINITY) return a;
+    return std::max(a, b) + std::log1p(std::exp(-std::fabs(a - b)));
+}
+inline double ck_lsinhc(double z) {                                  // log(sinh(z) / z)
+    z = std::fabs(z);
+    return (z < 1e-4) ? z * z / 6.0 : z + std::log1p(-std::exp(-2.0 * z)) - std::log(2.0 * z);
+}
+inline double ck_lexpm1c(double d) {                                 // log((e^d - 1) / d)
+    if (std::fabs(d) < 1e-8) return 0.5 * d;
+    return (d > 0.0) ? d + std::log(-std::expm1(-d) / d) : std::log(std::expm1(d) / d);
+}
+constexpr double CK_SB_KAPPA = 0.25, CK_SB_HMAX = 0.5, CK_SB_TOL = 1e-7;
+constexpr int CK_SB_KMAX = 4000;
+
+// log of an upper bound on P(V <= x) (+Inf: none)
+inline double sichel_log_cdf_upper(const SichelLogV& d, double x) {
+    double lS = -INFINITY, t = x;
+    for (int k = 0; k < CK_SB_KMAX; ++k) {
+        const double b = d.dphi(t);
+        if (b > 0.0) {
+            const double lT = d.phi(t) - std::log(b);
+            if (lT == -INFINITY) return lS;
+            if (lT <= lS + std::log(CK_SB_TOL) || b * b >= 1e8 * d.curv(t)) return ck_lse(lS, lT);
+        }
+        const double h = std::min(CK_SB_HMAX, CK_SB_KAPPA /
+            std::sqrt(d.curv(std::max(std::fabs(t), std::fabs(t - CK_SB_HMAX)))));
+        if (!(h > 0.0)) break;
+        const double a = t - 0.5 * h;
+        const double lp = d.phi(a) + std::log(h) + ck_lsinhc(0.5 * h * d.dphi(a));
+        if (!std::isnan(lp)) lS = ck_lse(lS, lp);
+        t -= h;
+    }
+    const double b = d.dphi(t);
+    return (b > 0.0) ? ck_lse(lS, d.phi(t) - std::log(b)) : INFINITY;
+}
+
+// log of a lower bound on P(V > x)
+inline double sichel_log_sf_lower(const SichelLogV& d, double x) {
+    double lS = -INFINITY, s = x, ps = d.phi(s);
+    for (int k = 0; k < CK_SB_KMAX; ++k) {
+        const double h = std::min(CK_SB_HMAX, CK_SB_KAPPA /
+            std::sqrt(d.curv(std::max(std::fabs(s), std::fabs(s + CK_SB_HMAX)))));
+        if (!(h > 0.0)) break;
+        const double s2 = s + h, ps2 = d.phi(s2);
+        if (ps == -INFINITY && ps2 == -INFINITY) break;
+        if (ps != -INFINITY && ps2 != -INFINITY) {
+            const double lp = ps + std::log(h) + ck_lexpm1c(ps2 - ps);
+            if (!std::isnan(lp)) lS = ck_lse(lS, lp);
+        }
+        const double b2 = d.dphi(s2);
+        if (b2 < 0.0 && ps2 - std::log(-b2) <= lS + std::log(CK_SB_TOL)) break;
+        s = s2; ps = ps2;
+    }
+    return lS;
+}
+
+inline bool sichel_cdf_below(double N, double p, double mu, double sigma, double nu, double cvec) {
+    if (!(p > 0.0 && p < 1.0) || !(N >= 1.0) || !std::isfinite(mu) || !(cvec > 0.0) || !std::isfinite(cvec))
+        return false;
+    const double ks = R::bessel_k(1.0 / sigma, nu, 2.0);          // K_nu(1/sigma) e^{1/sigma}
+    if (!(ks > 0.0) || !std::isfinite(ks)) return false;
+    const SichelLogV d{nu, sigma, std::log(2.0 * ks)};
+    // theta = N (1 + delta) with the Chernoff term ~ 1e-3 p
+    const double L = std::max(1.0, std::log(1e3) - std::log(p));
+    double delta = std::sqrt(2.0 * L / N);
+    delta *= 1.0 + delta / 3.0;
+    const double lpois = -N * (delta - std::log1p(delta));
+    const double x = std::log(cvec) + std::log(N) + std::log1p(delta) - std::log(mu);
+    if (!std::isfinite(x)) return false;
+    const double m = 1e-3 * std::min(p, 1.0 - p) + 1e-6 * p;
+    if (x <= std::asinh(sigma * nu)) {                              // left of the mode of V
+        const double lU = ck_lse(sichel_log_cdf_upper(d, x), lpois);
+        return lU < std::log(p - m);
+    }
+    const double lSV = sichel_log_sf_lower(d, x);
+    if (!(lSV < 0.0)) return false;                                 // numerical failure: no claim
+    return lSV + std::log1p(-std::exp(lpois)) > std::log((1.0 - p) + m);
+}
+
+}  // namespace
+
+// Internal test hook for sichel_cdf_below(), not part of the package API: no roxygen
+// block and a dot-prefixed R name (CKutils:::.sichel_cdf_below), like
+// .frNBI_scalar_vec in distr_rng_scalar_bridge.cpp. The arguments are recycled to the
+// longest length. inst/tinytest/test-fSICHEL.R uses it at a small N to check that the
+// bound never claims F(N) < p where fpSICHEL(N) >= p: the quantile search itself could
+// only show that with a scan of 2^31 terms.
+// [[Rcpp::export(name = ".sichel_cdf_below")]]
+LogicalVector sichel_cdf_below_r(NumericVector N, NumericVector p, NumericVector mu,
+                                 NumericVector sigma, NumericVector nu) {
+    auto recycled = recycle_vectors(N, p, mu, sigma, nu);
+    const int n = recycled.n;
+    LogicalVector out(n);
+    for (int i = 0; i < n; i++) {
+        const double sigmai = recycled.vec4[i];
+        const double nui = recycled.vec5[i];
+        out[i] = sichel_cdf_below(recycled.vec1[i], recycled.vec2[i], recycled.vec3[i],
+                                  sigmai, nui, compute_cvec(sigmai, nui));
+    }
+    return out;
+}
+
 // Optimized quantile search using incremental CDF computation
 // This directly computes densities incrementally without recomputing from scratch
 int fqSICHEL_search(const double& p, const double& mu, const double& sigma, const double& nu) {
@@ -214,6 +351,17 @@ int fqSICHEL_search(const double& p, const double& mu, const double& sigma, cons
     
     // Precompute constants
     const double cvec = compute_cvec(sigma, nu);
+
+    // A quantile beyond the int range is reported at once, instead of after
+    // scanning CK_SEARCH_MAX terms (some 40 s, which cannot be interrupted). By
+    // Markov's inequality P(Y > N) <= mu / (N + 1), so F(N) < p needs
+    // mu > (1 - p)(N + 1); only then is the bound sichel_cdf_below() evaluated,
+    // so a search with a small mu never pays for it.
+    if (mu > (1.0 - p) * (CK_SEARCH_MAX + 1.0) &&
+        sichel_cdf_below(CK_SEARCH_MAX, p, mu, sigma, nu, cvec)) {
+        return NA_INTEGER;
+    }
+
     const double alpha = compute_alpha(sigma, mu, cvec);
     const double lbes = compute_lbes(alpha, nu);
     

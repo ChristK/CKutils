@@ -1405,6 +1405,10 @@ fpSICHEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
     .Call(`_CKutils_fpSICHEL`, q, mu, sigma, nu, lower_tail, log_p)
 }
 
+.sichel_cdf_below <- function(N, p, mu, sigma, nu) {
+    .Call(`_CKutils_sichel_cdf_below_r`, N, p, mu, sigma, nu)
+}
+
 #' Sichel Distribution Quantile Function
 #'
 #' Quantile function for the Sichel distribution with parameters 

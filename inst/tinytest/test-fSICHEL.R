@@ -322,6 +322,41 @@ qtl_large <- fqSICHEL(very_large_p, mu = 2, sigma = 1, nu = -0.5)
 expect_true(all(qtl_small >= 0), info = "Small probability quantiles should be non-negative")
 expect_true(all(qtl_large >= qtl_small[1]), info = "Large probability quantiles should be larger")
 
+# =============================================================================
+# THE BOUND BEHIND THE EARLY NA OF THE QUANTILE SEARCH
+# =============================================================================
+
+# Test 35: fqSICHEL() reports a quantile beyond the int range at once when the internal
+# bound sichel_cdf_below() proves F(2^31 - 2) < p. The scan it saves takes some 40 s, so the
+# bound is tested here at N = 2000, against the package's own CDF, on a log grid of mu around
+# the boundary mu* (F(N; mu*) = p; F falls as mu rises). It must never claim F(N) < p where
+# fpSICHEL(N) >= p, which would turn a finite quantile into NA; and it must be able to fire,
+# or that check would pass for a bound that is always FALSE.
+N_bound <- 2000
+for (sn in list(c(0.01, -30), c(1, -0.5), c(1, 12), c(100, -0.5), c(100, 0.7), c(1e8, -0.5))) {
+  for (p_bound in c(1e-10, 0.5, 0.999, 1 - 1e-8)) {
+    sg_bound <- sn[1]
+    nu_bound <- sn[2]
+    info_bound <- sprintf("N = %d, sigma = %g, nu = %g, p = %g", N_bound, sg_bound, nu_bound, p_bound)
+    # the boundary: the root of F(N; mu) - p in log(mu)
+    mu_star <- exp(uniroot(function(t) fpSICHEL(N_bound, exp(t), sg_bound, nu_bound) - p_bound,
+                           interval = log(c(1e-6, 1e17)), tol = 1e-12)$root)
+    # 61 points from mu*/1000 to 1000 mu*, and three just below mu*
+    mu_grid <- mu_star * c(10^seq(-3, 3, by = 0.1), 1 - c(1e-3, 1e-6, 1e-9))
+    F_grid <- fpSICHEL(N_bound, mu_grid, sg_bound, nu_bound)
+    expect_true(all(is.finite(F_grid)), info = paste("fpSICHEL is finite:", info_bound))
+    expect_false(any(CKutils:::.sichel_cdf_below(N_bound, p_bound, mu_grid, sg_bound, nu_bound) &
+                       F_grid >= p_bound),
+                 info = paste("no false NA:", info_bound))
+    # It fires at 10 mu*. The bound keeps a margin of 1e-6 p below p, which for sigma = 1e8 at
+    # p = 1 - 1e-8 is 100 times 1 - p: that tail has to fall by that much first (it fires from
+    # about 1e4 mu*), so 1e6 mu* is used there.
+    far_bound <- if (sg_bound == 1e8 && p_bound > 0.9999) 1e6 else 10
+    expect_true(CKutils:::.sichel_cdf_below(N_bound, p_bound, far_bound * mu_star, sg_bound, nu_bound),
+                info = paste("fires far above the boundary:", info_bound))
+  }
+}
+
 # Final success message
 # cat("All SICHEL distribution tests passed successfully!\n")
 
