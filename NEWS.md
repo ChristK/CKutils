@@ -275,6 +275,19 @@
   per call (`std::bad_alloc` at 2147483646), `fpDEL_hlp_fn()` never returned at
   `INT_MAX`, and `fdDEL_scalar()` wrapped there. They are still O(q) in time:
   about a minute for the CDF at `INT_MAX`.
+* **`fpSICHEL()`, `fdSICHEL()`, `fpZISICHEL()` and `fdZISICHEL()` take O(1)
+  memory, and the CDF stops once its sum has settled.** `fcdfSICHEL_scalar()`
+  stored the whole Bessel-ratio recursion in two `std::vector`s of q + 1 doubles
+  and `ftofySICHEL2_scalar()` in one, although each step needs only the previous
+  one, and the CDF went on adding terms long after its sum had stopped changing.
+  The recursion is now carried forward one step at a time, and the CDF returns
+  once a term past the mode leaves the sum unchanged (the pmf is unimodal); the
+  return is withheld where a very negative `nu` makes the recursion break down,
+  so the values are the same doubles, NaN included (11.5 million results
+  compared bit for bit). `fpSICHEL(5e7, 2, 1, -0.5)` took 0.89 s and 762 MB and
+  takes 2 ms and no extra memory. The header scalars are safe at `INT_MAX`
+  (where the CDF needed about 32 GB) but still O(q) in time where the sum does
+  not settle (about 26 s at 2147483646).
 
 ## Tests
 
@@ -357,6 +370,9 @@
   open stay finite; `test-fSICHEL.R`, Test 35: at N = 2000, over 24 parameter
   combinations, the bound behind this never claims F(N) < p where the CDF says
   otherwise, and fires well beyond the boundary.
+* `test-fSICHEL.R` and `test-fZISICHEL.R`: the CDF at q = 5e7 is the CDF at
+  q = 1e4, bit for bit (with a timing bound at home); and where a very negative
+  `nu` breaks the recursion, `fpSICHEL()` is NaN exactly where the densities are.
 
 # CKutils 0.1.33
 

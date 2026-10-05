@@ -34,8 +34,8 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
 // The vectorised wrappers below already apply it via count_to_int(), but a
 // package using LinkingTo: CKutils to call the scalars directly does not get
-// it. fpSICHEL_scalar, which these wrappers delegate to, allocates O(y) memory
-// and overflows its workspace size at y == INT_MAX.
+// it. The SICHEL scalars these delegate to take O(1) memory but O(x) / O(q)
+// time (see distr_SICHEL.h), so a large-but-legal count is slow.
 
 #include <Rcpp.h>
 #include <cmath>

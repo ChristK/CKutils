@@ -168,3 +168,24 @@ if (requireNamespace("gamlss.dist", quietly = TRUE)) {
   expect_equal(length(fdZISICHEL(numeric(0), 1, 1, -0.5, 0.1)), 0L,
                info = "fdZISICHEL zero-length x recycles to length 0")
 }
+
+# =============================================================================
+# A large q: O(1) memory, and the CDF sum stops once it has settled
+# =============================================================================
+# fpZISICHEL delegates to fcdfSICHEL_scalar, which used to store the whole
+# Bessel-ratio recursion in two std::vector<double>s of q + 1 elements (16 bytes
+# per unit of q) and to add all q + 1 terms: fpZISICHEL(5e7, mu = 2, ...) took
+# ~0.8 s and ~800 MB for a sum that settles after a few hundred terms. It now
+# holds one step of the recursion and returns once a term past the mode leaves
+# the sum unchanged. The value is the same double either way, so the CDF at 5e7
+# is the CDF at 1e4, where the sum has long settled, bit for bit. The time bound
+# is a timing expectation, so it runs only when at_home(): CRAN never runs it.
+el <- system.time(v <- fpZISICHEL(5e7, mu = 2, sigma = 1, nu = -0.5, tau = 0.1))[["elapsed"]]
+expect_identical(v, fpZISICHEL(1e4, mu = 2, sigma = 1, nu = -0.5, tau = 0.1),
+                 info = "fpZISICHEL at q = 5e7 is the CDF at q = 1e4, bit for bit")
+expect_equal(v, 1, tolerance = 1e-12,
+             info = "fpZISICHEL at q = 5e7 is 1 (the mass is all below q)")
+if (at_home()) {
+  expect_true(el < 0.2,
+              info = "fpZISICHEL(5e7, mu = 2) in under 0.2 s (the sum stops once settled)")
+}

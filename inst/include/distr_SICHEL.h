@@ -33,16 +33,20 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
 // The vectorised wrappers below already apply it, but a package using
-// LinkingTo: CKutils to call the scalars directly does not get it. The
-// allocating kernels are ftofySICHEL2_scalar, which sizes a std::vector<double>
-// as y + 1, and fcdfSICHEL_scalar, which sizes two of them the same way; both
-// therefore allocate O(y) memory -- tens of gigabytes for a large y -- and that
-// size expression overflows to a negative int at y == INT_MAX. fdSICHEL_scalar
-// and fpSICHEL_scalar inherit this through them.
+// LinkingTo: CKutils to call the scalars directly does not get it. The two
+// kernels that run the Bessel-ratio recursion, ftofySICHEL2_scalar and
+// fcdfSICHEL_scalar (and so fdSICHEL_scalar and fpSICHEL_scalar), carry only
+// its previous step: they take O(1) memory, but they are O(x) / O(q) in TIME
+// (about 15-30 s at 2^31 - 2), so a large-but-legal count is slow. The CDF
+// stops as soon as its sum has settled, which is long before q when q lies far
+// beyond the mean.
+// Before 0.1.34 both stored the whole recursion in std::vector<double>
+// workspaces of y + 1 elements (one for the density, two for the CDF): O(y)
+// memory, tens of gigabytes for a large y, and a size that overflowed at
+// y == INT_MAX.
 
 #include <Rcpp.h>
 #include <cmath>
-#include <vector>
 #include "distr_NBI.h"   // fdSICHEL_scalar falls back to the NBI limit
 
 // Helper functions for SICHEL computations
@@ -71,22 +75,32 @@ inline double compute_lbes(const double& alpha, const double& nu) {
 }
 
 // Scalar helper function for tofySICHEL computation
+//
+// The sum of log(tofY[j]) over j = 0..y-1, where tofY is the ratio recursion
+//     tofY[0] = (mu / cvec) (1 + 2 sigma mu / cvec)^(-1/2) exp(lbes)
+//     tofY[j] = (2 cvec sigma (j + nu) / mu + 1 / tofY[j-1]) (mu / (sigma alpha cvec))^2
+// Each step needs only the previous ratio, so the recursion is carried forward
+// in one variable: O(1) memory, O(y) time. The updates and the additions run in
+// the same order as when tofY was a std::vector<double> of y + 1 elements, so
+// every value is the same double. The counter j never passes y, so y == INT_MAX
+// does not overflow it.
 inline double ftofySICHEL2_scalar(const int& y, const double& mu,
                           const double& sigma, const double& nu,
                           const double& lbes, const double& cvec) {
     if (y <= 0) return 0.0;
 
-    const int iy = y + 1;  // This is the key: iy = y + 1
-    std::vector<double> tofY(iy);
     const double alpha = compute_alpha(sigma, mu, cvec);
 
-    tofY[0] = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);
+    double tofY = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);  // tofY[0]
 
     double sumT = 0.0;
-    for (int j = 1; j < iy; j++) {  // j < iy, not j < y
-        tofY[j] = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tofY[j-1])) *
-                  pow(mu / (sigma * alpha * cvec), 2.0);
-        sumT += log(tofY[j-1]);
+    int j = 0;
+    while (j < y) {   // j = 1..y; tofY is tofY[j-1] until the update below
+        ++j;
+        const double tofY_next = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tofY)) *
+                                 pow(mu / (sigma * alpha * cvec), 2.0);   // tofY[j]
+        sumT += log(tofY);   // log(tofY[j-1])
+        tofY = tofY_next;
     }
 
     return sumT;
@@ -127,30 +141,66 @@ inline double fdSICHEL_scalar(const int& x, const double& mu,
     return log_p ? logfy : std::exp(logfy);
 }
 
+// SICHEL CDF scalar: the pmf added at 0..y, in that order, in double precision.
+//
+// The pmf comes from the recursion of ftofySICHEL2_scalar: ty is tynew[j] and
+// lp is the log pmf lpnew[j], and each step needs only the previous pair, so
+// the loop takes O(1) memory. (Before 0.1.34 it filled two std::vector<double>s
+// of y + 1 elements and added them up in a second pass.) The updates and the
+// additions run in the same order, so every sum is the same double. The
+// counter j never passes y, so y == INT_MAX does not overflow it.
+//
+// It returns as soon as the sum has settled: at an index past the mode (the
+// term is smaller than the one before), with cdf > 0, whose term leaves the
+// sum unchanged (cdf + term == cdf). The pmf is unimodal -- a Poisson mixture
+// over a unimodal mixing density is unimodal (Holgate 1970, "The modality of
+// some compound Poisson distributions", Biometrika 57), and the generalised
+// inverse Gaussian density the Sichel mixes over has a single mode -- so every
+// later term is no larger than this one. Added to the same, unchanged sum, each
+// is rounded away just as this one is, and adding all of them gives the same
+// double as stopping here. fpSICHEL(5e7, mu = 2, ...) thus takes a few hundred
+// steps rather than 5e7. A sum that has not settled by q (the mass lies beyond
+// q, e.g. mu ~ q) takes all y + 1 terms.
+//
+// Two more conditions confine the exit to where that argument holds. It is
+// about the pmf, but the terms are the recursion's, and they follow the pmf only
+// where the recursion is stable. For j + nu < 0 its drive term 2 (j + nu) / mu
+// is negative, and for a very negative nu and a small mu the ratios can turn
+// negative there: the terms are noise that can rise again or be NaN, and a NaN
+// reaches the full sum, which is then NaN where an earlier exit would return a
+// finite value. So no exit is taken before j >= -nu, and from there on the
+// ratios stay positive. For a few steps after that they can still alternate
+// around 1 as the noise dies away, so the next term must fall as well:
+// term[j+1] = term[j] * tynew[j] / (j + 1), i.e. tynew[j] < j + 1.
 inline double fcdfSICHEL_scalar(const int& y, const double& mu, const double& sigma, const double& nu) {
     if (y < 0) return 0.0;
 
-    const int lyp1 = y + 1;
     const double cvec = compute_cvec(sigma, nu);
     const double alpha = compute_alpha(sigma, mu, cvec);
     const double lbes = compute_lbes(alpha, nu);
 
-    std::vector<double> tynew(lyp1);
-    std::vector<double> lpnew(lyp1);
+    double ty = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);   // tynew[0]
+    double lp = -nu * log(sigma * alpha) + log_bessel_k(alpha, nu) -
+                log_bessel_k(1.0/sigma, nu);                                           // lpnew[0]
 
-    tynew[0] = (mu / cvec) * pow(1.0 + 2.0 * sigma * mu / cvec, -0.5) * exp(lbes);
-    lpnew[0] = -nu * log(sigma * alpha) + log_bessel_k(alpha, nu) -
-               log_bessel_k(1.0/sigma, nu);
-
-    for (int j = 1; j < lyp1; j++) {
-        tynew[j] = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tynew[j-1])) *
-                   pow(mu / (sigma * alpha * cvec), 2.0);
-        lpnew[j] = lpnew[j-1] + log(tynew[j-1]) - log(j);
-    }
-
+    double term = exp(lp);   // the pmf at 0
     double sumT = 0.0;
-    for (int j = 0; j < lyp1; j++) {
-        sumT += exp(lpnew[j]);
+    sumT += term;
+
+    int j = 0;
+    while (j < y) {   // j = 1..y; ty and lp are tynew[j-1] and lpnew[j-1] until the updates below
+        ++j;
+        const double ty_next = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / ty)) *
+                               pow(mu / (sigma * alpha * cvec), 2.0);                  // tynew[j]
+        lp = lp + log(ty) - log(j);                                                    // lpnew[j]
+        ty = ty_next;
+
+        const double prev = term;
+        term = exp(lp);
+        // settled; ty is tynew[j] here
+        if (sumT > 0.0 && term < prev && sumT + term == sumT &&
+            j + nu >= 0.0 && ty < j + 1.0) return sumT;
+        sumT += term;
     }
 
     return sumT;

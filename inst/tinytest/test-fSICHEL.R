@@ -360,3 +360,40 @@ for (sn in list(c(0.01, -30), c(1, -0.5), c(1, 12), c(100, -0.5), c(100, 0.7), c
 # Final success message
 # cat("All SICHEL distribution tests passed successfully!\n")
 
+# =============================================================================
+# A large q: O(1) memory, and the CDF sum stops once it has settled
+# =============================================================================
+# fcdfSICHEL_scalar used to store the whole Bessel-ratio recursion in two
+# std::vector<double>s of q + 1 elements (16 bytes per unit of q) and to add all
+# q + 1 terms: fpSICHEL(5e7, mu = 2, ...) took ~0.8 s and ~800 MB for a sum
+# that settles after a few hundred terms. It now holds one step of the
+# recursion and returns once a term past the mode leaves the sum unchanged. The
+# value is the same double either way, so the CDF at 5e7 is the CDF at 1e4,
+# where the sum has long settled, bit for bit. The time bound is a timing
+# expectation, so it runs only when at_home(): CRAN never runs it.
+el <- system.time(v <- fpSICHEL(5e7, mu = 2, sigma = 1, nu = -0.5))[["elapsed"]]
+expect_identical(v, fpSICHEL(1e4, mu = 2, sigma = 1, nu = -0.5),
+                 info = "fpSICHEL at q = 5e7 is the CDF at q = 1e4, bit for bit")
+expect_equal(v, 1, tolerance = 1e-12,
+             info = "fpSICHEL at q = 5e7 is 1 (the mass is all below q)")
+if (at_home()) {
+  expect_true(el < 0.2,
+              info = "fpSICHEL(5e7, mu = 2) in under 0.2 s (the sum stops once settled)")
+}
+
+# The CDF sum is not cut short where the recursion has broken down. For a very
+# negative nu and a small mu the ratios of the recursion turn negative before j
+# reaches -nu, so the density is NaN from about x = 10 on, and the CDF is NaN at
+# every q beyond that: both are the one recursion, and they always were. The sum
+# has settled by j = 8-11, a step or two before the break-down, so a settled-exit
+# taken there would return ~1 where the full sum is NaN. (These are outside the
+# range of any model; the expectation is that the CDF is NaN exactly when the
+# density is NaN somewhere in 0..q, not a claim that NaN is the right answer.)
+for (pr in list(c(0.02, 0.5, -20), c(0.1, 0.5, -15), c(0.05, 0.1, -40))) {
+  d_nr <- suppressWarnings(fdSICHEL(0:200, pr[1], pr[2], pr[3]))
+  p_nr <- suppressWarnings(fpSICHEL(200, pr[1], pr[2], pr[3]))
+  expect_identical(is.nan(p_nr), anyNA(d_nr),
+                   info = paste0("fpSICHEL is NaN exactly when fdSICHEL(0:q) is, mu = ", pr[1],
+                                 ", sigma = ", pr[2], ", nu = ", pr[3]))
+}
+
