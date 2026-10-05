@@ -33,15 +33,24 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // before calling them; count_to_int() in recycling_helpers.h does that test.
 // The vectorised wrappers below already apply it, but a package using
 // LinkingTo: CKutils to call the scalars directly does not get it. Here:
-//   * fpDPO_scalar accumulates with `for (int i = 0; i <= q; i++)`, so
-//     q == INT_MAX overflows i and the call NEVER RETURNS. It is also O(q) in
-//     time, so a large-but-legal q is slow rather than wrong.
+//   * fpDPO_scalar adds the densities (about 50 ns each) up to q, but stops once
+//     the sum has settled (see the comment in the function). For a finite mu > 0
+//     and sigma > 0 that is the width of the mass -- from the first density that
+//     does not underflow to roughly 8 to 18 standard deviations (sqrt(mu * sigma))
+//     above mu, more for a heavy tail -- and not O(q): a q of INT_MAX - 1 returns
+//     at once. A sum that cannot settle still runs to q, with
+//     `for (int i = ...; i <= q; i++)`: one whose terms are NaN (a non-finite mu
+//     or sigma: the constant is NaN) or all 0 (mu <= 0 or sigma <= 0, which the
+//     wrappers reject). That is O(q), and for q == INT_MAX i overflows and the
+//     call NEVER RETURNS.
 //   * fdDPO_scalar evaluates lgammafn(x + 1), so x == INT_MAX wraps the
 //     argument to INT_MIN and returns a silently wrong density.
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (lgammafn, dpois, ppois, ...)
+#include <cfloat>
 #include <cmath>
 #include <algorithm>
+#include "distr_search.h"   // ck_search_start(), CK_SEARCH_MAX
 
 // Optimized scalar version for single computation with random parameters
 // The normalising constant is the inverse of a sum of terms over y = 0, 1, ...
@@ -245,6 +254,32 @@ inline double fdDPO_scalar(const int& x,
 }
 
 // Helper function for optimised CDF computation
+//
+// The CDF is the sum of the densities from 0 to q (the normalizing constant is
+// cached), with two shortcuts that leave the sum unchanged, bit for bit, and a
+// direct upper tail:
+//  * The head. For q > 64 (a shorter sum is not worth the probe) the sum starts at
+//    the first density that does not underflow (ck_search_start, distr_search.h):
+//    at a large mu the ones before it are exactly 0, and adding 0 changes nothing.
+//  * The settle. Past the largest term, with the terms falling, the sum stops at a
+//    term that cannot change it (cdf + t == cdf). Rounding is monotone, so every
+//    later term, no larger, leaves it unchanged too, and the full sum to q would
+//    give the same double. The terms rise to a mode and fall from there, but for
+//    a sigma large against mu (as mu = 16.27, sigma = 7.53) the pmf is not
+//    unimodal: a second, shallow mode at 0 makes the terms first fall -- by at most
+//    1.5 + log(v) / 2 nats to a valley at v < mu (12 nats at the int limit; 8.4
+//    measured up to mu = 1e9, sigma = 1e8) -- and then rise. That dip is far from
+//    the 37 nats (53 log 2) below the sum that a positive term needs to be
+//    absorbed, so it cannot end the sum early. A term of 0 is absorbed by any sum,
+//    though, and the dip can underflow to exactly 0: where mu / sigma is near 745,
+//    p(0) is at the underflow limit (at most 5.5e-319 when the dip reaches 0, so
+//    the sum is below 1.2e-309 then) and the main mass is still to come. So the
+//    sum does not settle before it holds some mass (cdf >= DBL_MIN).
+//  * The upper tail. 1 - cdf is 0 once the sum has reached 1, is negative if it
+//    rounded above 1, and is wrong by orders of magnitude between: the tail of
+//    fpDPO(80, 10, 2) is 2.0e-23 where 1 - cdf is 4.4e-16. So where 1 - cdf would
+//    lose digits (cdf > 0.5) the tail is summed from q + 1, with the same settle
+//    test; log_p takes the log of that sum.
 inline double fpDPO_scalar(const int& q,
                       const double& mu,
                       const double& sigma,
@@ -258,18 +293,60 @@ inline double fpDPO_scalar(const int& q,
     return R::ppois(q, mu, lower_tail, log_p);
   }
 
-  // Optimized CDF computation using cached normalizing constants
-  double cdf = 0.0;
-
-  // Sum densities from 0 to q using cached computations
-  for (int i = 0; i <= q; i++) {
-    cdf += fdDPO_scalar(i, mu, sigma, false);
+  // The head: the sum starts at the first density that does not underflow, or at
+  // q if that lies beyond q (every term of the sum is 0 then)
+  int i0 = 0;
+  if (q > 64) {
+    const long long start = ck_search_start(
+        [&](double x) { return fdDPO_scalar(static_cast<int>(x), mu, sigma, true); }, mu);
+    i0 = static_cast<int>(std::min<long long>(start, q));
   }
 
-  if (!lower_tail) cdf = 1.0 - cdf;
-  if (log_p) cdf = log(cdf);
+  // Optimized CDF computation using cached normalizing constants
+  double cdf = 0.0;
+  double prev = -1.0;       // the previous term
+  double max_term = 0.0;    // the largest term so far, and where it was
+  int max_pos = i0;
 
-  return cdf;
+  // Sum densities from i0 to q using cached computations, until the sum settles.
+  // (The conditions of the stop are pure comparisons; cdf + t == cdf is first as it
+  // is false for nearly every term, and then the others are not evaluated.)
+  for (int i = i0; i <= q; i++) {
+    const double t = fdDPO_scalar(i, mu, sigma, false);
+    if (t > max_term) {
+      max_term = t;
+      max_pos = i;
+    } else if (cdf + t == cdf && i > max_pos && t < prev && cdf >= DBL_MIN) {
+      break;
+    }
+    cdf += t;
+    prev = t;
+  }
+
+  double res = cdf;
+  if (!lower_tail) {
+    if (cdf > 0.5) {
+      // The upper tail itself, from q + 1 to where it settles (or to the largest
+      // count there is). The first term is added, unless it is 0: the terms past
+      // q have underflowed, and the tail is 0. The terms may still be rising here
+      // (q below the mode), and then no term can end the sum: it needs t < up_prev.
+      double up = 0.0;
+      double up_prev = R_PosInf;
+      for (long long j = static_cast<long long>(q) + 1; j <= CK_SEARCH_MAX; j++) {
+        const double t = fdDPO_scalar(static_cast<int>(j), mu, sigma, false);
+        if (!std::isfinite(t)) return R_NaN;   // defensive: the constant is that of the finite sum above
+        if (t < up_prev && up + t == up) break;
+        up += t;
+        up_prev = t;
+      }
+      res = up;
+    } else {
+      res = 1.0 - cdf;
+    }
+  }
+  if (log_p) res = log(res);
+
+  return res;
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_DPO.cpp)

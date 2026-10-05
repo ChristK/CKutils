@@ -339,6 +339,19 @@
   search that ends sooner cannot have been stopped by the bound, so every
   quantile is unchanged (738,805 results compared). On the smoking models'
   parameters `fqZABNB()` takes 0.66 us a draw, against 1.78 us in 0.1.33.
+* **`fpDPO()` stops summing once the CDF has settled, and sums the upper tail
+  itself.** The CDF added every density from 0 to `q`, however far past the
+  mass: `fpDPO(1e7, 90, 2)` took 0.5 s for a sum complete by `q = 220`. It now
+  starts at the first density that does not underflow (for `q > 64`) and stops
+  once the terms, past the largest, no longer change a (normal) sum, which gives
+  the same double as the full sum: the lower tail is unchanged bit for bit,
+  including the models' calls at `q = 0` and `90`. (The DPO pmf can have a
+  second mode at 0, and where it underflows a zero term is not taken as
+  settled.) `lower_tail = FALSE` was `1 - F`, which is 0, negative or wrong by
+  orders of magnitude once `F` rounds to 1: `fpDPO(80, 10, 2, lower_tail =
+  FALSE)` was 4.4e-16 for a tail of 2.0e-23. Where `F > 0.5` the tail is now
+  summed from `q + 1`: within 6e-12 (relative) of a log-sum-exp reference,
+  never negative, and finite with `log_p = TRUE`.
 
 ## Tests
 
@@ -437,6 +450,11 @@
   Poisson plus the first-order effect of the mixing variance (a closed form with
   no Bessel function), the quantile search against the CDF on both sides of a
   step, and the models' box against `gamlss.dist`.
+* `test-fDPO.R`, Test 28: `fpDPO(1e7, 90, 2)` equals `fpDPO(1000, 90, 2)` to
+  the bit; upper tails against a log-sum-exp reference, as ratios and on the
+  log scale; a (mu, sigma, q) grid including bimodal sets; guards at the models'
+  parameters; and a pair where p(0) is at the underflow limit and the dip after
+  it underflows to exactly 0.
 
 # CKutils 0.1.33
 

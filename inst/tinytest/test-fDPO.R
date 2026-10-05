@@ -521,6 +521,110 @@ expect_identical(fget_C(c(1L, NA, .Machine$integer.max), 5, 2),
                  info = "fget_C: an NA and the largest int in x do not overflow")
 
 # =============================================================================
+# THE CDF STOPS WHEN ITS SUM HAS SETTLED; THE UPPER TAIL IS SUMMED
+# =============================================================================
+
+# Test 28: fpDPO() added the densities from 0 to q however large q was -- 0.5 s at
+# q = 1e7, for a sum that is complete by q = 220 at mu = 90, sigma = 2 -- and took
+# the upper tail as 1 - F, which is 0, negative or wrong by orders of magnitude once
+# F has rounded to 1. It now stops where the sum has settled (past the largest term,
+# at a term too small to change it: the same double as the full sum), starts at the
+# first density that does not underflow, and sums the upper tail from q + 1.
+
+# P(X > q), or with lower = TRUE P(X <= q), from the log-sum-exp density. The upper
+# tail is summed from its small end, so that it keeps its relative accuracy.
+dDPO_lse_tail <- function(q, mu, sigma, lower = FALSE, ymax = 5000) {
+  d <- dDPO_lse(0:ymax, mu, sigma, ymax)
+  if (lower) cumsum(d)[q + 1] else rev(cumsum(rev(d)))[q + 2]
+}
+
+# 28a: a q far beyond the mass gives the settled sum, to the bit
+expect_identical(fpDPO(1e7, 90, 2), fpDPO(1000, 90, 2),
+                 info = "fpDPO: q = 1e7 gives the same double as q = 1000 (the sum has settled)")
+if (at_home()) {
+  elapsed <- system.time(fpDPO(1e7, 90, 2))[["elapsed"]]
+  expect_true(elapsed < 0.1,
+              info = "fpDPO: q = 1e7 stops where the sum settles (was O(q): 0.5 s)")
+}
+
+# 28b: the upper tail is summed, not 1 - F. Before: -6.7e-16 and 4.4e-16 for tails of
+# 8.7e-46 and 2.0e-23, and NaN with log_p; 4.4e-16 at q = 1e7, where the tail underflows to 0.
+# The references are the log-sum-exp tails (dDPO_lse_tail): P(X > 80 | mu = 10, sigma = 2) =
+# 1.993625e-23 and P(X > 90 | mu = 1.041833, sigma = 3.157198) = 8.654893e-46. Values this
+# small are compared as ratios to the reference (target 1) and on the log scale:
+# expect_equal() (all.equal) compares ABSOLUTELY when the target is below the tolerance,
+# and 4.4e-16 "equals" 2.0e-23 to 1e-6.
+ref_a <- dDPO_lse_tail(90, 1.041833, 3.157198)
+ref_b <- dDPO_lse_tail(80, 10, 2)
+expect_true(fpDPO(90, 1.041833, 3.157198, lower_tail = FALSE) > 0,
+            info = "fpDPO: the upper tail at q = 90, mu = 1.041833, sigma = 3.157198 is positive (was -6.7e-16)")
+expect_equal(fpDPO(90, 1.041833, 3.157198, lower_tail = FALSE) / ref_a, 1, tolerance = 1e-6,
+             info = "fpDPO: that upper tail is 8.7e-46 (ratio to the log-sum-exp tail)")
+expect_equal(fpDPO(90, 1.041833, 3.157198, lower_tail = FALSE, log_p = TRUE), log(ref_a), tolerance = 1e-10,
+             info = "fpDPO: log_p of that upper tail is finite (was NaN)")
+expect_equal(fpDPO(80, 10, 2, lower_tail = FALSE) / ref_b, 1, tolerance = 1e-6,
+             info = "fpDPO: the upper tail at q = 80, mu = 10, sigma = 2 is 2.0e-23 (ratio to the log-sum-exp tail; was 4.4e-16)")
+expect_equal(fpDPO(80, 10, 2, lower_tail = FALSE, log_p = TRUE), log(ref_b), tolerance = 1e-10,
+             info = "fpDPO: log_p is the log of the summed upper tail")
+expect_identical(fpDPO(1e7, 90, 2, lower_tail = FALSE), 0,
+                 info = "fpDPO: the upper tail far out is 0 (was 4.4e-16)")
+expect_identical(fpDPO(1e7, 90, 2, lower_tail = FALSE, log_p = TRUE), -Inf,
+                 info = "fpDPO: its log is -Inf")
+
+# 28c: over a grid of (mu, sigma, q) -- bimodal parameter sets included (sigma large
+# against mu, as 16.27 and 7.53, or 57 and 20) -- the upper tail (on the log scale,
+# where it does not underflow) and the lower tail match the log-sum-exp reference,
+# and the two add up to 1
+tail_grid <- expand.grid(q = c(0L, 3L, 10L, 30L, 60L, 90L, 200L),
+                         mu = c(0.5, 2, 16.27, 57), sigma = c(1.15, 3, 7.53, 20, 126))
+tail_set <- as.integer(interaction(tail_grid$mu, tail_grid$sigma, drop = TRUE))
+tail_upper_ref <- ref_per_set(dDPO_lse_tail, tail_grid$q, tail_set,
+                              mu = tail_grid$mu, sigma = tail_grid$sigma)
+tail_lower_ref <- ref_per_set(dDPO_lse_tail, tail_grid$q, tail_set,
+                              mu = tail_grid$mu, sigma = tail_grid$sigma, extra = list(lower = TRUE))
+tail_upper <- fpDPO(tail_grid$q, tail_grid$mu, tail_grid$sigma, lower_tail = FALSE)
+tail_lower <- fpDPO(tail_grid$q, tail_grid$mu, tail_grid$sigma)
+keep_up <- tail_upper_ref > 1e-290
+expect_equal(log(tail_upper[keep_up]), log(tail_upper_ref[keep_up]), tolerance = 1e-10,
+             info = "fpDPO: upper tails (log scale) over a grid of parameters")
+expect_equal(tail_lower, tail_lower_ref, tolerance = 1e-13,
+             info = "fpDPO: lower tails over a grid of parameters")
+expect_equal(tail_lower + tail_upper, rep(1, nrow(tail_grid)), tolerance = 1e-13,
+             info = "fpDPO: the two tails add up to 1")
+
+# 28d: guard: at model-like parameters the sum is the one it has always been. The values
+# at q = 0 and 90 are what the IMPACTncd models use (bit-identical to the full sum).
+expect_equal(fpDPO(0:200, 16.27, 7.53), cumsum(dDPO_lse(0:200, 16.27, 7.53)), tolerance = 1e-13,
+             info = "fpDPO: 0:200 at mu = 16.27, sigma = 7.53 matches the log-sum-exp sums")
+expect_equal(fpDPO(c(0, 90), 16.27, 7.53), cumsum(dDPO_lse(0:90, 16.27, 7.53))[c(1, 91)], tolerance = 1e-13,
+             info = "fpDPO: q = 0 and 90 at mu = 16.27, sigma = 7.53")
+expect_equal(fpDPO(0:400, 57, 20), cumsum(dDPO_lse(0:400, 57, 20)), tolerance = 1e-13,
+             info = "fpDPO: 0:400 at mu = 57, sigma = 20 (a second mode at 0) matches the log-sum-exp sums")
+
+# 28e: at a large mu the sum starts at the first density that does not underflow (q > 64):
+# 0 below it, and the value of the sum from 0 above it
+expect_identical(fpDPO(100L, 5000, 2), 0,
+                 info = "fpDPO: q below the first non-zero density is exactly 0")
+expect_equal(fpDPO(5100L, 5000, 2), sum(fdDPO(0:5100, 5000, 2)), tolerance = 1e-12,
+             info = "fpDPO: mu = 5000, q = 5100 is the sum of the densities from 0")
+expect_equal(fpDPO(5100L, 5000, 2, lower_tail = FALSE), sum(fdDPO(5101:8000, 5000, 2)), tolerance = 1e-10,
+             info = "fpDPO: mu = 5000, q = 5100, upper tail")
+
+# 28f: a term of 0 is not a settled sum. At mu / sigma near 743, p(0) is at the underflow limit
+# (4.9e-324) and the pmf has a second mode there: the dip after it underflows to exactly 0 (for
+# mu = 29720, sigma = 40: 4.9e-324, six zeros, then tiny terms that rise to the main mass around
+# 29720), and a sum that stopped at the first zero returned 4.9e-324 for every q. The values are
+# those of the log-sum-exp density. (Whether the dip underflows depends on the platform's exp()
+# and lgamma() to an ulp of the exponent; the values are right either way.)
+dip_q <- c(20000L, 29720L, 33000L, 40000L)
+dip_lower_ref <- dDPO_lse_tail(dip_q, 29720, 40, lower = TRUE, ymax = 60000)
+dip_upper_ref <- dDPO_lse_tail(dip_q, 29720, 40, ymax = 60000)
+expect_equal(fpDPO(dip_q, 29720, 40) / dip_lower_ref, rep(1, length(dip_q)), tolerance = 1e-10,
+             info = "fpDPO: p(0) at the underflow limit, a dip of exact zeros after it (ratio to the log-sum-exp CDF)")
+expect_equal(log(fpDPO(dip_q, 29720, 40, lower_tail = FALSE)), log(dip_upper_ref), tolerance = 1e-9,
+             info = "fpDPO: the same, upper tail (log scale)")
+
+# =============================================================================
 # FINAL SUMMARY MESSAGE
 # =============================================================================
 
