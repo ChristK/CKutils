@@ -316,6 +316,8 @@ IntegerVector fqMN4(const NumericVector& p,
 //' generate uniform random variables and apply the quantile function.
 //'
 //' Parameters are recycled to the length n following R's standard recycling rules.
+//' A zero-length \code{mu}, \code{sigma} or \code{nu} gives a zero-length result,
+//' \code{integer(0)}.
 //'
 //' @return An integer vector of random values.
 //'
@@ -350,6 +352,12 @@ IntegerVector frMN4(const int& n,
   // Use existing recycling infrastructure for parameters
   auto recycled = recycle_vectors(mu, sigma, nu);
   const int param_len = recycled.n;
+
+  // Zero-length rule (see recycle_vectors() in recycling_helpers.h): a
+  // zero-length parameter gives a zero-length result, as in the other fr*
+  // functions. Return before the loop below, where i % param_len would be an
+  // integer modulo by zero (SIGFPE, which kills the R session).
+  if (param_len == 0) return IntegerVector(0);
   
   // Generate uniform random numbers
   NumericVector u = runif(n);

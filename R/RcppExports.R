@@ -1181,6 +1181,8 @@ fqMN4 <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' generate uniform random variables and apply the quantile function.
 #'
 #' Parameters are recycled to the length n following R's standard recycling rules.
+#' A zero-length \code{mu}, \code{sigma} or \code{nu} gives a zero-length result,
+#' \code{integer(0)}.
 #'
 #' @return An integer vector of random values.
 #'

@@ -27,6 +27,8 @@ Random values are generated using the quantile function method:
 generate uniform random variables and apply the quantile function.
 
 Parameters are recycled to the length n following R's standard recycling rules.
+A zero-length \code{mu}, \code{sigma} or \code{nu} gives a zero-length result,
+\code{integer(0)}.
 }
 \note{
 This implementation is based on the gamlss.dist package rMN4 function

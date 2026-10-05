@@ -474,3 +474,42 @@ if (FALSE) {
 
 # Print summary
 # cat("All MN4 distribution tests completed successfully!\n")
+
+# =============================================================================
+# ZERO-LENGTH PARAMETER TESTS
+# =============================================================================
+
+# Test 36: A zero-length parameter gives a zero-length result, in each of the
+# three parameter positions, as in the other fr* functions. frMN4 used to take
+# an integer modulo by the recycled parameter length (0 here), which raises
+# SIGFPE and kills the R session.
+expect_identical(
+  frMN4(5, numeric(0), 1, 1),
+  integer(0),
+  info = "Random generation: zero-length mu returns integer(0)"
+)
+
+expect_identical(
+  frMN4(5, 1, numeric(0), 1),
+  integer(0),
+  info = "Random generation: zero-length sigma returns integer(0)"
+)
+
+expect_identical(
+  frMN4(5, 1, 1, numeric(0)),
+  integer(0),
+  info = "Random generation: zero-length nu returns integer(0)"
+)
+
+# Test 37: The ordinary path and the check on n are unchanged
+expect_identical(
+  length(frMN4(5, 1, 1, 1)),
+  5L,
+  info = "Random generation: scalar parameters give n values"
+)
+
+expect_error(
+  frMN4(0, 1, 1, 1),
+  "positive integer",
+  info = "Random generation: n = 0 errors"
+)

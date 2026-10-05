@@ -187,6 +187,12 @@
   non-finite or huge `(mu, sigma)`, the start of the sum for `mu / sigma`
   beyond the int range, the window of a NaN `mu` or `sigma`, and `max(x) * 3`
   in `fget_C()`. Results for finite arguments are unchanged bit for bit.
+* **`frMN4()` returns `integer(0)` for a zero-length `mu`, `sigma` or `nu`,
+  instead of killing the R session.** It took an integer modulo by the recycled
+  parameter length, which is 0 then, and the floating point exception (SIGFPE)
+  ended the process. The other twelve `fr*` functions already return a
+  zero-length result. `n <= 0` still stops with "n must be a positive integer",
+  and the draws for non-empty parameters are unchanged.
 
 ## Documentation
 
@@ -295,6 +301,8 @@
 * `test-fDPO.R`, Test 27: an infinite `mu` or `sigma` gives `NaN` (`NA` for
   `fqDPO()`) in under a second (before: 33 s, and 100 s for `fqDPO()`); Test 27b,
   a guard: `fget_C()` with an `NA` and `.Machine$integer.max` in `x`.
+* `test-fMN4.R`, Tests 36-37: a zero-length `mu`, `sigma` or `nu` gives
+  `integer(0)` (with the code before, each of these calls killed R).
 
 # CKutils 0.1.33
 
