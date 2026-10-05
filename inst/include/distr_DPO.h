@@ -64,7 +64,10 @@ inline double fdDPO_C_sd(const double& mu, const double& sigma) {
 // after which a sum that found no mass at all gives up.
 inline int fdDPO_C_window(const double& mu, const double& sigma) {
   const double w = std::ceil(mu + 40.0 * fdDPO_C_sd(mu, sigma)) + 100.0;
-  return static_cast<int>(std::min(std::max(w, 501.0), 2147483646.0));
+  // not `std::max(w, 501.0)`: for a NaN w (a NaN mu or sigma) that keeps the NaN, and
+  // an out-of-range float-to-int conversion is undefined behaviour
+  if (!(w > 501.0)) return 501;
+  return static_cast<int>(std::min(w, 2147483646.0));
 }
 
 // The sum runs from 40 standard deviations below mu (or 0) until its terms,
@@ -79,6 +82,10 @@ inline double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
   if (std::abs(sigma - 1.0) < 1e-6) {
     return 1.0; // Normalizing constant for Poisson is 1
   }
+
+  // A non-finite mu or sigma has no constant (and the loop below would run its
+  // 2^31 iterations, ~33 s, to find that out)
+  if (!std::isfinite(mu) || !std::isfinite(sigma)) return R_NaN;
 
   // Pre-compute constants outside loops
   mus = mu / sigma;
@@ -104,6 +111,7 @@ inline double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
   const int j0 = static_cast<int>(std::min(
       std::max(0.0, std::floor(mu - 40.0 * fdDPO_C_sd(mu, sigma))), 2147483646.0));
   const int window = std::max(ly, fdDPO_C_window(mu, sigma));
+  bool converged = false;
   for (int j = j0; j < 2147483646; j++) {
     double j_log = (j == 0) ? 1.0 : log(static_cast<double>(j));
     double ylogofy = j * j_log;
@@ -123,20 +131,20 @@ inline double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
     if (pathological) {
       // Conservative for pathological cases
       if (j > 100 && term < 1e-15 && term < prev_term * 1e-6) {
-        break;
+        { converged = true; break; }
       }
     } else {
       // Conservative termination for normal cases - prioritize accuracy over extreme speed
-      int min_iter = std::max(15, static_cast<int>(expected_mode * 0.7));
+      int min_iter = std::max(15, static_cast<int>(std::min(expected_mode * 0.7, 2147483646.0)));
 
       if (j >= min_iter && j > max_term_pos + 8) {
         // Only terminate if we're well past the mode and terms are extremely small
         if (term < max_term * 1e-15) {
-          break;
+          { converged = true; break; }
         }
         // Very conservative decreasing term check
         if (j > max_term_pos + 12 && term < prev_term * 0.01) {
-          break;
+          { converged = true; break; }
         }
       }
     }
@@ -146,14 +154,16 @@ inline double fdDPOgetC5_C_scalar(const double& mu, const double& sigma,
     // (all terms underflowing) gives up rather than run on.
     if ((j > max_term_pos && term < max_term * 1e-17) ||
         (j >= window && max_term == 0.0)) {
-      break;
+      { converged = true; break; }
     }
     prev_term = term;
   }
 
   // No term summed, or all underflowed (the mass lies beyond the int range):
   // the constant is unknown, not 1 / 0 = Inf
-  if (!(sumC > 0.0)) return R_NaN;
+  // the loop reached the int cap without a stopping rule: the sum needs more terms
+  // than an int holds, so the constant is unknown
+  if (!converged || !(sumC > 0.0)) return R_NaN;
   return 1.0 / sumC;
 }
 
@@ -178,7 +188,12 @@ struct DPOCache {
 
   static double get_or_compute(double mu, double sigma, int ly) {
     // Simple hash for cache lookup
-    int hash = (int)(mu * 1000 + sigma * 100000 + ly) % CACHE_SIZE;
+    const double key = mu * 1000 + sigma * 100000 + ly;
+    // in range: the slot of a plain int cast; out of range or NaN: slot 0 (an
+    // out-of-range double-to-int conversion is undefined behaviour). The slot only
+    // spreads the entries: a hit compares mu, sigma and ly below, so a collision
+    // costs a recomputation at most.
+    const int hash = (key >= 0.0 && key < 2147483647.0) ? static_cast<int>(key) % CACHE_SIZE : 0;
 
     CacheEntry& entry = cache[hash];
     if (entry.valid &&

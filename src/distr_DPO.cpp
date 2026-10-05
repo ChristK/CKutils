@@ -146,13 +146,17 @@ NumericVector fget_C(const IntegerVector& x,
                        const NumericVector& mu,
                        const NumericVector& sigma)
 {
-  // Any zero-length input -> zero-length result. This guards both Rcpp::max(x)
-  // on an empty vector and the i % length() modulo-by-zero in the recycling loop
-  // below (UB / SIGFPE when mu or sigma is empty while another arg is not).
+  // Any zero-length input -> zero-length result. This guards the i % length()
+  // modulo-by-zero in the recycling loop below (UB / SIGFPE when mu or sigma is
+  // empty while another arg is not).
   if (x.length() == 0 || mu.length() == 0 || sigma.length() == 0) {
     return NumericVector(0);
   }
-  int maxV = std::max(Rcpp::max(x) * 3, 500);
+  // The largest x, taken as a double (3 * an int can overflow) and skipping NA,
+  // clamped so that maxV + 1 below still fits an int
+  double mx = 0;
+  for (int v : x) if (v != NA_INTEGER) mx = std::max(mx, static_cast<double>(v));
+  const int maxV = static_cast<int>(std::min(std::max(3.0 * mx, 500.0), 2147483645.0));
   int lmu   = std::max(std::max(x.length(), mu.length()), sigma.length());
 
   // Per element, through the scalar: its window covers the mass around mu

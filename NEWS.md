@@ -176,6 +176,17 @@
   probability, while `gamlss.dist::qBCT()` and `fqBCPEo()` return the ends of
   the support. It now returns 0 and `Inf`. A `p` outside [0, 1] is still an
   error.
+* **`fdDPO()`, `fpDPO()` and `fqDPO()` return at once for an infinite `mu` or
+  `sigma`.** There is no normalising constant then, and the loop that sums it
+  ran all of its 2^31 iterations to find that out: `fdDPO(1, Inf, 2)` took 33 s
+  and `fqDPO(0.5, Inf, 2)` 100 s to return the same `NaN` (`NA` for `fqDPO()`),
+  with the usual warning. A sum that reaches the int cap without meeting a
+  stopping rule (a finite `sigma` near 1e10) is `NaN` too, rather than the
+  constant of the truncated sum. The out-of-range float-to-int conversions on
+  this path, which are undefined behaviour, are gone: the cache slot of a
+  non-finite or huge `(mu, sigma)`, the start of the sum for `mu / sigma`
+  beyond the int range, the window of a NaN `mu` or `sigma`, and `max(x) * 3`
+  in `fget_C()`. Results for finite arguments are unchanged bit for bit.
 
 ## Documentation
 
@@ -281,6 +292,9 @@
   `fqDEL(fpDEL(0:10)) == 0:10` at IMPACTncd's veg parameters; a NaN or NA
   `sigma` after a valid element stays NA. Its three timing expectations (under
   5 s; the old code took 12-45 s per call) run only under `at_home()`.
+* `test-fDPO.R`, Test 27: an infinite `mu` or `sigma` gives `NaN` (`NA` for
+  `fqDPO()`) in under a second (before: 33 s, and 100 s for `fqDPO()`); Test 27b,
+  a guard: `fget_C()` with an `NA` and `.Machine$integer.max` in `x`.
 
 # CKutils 0.1.33
 

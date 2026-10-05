@@ -471,6 +471,36 @@ expect_equal(ck_extreme_quants_all, gamlss_extreme_quants_all, tolerance = 0,
             info = "Vectorized extreme quantiles - all parameter sets")
 
 # =============================================================================
+# NON-FINITE PARAMETERS AND THE int RANGE
+# =============================================================================
+
+# Test 27: an infinite mu or sigma has no normalising constant: NaN (NA for
+# fqDPO), with the usual warning, at once. The constant's loop used to run its
+# 2^31 iterations first, ~33 s for each constant: fdDPO and fpDPO(0, ...) ~33 s,
+# fqDPO ~100 s (its search asks for three densities). The calls now take
+# microseconds, so the 1 s bound leaves a slow machine room to spare.
+elapsed <- system.time(v <- suppressWarnings(fdDPO(1, Inf, 2)))[["elapsed"]]
+expect_true(is.na(v) && elapsed < 1,
+            info = "fdDPO: mu = Inf gives NaN at once (was ~33 s)")
+elapsed <- system.time(v <- suppressWarnings(fdDPO(1, 2, Inf)))[["elapsed"]]
+expect_true(is.na(v) && elapsed < 1,
+            info = "fdDPO: sigma = Inf gives NaN at once (was ~33 s)")
+elapsed <- system.time(v <- suppressWarnings(fpDPO(0L, Inf, 2)))[["elapsed"]]
+expect_true(is.nan(v) && elapsed < 1,
+            info = "fpDPO: mu = Inf gives NaN at once (was ~33 s)")
+elapsed <- system.time(v <- suppressWarnings(fqDPO(0.5, Inf, 2)))[["elapsed"]]
+expect_true(is.na(v) && !is.nan(v) && elapsed < 1,
+            info = "fqDPO: mu = Inf gives NA at once (was ~100 s)")
+
+# Test 27b: fget_C() takes the largest x as a double, skipping NA, and clamps the
+# range it derives from it: 3 * .Machine$integer.max overflows an int. This is a
+# guard only: on x86-64 the overflow wraps to a harmless value, so it cannot fail
+# there without a sanitizer (UBSan). The constant does not depend on x.
+expect_identical(fget_C(c(1L, NA, .Machine$integer.max), 5, 2),
+                 rep(fget_C(1L, 5, 2), 3),
+                 info = "fget_C: an NA and the largest int in x do not overflow")
+
+# =============================================================================
 # FINAL SUMMARY MESSAGE
 # =============================================================================
 
