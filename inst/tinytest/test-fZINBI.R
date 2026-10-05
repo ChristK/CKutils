@@ -138,3 +138,63 @@ expect_silent(res_p1 <- fqZINBI(1, 5, .5, .3))
 expect_identical(res_p1, 77L, info = "fqZINBI(p = 1) keeps its finite value, silently")
 expect_silent(res_na <- fqZINBI(NaN, 5, .5, .3))
 expect_true(is.na(res_na), info = "fqZINBI NaN p is NA, silently")
+
+# =============================================================================
+# UPPER TAIL: (1 - nu) * S_NBI(q), NOT 1 - F
+#
+# fpZINBI computed lower_tail = FALSE as 1 - F. F rounds to 1 once the tail is
+# below about 1e-16, so the upper tail came out as 0, or wrong by orders of
+# magnitude, where it is 1e-20 or smaller.
+#
+# The references are closed forms on base R's negative binomial
+# (NBI(mu, sigma) = NB(size = 1 / sigma, mu)), compared as a RATIO to the
+# reference: expect_equal() is relative only while the reference exceeds the
+# tolerance. Below that all.equal() takes an absolute difference, and a result
+# of 0 would pass against a reference of 1e-28.
+# =============================================================================
+ref_up <- 0.7 * pnbinom(200, size = 2, mu = 5, lower.tail = FALSE)
+expect_true(ref_up > 1e-300 && ref_up < 1e-20,
+            info = "the reference upper tail is far below the resolution of 1 - F")
+expect_equal(fpZINBI(200, 5, .5, .3, lower_tail = FALSE) / ref_up, 1, tolerance = 1e-12,
+             info = "fpZINBI upper tail at q = 200 is 1.7e-28, not 0")
+expect_equal(fpZINBI(200, 5, .5, .3, lower_tail = FALSE, log_p = TRUE), log(ref_up),
+             tolerance = 1e-12, info = "fpZINBI log upper tail at q = 200")
+
+# the Poisson branch (sigma < 1e-4) takes its tail from ppois
+ref_up_pois <- 0.7 * ppois(200, 5, lower.tail = FALSE)
+expect_equal(fpZINBI(200, 5, 1e-5, .3, lower_tail = FALSE) / ref_up_pois, 1, tolerance = 1e-12,
+             info = "fpZINBI upper tail, Poisson branch")
+expect_equal(fpZINBI(200, 5, 1e-5, .3, lower_tail = FALSE, log_p = TRUE), log(ref_up_pois),
+             tolerance = 1e-12, info = "fpZINBI log upper tail, Poisson branch")
+
+# a grid across the NBI regimes: the log tail never underflows, so it is compared
+# everywhere; the plain tail where the reference is representable
+g <- expand.grid(q = c(0L, 1L, 2L, 5L, 20L, 80L, 200L), mu = c(0.5, 5, 50),
+                 sigma = c(0.05, 0.5, 2), nu = c(0.05, 0.5, 0.9))
+g_size <- 1 / g$sigma
+g_ref <- (1 - g$nu) * pnbinom(g$q, size = g_size, mu = g$mu, lower.tail = FALSE)
+g_ref_log <- log1p(-g$nu) +
+  pnbinom(g$q, size = g_size, mu = g$mu, lower.tail = FALSE, log.p = TRUE)
+expect_equal(fpZINBI(g$q, g$mu, g$sigma, g$nu, lower_tail = FALSE, log_p = TRUE), g_ref_log,
+             tolerance = 1e-12, info = "fpZINBI log upper tail on a grid")
+g_ok <- g_ref > 1e-300
+expect_true(sum(g_ok) > 100, info = "the grid has representable plain upper tails")
+expect_equal(fpZINBI(g$q, g$mu, g$sigma, g$nu, lower_tail = FALSE)[g_ok] / g_ref[g_ok],
+             rep(1, sum(g_ok)), tolerance = 1e-12, info = "fpZINBI upper tail on a grid")
+
+# A tiny mu. With sigma = 1 the NBI is geometric, so for q >= 0
+# P(X > q) = (1 - nu) * (mu / (1 + mu))^(q + 1) exactly: a reference that needs
+# no subtraction at any mu.
+gm <- expand.grid(q = 0:2, mu = c(1e-17, 1e-12, 1e-6))
+gm_ref <- 0.5 * (gm$mu / (1 + gm$mu))^(gm$q + 1)
+expect_equal(fpZINBI(gm$q, gm$mu, 1, 0.5, lower_tail = FALSE) / gm_ref, rep(1, nrow(gm)),
+             tolerance = 1e-12, info = "fpZINBI upper tail at a tiny mu (was 0 or noise)")
+expect_equal(fpZINBI(gm$q, gm$mu, 1, 0.5, lower_tail = FALSE, log_p = TRUE), log(gm_ref),
+             tolerance = 1e-12, info = "fpZINBI log upper tail at a tiny mu")
+
+# Guards that hold with or without the fix: where both tails are well conditioned
+# they sum to 1
+lo <- fpZINBI(data$q, data$mu, data$sigma, data$nu)
+up <- fpZINBI(data$q, data$mu, data$sigma, data$nu, lower_tail = FALSE)
+expect_equal(lo + up, rep(1, length(lo)), tolerance = 1e-12,
+             info = "fpZINBI: the two tails sum to 1")

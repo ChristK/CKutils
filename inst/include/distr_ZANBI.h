@@ -72,6 +72,24 @@ inline double fdZANBI_scalar(const int& x,
 }
 
 // SIMD-optimised ZANBI CDF scalar function
+//
+// For q > 0, with S_NBI = 1 - F_NBI the NBI upper tail:
+//   upper tail  P(X > q) = (1 - nu) * S_NBI(q) / (1 - F_NBI(0))
+//   lower tail  F(q)     = nu + (1 - nu) * (F_NBI(q) - F_NBI(0)) / (1 - F_NBI(0))
+//                        = 1 - P(X > q)
+//
+// The upper tail is computed directly, from R's pnbinom_mu / ppois with
+// lower_tail = FALSE (in log space for log_p), not as 1 - F. F rounds to 1 once the
+// tail drops below about 1e-16, so 1 - F was 0, or wrong by orders of magnitude,
+// where the tail is far smaller: fpZANBI(200, 5, .5, .3, lower_tail = FALSE) was 0
+// for a true 1.9e-28. 1 - F_NBI(0) is -expm1(log f0), as in fdZANBI_scalar: unlike
+// the literal difference it stays accurate where f0 rounds to 1 (a tiny mu), where
+// the lower tail's ratio of two differences was 0/0 (fpZANBI(1, 1e-17, 1, .5) was
+// NaN).
+//
+// The lower tail keeps its original expression, bit for bit, while
+// 1 - F_NBI(0) >= 1e-3: its error there is at most about eps / 1e-3 = 1e-13.
+// Below that it is 1 - P(X > q), accurate to a few eps.
 inline double fpZANBI_scalar(const int& q,
                              const double& mu,
                              const double& sigma,
@@ -84,22 +102,46 @@ inline double fpZANBI_scalar(const int& q,
     // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
     // if (q      < 0) stop("q must be >=0");
 
-    double cdf;
     if (q < 0) {
-        cdf = 0.0;
-    } else if (q == 0) {
+        // Below the support: F = 0, so the upper tail is 1.
+        const double cdf = lower_tail ? 0.0 : 1.0;
+        return log_p ? std::log(cdf) : cdf;
+    }
+
+    if (!lower_tail) {
+        // P(X > 0) = 1 - nu
+        if (q == 0) return log_p ? std::log1p(-nu) : 1.0 - nu;
+
+        // 1 - F_NBI(0), without the cancellation of 1 - exp(log f0)
+        const double one_minus_f0 = -std::expm1(fdNBI_scalar(0, mu, sigma, true));
+        if (log_p) {
+            return std::log1p(-nu)
+                 + fpNBI_scalar(q, mu, sigma, false, true)
+                 - std::log(one_minus_f0);
+        }
+        return (1.0 - nu) * fpNBI_scalar(q, mu, sigma, false, false) / one_minus_f0;
+    }
+
+    double cdf;
+    if (q == 0) {
         cdf = nu;
     } else {
         // F(q) = nu + (1-nu) * (F_NBI(q) - F_NBI(0)) / (1 - F_NBI(0))
         const double cdf0 = fpNBI_scalar(0, mu, sigma, true, false);
-        const double cdf1 = fpNBI_scalar(q, mu, sigma, true, false);
-        cdf = nu + ((1.0 - nu) * (cdf1 - cdf0) / (1.0 - cdf0));
+        if (1.0 - cdf0 >= 1e-3) {
+            const double cdf1 = fpNBI_scalar(q, mu, sigma, true, false);
+            cdf = nu + ((1.0 - nu) * (cdf1 - cdf0) / (1.0 - cdf0));
+        } else {
+            // 1 - cdf0 and cdf1 - cdf0 are differences of two numbers that are
+            // nearly 1 here: use 1 - P(X > q) instead (a NaN cdf0 comes here too,
+            // and stays NaN).
+            const double one_minus_f0 = -std::expm1(fdNBI_scalar(0, mu, sigma, true));
+            cdf = 1.0 - (1.0 - nu) * fpNBI_scalar(q, mu, sigma, false, false)
+                                   / one_minus_f0;
+        }
     }
 
-    if (!lower_tail) cdf = 1.0 - cdf;
-    if (log_p) cdf = std::log(cdf);
-
-    return cdf;
+    return log_p ? std::log(cdf) : cdf;
 }
 
 // SIMD-optimised ZANBI quantile scalar function

@@ -234,6 +234,19 @@
 * In the header-only BNB scalars, `fdBNB_scalar(INT_MAX)` no longer wraps (it
   returned `-Inf`) and `fpBNB_scalar(INT_MAX)` returns (about 5 s) instead of
   never.
+* **`fpZANBI()` and `fpZINBI()`: the upper tail is no longer `1 - F`, and
+  `fpZANBI()` is no longer `NaN` at a tiny `mu`.** One minus the CDF is 0, or
+  wrong by orders of magnitude, once the CDF rounds to 1:
+  `fpZANBI(200, 5, .5, .3, lower_tail = FALSE)` returned 0 for a true 1.9e-28.
+  The upper tail is now `(1 - nu) * S(q) / (1 - F(0))` (ZANBI) and
+  `(1 - nu) * S(q)` (ZINBI), with `S` the NBI upper tail from R's
+  `pnbinom()`/`ppois()` (in log space for `log_p = TRUE`); it agrees with a
+  `pnbinom(lower.tail = FALSE)` reference to 1e-15. `fpZANBI(1, 1e-17, 1, 0.5)`
+  was `NaN`, because F(0) rounds to 1 and the lower tail divided 0 by 0;
+  `1 - F(0)` is now `-expm1(log f(0))`, and where it is below 1e-3 the lower
+  tail is `1 - P(X > q)`. Elsewhere the lower tail is unchanged bit for bit,
+  which covers the IMPACTncd models (`mu >= 0.46`, through
+  `fpZANBI_scalar()`).
 
 ## Documentation
 
@@ -385,6 +398,10 @@
 * `test-fSICHEL.R` and `test-fZISICHEL.R`: the CDF at q = 5e7 is the CDF at
   q = 1e4, bit for bit (with a timing bound at home); and where a very negative
   `nu` breaks the recursion, `fpSICHEL()` is NaN exactly where the densities are.
+* `test-fZANBI.R`, `test-fZINBI.R`: upper tails against `pnbinom()`-based and
+  exact geometric references, as ratios or logs (a plain `expect_equal()` with a
+  reference far below its tolerance cannot fail); `fpZANBI()` at `mu = 1e-17` is
+  in [0, 1]; both tails sum to 1.
 
 # CKutils 0.1.33
 

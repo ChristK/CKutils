@@ -70,6 +70,16 @@ inline double fdZINBI_scalar(const int& x,
 }
 
 // SIMD-optimised ZINBI CDF scalar function
+//
+// For q >= 0, with S_NBI = 1 - F_NBI the NBI upper tail:
+//   lower tail  F(q)     = nu + (1 - nu) * F_NBI(q)
+//   upper tail  P(X > q) = (1 - nu) * S_NBI(q)
+//
+// The upper tail is computed directly, from R's pnbinom_mu / ppois with
+// lower_tail = FALSE (in log space for log_p), and not as 1 - F. F rounds to 1 as
+// soon as the tail drops below about 1e-16, so 1 - F was 0, or wrong by orders of
+// magnitude, where the tail is far smaller: fpZINBI(200, 5, .5, .3, lower_tail =
+// FALSE) was 0 for a true 1.7e-28. The lower tail is unchanged.
 inline double fpZINBI_scalar(const int& q,
                       const double& mu = 1.0,
                       const double& sigma = 1.0,
@@ -82,19 +92,22 @@ inline double fpZINBI_scalar(const int& q,
     // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
     // if (q      < 0) stop("q must be >=0");
 
-    double cdf;
     if (q < 0) {
-        cdf = 0.0;
-    } else {
-        // F(q) = nu + (1-nu) * F_NBI(q)
-        const double cdf_nbi = fpNBI_scalar(q, mu, sigma, true, false);
-        cdf = nu + (1.0 - nu) * cdf_nbi;
+        // Below the support: F = 0, so the upper tail is 1.
+        const double cdf = lower_tail ? 0.0 : 1.0;
+        return log_p ? std::log(cdf) : cdf;
     }
 
-    if (!lower_tail) cdf = 1.0 - cdf;
-    if (log_p) cdf = std::log(cdf);
+    if (!lower_tail) {
+        if (log_p) return std::log1p(-nu) + fpNBI_scalar(q, mu, sigma, false, true);
+        return (1.0 - nu) * fpNBI_scalar(q, mu, sigma, false, false);
+    }
 
-    return cdf;
+    // F(q) = nu + (1-nu) * F_NBI(q)
+    const double cdf_nbi = fpNBI_scalar(q, mu, sigma, true, false);
+    const double cdf = nu + (1.0 - nu) * cdf_nbi;
+
+    return log_p ? std::log(cdf) : cdf;
 }
 
 // SIMD-optimised ZINBI quantile scalar function
