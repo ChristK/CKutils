@@ -24,7 +24,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include "recycling_helpers.h"
 #include "distr_NBI.h"
 #include "distr_SICHEL.h"   // canonical header-only scalar definitions
-#include "distr_search.h"   // ck_search_gives_up(), CK_SEARCH_MAX
+#include "distr_search.h"   // ck_search_stalled(), ck_search_settled(), CK_SEARCH_MAX
 // [[Rcpp::plugins(cpp17)]]
 
 using namespace Rcpp;
@@ -379,9 +379,11 @@ int fqSICHEL_search(const double& p, const double& mu, const double& sigma, cons
         return 0;
     }
 
-    // Incremental search. No fixed cap: ck_search_gives_up() (distr_search.h)
-    // ends a search that cannot reach p, and NA_INTEGER is returned rather than
-    // a number
+    // Incremental search. No fixed cap: a term that is not finite gives
+    // NA_INTEGER, and so does a stalled sum (ck_search_stalled, distr_search.h)
+    // that is not within CK_P_FUZZ of p (ck_search_settled); a stalled sum within
+    // it returns the index where it stopped. NA_INTEGER is returned rather than a
+    // number
     const double sigma_alpha_cvec_sq = pow(mu / (sigma * alpha * cvec), 2.0);
 
     for (int j = 1; j <= CK_SEARCH_MAX; j++) {
@@ -390,8 +392,11 @@ int fqSICHEL_search(const double& p, const double& mu, const double& sigma, cons
         double lpnew_curr = lpnew_prev + log(tynew_prev) - log(static_cast<double>(j));
         const double term = exp(lpnew_curr);
 
-        if (ck_search_gives_up(term, term_prev, cdf)) {
+        if (!std::isfinite(term)) {
             return NA_INTEGER;
+        }
+        if (ck_search_stalled(term, term_prev, cdf)) {
+            return ck_search_settled(cdf, p) ? j - 1 : NA_INTEGER;
         }
         cdf += term;
 
@@ -495,11 +500,18 @@ IntegerVector fqSICHEL(NumericVector p,
             continue;
         }
 
-        // The quantile is Inf, which an int cannot hold. Assigning R_PosInf to
-        // an IntegerVector element was an out-of-range float-to-int conversion:
+        // p = 1 (or above it, within the 1.0001 tolerance) has an infinite
+        // quantile, which an int cannot hold. Assigning R_PosInf to an
+        // IntegerVector element was an out-of-range float-to-int conversion:
         // undefined behaviour, that gives INT_MIN (= NA) on x86-64 and
-        // saturates to INT_MAX on AArch64.
-        if (pi + 1e-09 >= 1.0) {
+        // saturates to INT_MAX on AArch64. Any p < 1 is searched, and its
+        // quantile is finite. The `p + 1e-09 >= 1` cutoff of gamlss.dist::qSICHEL
+        // guards its R loop (max.value iterations, a pSICHEL call each) and is
+        // deliberately not copied: the search below needs no such guard, and with
+        // it every p in [1 - 1e-9, 1) came out as NA. A p so close to 1 that the
+        // summed CDF cannot reach it is settled or NA in fqSICHEL_search
+        // (ck_search_stalled / ck_search_settled).
+        if (pi >= 1.0) {
             QQQ[i] = NA_INTEGER;
             not_found = true;
             continue;

@@ -273,6 +273,18 @@
   `NaN`. At the models' parameters the quantiles are unchanged and the CDF
   moves by < 2e-13 (relative); far in the tail of a very negative `nu` (near
   -14.7, counts 7 to 14) a density moves by up to 5e-8, towards the true value.
+* **`fqBNB()` and `fqSICHEL()` return the finite quantile for `p` in
+  [1 - 1e-9, 1), as `fqDPO()` does.** They returned `Inf` (`fqBNB()`) and `NA`
+  with a warning (`fqSICHEL()`) for every `p` with `p + 1e-9 >= 1`, the cutoff of
+  `gamlss.dist::qBNB()` and `qSICHEL()`: `fqBNB(c(1 - 1e-9, 1 - 5e-10, 1 - 2e-10),
+  10.6139, 0.08621, 0.0174699)` is `342 365 398`, and `fqSICHEL(c(1 - 1e-9,
+  1 - 5e-10, 1 - 1e-10), 2.34544, 0.212277, -6.19696)` is `33 34 37`. `p = 1` is
+  still `Inf` (`NA` with a warning for the integer `fqSICHEL()`), and every `p`
+  below the window gives the result it gave before. The stall rule is
+  `fqDPO()`'s, so for `p` within ~1e-13 of 1 the quantile is accurate only to a
+  few units (more in a heavy tail), and `NA` where the summed CDF cannot reach
+  `p`. `fqZABNB()` follows `fqBNB()` (the models' `smok_cig_ex`: about 1e-13 of
+  the draws, which were `Inf`).
 
 ## Documentation
 
@@ -455,6 +467,12 @@
   log scale; a (mu, sigma, q) grid including bimodal sets; guards at the models'
   parameters; and a pair where p(0) is at the underflow limit and the dip after
   it underflows to exactly 0.
+* `test-distr_near_one.R` (BNB and SICHEL part): finite quantiles in
+  [1 - 1e-9, 1) at pinned values (margins of at least 1.7e-12 from a
+  quad-precision pmf sum and the Poisson-GIG mixture integrals), brackets on the
+  package's own CDF deeper in the window, the same answers on the upper tail and
+  the log scale, the settle step and the heavy-tail `NA`, `p = 1`, and round
+  trips.
 
 # CKutils 0.1.33
 

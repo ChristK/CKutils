@@ -197,10 +197,11 @@ inline int fqBNB_search(const double& p, const double& mu, const double& sigma, 
             // within a few terms (nearly all do) does not need: it is checked when
             // the scan reaches index CK_BNB_BOUND_AFTER. The outcome is the same as
             // if it were checked first. A scan that ends sooner either found
-            // F(i) >= p, which the bound rules out (F(i) <= (i + 1) * the largest
-            // term, and the bound puts (CK_SEARCH_MAX + 1) * the largest term below
-            // p), or gave up (NA either way). Only a quantile beyond the int range
-            // pays for the wait, up to ~0.3 ms.
+            // F(i) >= p (or stopped on a sum within CK_P_FUZZ of p), which the
+            // bound rules out (F(i) <= (i + 1) * the largest term, and the bound
+            // puts (CK_SEARCH_MAX + 1) * the largest term below p, by far more
+            // than CK_P_FUZZ), or gave up (NA either way). Only a quantile beyond
+            // the int range pays for the wait, up to ~0.3 ms.
             check_at = start + CK_BNB_BOUND_AFTER;
         } else {
             // The head underflows, or nearly (a large mu; a term below CK_TERM_TINY
@@ -214,8 +215,10 @@ inline int fqBNB_search(const double& p, const double& mu, const double& sigma, 
         }
     }
 
-    // No fixed cap: ck_search_gives_up() (distr_search.h) ends a search that
-    // cannot reach p, and NA_INTEGER is returned rather than a number. Each
+    // No fixed cap: a term that is not finite gives NA_INTEGER, and so does a
+    // stalled sum (ck_search_stalled, distr_search.h) that is not within
+    // CK_P_FUZZ of p (ck_search_settled); a stalled sum within it returns the
+    // index where it stopped. NA_INTEGER is returned rather than a number. Each
     // term is the previous one times ratio(), recomputed from its log every
     // CK_REANCHOR terms; the CDF is a compensated sum (distr_search.h). About
     // 3.9 ns per term (was ~100: three lgamma/lbeta per term).
@@ -234,8 +237,11 @@ inline int fqBNB_search(const double& p, const double& mu, const double& sigma, 
             term *= T.ratio(i - 1.0);
         }
         --countdown;
-        if (ck_search_gives_up(term, prev_term, cdf.value())) {
+        if (!std::isfinite(term)) {
             return NA_INTEGER;
+        }
+        if (ck_search_stalled(term, prev_term, cdf.value())) {
+            return ck_search_settled(cdf.value(), p) ? i - 1 : NA_INTEGER;
         }
         cdf.add(term);
         if (cdf.value() >= p) {
@@ -259,7 +265,14 @@ inline double fqBNB_scalar(const double& p,
   if (log_p) p_ = std::exp(p_);
   if (!lower_tail) p_ = 1.0 - p_;
 
-  if (p_ + 1e-09 >= 1.0) {
+  // p = 1 (or above it, within the 1.0001 tolerance of the vectorised wrapper)
+  // has an infinite quantile; any p < 1 is searched, and its quantile is finite.
+  // The `p + 1e-09 >= 1` cutoff of gamlss.dist::qBNB guards its R loop (max.value
+  // iterations, a pBNB call each) and is deliberately not copied: the search
+  // below needs no such guard, and with it every p in [1 - 1e-9, 1) came out as
+  // Inf. A p so close to 1 that the summed CDF cannot reach it is settled or NA
+  // in fqBNB_search (ck_search_stalled / ck_search_settled).
+  if (p_ >= 1.0) {
     return R_PosInf;
   }
 
