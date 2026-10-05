@@ -30,7 +30,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <cstring>
 #include "recycling_helpers.h"
 #include "distr_DPO.h"   // canonical header-only scalar definitions
-#include "distr_search.h"   // ck_search_gives_up(), CK_SEARCH_MAX
+#include "distr_search.h"   // ck_search_stalled(), ck_search_settled(), CK_SEARCH_MAX
 // [[Rcpp::plugins(cpp17)]]
 using namespace Rcpp;
 
@@ -309,8 +309,10 @@ int fqDPO_search(const double& p,
   }
   
   // Incremental search: compute CDF incrementally by adding densities. No
-  // fixed cap: ck_search_gives_up() (distr_search.h) ends a search that cannot
-  // reach p, and NA_INTEGER is returned rather than a number
+  // fixed cap: a density that is not finite gives NA_INTEGER, and so does a
+  // stalled sum (ck_search_stalled, distr_search.h) that is not within
+  // CK_P_FUZZ of p (ck_search_settled); a stalled sum within it returns the
+  // index where it stopped. NA_INTEGER is returned rather than a number.
   // With a large mu, start at the first density that does not underflow
   // (ck_search_start, distr_search.h). For mu beyond the int range the
   // densities are NaN (their constant cannot be summed), and the search below
@@ -322,8 +324,11 @@ int fqDPO_search(const double& p,
   double prev_density = -1.0;
   for (int q = static_cast<int>(start); q <= CK_SEARCH_MAX; q++) {
     const double density = fdDPO_scalar(q, mu, sigma, false);
-    if (ck_search_gives_up(density, prev_density, cdf)) {
+    if (!std::isfinite(density)) {
       return NA_INTEGER;
+    }
+    if (ck_search_stalled(density, prev_density, cdf)) {
+      return ck_search_settled(cdf, p) ? q - 1 : NA_INTEGER;
     }
     cdf += density;
     if (cdf >= p) {
@@ -557,7 +562,14 @@ NumericVector fqDPO(NumericVector p,
       if (!lower_tail)
         p_i = 1.0 - p_i;
 
-      if (p_i + 1e-09 >= 1.0) {
+      // p = 1 (or above it, within the 1.0001 tolerance) has an infinite
+      // quantile; any p < 1 is searched, and its quantile is finite. The
+      // `p + 1e-09 >= 1` cutoff of gamlss.dist::qDPO guards its R loop (max.value
+      // iterations, a pDPO call each) and is deliberately not copied: the
+      // search below needs no such guard, and with it every p in [1 - 1e-9, 1)
+      // came out as Inf. A p so close to 1 that the summed CDF cannot reach it
+      // is settled or NA in fqDPO_search (ck_search_stalled / ck_search_settled).
+      if (p_i >= 1.0) {
         QQQ[i] = R_PosInf;
       } else {
         // Use optimized incremental search

@@ -193,6 +193,19 @@
   ended the process. The other twelve `fr*` functions already return a
   zero-length result. `n <= 0` still stops with "n must be a positive integer",
   and the draws for non-empty parameters are unchanged.
+* **`fqDPO()` returns the finite quantile for `p` in [1 - 1e-9, 1), not `Inf`.**
+  It returned `Inf` for every `p` with `p + 1e-9 >= 1`, a cutoff copied from
+  `gamlss.dist::qDPO()`, where it guards an R loop. The C++ search needs no such
+  guard, and the quantile there is finite:
+  `fqDPO(c(1 - 1e-9, 1 - 5e-10, 1 - 4e-11), 16.27, 7.53)` is `118 121 130`, not
+  `Inf Inf Inf`. Stored as an integer, as in the IMPACTncd models
+  (`smok_quit_yrs` and `smok_dur_ex`, about 4e-10 of the draws), the `Inf`
+  became `NA`. `p = 1` is still `Inf`, and every `p` below `1 - 1e-9` gives the
+  result it gave before. The search still stops at the first `q` whose CDF is at
+  least `p`, so `fqDPO(fpDPO(x))` is `x`. When the summed CDF stops growing
+  within 64 * `.Machine$double.eps` (relative) of `p`, the result is the index
+  where it stopped; further below `p` it is `NA`, with a warning. For `p` within
+  ~1e-13 of 1 the quantile is accurate only to a few units.
 
 ## Documentation
 
@@ -303,6 +316,11 @@
   a guard: `fget_C()` with an `NA` and `.Machine$integer.max` in `x`.
 * `test-fMN4.R`, Tests 36-37: a zero-length `mu`, `sigma` or `nu` gives
   `integer(0)` (with the code before, each of these calls killed R).
+* `test-distr_near_one.R` (new): finite DPO quantiles in [1 - 1e-9, 1) at
+  pinned values (margins of at least 4.6e-12 from an independent long-double
+  reference), the same answers on the upper tail and the log scale, round trips
+  `fqDPO(fpDPO(x)) == x`, and `Inf` at `p = 1`. `test-fDPO.R` Tests 16 and 26
+  compare with gamlss.dist only where its `qDPO()` is finite.
 
 # CKutils 0.1.33
 

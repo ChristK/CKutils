@@ -293,8 +293,17 @@ ck_roundtrip_all <- fqDPO(fpDPO(roundtrip_test_grid$x, mu = roundtrip_test_grid$
 gamlss_roundtrip_all <- qDPO(pDPO(roundtrip_test_grid$x, mu = roundtrip_test_grid$mu, sigma = roundtrip_test_grid$sigma),
                             mu = roundtrip_test_grid$mu, sigma = roundtrip_test_grid$sigma)
 
-expect_equal(ck_roundtrip_all, gamlss_roundtrip_all, tolerance = 0, 
-            info = "Vectorized round-trip consistency with gamlss.dist - all parameter sets")
+# gamlss.dist's qDPO() returns Inf for every p + 1e-9 >= 1 although the quantile is finite, so
+# its round trip is not a reference there: the property itself is checked, and gamlss.dist is
+# compared where it returns a finite value.
+# (set 4, mu = 0.5, sigma = 0.1: F(3) == F(4) == F(5) in double precision, the pmf there is below 1e-16, so only
+# x <= 3 can round-trip; the loop test further up uses 0:1 for that set)
+rt_ok <- !(roundtrip_test_grid$param_idx == 4L & roundtrip_test_grid$x > 3L)
+expect_equal(ck_roundtrip_all[rt_ok], as.numeric(roundtrip_test_grid$x)[rt_ok], tolerance = 0,
+            info = "Vectorized round-trip q(p(x)) == x - all parameter sets")
+expect_equal(ck_roundtrip_all[is.finite(gamlss_roundtrip_all)],
+             gamlss_roundtrip_all[is.finite(gamlss_roundtrip_all)], tolerance = 0,
+            info = "Vectorized round-trip consistency with gamlss.dist where it is finite")
 
 # =============================================================================
 # GAMLSS.DIST BUG DOCUMENTATION TEST
@@ -467,8 +476,19 @@ extreme_test_grid$sigma <- basic_params$sigma[extreme_test_grid$param_idx]
 ck_extreme_quants_all <- suppressWarnings(fqDPO(extreme_test_grid$p, mu = extreme_test_grid$mu, sigma = extreme_test_grid$sigma))
 gamlss_extreme_quants_all <- suppressWarnings(qDPO(extreme_test_grid$p, mu = extreme_test_grid$mu, sigma = extreme_test_grid$sigma))
 
-expect_equal(ck_extreme_quants_all, gamlss_extreme_quants_all, tolerance = 0, 
-            info = "Vectorized extreme quantiles - all parameter sets")
+# gamlss.dist returns Inf for p + 1e-9 >= 1 (a rule copied into CKutils up to 0.1.34, which made
+# every quantile in [1 - 1e-9, 1) Inf although it is finite): compare it where it is finite,
+# and check the rest against the exact quantile from the normalised density (log-sum-exp).
+expect_equal(ck_extreme_quants_all[is.finite(gamlss_extreme_quants_all)],
+             gamlss_extreme_quants_all[is.finite(gamlss_extreme_quants_all)], tolerance = 0,
+            info = "Vectorized extreme quantiles - all parameter sets (gamlss.dist finite)")
+q_exact <- function(p, mu, sigma, ymax = 3000) which(cumsum(dDPO_lse(0:ymax, mu, sigma, ymax)) >= p)[1] - 1
+tail_rows <- which(extreme_test_grid$p == 1 - 1e-10)
+expect_equal(ck_extreme_quants_all[tail_rows],
+             vapply(tail_rows, function(r) q_exact(extreme_test_grid$p[r], extreme_test_grid$mu[r], extreme_test_grid$sigma[r]), 0),
+             tolerance = 0, info = "Quantiles at p = 1 - 1e-10 are finite and exact")
+expect_true(all(is.finite(ck_extreme_quants_all[extreme_test_grid$p == 1 - 1e-15])),
+            info = "Quantiles at p = 1 - 1e-15 are finite")
 
 # =============================================================================
 # NON-FINITE PARAMETERS AND THE int RANGE
