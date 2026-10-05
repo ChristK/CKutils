@@ -25,7 +25,8 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //   - at the first q with cdf >= p, compared exactly; or
 //   - past the largest term (terms falling), at a term too small to change the
 //     sum in double precision, which is then as large as it will get
-//     (ck_search_stalled): within CK_P_FUZZ of p it counts as having reached p
+//     (ck_search_stalled; a sum still below DBL_MIN has not settled, whatever
+//     the term): within CK_P_FUZZ of p it counts as having reached p
 //     and the answer is the index where it stopped (ck_search_settled), further
 //     below p the rest of the tail cannot add up to p either, and the search
 //     reports "not found" (NA_INTEGER) rather than a number; or
@@ -50,10 +51,18 @@ constexpr double CK_P_FUZZ = 64.0 * DBL_EPSILON;
 inline bool ck_search_settled(const double& cdf, const double& p) { return cdf >= p * (1.0 - CK_P_FUZZ); }
 
 // `cdf` is the sum before `term` is added; `prev_term` the previous term (pass
-// a negative value for the first).
+// a negative value for the first). A sum still below DBL_MIN (zero, or
+// subnormal) has not settled: an exact-zero term satisfies cdf + 0 == cdf for
+// any cdf, and a pmf that is not unimodal can underflow to exact zeros between
+// its modes, ahead of most of the mass. The DPO pmf for a large sigma has a
+// second, shallow mode at 0: where mu / sigma is near 743 (a little lower for a
+// larger sigma: 737 at 1e6) the term at 0 sits at the underflow limit and the
+// dip after it is exactly 0, so a test that read that zero as a stall answered
+// NA for a quantile that lies near mu. Once the sum is normal (>= DBL_MIN), a
+// falling term that cannot change it is a stall as before.
 inline bool ck_search_stalled(const double& term, const double& prev_term,
                               const double& cdf) {
-    return cdf > 0.0 && term < prev_term && cdf + term == cdf;
+    return cdf >= DBL_MIN && term < prev_term && cdf + term == cdf;
 }
 
 // A term that is not finite, or a stall: the two ways a search gives up. This

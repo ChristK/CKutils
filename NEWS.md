@@ -285,6 +285,17 @@
   few units (more in a heavy tail), and `NA` where the summed CDF cannot reach
   `p`. `fqZABNB()` follows `fqBNB()` (the models' `smok_cig_ex`: about 1e-13 of
   the draws, which were `Inf`).
+* **`fqDPO()` no longer answers `NA` where `p(0)` is at the underflow limit.**
+  For a `sigma` large against `mu` the double Poisson pmf has a second, shallow
+  mode at 0. Where `mu / sigma` is about 743, `p(0)` is the smallest positive
+  double and the densities after it are exactly 0 for a while, ahead of the
+  main mass near `mu`; the quantile search took that zero for a sum that had
+  stopped growing (an exact 0 changes no sum) and gave up:
+  `fqDPO(c(0.1, 0.5, 0.9), 17934.73, 24.14)` was `NA NA NA` for `17094 17931
+  18781`, and so were all quantiles of about a quarter of the pairs in that
+  band. A sum still below `DBL_MIN` no longer counts as settled
+  (`ck_search_stalled()`, shared by all the searches; the BNB, SICHEL and DEL
+  results are unchanged).
 
 ## Documentation
 
@@ -473,6 +484,10 @@
   package's own CDF deeper in the window, the same answers on the upper tail and
   the log scale, the settle step and the heavy-tail `NA`, `p = 1`, and round
   trips.
+* `test-fDPO.R`, Test 29: at two pairs where `p(0)` is at the underflow limit
+  and exact zeros follow, `fqDPO()` is finite, brackets `p` on `fpDPO()` and
+  equals the quantile of the log-sum-exp density, also for `p` from 1e-320 to
+  1e-10; a `p` above such a pair's largest sum still ends at once.
 
 # CKutils 0.1.33
 

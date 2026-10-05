@@ -625,6 +625,55 @@ expect_equal(log(fpDPO(dip_q, 29720, 40, lower_tail = FALSE)), log(dip_upper_ref
              info = "fpDPO: the same, upper tail (log scale)")
 
 # =============================================================================
+# THE QUANTILE SEARCH DOES NOT READ AN UNDERFLOWED ZERO AS A STALL
+# =============================================================================
+
+# Test 29: fqDPO() adds the densities from 0 until the sum reaches p, and gives up (NA) at a
+# falling term that cannot change the sum. An exact 0 cannot change any sum, but for a sigma
+# large against mu the pmf is not unimodal: it has a second, shallow mode at 0, and where
+# mu / sigma is near 743 p(0) sits at the underflow limit (4.9e-324) with the dip after it
+# exactly 0, ahead of the main mass near mu. The search read that zero as a stall and
+# answered NA for quantiles near mu: fqDPO(c(.1, .5, .9), 17934.73, 24.14) was NA NA NA. A sum
+# still below DBL_MIN has not settled, so the search walks on through the zeros (Test 28f is
+# the same trap in fpDPO()). The references are the quantiles of the log-sum-exp density
+# (q_exact, Test 26): p - F(q - 1) and F(q) - p are at least 4e-6 in every case, far above the
+# 1e-15 accuracy of the sums. (Whether a dip underflows depends on the platform's exp() and
+# lgamma() to an ulp of the exponent; the answers are right either way.)
+p29 <- c(0.1, 0.5, 0.9)
+band29 <- list(list(mu = 17934.734753921883, sigma = 24.138224901457072, ymax = 40000),  # one zero after p(0)
+               list(mu = 74250, sigma = 100, ymax = 130000))                             # eleven or more
+for (b in band29) {
+  lab29 <- sprintf("mu = %.10g, sigma = %.10g", b$mu, b$sigma)
+  q29 <- fqDPO(p29, b$mu, b$sigma)
+  expect_true(all(is.finite(q29)),
+              info = paste("fqDPO: p(0) at the underflow limit, a dip of exact zeros after it: finite quantiles (was NA),", lab29))
+  expect_true(all(fpDPO(q29 - 1, b$mu, b$sigma) < p29 & p29 <= fpDPO(q29, b$mu, b$sigma)),
+              info = paste("fqDPO: the quantile of the package's own CDF, F(q - 1) < p <= F(q),", lab29))
+  expect_identical(q29, vapply(p29, q_exact, 0, mu = b$mu, sigma = b$sigma, ymax = b$ymax),
+                   info = paste("fqDPO: the quantiles of the log-sum-exp density,", lab29))
+}
+# p far into the left tail: every one of these searches crosses the dip while its sum is subnormal,
+# and for the first two (below DBL_MIN) the quantile itself is reached before the sum is normal
+ptiny29 <- c(1e-320, 1e-308, 1e-300, 1e-100, 1e-10)
+qtiny29 <- fqDPO(ptiny29, 17934.734753921883, 24.138224901457072)
+expect_true(all(is.finite(qtiny29)) && !is.unsorted(qtiny29),
+            info = "fqDPO: p from 1e-320 to 1e-10 at the underflow limit: finite and non-decreasing in p (was NA)")
+expect_true(all(fpDPO(qtiny29 - 1, 17934.734753921883, 24.138224901457072) < ptiny29 &
+                  ptiny29 <= fpDPO(qtiny29, 17934.734753921883, 24.138224901457072)),
+            info = "fqDPO: the same quantiles bracket p on the package's own CDF")
+# guard: an ordinary pair (a second mode at 0, nowhere near the underflow limit) is the log-sum-exp quantile, as before
+expect_identical(fqDPO(p29, 57, 20), vapply(p29, q_exact, 0, mu = 57, sigma = 20),
+                 info = "fqDPO: mu = 57, sigma = 20 (a second mode at 0, no underflow) is the log-sum-exp quantile")
+# guard: once the sum is normal, a stall still ends the search. This pair's summed CDF stops about 3e-13 short of 1
+# (the accuracy of the normalising constant), so p = 1 - 1e-15 lies above the largest sum there is: the search
+# walks the dip, the mass, and then gives up at once (NA) instead of walking on to the int cap (minutes).
+if (at_home()) {
+  elapsed <- system.time(v29 <- suppressWarnings(fqDPO(1 - 1e-15, 17832, 24)))[["elapsed"]]
+  expect_true(elapsed < 5,
+              info = "fqDPO: a p above the largest sum ends at once, by the stall (not by a walk to the int cap)")
+}
+
+# =============================================================================
 # FINAL SUMMARY MESSAGE
 # =============================================================================
 
