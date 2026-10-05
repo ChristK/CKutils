@@ -80,6 +80,13 @@ inline double fpNBI_scalar(const int& q,
 }
 
 // SIMD-optimised NBI quantile scalar function
+//
+// Returns NA_INTEGER, not a count, when the quantile is not an int in
+// [0, CK_MAX_COUNT] (INT_MAX - 1; see recycling_helpers.h): it is infinite (p = 1;
+// also log_p with p = 0, and lower_tail = FALSE with p = 0), Inf or NaN (mu = Inf),
+// or above INT_MAX - 1 (a huge mu). A quantile of exactly INT_MAX is NA too. A NaN
+// p, mu or sigma gives NA_INTEGER as well. The vectorised fqNBI() warns when a
+// non-NA input gives NA; a caller of this scalar has to test for NA_INTEGER itself.
 inline int fqNBI_scalar(const double& p,
                         const double& mu = 1.0,
                         const double& sigma = 1.0,
@@ -97,14 +104,23 @@ inline int fqNBI_scalar(const double& p,
         return NA_INTEGER;
     }
 
-    // For very small sigma values, use Poisson approximation
+    // R's quantile functions return a double, and that double is not always an
+    // int. Converting one that is not is out-of-range float-to-int, which is
+    // undefined behaviour and not benign (INT_MIN, i.e. NA_INTEGER, on x86-64;
+    // INT_MAX on AArch64), so it is tested first: the comparison below is false for
+    // NaN and for +-Inf. The upper bound is CK_MAX_COUNT = INT_MAX - 1, the largest
+    // count this package's kernels take (see recycling_helpers.h), which is why a
+    // quantile of exactly INT_MAX is NA as well.
+    double q;
     if (sigma < 1e-4) {
-        return R::qpois(p, mu, lower_tail, log_p);
+        // For very small sigma values, use Poisson approximation
+        q = R::qpois(p, mu, lower_tail, log_p);
+    } else {
+        // Standard NBI calculation using negative binomial
+        const double size = 1.0 / sigma;
+        q = R::qnbinom_mu(p, size, mu, lower_tail, log_p);
     }
-
-    // Standard NBI calculation using negative binomial
-    const double size = 1.0 / sigma;
-    return R::qnbinom_mu(p, size, mu, lower_tail, log_p);
+    return (q >= 0.0 && q <= 2147483646.0) ? static_cast<int>(q) : NA_INTEGER;
 }
 
 // SIMD-optimised NBI random generation scalar function

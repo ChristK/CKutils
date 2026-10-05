@@ -397,3 +397,68 @@ expect_true(
   all(is.finite(cdf_edge_recycled)) && all(cdf_edge_recycled >= 0) && all(cdf_edge_recycled <= 1),
   info = "BCT Edge case parameter recycling: CDF should handle extreme parameter values"
 )
+
+# =============================================================================
+# fqBCT: p = 0 AND p = 1 ARE THE END POINTS OF THE SUPPORT (0 AND Inf), NOT ERRORS
+#
+# fqBCT used to stop() with "p must be between 0 and 1" for p = 0 or p = 1 (after the
+# lower_tail / log_p transformation), which aborted a whole vector for one boundary
+# probability. gamlss.dist::qBCT and CKutils' own fqBCPEo return 0 and Inf. A p
+# outside [0, 1] is still an error.
+# =============================================================================
+bct_end <- function(...) tryCatch(fqBCT(...), error = function(e) "error")
+
+expect_identical(bct_end(c(0, 1), 5, 0.2, 0.5, 10), c(0, Inf),
+                 info = "fqBCT: p = 0 gives 0 and p = 1 gives Inf")
+expect_identical(bct_end(c(0, 1), 5, 0.2, -0.5, 10), c(0, Inf),
+                 info = "fqBCT end points with nu < 0")
+expect_identical(bct_end(c(0, 1), 5, 0.2, 0, 10), c(0, Inf),
+                 info = "fqBCT end points with nu = 0")
+expect_silent(fqBCT(c(0, 1), 5, 0.2, 0.5, 10))
+
+# log_p = TRUE: log(0) = -Inf gives 0, and log(1) = 0 gives Inf
+expect_identical(bct_end(-Inf, 5, 0.2, 0.5, 10, log_p = TRUE), 0,
+                 info = "fqBCT: log_p = TRUE with p = -Inf gives 0")
+expect_identical(bct_end(0, 5, 0.2, 0.5, 10, log_p = TRUE), Inf,
+                 info = "fqBCT: log_p = TRUE with p = 0 gives Inf")
+
+# lower_tail = FALSE: an upper-tail p of 1 is the lower-tail 0, and of 0 the lower-tail 1
+expect_identical(bct_end(1, 5, 0.2, 0.5, 10, lower_tail = FALSE), 0,
+                 info = "fqBCT: lower_tail = FALSE with p = 1 gives 0")
+expect_identical(bct_end(0, 5, 0.2, 0.5, 10, lower_tail = FALSE), Inf,
+                 info = "fqBCT: lower_tail = FALSE with p = 0 gives Inf")
+
+# the end points sit alongside ordinary and NA elements of one vector (the NA
+# element still raises the existing "NaNs or NAs were produced" warning)
+res_bct_mix <- suppressWarnings(bct_end(c(0.5, NA, 1, 0), 5, 0.2, 0.5, 10))
+expect_identical(is.na(res_bct_mix), c(FALSE, TRUE, FALSE, FALSE),
+                 info = "fqBCT: only the NA element is NA next to p = 1 and p = 0")
+expect_identical(res_bct_mix[3:4], c(Inf, 0),
+                 info = "fqBCT end points inside a longer vector")
+expect_identical(res_bct_mix[1], fqBCT(0.5, 5, 0.2, 0.5, 10),
+                 info = "fqBCT ordinary element unchanged next to the end points")
+
+# the end points continue the quantile function: increasing from 0 to Inf
+p_seq <- c(0, 1e-9, 0.1, 0.5, 0.9, 1 - 1e-9, 1)
+for (nu_k in c(-0.5, 0, 0.5)) {
+  q_seq <- bct_end(p_seq, 5, 0.2, nu_k, 10)
+  expect_true(is.numeric(q_seq) && all(diff(q_seq) > 0),
+              info = paste("fqBCT increases through the end points, nu =", nu_k))
+}
+
+# Still errors: a p outside [0, 1], on either scale, and an invalid parameter even
+# at a boundary p
+expect_error(fqBCT(2, 5, 0.2, 0.5, 10), "p must be between 0 and 1",
+             info = "fqBCT still rejects p > 1")
+expect_error(fqBCT(-0.1, 5, 0.2, 0.5, 10), "p must be between 0 and 1",
+             info = "fqBCT still rejects p < 0")
+expect_error(fqBCT(0.5, 5, 0.2, 0.5, 10, log_p = TRUE), "p must be between 0 and 1",
+             info = "fqBCT still rejects a positive log-scale p")
+expect_error(fqBCT(c(0.5, 1.5), 5, 0.2, 0.5, 10), "p must be between 0 and 1",
+             info = "fqBCT: one p > 1 still aborts the call")
+expect_error(fqBCT(1, -5, 0.2, 0.5, 10), "mu must be positive",
+             info = "fqBCT: p = 1 does not excuse an invalid mu")
+expect_error(fqBCT(0, 5, -0.2, 0.5, 10), "sigma must be positive",
+             info = "fqBCT: p = 0 does not excuse an invalid sigma")
+expect_error(fqBCT(1, 5, 0.2, 0.5, -10), "tau must be positive",
+             info = "fqBCT: p = 1 does not excuse an invalid tau")

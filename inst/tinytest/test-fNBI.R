@@ -247,3 +247,74 @@ expect_true(elapsed < 5, info = "Large PDF calculation should complete within 5 
 
 # cat("All NBI distribution tests passed!\n")
 
+# =============================================================================
+# A QUANTILE AN INT CANNOT HOLD IS NA, WITH A WARNING
+#
+# R's qnbinom_mu / qpois return a double: Inf for p = 1 (also log_p with p = 0, and
+# lower_tail = FALSE with p = 0), Inf or NaN for mu = Inf, and above INT_MAX for a
+# huge mu. Putting that in an int is undefined behaviour: it gave NA only by
+# accident on x86-64 (INT_MIN), silently, and probably INT_MAX on AArch64. It is now
+# NA on purpose, with one warning per call.
+# =============================================================================
+
+# p = 1: the quantile is infinite
+expect_warning(res_p1 <- fqNBI(1, mu = 5, sigma = 0.5), "NAs produced",
+               info = "fqNBI(p = 1) warns")
+expect_true(is.na(res_p1), info = "fqNBI(p = 1) is NA")
+
+# a finite quantile above INT_MAX (the true value at mu = 1e10, sigma = 1 is 6931471805)
+expect_warning(res_big <- fqNBI(0.5, mu = 1e10, sigma = 1), "NAs produced",
+               info = "fqNBI warns for a quantile above INT_MAX")
+expect_true(is.na(res_big), info = "fqNBI above INT_MAX is NA")
+
+# the other ways to reach an infinite quantile
+expect_warning(res_logp0 <- fqNBI(0, mu = 5, sigma = 0.5, log_p = TRUE), "NAs produced",
+               info = "fqNBI(log p = 0) warns")
+expect_true(is.na(res_logp0), info = "fqNBI(log p = 0) is NA")
+expect_warning(res_up0 <- fqNBI(0, mu = 5, sigma = 0.5, lower_tail = FALSE), "NAs produced",
+               info = "fqNBI(upper tail, p = 0) warns")
+expect_true(is.na(res_up0), info = "fqNBI(upper tail, p = 0) is NA")
+expect_warning(res_muinf <- fqNBI(0.5, mu = Inf, sigma = 1), "NAs produced",
+               info = "fqNBI(mu = Inf) warns")
+expect_true(is.na(res_muinf), info = "fqNBI(mu = Inf) is NA")
+
+# the Poisson branch (sigma < 1e-4) is guarded the same way
+expect_warning(res_pois1 <- fqNBI(1, mu = 5, sigma = 1e-6), "NAs produced",
+               info = "fqNBI Poisson branch, p = 1, warns")
+expect_true(is.na(res_pois1), info = "fqNBI Poisson branch, p = 1, is NA")
+expect_warning(res_poisbig <- fqNBI(0.5, mu = 1e10, sigma = 1e-6), "NAs produced",
+               info = "fqNBI Poisson branch, quantile above INT_MAX, warns")
+expect_true(is.na(res_poisbig), info = "fqNBI Poisson branch, quantile above INT_MAX, is NA")
+
+# one warning per call; the other elements are untouched, and an NA input stays NA
+n_warn <- 0L
+res_mixed <- withCallingHandlers(
+  fqNBI(c(0.5, 1, NA, 1, 0.9), mu = 5, sigma = 0.5),
+  warning = function(w) {
+    n_warn <<- n_warn + 1L
+    invokeRestart("muffleWarning")
+  })
+expect_identical(res_mixed, c(4L, NA, NA, NA, 11L),
+                 info = "fqNBI: only the unrepresentable and NA elements are NA")
+expect_equal(n_warn, 1L, info = "fqNBI warns once per call, not once per element")
+
+# The largest quantile returned is INT_MAX - 1 (CK_MAX_COUNT in recycling_helpers.h):
+# a quantile of exactly INT_MAX is NA as well. sigma < 1e-4 is Poisson, so mu is
+# chosen to put qpois(0.5, mu) on each side of that bound.
+mu_ok <- 2147483645.7
+mu_edge <- 2147483646.7
+if (qpois(0.5, mu_ok) == 2147483646 && qpois(0.5, mu_edge) == 2147483647) {
+  expect_silent(res_ok <- fqNBI(0.5, mu = mu_ok, sigma = 1e-6))
+  expect_identical(res_ok, 2147483646L, info = "fqNBI returns INT_MAX - 1")
+  expect_warning(res_edge <- fqNBI(0.5, mu = mu_edge, sigma = 1e-6), "NAs produced",
+                 info = "fqNBI warns for a quantile of exactly INT_MAX")
+  expect_true(is.na(res_edge), info = "fqNBI: a quantile of exactly INT_MAX is NA")
+}
+
+# Guards that hold with or without the fix: ordinary quantiles are unchanged and
+# silent, and an NA/NaN input is NA without the new warning
+expect_silent(res_ord <- fqNBI(c(.1, .5, .9), 5, .5))
+expect_identical(res_ord, as.integer(qnbinom(c(.1, .5, .9), size = 2, mu = 5)),
+                 info = "fqNBI ordinary quantiles are unchanged")
+expect_silent(res_na <- fqNBI(c(NA, NaN), 5, .5))
+expect_identical(res_na, c(NA_integer_, NA_integer_), info = "fqNBI NA/NaN p is NA, silently")

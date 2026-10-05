@@ -381,6 +381,10 @@ NumericVector fpBCT(const NumericVector& q,
 //' Input probabilities are automatically cloned to ensure memory safety and
 //' prevent unexpected side effects.
 //'
+//' A probability of 0 gives 0 and a probability of 1 gives \code{Inf}, as in
+//' \code{gamlss.dist::qBCT} (after the \code{lower_tail} and \code{log_p}
+//' transformation); a probability outside \eqn{[0, 1]} is an error.
+//'
 //' @return Vector of quantiles corresponding to the input probabilities.
 //'
 //' @examples
@@ -435,9 +439,10 @@ NumericVector fqBCT(const NumericVector& p,
     }
   }
 
-  // Input validation
+  // Input validation. p = 0 and p = 1 are admissible (the ends of the support);
+  // only a p outside [0, 1] is an error.
   for (int i = 0; i < n; i++) {
-    if (p_cloned[i] <= 0.0 || p_cloned[i] >= 1.0) stop("p must be between 0 and 1");
+    if (p_cloned[i] < 0.0 || p_cloned[i] > 1.0) stop("p must be between 0 and 1");
     if (recycled.vec2[i] <= 0.0) stop("mu must be positive");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be positive");
     if (recycled.vec5[i] <= 0.0) stop("tau must be positive");
@@ -454,6 +459,12 @@ NumericVector fqBCT(const NumericVector& p,
       out[i] = NA_REAL;
       continue;
     }
+    // p = 0 and p = 1 are the ends of the support (0 and Inf), as in
+    // gamlss.dist::qBCT and fqBCPEo. They are set here rather than computed: at
+    // p = 0 with nu > 0, and at p = 1 with nu < 0, the transformation below reaches
+    // a term that is 0 up to rounding, and a non-positive one would give NaN.
+    if (p_cloned[i] == 0.0) { out[i] = 0.0; continue; }
+    if (p_cloned[i] == 1.0) { out[i] = R_PosInf; continue; }
     // Compute quantile transformation
     const double abs_nu_sigma = recycled.vec3[i] * std::abs(recycled.vec4[i]);
     const double pt_term = fdBCT_t_cdf(1.0 / abs_nu_sigma, recycled.vec5[i]);

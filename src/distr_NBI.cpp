@@ -198,6 +198,9 @@ NumericVector fpNBI(const NumericVector& q,
 //'
 //' For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
 //'
+//' A quantile that is infinite (\eqn{p = 1}) or above 2147483646, the largest
+//' integer this function returns, is \code{NA}, with a warning.
+//'
 //' @return A numeric vector of quantiles.
 //' 
 //' @references
@@ -238,6 +241,7 @@ IntegerVector fqNBI(const NumericVector& p,
   }
 
   IntegerVector out(n);
+  bool not_found = false;  // a non-NA input gave NA
 
   SIMD_HINT
   for (int i = 0; i < n; i++)
@@ -251,8 +255,13 @@ IntegerVector fqNBI(const NumericVector& p,
     }
     out[i] = fqNBI_scalar(recycled.vec1[i], recycled.vec2[i],
                           recycled.vec3[i], lower_tail, log_p);
+    // fqNBI_scalar gives NA_INTEGER for a quantile an int cannot hold: Inf (p = 1)
+    // or beyond CK_MAX_COUNT. That is not an NA input, so say so, once per call.
+    if (out[i] == NA_INTEGER) not_found = true;
   }
 
+  if (not_found)
+    warning("NAs produced: a quantile is infinite (p = 1) or beyond the integer range");
   return out;
 }
 

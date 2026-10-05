@@ -242,6 +242,7 @@ IntegerVector fqZANBI(const NumericVector& p,
   }
 
   IntegerVector out(n);
+  bool not_found = false;  // a non-NA input gave NA
 
   SIMD_HINT
   for (int i = 0; i < n; i++)
@@ -257,8 +258,14 @@ IntegerVector fqZANBI(const NumericVector& p,
     }
     out[i] = fqZANBI_scalar(recycled.vec1[i], recycled.vec2[i],
                             recycled.vec3[i], recycled.vec4[i], lower_tail, log_p);
+    // fqNBI_scalar (which this calls) gives NA_INTEGER for a quantile an int cannot
+    // hold: Inf or beyond CK_MAX_COUNT (e.g. mu = Inf). That is not an NA input, so
+    // say so, once per call.
+    if (out[i] == NA_INTEGER) not_found = true;
   }
 
+  if (not_found)
+    warning("NAs produced: a quantile is infinite (p = 1) or beyond the integer range");
   return out;
 }
 

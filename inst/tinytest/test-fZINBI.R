@@ -102,3 +102,39 @@ expect_error(
     fdZINBI(c(0, 1, 2), mu = 1, sigma = 1, nu = 1),
     info = "fdZINBI should error on nu = 1"
 )
+
+# =============================================================================
+# A QUANTILE AN INT CANNOT HOLD IS NA, WITH A WARNING (see test-fNBI.R)
+#
+# fqZINBI inverts through fqNBI_scalar, which returned the double from R's quantile
+# function through an implicit int conversion: undefined behaviour for Inf (mu = Inf),
+# or for a value above INT_MAX, and only an accidental, silent NA on x86-64.
+# =============================================================================
+expect_warning(res_muinf <- fqZINBI(0.5, mu = Inf, sigma = 1, nu = 0.3), "NAs produced",
+               info = "fqZINBI(mu = Inf) warns")
+expect_true(is.na(res_muinf), info = "fqZINBI(mu = Inf) is NA")
+
+# a finite quantile above INT_MAX (the NBI part is about 3.4e9 at mu = 1e10, sigma = 1)
+expect_warning(res_big <- fqZINBI(0.5, mu = 1e10, sigma = 1, nu = 0.3), "NAs produced",
+               info = "fqZINBI warns for a quantile above INT_MAX")
+expect_true(is.na(res_big), info = "fqZINBI above INT_MAX is NA")
+
+# One warning per call, and the other elements are untouched
+n_warn <- 0L
+res_vec <- withCallingHandlers(
+  fqZINBI(c(0.5, 0.5, 0.9), mu = c(5, Inf, 5), sigma = 0.5, nu = 0.3),
+  warning = function(w) {
+    n_warn <<- n_warn + 1L
+    invokeRestart("muffleWarning")
+  })
+expect_identical(is.na(res_vec), c(FALSE, TRUE, FALSE),
+                 info = "fqZINBI: only the mu = Inf element is NA")
+expect_equal(n_warn, 1L, info = "fqZINBI warns once per call")
+
+# Guards that hold with or without the fix. p = 1 is NOT an infinite quantile for
+# the zero-inflated quantile (it inverts at 1 - nu-adjusted - 1e-10, a finite
+# value), and it must stay that way: callers rely on the finite value.
+expect_silent(res_p1 <- fqZINBI(1, 5, .5, .3))
+expect_identical(res_p1, 77L, info = "fqZINBI(p = 1) keeps its finite value, silently")
+expect_silent(res_na <- fqZINBI(NaN, 5, .5, .3))
+expect_true(is.na(res_na), info = "fqZINBI NaN p is NA, silently")

@@ -424,6 +424,10 @@ fpBCT <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' Input probabilities are automatically cloned to ensure memory safety and
 #' prevent unexpected side effects.
 #'
+#' A probability of 0 gives 0 and a probability of 1 gives \code{Inf}, as in
+#' \code{gamlss.dist::qBCT} (after the \code{lower_tail} and \code{log_p}
+#' transformation); a probability outside \eqn{[0, 1]} is an error.
+#'
 #' @return Vector of quantiles corresponding to the input probabilities.
 #'
 #' @examples
@@ -1295,6 +1299,9 @@ fpNBI <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' \eqn{F(x) \geq p}, where \eqn{F} is the cumulative distribution function.
 #'
 #' For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
+#'
+#' A quantile that is infinite (\eqn{p = 1}) or above 2147483646, the largest
+#' integer this function returns, is \code{NA}, with a warning.
 #'
 #' @return A numeric vector of quantiles.
 #' 

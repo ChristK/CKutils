@@ -158,6 +158,24 @@
   order under the key. With integer or factor keys one pass over the rows
   marks a key they already follow; otherwise they are sorted from scratch. It
   also names absent key columns.
+* **`fqNBI()`, `fqZINBI()` and `fqZANBI()` return `NA` with a warning for a
+  quantile an integer cannot hold, instead of converting it with undefined
+  behaviour.** `fqNBI_scalar()` passed the double from `R::qnbinom_mu()` /
+  `R::qpois()` through an implicit `int` conversion. That is undefined for
+  `p = 1` (also `log_p = TRUE` with `p = 0`, and `lower_tail = FALSE` with
+  `p = 0`), for `mu = Inf`, and for a quantile above `INT_MAX`
+  (`fqNBI(0.5, mu = 1e10, sigma = 1)`, whose true value is 6931471805): it gave
+  `NA` only by accident on x86-64, silently, and probably `INT_MAX` on AArch64.
+  The three functions now warn once per call ("NAs produced: a quantile is
+  infinite (p = 1) or beyond the integer range"). The largest quantile returned
+  is `.Machine$integer.max - 1`, the package's `CK_MAX_COUNT`, so a quantile of
+  exactly `INT_MAX` is `NA` too. `fqZINBI()` and `fqZANBI()` still return a
+  finite value at `p = 1`, and in-range quantiles are unchanged.
+* **`fqBCT()` accepts `p = 0` and `p = 1`.** It stopped with "p must be between
+  0 and 1" for either, which aborted a whole vector for one boundary
+  probability, while `gamlss.dist::qBCT()` and `fqBCPEo()` return the ends of
+  the support. It now returns 0 and `Inf`. A `p` outside [0, 1] is still an
+  error.
 
 ## Documentation
 
@@ -235,6 +253,12 @@
   NA with a warning for p = 1 and for quantiles beyond the int range.
 * `test-lookup_dt.R`, Tests 4b-4d: `set_lookup_tbl_key()` past a stale index,
   with a stale key, and on a double key column; and an absent key column.
+* `test-fNBI.R`, `test-fZINBI.R`, `test-fZANBI.R`: `NA` with one warning per
+  call for `p = 1`, `mu = Inf`, and a quantile above `INT_MAX` or exactly at
+  it; ordinary quantiles unchanged and silent; `fqZINBI()` and `fqZANBI()` keep
+  their finite value at `p = 1`. `test-fBCT.R`: `p = 0` and `p = 1` give 0 and
+  `Inf` on both scales and tails, for `nu` of either sign; a `p` outside
+  [0, 1] and invalid parameters still error.
 
 # CKutils 0.1.33
 

@@ -115,3 +115,38 @@ expect_error(
     info = "fdZANBI should error on nu = 1"
 )
 
+# =============================================================================
+# A QUANTILE AN INT CANNOT HOLD IS NA, WITH A WARNING (see test-fNBI.R)
+#
+# fqZANBI inverts through fqNBI_scalar, which returned the double from R's quantile
+# function through an implicit int conversion: undefined behaviour for Inf (mu = Inf),
+# or for a value above INT_MAX, and only an accidental, silent NA on x86-64.
+# =============================================================================
+expect_warning(res_muinf <- fqZANBI(0.5, mu = Inf, sigma = 1, nu = 0.3), "NAs produced",
+               info = "fqZANBI(mu = Inf) warns")
+expect_true(is.na(res_muinf), info = "fqZANBI(mu = Inf) is NA")
+
+# a finite quantile above INT_MAX (the NBI part is about 3.4e9 at mu = 1e10, sigma = 1)
+expect_warning(res_big <- fqZANBI(0.5, mu = 1e10, sigma = 1, nu = 0.3), "NAs produced",
+               info = "fqZANBI warns for a quantile above INT_MAX")
+expect_true(is.na(res_big), info = "fqZANBI above INT_MAX is NA")
+
+# One warning per call, and the other elements are untouched
+n_warn <- 0L
+res_vec <- withCallingHandlers(
+  fqZANBI(c(0.5, 0.5, 0.9), mu = c(5, Inf, 5), sigma = 0.5, nu = 0.3),
+  warning = function(w) {
+    n_warn <<- n_warn + 1L
+    invokeRestart("muffleWarning")
+  })
+expect_identical(is.na(res_vec), c(FALSE, TRUE, FALSE),
+                 info = "fqZANBI: only the mu = Inf element is NA")
+expect_equal(n_warn, 1L, info = "fqZANBI warns once per call")
+
+# Guards that hold with or without the fix. p = 1 is NOT an infinite quantile for
+# the zero-altered quantile (it inverts at a probability 1e-10 short of 1, a finite
+# value), and it must stay that way: IMPACTncd's C++ relies on the finite value.
+expect_silent(res_p1 <- fqZANBI(1, 5, .5, .3))
+expect_identical(res_p1, 78L, info = "fqZANBI(p = 1) keeps its finite value, silently")
+expect_silent(res_na <- fqZANBI(NaN, 5, .5, .3))
+expect_true(is.na(res_na), info = "fqZANBI NaN p is NA, silently")

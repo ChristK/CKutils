@@ -30,6 +30,9 @@ The quantile function returns the smallest integer \eqn{x} such that
 \eqn{F(x) \geq p}, where \eqn{F} is the cumulative distribution function.
 
 For \eqn{\sigma < 0.0001}, the distribution reduces to the Poisson distribution.
+
+A quantile that is infinite (\eqn{p = 1}) or above 2147483646, the largest
+integer this function returns, is \code{NA}, with a warning.
 }
 \examples{
 # Single values

@@ -102,6 +102,10 @@ The quantile calculation involves:
 
 Input probabilities are automatically cloned to ensure memory safety and
 prevent unexpected side effects.
+
+A probability of 0 gives 0 and a probability of 1 gives \code{Inf}, as in
+\code{gamlss.dist::qBCT} (after the \code{lower_tail} and \code{log_p}
+transformation); a probability outside \eqn{[0, 1]} is an error.
 }
 \note{
 These optimised implementations include:
