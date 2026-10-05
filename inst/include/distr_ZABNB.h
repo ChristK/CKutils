@@ -33,10 +33,13 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
 // The vectorised fdZABNB/fpZABNB wrappers below already apply it, but a package
-// using LinkingTo: CKutils to call the scalars directly does not get it. The
-// hazards are inherited from the BNB kernels these delegate to:
-// fpZABNB_scalar -> fpBNB_scalar NEVER RETURNS at q == INT_MAX, and
-// fdZABNB_scalar -> fdBNB_scalar is silently wrong at x == INT_MAX.
+// using LinkingTo: CKutils to call the scalars directly does not get it. The BNB
+// kernels these delegate to no longer fail at INT_MAX itself (fpBNB_scalar
+// counts with a 64-bit index, fdBNB_scalar works in double), so
+// fpZABNB_scalar returns at q == INT_MAX and fdZABNB_scalar is right at
+// x == INT_MAX. The cost remains: fpZABNB_scalar is O(q) in time (about 5 s at
+// q == INT_MAX, less where the terms underflow, as it stops then; see
+// distr_BNB.h).
 //
 // Parameterisation follows gamlss.dist::dZABNB/pZABNB/qZABNB (Rigby et al.
 // 2019): tau is the hurdle probability, i.e. P(Y = 0) = tau exactly, and the

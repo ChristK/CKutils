@@ -91,4 +91,26 @@ inline long long ck_search_start(LogTerm log_term, const double& mean) {
     return hi;
 }
 
+// Running sum of many small positive terms (a CDF built term by term), with the
+// rounding of each addition carried in c (Neumaier's compensated summation): the
+// error stays about one ulp instead of growing with the number of terms, which
+// reaches 1e9 in a quantile search. value() is the sum. Needs IEEE arithmetic
+// as compiled by R (no -ffast-math, which would fold the compensation away).
+struct ck_compensated_sum {
+    double s = 0.0, c = 0.0;
+    inline void add(const double& x) {
+        const double t = s + x;
+        if (std::fabs(s) >= std::fabs(x)) c += (s - t) + x; else c += (x - t) + s;
+        s = t;
+    }
+    inline double value() const { return s + c; }
+};
+
+// For searches that step from term(i) to term(i + 1) by their ratio: the term is
+// recomputed from its log every CK_REANCHOR terms (bounds the drift of the
+// products to ~1e-14, measured), and whenever it is below CK_TERM_TINY (no
+// recursion from a subnormal, which has few significant bits).
+constexpr int CK_REANCHOR = 1024;
+constexpr double CK_TERM_TINY = 2.004168360008973e-292;   // DBL_MIN * 2^53
+
 #endif

@@ -32,17 +32,49 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
 // The vectorised fdBNB/fpBNB wrappers below already apply it, but a package
-// using LinkingTo: CKutils to call the scalars directly does not get it. Here:
-//   * fpBNB_scalar accumulates with `for (int i = 0; i <= q; i++)`, so
-//     q == INT_MAX overflows i and the call NEVER RETURNS.
-//   * fdBNB_scalar evaluates lgammafn(x + 1), so x == INT_MAX wraps the
-//     argument to INT_MIN and returns 0 instead of about 2.2e-27.
-// fpBNB_scalar is also O(q) in time with three lgamma/lbeta calls per step, so
-// a large-but-legal q is slow: q = 2^31 - 1024 takes roughly five minutes.
+// using LinkingTo: CKutils to call the scalars directly does not get it.
+// fpBNB_scalar is O(q) in time (about 2.3 ns per term: q = 2^31 - 1024 takes
+// about 5 s), but it stops once the terms have fallen below 2e-292 past the
+// mode, as they do for a small sigma: the sum is complete by then.
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (lbeta, lgammafn, ...)
 #include <cmath>
 #include "distr_search.h"
+
+// The BNB terms term(i) = P(X = i), with n = mu nu / sigma, m = 1/sigma + 1, k = 1/nu:
+//   log term(i) = lbeta(i+n, m+k) - lbeta(n, m) - log(i+k) - lbeta(i+1, k),
+// as Gamma(i+k) / (Gamma(i+1) Gamma(k)) = 1 / ((i+k) B(i+1, k)). Up to 0.1.34
+// the last part was -lgamma(i+1) - lgamma(k) + lgamma(i+k): that forms
+// lgamma(i+1) ~ i log i (2e10 at i = 1e9) and rounds lgamma(k) and the argument
+// i+k on its grid, so the term was off by ~1e-9 at i = 1e6 and ~1e-6 at 1e9,
+// with a bias when k != 1 (the quantile 997 too low at mu = 3e9, nu = 1.3).
+// R's lbeta keeps one small argument apart, so this form stays within ~1e-14
+// (~1e-12 for k ~ 1000). Consecutive terms: ratio(i) = term(i+1) / term(i)
+//   = (i+n)(i+k) / ((i+n+m+k)(i+1)),
+// computed as 1 - a near 1 (no rounding of i+n or n+m+k accumulates through the
+// products: drift ~1e-13 over 1e8 terms instead of ~1e-8).
+struct ck_bnb_terms {
+    double n, m, k, mk, one_minus_k, log_beta_n_m;
+    ck_bnb_terms(const double& mu, const double& sigma, const double& nu) {
+        const double inv_sigma = 1.0 / sigma;
+        const double inv_nu = 1.0 / nu;
+        n = (mu * nu) * inv_sigma;
+        m = inv_sigma + 1.0;
+        k = inv_nu;
+        mk = m + k;
+        one_minus_k = 1.0 - k;
+        log_beta_n_m = R::lbeta(n, m);
+    }
+    inline double log_term(const double& i) const {
+        return R::lbeta(i + n, mk) - log_beta_n_m - std::log(i + k) - R::lbeta(i + 1.0, k);
+    }
+    inline double ratio(const double& i) const {
+        const double x = i + n;
+        const double d = (x + mk) * (i + 1.0);
+        const double a = (x * one_minus_k + mk * (i + 1.0)) / d;   // 1 - ratio
+        return (a <= 0.5) ? 1.0 - a : (x * (i + k)) / d;
+    }
+};
 
 // SIMD-optimised Beta Negative Binomial density scalar function
 inline double fdBNB_scalar(const int& x,
@@ -56,19 +88,8 @@ inline double fdBNB_scalar(const int& x,
     // if (nu    <= 0.0) stop("nu must be greater than 0");
     // if (x      < 0.0) stop("x must be >=0");
 
-    // Pre-compute commonly used values
-    const double inv_sigma = 1.0 / sigma;
-    const double inv_nu = 1.0 / nu;
-    const double mu_nu_over_sigma = (mu * nu) * inv_sigma;
-
-    const double m = inv_sigma + 1.0;
-    const double n = mu_nu_over_sigma;
-    const double k = inv_nu;
-
-    // Use lgamma instead of lgammafn for better performance
-    const double logL = R::lbeta(x + n, m + k) - R::lbeta(n, m) -
-                        R::lgammafn(x + 1) - R::lgammafn(k) + R::lgammafn(x + k);
-
+    // double argument: no int arithmetic on x (x + 1 wrapped at INT_MAX up to 0.1.34)
+    const double logL = ck_bnb_terms(mu, sigma, nu).log_term(static_cast<double>(x));
     return log ? logL : std::exp(logL);
 }
 
@@ -86,32 +107,61 @@ inline double fpBNB_scalar(const int& q,
     // if (nu    <= 0.0) stop("nu must be greater than 0");
     // if (q      < 0) stop("q must be >=0");
 
+    const ck_bnb_terms T(mu, sigma, nu);
+    auto log_term = [&](double i) { return T.log_term(i); };
     double cdf = 0.0;
-
-    // Cache parameters for repeated use
-    const double inv_sigma = 1.0 / sigma;
-    const double inv_nu = 1.0 / nu;
-    const double mu_nu_over_sigma = (mu * nu) * inv_sigma;
-    const double m = inv_sigma + 1.0;
-    const double n = mu_nu_over_sigma;
-    const double k = inv_nu;
-
-    // Pre-compute common terms
-    const double log_beta_n_m = R::lbeta(n, m);
-    const double log_gamma_k = R::lgammafn(k);
-
-    for(int i = 0; i <= q; i++)
-    {
-      const double log_prob = R::lbeta(i + n, m + k) - log_beta_n_m -
-                             R::lgammafn(i + 1) - log_gamma_k + R::lgammafn(i + k);
-      cdf += std::exp(log_prob);
+    if (q >= 0) {
+      // the terms before `start` underflow to 0 and add nothing (ck_search_start)
+      const long long start = ck_search_start(log_term, mu);
+      // the terms fall from this index on: ceil(r), r as in fqBNB_search (0 if r < 0)
+      auto first_falling = [&]() {
+        const double r = (T.n * (T.k - 1.0) - T.m - T.k) / (T.m + 1.0);
+        return static_cast<long long>(std::min(std::max(0.0, std::ceil(r)),
+                                               static_cast<double>(CK_SEARCH_MAX)));
+      };
+      ck_compensated_sum sum;
+      double term = 0.0;
+      int countdown = 0;
+      // long long: q == INT_MAX ends (an int i overflowed and never returned)
+      for (long long i = start; i <= static_cast<long long>(q); i++) {
+        if (countdown == 0 || term < CK_TERM_TINY) {
+          // Underflow exit. term(i + 1) / term(i) crosses 1 once, at r, so from the
+          // mode on each term is at most the one before. Once that one (term, of
+          // index i - 1) is below CK_TERM_TINY, the terms still to come add up to
+          // less than 2^31 * CK_TERM_TINY ~ 4e-283. With the sum above 1e-250,
+          // where ulp(sum) / 2 > 7e-267, they cannot change sum + c (the
+          // compensation absorbs them): the sum is complete. Only this exit: a
+          // general `cdf + term == cdf` would drop the mass of a power-law tail,
+          // which the compensated sum is there to keep.
+          if (term < CK_TERM_TINY && sum.value() > 1e-250 && i > first_falling()) break;
+          term = std::exp(log_term(static_cast<double>(i)));
+          countdown = CK_REANCHOR;
+        } else {
+          term *= T.ratio(static_cast<double>(i - 1));
+        }
+        --countdown;
+        sum.add(term);
+      }
+      cdf = sum.value();
     }
 
     if (!lower_tail) cdf = 1.0 - cdf;
     return log_p ? std::log(cdf) : cdf;
   }
 
-// Optimized quantile search using incremental CDF computation
+// Quantile search: the smallest i with F(i) >= p, found by adding the terms one
+// at a time; NA_INTEGER when there is none. Its limits, all in extreme regimes:
+//   * O(q) in time, at ~4 ns per unit of the quantile: the median at mu = 3e9
+//     (sigma = 0.5, nu = 1; 1.56e9) takes ~6 s, and ~9 s are needed to answer
+//     NA when the quantile lies past the int range and the closed-form bound
+//     below does not show it at once (p = 0.9 at the same parameters).
+//   * With 1 - p < ~1e-5 and a heavy tail, the steps of the CDF fall below
+//     ulp(p), which no sum in double precision resolves, so the answer may be
+//     off by a few units or more: +34 at p = 1 - 1e-8, mu = 90, sigma = 10,
+//     nu = 1 (169562403 for 169562369).
+//   * sigma <~ 1e-4: lbeta(i+n, m+k) - lbeta(n, m) cancels when m = 1/sigma + 1
+//     is large, which leaves the CDF off by ~1e-11: 7153450 for 7153453 at
+//     p = 0.999999, mu = 1e4, sigma = 1e-4, nu = 100.
 inline int fqBNB_search(const double& p, const double& mu, const double& sigma, const double& nu) {
     // NaN/NA guard: the vector wrapper (fqBNB) already maps NaN args to NA, but
     // guard here too so the search below can never see NaN. For a NaN p the
@@ -119,30 +169,15 @@ inline int fqBNB_search(const double& p, const double& mu, const double& sigma, 
     if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(nu)) {
         return NA_INTEGER;
     }
-    // Pre-compute common terms for density calculation
-    const double inv_sigma = 1.0 / sigma;
-    const double inv_nu = 1.0 / nu;
-    const double mu_nu_over_sigma = (mu * nu) * inv_sigma;
-    const double m = inv_sigma + 1.0;
-    const double n_param = mu_nu_over_sigma;
-    const double k = inv_nu;
-
-    const double log_beta_n_m = R::lbeta(n_param, m);
-    const double log_gamma_k = R::lgammafn(k);
-
-    // log of the term at i; i + 1.0 keeps lgamma's argument out of int arithmetic
-    auto log_term = [&](double i) {
-        return R::lbeta(i + n_param, m + k) - log_beta_n_m -
-               R::lgammafn(i + 1.0) - log_gamma_k + R::lgammafn(i + k);
-    };
+    const ck_bnb_terms T(mu, sigma, nu);
+    auto log_term = [&](double i) { return T.log_term(i); };
     // A quantile beyond the int range is reported at once, not after scanning
-    // the whole range. The terms rise while
+    // the whole range, when this bound shows it. The terms rise while
     //   term(i + 1) / term(i) = (i + n)(i + k) / ((i + n + m + k)(i + 1)) > 1,
     // i.e. while i < r = (n (k - 1) - m - k) / (m + 1): the largest term is at
     // ceil(r), or at 0, so F(CK_SEARCH_MAX) <= (CK_SEARCH_MAX + 1) * term there
-    // (with a margin of 1e-3 in the log for its rounding). Closed form: near
-    // INT_MAX, neighbouring log terms differ by less than their rounding noise.
-    const double r = (n_param * (k - 1.0) - m - k) / (m + 1.0);
+    // (with a margin of 1e-3 in the log for its rounding).
+    const double r = (T.n * (T.k - 1.0) - T.m - T.k) / (T.m + 1.0);
     const double mode = std::min(std::max(0.0, std::ceil(r)), static_cast<double>(CK_SEARCH_MAX));
     if (p > 0.0 && log_term(mode) + std::log(CK_SEARCH_MAX + 1.0) < std::log(p) - 1e-3) {
         return NA_INTEGER;
@@ -152,16 +187,27 @@ inline int fqBNB_search(const double& p, const double& mu, const double& sigma, 
     const long long start = (p > 0.0) ? ck_search_start(log_term, mu) : 0;
 
     // No fixed cap: ck_search_gives_up() (distr_search.h) ends a search that
-    // cannot reach p, and NA_INTEGER is returned rather than a number
-    double cdf = 0.0;
+    // cannot reach p, and NA_INTEGER is returned rather than a number. Each
+    // term is the previous one times ratio(), recomputed from its log every
+    // CK_REANCHOR terms; the CDF is a compensated sum (distr_search.h). About
+    // 3.9 ns per term (was ~100: three lgamma/lbeta per term).
+    ck_compensated_sum cdf;
     double prev_term = -1.0;
+    double term = 0.0;
+    int countdown = 0;
     for (int i = static_cast<int>(start); i <= CK_SEARCH_MAX; i++) {
-        const double term = std::exp(log_term(i));
-        if (ck_search_gives_up(term, prev_term, cdf)) {
+        if (countdown == 0 || term < CK_TERM_TINY) {
+            term = std::exp(log_term(static_cast<double>(i)));
+            countdown = CK_REANCHOR;
+        } else {
+            term *= T.ratio(i - 1.0);
+        }
+        --countdown;
+        if (ck_search_gives_up(term, prev_term, cdf.value())) {
             return NA_INTEGER;
         }
-        cdf += term;
-        if (cdf >= p) {
+        cdf.add(term);
+        if (cdf.value() >= p) {
             return i;
         }
         prev_term = term;

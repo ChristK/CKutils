@@ -116,6 +116,35 @@ expect_equal(
   info = "CDF: log.p test"
 )
 
+# Test 6b: the CDF is the sum of the densities (fpBNB steps from term to term by
+# their ratio and adds them with a compensated sum; R's sum() of fdBNB, which
+# evaluates every term from its log, is an independent route). A guard: it holds
+# before and after the ratio recursion.
+expect_true(
+  abs(sum(fdBNB(0:5000, 2.5, 0.5, 1.7)) - fpBNB(5000, 2.5, 0.5, 1.7)) < 1e-14,
+  info = "CDF: the sum of the densities equals the CDF"
+)
+
+# Test 6c: fpBNB stops where the terms underflow. For mu = 1, sigma = 1e-3, nu = 1 the
+# terms fall below 2e-292 (CK_TERM_TINY) at i = 1390, and nothing after that can change
+# the sum: q = 2e5 and q = 5e7 are both past that point, give the same value, and that
+# value is 1 (up to the ~1e-13 that the lbeta of a small sigma leaves). The loop used
+# to run all q terms: 3 s at q = 5e7.
+expect_identical(
+  fpBNB(5e7, 1, 1e-3, 1), fpBNB(2e5, 1, 1e-3, 1),
+  info = "CDF: the same value past the point where the terms underflow"
+)
+expect_true(
+  abs(fpBNB(5e7, 1, 1e-3, 1) - 1) < 1e-11,
+  info = "CDF: 1 past the point where the terms underflow"
+)
+if (at_home()) {
+  expect_true(
+    system.time(fpBNB(5e7, 1, 1e-3, 1))[["elapsed"]] < 0.5,
+    info = "CDF: stops where the terms underflow (it took 3 s at q = 5e7)"
+  )
+}
+
 # =============================================================================
 # QUANTILE TESTS
 # =============================================================================

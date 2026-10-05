@@ -136,11 +136,12 @@
   1,000,000 for 1,351,683. There is no fixed cap now. A search gives up, with
   NA and a warning, only when the CDF cannot reach p: a term that is not finite,
   or terms past the largest too small to change the sum. A BNB quantile beyond
-  the int range is reported at once (from the closed-form mode), and BNB and
-  DPO searches at a large `mu` start at the first term that does not
-  underflow. The time grows with the quantile: about 0.1 s per million terms
-  for BNB (`mu = 2e7`: 1 s; a quantile of 1.56e9 at `mu = 3e9`: about 2
-  minutes), about 0.01 s for SICHEL, whose terms come from a recursion -- so a
+  the int range is reported at once when the closed-form mode shows it
+  (otherwise after scanning the range, about 9 s), and BNB and DPO searches at
+  a large `mu` start at the first term that does not underflow. The time grows
+  with the quantile: about 4 ms per million terms for BNB (`mu = 2e7`: 0.04 s;
+  a quantile of 1.56e9 at `mu = 3e9`: about 6 s), about 0.01 s for SICHEL,
+  whose terms come from a recursion -- so a
   SICHEL quantile beyond the int range is only known to be NA after scanning
   the range (some 40 s).
 * `fqSICHEL()` and `fqZISICHEL()` return NA, with a warning, for p = 1: the
@@ -206,6 +207,27 @@
   within 64 * `.Machine$double.eps` (relative) of `p`, the result is the index
   where it stopped; further below `p` it is `NA`, with a warning. For `p` within
   ~1e-13 of 1 the quantile is accurate only to a few units.
+* **BNB densities, CDFs and quantiles were inaccurate at large counts.** The log
+  of a BNB term was `lbeta(i + n, m + k) - lbeta(n, m) - lgamma(i + 1) -
+  lgamma(k) + lgamma(i + k)`, whose last three parts are large and nearly
+  cancel (`lgamma(i + 1)` is 2e10 at `i = 1e9`), and the CDF and the quantile
+  search added the terms in plain double precision. `fqBNB(0.5, 2e8, 0.7, 1.3)`
+  returned 83762994 where the median is 83762993, `fqBNB(1 - 1e-8, 90, 10, 1)`
+  162955745 for 169562369 (-4%), `fpBNB(1e7, 2e6, 0.7, 1.3)` was off by 2.7e-10
+  and `fdBNB(1.5e9, 3e9, 0.7, 1.3, log = TRUE)` by 1.2e-5. The log of a term is
+  now `lbeta(i + n, m + k) - lbeta(n, m) - log(i + k) - lbeta(i + 1, k)`,
+  successive terms follow each other by their ratio (recomputed from the log
+  every 1024 terms), and the CDF is a compensated (Neumaier) sum. A term costs
+  about 4 ns instead of 100: `fpBNB()` is about 35 times faster, and stops as
+  soon as its terms underflow (`fpBNB(5e7, 1, 1e-3, 1)` took 3 s and takes
+  0.04 ms); `fqZABNB()` on the smoking models' parameters is 1.9 times faster
+  with identical quantiles (240,000 draws compared). Values move in the last
+  bits (~1e-14). Left as they were: quantiles with `1 - p < ~1e-5` in a heavy
+  tail, which can be off by a few units (the CDF steps fall below the spacing
+  of `p`), and `sigma <~ 1e-4`, where `lbeta` cancels.
+* In the header-only BNB scalars, `fdBNB_scalar(INT_MAX)` no longer wraps (it
+  returned `-Inf`) and `fpBNB_scalar(INT_MAX)` returns (about 5 s) instead of
+  never.
 
 ## Documentation
 
@@ -321,6 +343,11 @@
   reference), the same answers on the upper tail and the log scale, round trips
   `fqDPO(fpDPO(x)) == x`, and `Inf` at `p = 1`. `test-fDPO.R` Tests 16 and 26
   compare with gamlss.dist only where its `qDPO()` is finite.
+* `test-distr_huge_mu.R`: three BNB quantiles between 1e7 and 2e8 (margins of
+  1e5 to 2e7 ulp from a quad-precision reference), a CDF at q = 1e7 and two log
+  densities at 1e6 and 1.5e9, all of which the build before got wrong;
+  `test-fBNB.R`: the CDF equals the sum of the densities, and `fpBNB()` past the
+  point where its terms underflow (with a timing bound at home).
 
 # CKutils 0.1.33
 

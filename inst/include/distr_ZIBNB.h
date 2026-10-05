@@ -31,10 +31,13 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
 // kernels in this package do no bounds checking; the caller owns
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
-// fqZIBNB_scalar itself is safe: the fqBNB_search it delegates to caps its own
-// iteration count. The contract matters for the BNB, DPO, DEL and SICHEL
-// density and CDF kernels, some of which do not return at all when it is
-// violated.
+// fqZIBNB_scalar itself is safe: the fqBNB_search it delegates to scans at most
+// the int range (CK_SEARCH_MAX = INT_MAX - 1, NA beyond; ~9 s to scan all of it)
+// and gives up earlier on a search that cannot reach p (distr_search.h). The
+// contract matters for the DPO, DEL and SICHEL density and CDF kernels, some of
+// which do not return at all when it is violated; the BNB ones return, even at
+// INT_MAX (fpBNB_scalar is O(q) in time: about 5 s there, less where the terms
+// underflow, as it stops then; see distr_BNB.h).
 
 #include <Rcpp.h>
 #include <cmath>
