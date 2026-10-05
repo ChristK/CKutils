@@ -149,12 +149,16 @@ inline double fpBNB_scalar(const int& q,
     return log_p ? std::log(cdf) : cdf;
   }
 
+// How many terms a quantile search adds before it checks the closed-form bound
+// on a quantile beyond the int range (see fqBNB_search).
+constexpr long long CK_BNB_BOUND_AFTER = 65536;
+
 // Quantile search: the smallest i with F(i) >= p, found by adding the terms one
 // at a time; NA_INTEGER when there is none. Its limits, all in extreme regimes:
 //   * O(q) in time, at ~4 ns per unit of the quantile: the median at mu = 3e9
 //     (sigma = 0.5, nu = 1; 1.56e9) takes ~6 s, and ~9 s are needed to answer
 //     NA when the quantile lies past the int range and the closed-form bound
-//     below does not show it at once (p = 0.9 at the same parameters).
+//     below does not show it (p = 0.9 at the same parameters).
 //   * With 1 - p < ~1e-5 and a heavy tail, the steps of the CDF fall below
 //     ulp(p), which no sum in double precision resolves, so the answer may be
 //     off by a few units or more: +34 at p = 1 - 1e-8, mu = 90, sigma = 10,
@@ -171,20 +175,44 @@ inline int fqBNB_search(const double& p, const double& mu, const double& sigma, 
     }
     const ck_bnb_terms T(mu, sigma, nu);
     auto log_term = [&](double i) { return T.log_term(i); };
-    // A quantile beyond the int range is reported at once, not after scanning
+    // A quantile beyond the int range is reported as not found, without scanning
     // the whole range, when this bound shows it. The terms rise while
     //   term(i + 1) / term(i) = (i + n)(i + k) / ((i + n + m + k)(i + 1)) > 1,
     // i.e. while i < r = (n (k - 1) - m - k) / (m + 1): the largest term is at
     // ceil(r), or at 0, so F(CK_SEARCH_MAX) <= (CK_SEARCH_MAX + 1) * term there
     // (with a margin of 1e-3 in the log for its rounding).
-    const double r = (T.n * (T.k - 1.0) - T.m - T.k) / (T.m + 1.0);
-    const double mode = std::min(std::max(0.0, std::ceil(r)), static_cast<double>(CK_SEARCH_MAX));
-    if (p > 0.0 && log_term(mode) + std::log(CK_SEARCH_MAX + 1.0) < std::log(p) - 1e-3) {
-        return NA_INTEGER;
+    auto beyond_int = [&]() {
+        const double r = (T.n * (T.k - 1.0) - T.m - T.k) / (T.m + 1.0);
+        const double mode = std::min(std::max(0.0, std::ceil(r)), static_cast<double>(CK_SEARCH_MAX));
+        return p > 0.0 && log_term(mode) + std::log(CK_SEARCH_MAX + 1.0) < std::log(p) - 1e-3;
+    };
+    // The term at 0 is computed once: it is the first term of the scan, and it
+    // tells whether the head of the distribution underflows (a large mu).
+    const double first = std::exp(log_term(0.0));
+    long long start = 0;
+    long long check_at = -1;   // the index at which the scan checks the bound; -1: never
+    if (p > 0.0) {
+        if (first >= CK_TERM_TINY) {
+            // The bound costs a log_term and two logs, which a search that ends
+            // within a few terms (nearly all do) does not need: it is checked when
+            // the scan reaches index CK_BNB_BOUND_AFTER. The outcome is the same as
+            // if it were checked first. A scan that ends sooner either found
+            // F(i) >= p, which the bound rules out (F(i) <= (i + 1) * the largest
+            // term, and the bound puts (CK_SEARCH_MAX + 1) * the largest term below
+            // p), or gave up (NA either way). Only a quantile beyond the int range
+            // pays for the wait, up to ~0.3 ms.
+            check_at = start + CK_BNB_BOUND_AFTER;
+        } else {
+            // The head underflows, or nearly (a large mu; a term below CK_TERM_TINY
+            // is recomputed from its log at every step): the scan is long and slow,
+            // so the bound is checked at once, and the scan starts at the first term
+            // that does not underflow (ck_search_start, distr_search.h)
+            if (beyond_int()) {
+                return NA_INTEGER;
+            }
+            start = ck_search_start(log_term, mu);
+        }
     }
-    // With a large mu, start at the first term that does not underflow
-    // (ck_search_start, distr_search.h)
-    const long long start = (p > 0.0) ? ck_search_start(log_term, mu) : 0;
 
     // No fixed cap: ck_search_gives_up() (distr_search.h) ends a search that
     // cannot reach p, and NA_INTEGER is returned rather than a number. Each
@@ -196,8 +224,11 @@ inline int fqBNB_search(const double& p, const double& mu, const double& sigma, 
     double term = 0.0;
     int countdown = 0;
     for (int i = static_cast<int>(start); i <= CK_SEARCH_MAX; i++) {
+        if (i == check_at && beyond_int()) {
+            return NA_INTEGER;
+        }
         if (countdown == 0 || term < CK_TERM_TINY) {
-            term = std::exp(log_term(static_cast<double>(i)));
+            term = (i == 0) ? first : std::exp(log_term(static_cast<double>(i)));
             countdown = CK_REANCHOR;
         } else {
             term *= T.ratio(i - 1.0);

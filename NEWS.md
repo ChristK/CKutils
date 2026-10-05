@@ -136,8 +136,10 @@
   1,000,000 for 1,351,683. There is no fixed cap now. A search gives up, with
   NA and a warning, only when the CDF cannot reach p: a term that is not finite,
   or terms past the largest too small to change the sum. A BNB quantile beyond
-  the int range is reported at once when the closed-form mode shows it
-  (otherwise after scanning the range, about 9 s), and BNB and DPO searches at
+  the int range is reported as NA when the closed-form mode shows it: at once
+  for a large `mu`, otherwise after at most 65,536 terms (about 0.3 ms); where
+  the bound does not show it, after scanning the range (about 9 s). BNB and DPO
+  searches at
   a large `mu` start at the first term that does not underflow. The time grows
   with the quantile: about 4 ms per million terms for BNB (`mu = 2e7`: 0.04 s;
   a quantile of 1.56e9 at `mu = 3e9`: about 6 s), about 0.01 s for SICHEL,
@@ -288,6 +290,16 @@
   takes 2 ms and no extra memory. The header scalars are safe at `INT_MAX`
   (where the CDF needed about 32 GB) but still O(q) in time where the sum does
   not settle (about 26 s at 2147483646).
+* **`fqBNB()`, `fqZIBNB()` and `fqZABNB()` evaluate the term at 0 once, and
+  check the int-range bound late.** The quantile search computed the log of the
+  term at 0 up to three times (in the closed-form bound for a quantile beyond
+  the int range, in the search for the first term that does not underflow, and
+  as its own first term), and the bound added another log term. The term is now
+  computed once, and the bound runs once the search has added 65,536 terms (at
+  once, as before, when the term at 0 underflows or nearly: a large `mu`). A
+  search that ends sooner cannot have been stopped by the bound, so every
+  quantile is unchanged (738,805 results compared). On the smoking models'
+  parameters `fqZABNB()` takes 0.66 us a draw, against 1.78 us in 0.1.33.
 
 ## Tests
 
