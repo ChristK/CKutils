@@ -126,9 +126,9 @@ for (i in seq_len(nrow(basic_params))) {
   # My implementation have higher precision in extreme tails. I.e. for i=1 pDPO
   # returns -Inf while my implementation returns a number. The code below
   # ensures that the test pass in such cases.
-  ck_log_cdf_upper <- ck_log_cdf_upper[!is.infinite(gamlss_log_cdf_upper)]
+  ck_log_cdf_upper <- ck_log_cdf_upper[is.finite(gamlss_log_cdf_upper)]
   gamlss_log_cdf_upper <- gamlss_log_cdf_upper[
-    !is.infinite(gamlss_log_cdf_upper)
+    is.finite(gamlss_log_cdf_upper)
   ]
 
   ck_log_cdf_upper_above_threshold <- ck_log_cdf_upper[ck_log_cdf_upper < -20]

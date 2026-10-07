@@ -386,7 +386,8 @@ NumericVector fpDEL(const IntegerVector &q,
         run.reset(mu_val, sigma_val, nu_val);
         c_mu = mu_val; c_sigma = sigma_val; c_nu = nu_val; have_c = true;
       }
-      cdf[i] = run.advance_to(q_i);
+      // clamp the value returned, never the running sum (`run` is extended next)
+      cdf[i] = std::min(run.advance_to(q_i), 1.0);
     }
   }
 

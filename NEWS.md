@@ -318,6 +318,17 @@
   `p >= 1` is `Inf`, and the search ends with the shared stall rule (a sum that
   has stopped growing within 64 eps of `p` returns the index where it stopped).
   The models' DEL draws stay below the window and are unchanged.
+* **Summed CDFs never exceed 1, so upper tails are never negative.**
+  `fpDPO()`, `fpDEL()`, `fpBNB()`, `fpSICHEL()`, `fpZANBI()` and `fpBCT()` (and
+  the ZI/ZA variants through them) could return a CDF a few ulp above 1, from
+  rounding in their sums, which made `lower_tail = FALSE` negative and NaN on
+  the log scale (`fpBNB(1000, 90, 0.02, 0.02, lower_tail = FALSE)` was
+  -5.9e-14). The value returned is now at most 1 (a running sum that continues
+  to the next element is not clamped). In the models' ranges this moves stored
+  CDF values such as `fpDPO(90, ...)` by at most 1.3e-14 and leaves every
+  quantile draw unchanged. `fpDPO()` also returns `NaN` at the first
+  non-finite term, so an infinite `mu` or `sigma` no longer sums `NaN` terms up
+  to `q`.
 
 ## Documentation
 
@@ -519,6 +530,11 @@
   against a Poisson-NB convolution reference (margins of at least 1e-12),
   brackets on `fpDEL()` for quantiles beyond 4096, `Inf` at `p = 1`, the upper
   tail and log scale, the settle step, and round trips.
+* `test-distr_cdf_le_one.R` (new): for DPO, DEL (scalar and vector), BNB,
+  SICHEL, BCT and the ZI/ZA families, cases whose CDF exceeded 1 give a CDF of
+  at most 1, a non-negative upper tail and a finite log upper tail; the vector
+  `fpDEL()` still equals element-wise calls; `fpDPO(1e7, Inf, 2)` is `NaN` at
+  once.
 
 # CKutils 0.1.33
 

@@ -141,6 +141,7 @@ inline double fpZANBI_scalar(const int& q,
         }
     }
 
+    cdf = std::min(cdf, 1.0);   // rounding can leave the sum above 1
     return log_p ? std::log(cdf) : cdf;
 }
 

@@ -313,6 +313,8 @@ inline double fpDPO_scalar(const int& q,
   // is false for nearly every term, and then the others are not evaluated.)
   for (int i = i0; i <= q; i++) {
     const double t = fdDPO_scalar(i, mu, sigma, false);
+    // a non-finite mu or sigma: every term is NaN, and the loop would add them to q
+    if (!std::isfinite(t)) return R_NaN;
     if (t > max_term) {
       max_term = t;
       max_pos = i;
@@ -323,7 +325,8 @@ inline double fpDPO_scalar(const int& q,
     prev = t;
   }
 
-  double res = cdf;
+  // rounding can leave the sum above 1: clamp the lower-tail value
+  double res = std::min(cdf, 1.0);
   if (!lower_tail) {
     if (cdf > 0.5) {
       // The upper tail itself, from q + 1 to where it settles (or to the largest

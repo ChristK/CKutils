@@ -145,6 +145,7 @@ inline double fpBNB_scalar(const int& q,
       cdf = sum.value();
     }
 
+    cdf = std::min(cdf, 1.0);   // rounding can leave the sum above 1
     if (!lower_tail) cdf = 1.0 - cdf;
     return log_p ? std::log(cdf) : cdf;
   }

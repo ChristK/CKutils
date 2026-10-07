@@ -381,7 +381,9 @@ inline double fpDEL_hlp_fn(const int &q,
 {
   if (q < 0) return 0.0;
   CkDELCdf cdf(mu, sigma, nu);
-  return cdf.advance_to(q);
+  // the value handed on is clamped (rounding can leave the sum above 1); the
+  // running sum inside CkDELCdf is not, as it is extended by the next element
+  return std::min(cdf.advance_to(q), 1.0);
 }
 
 // Optimized scalar CDF function

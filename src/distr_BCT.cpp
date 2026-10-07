@@ -336,7 +336,7 @@ NumericVector fpBCT(const NumericVector& q,
       FYy2 = fdBCT_t_cdf(-1.0 / (recycled.vec3[i] * std::abs(recycled.vec4[i])), recycled.vec5[i]);
     }
     
-    out[i] = (FYy1 - FYy2) / FYy3;
+    out[i] = std::min((FYy1 - FYy2) / FYy3, 1.0);   // rounding can leave it above 1
   }
 
   if (!lower_tail) {

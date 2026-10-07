@@ -249,11 +249,11 @@ inline double fcdfSICHEL_scalar(const int& y, const double& mu, const double& si
         term = exp(lp);
         // settled; ty is tynew[j] here
         if (sumT > 0.0 && term < prev && sumT + term == sumT &&
-            j + nu >= 0.0 && ty < j + 1.0) return sumT;
+            j + nu >= 0.0 && ty < j + 1.0) return std::min(sumT, 1.0);
         sumT += term;
     }
 
-    return sumT;
+    return std::min(sumT, 1.0);   // rounding can leave the sum above 1
 }
 
 // Scalar CDF function for internal use
