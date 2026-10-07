@@ -44,9 +44,17 @@ using namespace Rcpp;
 //'
 //' @details
 //' The zero-inflated Sichel distribution is a mixture of a point mass at zero 
-//' and a (truncated at zero) Sichel distribution.
+//' and a Sichel distribution (not truncated at zero):
+//' \eqn{P(Y = 0) = \tau + (1-\tau) f_{SICHEL}(0)}, so the probability of zero
+//' exceeds \eqn{\tau}.
 //'
-//' @return A numeric vector of quantiles.
+//' The quantile is found on the Sichel scale, after removing the zero mass and
+//' taking a margin of \code{2 * .Machine$double.eps} off \code{p} (gamlss.dist
+//' takes 1e-7), by the search of \code{\link{fqSICHEL}}, whose cost (about 12.5
+//' ms per million terms) and \code{NA} cases (a quantile beyond 2147483646)
+//' apply here. \code{p >= 1} gives \code{NA} with a warning.
+//'
+//' @return An integer vector of quantiles, \code{NA} where none was found.
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -148,7 +156,7 @@ IntegerVector fqZISICHEL(NumericVector p,
 //' distribution with parameters mu (mean), sigma (dispersion), nu (shape), and
 //' tau (zero-inflation probability).
 //'
-//' @param x vector of (non-negative integer) quantiles.
+//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of shape parameters (real values).
@@ -221,7 +229,7 @@ NumericVector fdZISICHEL(const NumericVector& x,
 //' Distribution function for the zero-inflated Sichel distribution with parameters 
 //' mu (mean), sigma (dispersion), nu (shape), and tau (zero-inflation).
 //'
-//' @param q vector of quantiles.
+//' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of shape parameters (real values).
@@ -232,7 +240,9 @@ NumericVector fdZISICHEL(const NumericVector& x,
 //'
 //' @details
 //' The zero-inflated Sichel distribution is a mixture of a point mass at zero 
-//' and a (truncated at zero) Sichel distribution.
+//' and a Sichel distribution (not truncated at zero):
+//' \eqn{F(q) = \tau + (1-\tau) F_{SICHEL}(q)}. The cost and the accuracy at
+//' large counts are those of \code{\link{fpSICHEL}}.
 //'
 //' @return A numeric vector of probabilities.
 //' 

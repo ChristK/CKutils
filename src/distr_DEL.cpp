@@ -100,34 +100,39 @@ inline void simd_log_4(const double* input, double* output) {
 //' The Delaporte Distribution - Density Function
 //'
 //' Density function for the Delaporte distribution with parameters mu, sigma and nu.
-//' The Delaporte distribution is a discrete probability distribution that can be 
-//' expressed as a compound Poisson distribution where the intensity parameter follows
-//' a Gamma distribution.
+//' The Delaporte distribution is a discrete probability distribution: the sum of
+//' a Poisson variable and an independent negative binomial variable.
 //'
-//' @param x vector of (non-negative integer) quantiles
+//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means
 //' @param sigma vector of positive dispersion parameters
 //' @param nu vector of parameters between 0 and 1
 //' @param log_ logical; if TRUE, probabilities p are given as log(p)
 //'
 //' @details
-//' The Delaporte distribution has probability mass function:
-//' \deqn{P(X = x) = e^{-\mu\nu} \frac{\Gamma(x + 1/\sigma)}{\Gamma(x + 1)\Gamma(1/\sigma)} \left(\frac{\mu\sigma(1-\nu)}{1 + \mu\sigma(1-\nu)}\right)^x \left(\frac{1}{1 + \mu\sigma(1-\nu)}\right)^{1/\sigma}}
-//' 
+//' The Delaporte distribution is the convolution of a Poisson distribution
+//' with mean \eqn{\mu\nu} and a negative binomial distribution with size
+//' \eqn{1/\sigma} and mean \eqn{\mu(1-\nu)}:
+//' \deqn{P(X = x) = \sum_{k=0}^{x} \frac{e^{-\mu\nu}(\mu\nu)^k}{k!}
+//'   \frac{\Gamma(x-k+1/\sigma)}{\Gamma(x-k+1)\Gamma(1/\sigma)}
+//'   \left(\frac{1}{1+\mu\sigma(1-\nu)}\right)^{1/\sigma}
+//'   \left(\frac{\mu\sigma(1-\nu)}{1+\mu\sigma(1-\nu)}\right)^{x-k}}
 //' for x = 0, 1, 2, ..., mu > 0, sigma > 0, and 0 < nu < 1.
 //' 
-//' The mean is mu and the variance is mu + mu^2 * sigma * (1 - nu).
+//' The mean is mu and the variance is mu + mu^2 * sigma * (1 - nu)^2.
+//' 
+//' When sigma is below 1e-04 the density is that of a Poisson distribution with
+//' mean mu. The density is computed by a recurrence over the counts 0 to x in
+//' constant memory, so the cost is O(x): about 10 ms per million
+//' (\code{fdDEL(9.2e7, 1e8, 0.5, 0.5)} takes 0.9 s). In a vector call the
+//' recurrence continues from one element to the next while mu, sigma and nu repeat
+//' and x does not decrease.
 //' 
 //' This implementation is based on the algorithms from the gamlss.dist package
-//' by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
-//' including SIMD support and efficient parameter recycling.
+//' by Rigby, R. A. and Stasinopoulos D. M.
 //'
 //' @return
 //' \code{fdDEL} gives the density
-//'
-//' @note
-//' This function is optimised for performance with chunked processing and
-//' efficient memory access patterns.
 //'
 //' @references
 //' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -266,7 +271,7 @@ NumericVector fdDEL(const IntegerVector &x,
 //' Distribution function for the Delaporte distribution with parameters mu, sigma and nu.
 //' Computes the cumulative distribution function (CDF) of the Delaporte distribution.
 //'
-//' @param q vector of (non-negative integer) quantiles
+//' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means
 //' @param sigma vector of positive dispersion parameters
 //' @param nu vector of parameters between 0 and 1
@@ -275,26 +280,29 @@ NumericVector fdDEL(const IntegerVector &x,
 //'
 //' @details
 //' The cumulative distribution function is computed as the sum of the probability
-//' mass function from 0 to q. For computational efficiency, this implementation
-//' employs chunked processing with SIMD optimizations when available and is
-//' optimised for scenarios with varying parameter combinations.
+//' mass function from 0 to q, by the recurrence of \code{\link{fdDEL}}, so the
+//' cost is O(q): about 12 ms per million counts (\code{fpDEL(9.2e7, 1e8, 0.5, 0.5)}
+//' takes 1.1 s). In a vector call, \code{fpDEL(0:q, ...)} with repeated
+//' parameters costs O(q), not O(q^2). The result never exceeds 1.
 //' 
-//' When sigma is very small (< 1e-04), the distribution approaches a Poisson
-//' distribution with parameter mu, and the function switches to using the
-//' more efficient Poisson CDF computation.
+//' When sigma is very small (< 1e-04), the distribution is treated as a Poisson
+//' distribution with mean mu.
+//' 
+//' \emph{Accuracy.} Up to count 4095 the plain recurrence is used. Against the
+//' exact sum of the Poisson and negative binomial convolution
+//' (\eqn{\sum_k f_{Pois}(k) F_{NB}(q-k)}) the largest error over five synthetic
+//' parameter sets (mu about q, sigma 0.1 to 2, nu 0.2 to 0.9) was 1e-15 at q = 10,
+//' 4e-14 at 50, 4e-13 at 200, 9e-12 at 1000 and 5e-11 at 4095. From count 4096
+//' on a compensated recurrence takes over, and the same check gave errors below
+//' 3e-14 at q = 4096, 5000, 20000, 65535 and 200000; over a wider set of
+//' parameters the error is below 6e-13 for counts 4096 to 65535 and below 5e-12
+//' up to 2e9.
 //' 
 //' This implementation is based on the algorithms from the gamlss.dist package
-//' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
-//' optimizations including vectorized transformations and SIMD support for
-//' large datasets with diverse parameter sets.
+//' by Rigby, R. A. and Stasinopoulos D. M.
 //'
 //' @return
 //' \code{fpDEL} gives the cumulative distribution function
-//'
-//' @note
-//' This function is optimised for scenarios where parameters vary between
-//' computations (e.g., random parameters). For applications with repeated
-//' parameter combinations, consider implementing application-specific caching.
 //'
 //' @references
 //' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -568,7 +576,7 @@ int fqDEL_search(const double &p,
 //' @param p Vector of probabilities.
 //' @param mu Vector of mu (location/mean) parameters (positive).
 //' @param sigma Vector of sigma (scale) parameters (positive).
-//' @param nu Vector of nu (shape) parameters (positive).
+//' @param nu Vector of nu (shape) parameters, between 0 and 1.
 //' @param lower_tail Logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise P[X > x].
 //' @param log_p Logical; if TRUE, probabilities p are given as log(p).
@@ -577,22 +585,34 @@ int fqDEL_search(const double &p,
 //'
 //' @details
 //' The Delaporte distribution is a three-parameter discrete distribution
-//' defined as the convolution of a Poisson distribution with mean \code{mu}
-//' and a shifted negative binomial distribution with parameters related to
-//' \code{sigma} and \code{nu}.
+//' defined as the convolution of a Poisson distribution with mean
+//' \code{mu * nu} and a negative binomial distribution with size
+//' \code{1 / sigma} and mean \code{mu * (1 - nu)} (see \code{\link{fdDEL}}).
 //'
-//' This implementation uses an optimised binary search algorithm with
-//' SIMD acceleration where available, and includes intelligent caching
-//' of intermediate CDF calculations for improved performance with repeated
-//' quantile computations.
+//' The quantile is the smallest integer x with P(X <= x) >= p, found by adding
+//' the probabilities from 0 upwards (the recurrence of \code{\link{fdDEL}}).
+//' The cost is O(x): about 12 ms per million counts (a median near 9.2e7, at
+//' mu = 1e8, takes 1.1 s). \code{p = 1} (or above, up to 1.0001) gives
+//' \code{Inf}; any \code{p < 1} has a finite quantile, including \code{p}
+//' within 1e-9 of 1 (\code{fqDEL(1 - 1e-9, 2.03065, 2.30919, 0.830551)} is 25).
+//' A \code{p} so close to 1 that the summed CDF cannot reach it gives
+//' \code{NA}. A quantile beyond 2147483646, the largest integer this function
+//' returns, is \code{NA} too, but only after the scan has run to the end of the
+//' range (there is no closed-form shortcut as for \code{\link{fqBNB}}). The
+//' scan can be stopped with Ctrl-C. The accuracy of the CDF behind it is
+//' described in \code{\link{fpDEL}}.
 //'
 //' Parameter recycling is performed automatically - all parameter vectors
 //' are recycled to the length of the longest vector.
 //'
 //' @section Parameter Validation:
-//' - \code{p} must be in [0,1] for \code{log_p = FALSE}, or in (-Inf, 0] for \code{log_p = TRUE}
-//' - \code{mu}, \code{sigma}, \code{nu} must all be positive
-//' - Invalid parameters result in \code{NA} values in the output
+//' - \code{p} must be a probability (a log probability if \code{log_p = TRUE});
+//'   a value above 1 by up to 1e-4 is treated as 1, anything outside stops
+//'   with an error
+//' - \code{mu} and \code{sigma} must be positive and \code{nu} between 0 and 1,
+//'   otherwise the function stops with an error
+//' - an \code{NA} or \code{NaN} argument gives \code{NA}; any \code{NA} in the
+//'   result gives a warning
 //'
 //' @note
 //' This function is based on the Delaporte distribution implementation from

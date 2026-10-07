@@ -42,6 +42,9 @@ distribution function of a specific T distribution.
 
 This implementation is optimised for cases where tau values are rarely repeated,
 using SIMD vectorisation and per-element computation without caching.
+
+\code{lower_tail = FALSE} is computed as 1 - F, so the upper tail has no
+relative accuracy far out: it is 0 once F rounds to 1.
 }
 \note{
 This implementation is based on the gamlss.dist package pBCPEo function

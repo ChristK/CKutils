@@ -365,6 +365,17 @@
   relies on, to refresh distribution parameters). Example 3 said such a column
   "should be ignored", and showed the caller's values; it now shows the
   overwritten ones.
+* The help pages of the count distributions describe what the code does:
+  the BNB, SICHEL, DEL and DPO searches are scans with no cap (cost per
+  million terms, when a quantile beyond the int range is `NA` at once and when
+  only after a scan), not "divide-and-conquer", binary search, SIMD or caching;
+  the DEL pmf is the Poisson + negative binomial convolution, its variance
+  `mu + mu^2 sigma (1 - nu)^2` (the page had `(1 - nu)`) and its measured
+  accuracy; the zero-inflated Sichel is not truncated at zero; the DPO limit at
+  a huge `mu` and `sigma`; `p = 1` for each quantile function; non-integer
+  counts truncate; `fqMN4()` at a `p` equal to a CDF value; `lower_tail = FALSE`
+  for BCT, BCPEo and MN4 is 1 - F. The `fr*()` functions say that `n` is a
+  single number (a vector errors).
 
 ## Performance
 

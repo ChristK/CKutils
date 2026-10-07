@@ -7,7 +7,7 @@
 fdDPO(x, mu, sigma, log_ = FALSE)
 }
 \arguments{
-\item{x}{vector of (non-negative integer) quantiles}
+\item{x}{vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means}
 
@@ -30,12 +30,17 @@ distribution. Values of sigma > 1 indicate overdispersion, while sigma < 1
 indicates underdispersion.
 
 This implementation is based on the algorithms from the gamlss.dist package
-by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
-including SIMD support and improved caching.
-}
-\note{
-This function is optimised for performance with chunked processing and
-prefetching for better cache utilization.
+by Rigby, R. A. and Stasinopoulos D. M.
+
+\emph{Limit.} The normalising constant of the density is a sum over the
+counts around mu (its standard deviation is about
+\code{sqrt(mu * max(sigma, 1))}), kept in a small per-thread cache keyed by
+(mu, sigma). With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+example \code{mu = 3e9}, \code{sigma = 4e6}) the sum scans the whole integer
+range before it gives up, so \code{fdDPO}, \code{fpDPO} and \code{fqDPO} each
+take about 50 s (49.5 to 49.8 s measured) to answer \code{NaN} (\code{NA}
+for \code{fqDPO}). An infinite \code{mu} or \code{sigma} gives \code{NaN}
+at once.
 }
 \examples{
 # Calculate density for single values

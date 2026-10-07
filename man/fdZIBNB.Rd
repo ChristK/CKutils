@@ -7,7 +7,7 @@
 fdZIBNB(x, mu, sigma, nu, tau, log = FALSE)
 }
 \arguments{
-\item{x}{vector of (non-negative integer) quantiles.}
+\item{x}{vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means.}
 

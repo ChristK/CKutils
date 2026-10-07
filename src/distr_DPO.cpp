@@ -176,7 +176,7 @@ NumericVector fget_C(const IntegerVector& x,
 //' The DPO distribution is a discrete probability distribution that extends the
 //' Poisson distribution by adding an additional dispersion parameter.
 //'
-//' @param x vector of (non-negative integer) quantiles
+//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means
 //' @param sigma vector of positive dispersion parameters
 //' @param log_ logical; if TRUE, probabilities p are given as log(p)
@@ -188,15 +188,20 @@ NumericVector fget_C(const IntegerVector& x,
 //' indicates underdispersion.
 //' 
 //' This implementation is based on the algorithms from the gamlss.dist package
-//' by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
-//' including SIMD support and improved caching.
+//' by Rigby, R. A. and Stasinopoulos D. M.
+//'
+//' \emph{Limit.} The normalising constant of the density is a sum over the
+//' counts around mu (its standard deviation is about
+//' \code{sqrt(mu * max(sigma, 1))}), kept in a small per-thread cache keyed by
+//' (mu, sigma). With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+//' example \code{mu = 3e9}, \code{sigma = 4e6}) the sum scans the whole integer
+//' range before it gives up, so \code{fdDPO}, \code{fpDPO} and \code{fqDPO} each
+//' take about 50 s (49.5 to 49.8 s measured) to answer \code{NaN} (\code{NA}
+//' for \code{fqDPO}). An infinite \code{mu} or \code{sigma} gives \code{NaN}
+//' at once.
 //'
 //' @return
 //' \code{fdDPO} gives the density
-//'
-//' @note
-//' This function is optimised for performance with chunked processing and
-//' prefetching for better cache utilization.
 //'
 //' @references
 //' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -353,7 +358,7 @@ int fqDPO_search(const double& p,
 //' Distribution function for the DPO (Double Poisson) distribution with parameters mu and sigma.
 //' Computes the cumulative distribution function (CDF) of the DPO distribution.
 //'
-//' @param q vector of (non-negative integer) quantiles
+//' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means
 //' @param sigma vector of positive dispersion parameters
 //' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x]
@@ -361,22 +366,21 @@ int fqDPO_search(const double& p,
 //'
 //' @details
 //' The cumulative distribution function is computed using the normalizing constants
-//' approach from gamlss.dist. For computational efficiency, this implementation
-//' employs chunked processing with SIMD optimizations when available and is
-//' optimised for scenarios with varying parameter combinations.
+//' approach from gamlss.dist: the sum of the densities from the first one that
+//' does not underflow up to q. The sum stops once it has settled (a falling term
+//' past the largest no longer changes it), so a q far beyond the mass costs
+//' only as far as the mass. The result never exceeds 1, and the upper tail is
+//' summed from q + 1 where F > 0.5, so it is never negative.
 //' 
 //' This implementation is based on the algorithms from the gamlss.dist package
-//' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
-//' optimizations including vectorized transformations and SIMD support for
-//' large datasets with diverse parameter sets.
+//' by Rigby, R. A. and Stasinopoulos D. M.
+//'
+//' \emph{Limit.} With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+//' example \code{mu = 3e9}, \code{sigma = 4e6}) the normalising constant takes
+//' about 50 s to give up, and the answer is \code{NaN}: see \code{\link{fdDPO}}.
 //'
 //' @return
 //' \code{fpDPO} gives the cumulative distribution function
-//'
-//' @note
-//' This function is optimised for scenarios where parameters vary between
-//' computations (e.g., random parameters). For applications with repeated
-//' parameter combinations, consider implementing application-specific caching.
 //'
 //' @references
 //' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -472,24 +476,36 @@ NumericVector fpDPO(const IntegerVector &q,
 //' @param lower_tail Logical; if TRUE (default), probabilities are P[X <= x],
 //'   otherwise P[X > x].
 //' @param log_p Logical; if TRUE, probabilities p are given as log(p).
-//' @param max_value Maximum value to search for quantiles (for performance tuning).
+//' @param max_value Ignored; kept for compatibility. The search has no cap.
 //'
 //' @return Vector of quantiles corresponding to the given probabilities.
 //'
 //' @details
 //' The DPO distribution is a two-parameter discrete distribution that reduces
-//' to the Poisson distribution when sigma = 1. This implementation uses an
-//' optimised search algorithm with SIMD acceleration where available, and
-//' includes intelligent caching of intermediate CDF calculations for improved
-//' performance with repeated quantile computations.
+//' to the Poisson distribution when sigma = 1. The quantile is the smallest
+//' integer x with P(X <= x) >= p, found by adding the densities from the first
+//' one that does not underflow, until the sum reaches p.
+//'
+//' \code{p = 1} (or above, up to 1.0001) gives \code{Inf}; any \code{p < 1}
+//' has a finite quantile, including \code{p} within 1e-9 of 1
+//' (\code{fqDPO(c(1 - 1e-9, 1 - 5e-10, 1 - 4e-11), 16.27, 7.53)} is 118 121 130).
+//' A \code{p} so close to 1 that the summed CDF cannot reach it gives \code{NA}.
+//'
+//' \emph{Limit.} With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+//' example \code{mu = 3e9}, \code{sigma = 4e6}) the normalising constant takes
+//' about 50 s to give up, and the answer is \code{NA}: see \code{\link{fdDPO}}.
 //'
 //' Parameter recycling is performed automatically - all parameter vectors
 //' are recycled to the length of the longest vector.
 //'
 //' @section Parameter Validation:
-//' - \code{p} must be in [0,1] for \code{log_p = FALSE}, or in (-Inf, 0] for \code{log_p = TRUE}
-//' - \code{mu}, \code{sigma} must both be positive
-//' - Invalid parameters result in \code{NA} values in the output
+//' - \code{p} must be a probability (a log probability if \code{log_p = TRUE});
+//'   a value above 1 by up to 1e-4 is treated as 1, anything outside stops
+//'   with an error
+//' - \code{mu} and \code{sigma} must be positive, otherwise the function stops
+//'   with an error
+//' - an \code{NA} or \code{NaN} argument gives \code{NA}; any \code{NA} in the
+//'   result gives a warning
 //'
 //' @note
 //' This function is based on the DPO distribution implementation from

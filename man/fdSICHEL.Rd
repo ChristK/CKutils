@@ -7,7 +7,7 @@
 fdSICHEL(x, mu, sigma, nu, log_p = FALSE)
 }
 \arguments{
-\item{x}{vector of (non-negative integer) quantiles.}
+\item{x}{vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means.}
 
@@ -34,6 +34,10 @@ where \eqn{\alpha^2= 1/\sigma^2 +2*\mu/\sigma},
 
 When \eqn{\sigma > 10000} and \eqn{\nu > 0}, the function uses the NBI 
 approximation for numerical stability.
+
+The density at y is computed by a recursion over the counts 0 to y (ratios
+of scaled Bessel K functions) in constant memory, so the cost is O(y): about
+6.5 ms per million (\code{fdSICHEL(1e7, 1.2e7, 0.5, -0.5)} takes 65 ms).
 }
 \examples{
 # Single values

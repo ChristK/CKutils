@@ -230,6 +230,9 @@ NumericVector fdBCPEo(const NumericVector& x,
 //' This implementation is optimised for cases where tau values are rarely repeated,
 //' using SIMD vectorisation and per-element computation without caching.
 //'
+//' \code{lower_tail = FALSE} is computed as 1 - F, so the upper tail has no
+//' relative accuracy far out: it is 0 once F rounds to 1.
+//'
 //' @return A numeric vector of probabilities.
 //'
 //' @references
@@ -357,6 +360,9 @@ NumericVector fpBCPEo(const NumericVector& q,
 //'
 //' This implementation is optimised for cases where tau values are rarely repeated,
 //' using SIMD vectorisation and per-element computation without caching.
+//'
+//' \code{lower_tail = FALSE} replaces \code{p} by 1 - \code{p}, so a quantile
+//' in the far upper tail (\code{p} tiny) has no relative accuracy.
 //'
 //' @return A numeric vector of quantiles.
 //'

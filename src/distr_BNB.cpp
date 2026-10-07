@@ -42,7 +42,7 @@ using namespace Rcpp;
 //' Probability density function for the Beta Negative Binomial (BNB) distribution
 //' with parameters mu (mean), sigma (dispersion), and nu (shape).
 //'
-//' @param x vector of (non-negative integer) quantiles.
+//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of positive shape parameters.
@@ -117,7 +117,7 @@ NumericVector fdBNB(const NumericVector& x,
 //' Cumulative distribution function for the Beta Negative Binomial (BNB) distribution
 //' with parameters mu (mean), sigma (dispersion), and nu (shape).
 //'
-//' @param q vector of (non-negative integer) quantiles.
+//' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of positive shape parameters.
@@ -126,7 +126,13 @@ NumericVector fdBNB(const NumericVector& x,
 //'
 //' @details
 //' The cumulative distribution function is computed by summing the probability mass
-//' function from 0 to q.
+//' function from 0 to q. Each term follows from the one before by its ratio
+//' (recomputed from its logarithm every 1024 terms), and the sum is
+//' error-compensated. The cost is O(q), about 2.3 ms per million terms when the
+//' tail is long (\code{fpBNB(1e8, 2, 1, 1)} takes 0.23 s). Past the mode the sum stops
+//' once the terms underflow, so a short-tailed distribution does not pay for a
+//' large q (\code{fpBNB(5e7, 1, 1e-3, 1)} takes under a millisecond). The
+//' result never exceeds 1, so an upper tail is never negative.
 //'
 //' @return A numeric vector of cumulative probabilities.
 //' 
@@ -202,10 +208,30 @@ NumericVector fpBNB(const IntegerVector& q,
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'
 //' @details
-//' The quantile function uses a fast divide-and-conquer algorithm to find
-//' the quantiles efficiently.
+//' The quantile is the smallest integer x with P(X <= x) >= p. It is found by
+//' scanning the probability mass function upwards from 0 and adding the terms
+//' until the sum reaches p: each term follows from the one before by its ratio
+//' (recomputed from its logarithm every 1024 terms), and the sum is
+//' error-compensated. There is no cap on the number of terms, so the cost is
+//' O(x), about 4 ms per million terms: with sigma = 0.5 and nu = 1, mu = 2e7 (quantile 1.04e7)
+//' takes 0.04 s, and mu = 3e9 (quantile 1.56e9) about 6 s.
 //'
-//' @return An integer vector of quantiles.
+//' A quantile beyond 2147483646, the largest integer this function returns, is
+//' \code{NA}, with a warning. When the head of the distribution underflows (a
+//' large mu) a closed-form bound shows this at once. Otherwise the bound is
+//' checked once the scan has added 65,536 terms; if it shows the quantile is
+//' beyond the range the answer is \code{NA} within milliseconds, and if it does
+//' not, the scan runs on until it finds the quantile or reaches the end of the
+//' range (about 8 s at mu = 3e9, sigma = 0.5, nu = 1, p = 0.9, which is
+//' \code{NA}).
+//'
+//' \code{p >= 1} gives \code{Inf}. A \code{p} so close to 1 that the CDF cannot
+//' resolve it in double precision (a heavy tail) can give a result off by a few
+//' units or more (+34 at \code{p = 1 - 1e-8}, mu = 90, sigma = 10, nu = 1), or
+//' \code{NA} with a warning.
+//'
+//' @return A numeric vector of quantiles (whole numbers, \code{Inf} for
+//'   \code{p >= 1}, \code{NA} where none was found).
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 

@@ -276,6 +276,9 @@ NumericVector fdBCT(const NumericVector& x,
 //'   \item Robust handling of boundary cases
 //' }
 //'
+//' \code{lower_tail = FALSE} is computed as 1 - F, so the upper tail has no
+//' relative accuracy far out: it is 0 once F rounds to 1.
+//'
 //' @return Vector of probabilities corresponding to the input quantiles.
 //'
 //' @examples
@@ -384,6 +387,9 @@ NumericVector fpBCT(const NumericVector& q,
 //' A probability of 0 gives 0 and a probability of 1 gives \code{Inf}, as in
 //' \code{gamlss.dist::qBCT} (after the \code{lower_tail} and \code{log_p}
 //' transformation); a probability outside \eqn{[0, 1]} is an error.
+//'
+//' \code{lower_tail = FALSE} replaces \code{p} by 1 - \code{p}, so a quantile
+//' in the far upper tail (\code{p} tiny) has no relative accuracy.
 //'
 //' @return Vector of quantiles corresponding to the input probabilities.
 //'

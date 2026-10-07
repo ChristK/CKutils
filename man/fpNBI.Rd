@@ -7,7 +7,7 @@
 fpNBI(q, mu, sigma, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
-\item{q}{vector of quantiles.}
+\item{q}{vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means.}
 

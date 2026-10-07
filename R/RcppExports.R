@@ -117,6 +117,9 @@ fdBCPEo <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
 #' This implementation is optimised for cases where tau values are rarely repeated,
 #' using SIMD vectorisation and per-element computation without caching.
 #'
+#' \code{lower_tail = FALSE} is computed as 1 - F, so the upper tail has no
+#' relative accuracy far out: it is 0 once F rounds to 1.
+#'
 #' @return A numeric vector of probabilities.
 #'
 #' @references
@@ -185,6 +188,9 @@ fpBCPEo <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' This implementation is optimised for cases where tau values are rarely repeated,
 #' using SIMD vectorisation and per-element computation without caching.
+#'
+#' \code{lower_tail = FALSE} replaces \code{p} by 1 - \code{p}, so a quantile
+#' in the far upper tail (\code{p} tiny) has no relative accuracy.
 #'
 #' @return A numeric vector of quantiles.
 #'
@@ -380,6 +386,9 @@ fdBCT <- function(x, mu, sigma, nu, tau, log_ = FALSE) {
 #'   \item Robust handling of boundary cases
 #' }
 #'
+#' \code{lower_tail = FALSE} is computed as 1 - F, so the upper tail has no
+#' relative accuracy far out: it is 0 once F rounds to 1.
+#'
 #' @return Vector of probabilities corresponding to the input quantiles.
 #'
 #' @examples
@@ -428,6 +437,9 @@ fpBCT <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' \code{gamlss.dist::qBCT} (after the \code{lower_tail} and \code{log_p}
 #' transformation); a probability outside \eqn{[0, 1]} is an error.
 #'
+#' \code{lower_tail = FALSE} replaces \code{p} by 1 - \code{p}, so a quantile
+#' in the far upper tail (\code{p} tiny) has no relative accuracy.
+#'
 #' @return Vector of quantiles corresponding to the input probabilities.
 #'
 #' @examples
@@ -459,7 +471,7 @@ fqBCT <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' Probability density function for the Beta Negative Binomial (BNB) distribution
 #' with parameters mu (mean), sigma (dispersion), and nu (shape).
 #'
-#' @param x vector of (non-negative integer) quantiles.
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -494,7 +506,7 @@ fdBNB <- function(x, mu, sigma, nu, log = FALSE) {
 #' Cumulative distribution function for the Beta Negative Binomial (BNB) distribution
 #' with parameters mu (mean), sigma (dispersion), and nu (shape).
 #'
-#' @param q vector of (non-negative integer) quantiles.
+#' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -503,7 +515,13 @@ fdBNB <- function(x, mu, sigma, nu, log = FALSE) {
 #'
 #' @details
 #' The cumulative distribution function is computed by summing the probability mass
-#' function from 0 to q.
+#' function from 0 to q. Each term follows from the one before by its ratio
+#' (recomputed from its logarithm every 1024 terms), and the sum is
+#' error-compensated. The cost is O(q), about 2.3 ms per million terms when the
+#' tail is long (\code{fpBNB(1e8, 2, 1, 1)} takes 0.23 s). Past the mode the sum stops
+#' once the terms underflow, so a short-tailed distribution does not pay for a
+#' large q (\code{fpBNB(5e7, 1, 1e-3, 1)} takes under a millisecond). The
+#' result never exceeds 1, so an upper tail is never negative.
 #'
 #' @return A numeric vector of cumulative probabilities.
 #' 
@@ -537,10 +555,30 @@ fpBNB <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
 #' @details
-#' The quantile function uses a fast divide-and-conquer algorithm to find
-#' the quantiles efficiently.
+#' The quantile is the smallest integer x with P(X <= x) >= p. It is found by
+#' scanning the probability mass function upwards from 0 and adding the terms
+#' until the sum reaches p: each term follows from the one before by its ratio
+#' (recomputed from its logarithm every 1024 terms), and the sum is
+#' error-compensated. There is no cap on the number of terms, so the cost is
+#' O(x), about 4 ms per million terms: with sigma = 0.5 and nu = 1, mu = 2e7 (quantile 1.04e7)
+#' takes 0.04 s, and mu = 3e9 (quantile 1.56e9) about 6 s.
 #'
-#' @return An integer vector of quantiles.
+#' A quantile beyond 2147483646, the largest integer this function returns, is
+#' \code{NA}, with a warning. When the head of the distribution underflows (a
+#' large mu) a closed-form bound shows this at once. Otherwise the bound is
+#' checked once the scan has added 65,536 terms; if it shows the quantile is
+#' beyond the range the answer is \code{NA} within milliseconds, and if it does
+#' not, the scan runs on until it finds the quantile or reaches the end of the
+#' range (about 8 s at mu = 3e9, sigma = 0.5, nu = 1, p = 0.9, which is
+#' \code{NA}).
+#'
+#' \code{p >= 1} gives \code{Inf}. A \code{p} so close to 1 that the CDF cannot
+#' resolve it in double precision (a heavy tail) can give a result off by a few
+#' units or more (+34 at \code{p = 1 - 1e-8}, mu = 90, sigma = 10, nu = 1), or
+#' \code{NA} with a warning.
+#'
+#' @return A numeric vector of quantiles (whole numbers, \code{Inf} for
+#'   \code{p >= 1}, \code{NA} where none was found).
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -562,34 +600,39 @@ fqBNB <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' The Delaporte Distribution - Density Function
 #'
 #' Density function for the Delaporte distribution with parameters mu, sigma and nu.
-#' The Delaporte distribution is a discrete probability distribution that can be 
-#' expressed as a compound Poisson distribution where the intensity parameter follows
-#' a Gamma distribution.
+#' The Delaporte distribution is a discrete probability distribution: the sum of
+#' a Poisson variable and an independent negative binomial variable.
 #'
-#' @param x vector of (non-negative integer) quantiles
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means
 #' @param sigma vector of positive dispersion parameters
 #' @param nu vector of parameters between 0 and 1
 #' @param log_ logical; if TRUE, probabilities p are given as log(p)
 #'
 #' @details
-#' The Delaporte distribution has probability mass function:
-#' \deqn{P(X = x) = e^{-\mu\nu} \frac{\Gamma(x + 1/\sigma)}{\Gamma(x + 1)\Gamma(1/\sigma)} \left(\frac{\mu\sigma(1-\nu)}{1 + \mu\sigma(1-\nu)}\right)^x \left(\frac{1}{1 + \mu\sigma(1-\nu)}\right)^{1/\sigma}}
-#' 
+#' The Delaporte distribution is the convolution of a Poisson distribution
+#' with mean \eqn{\mu\nu} and a negative binomial distribution with size
+#' \eqn{1/\sigma} and mean \eqn{\mu(1-\nu)}:
+#' \deqn{P(X = x) = \sum_{k=0}^{x} \frac{e^{-\mu\nu}(\mu\nu)^k}{k!}
+#'   \frac{\Gamma(x-k+1/\sigma)}{\Gamma(x-k+1)\Gamma(1/\sigma)}
+#'   \left(\frac{1}{1+\mu\sigma(1-\nu)}\right)^{1/\sigma}
+#'   \left(\frac{\mu\sigma(1-\nu)}{1+\mu\sigma(1-\nu)}\right)^{x-k}}
 #' for x = 0, 1, 2, ..., mu > 0, sigma > 0, and 0 < nu < 1.
 #' 
-#' The mean is mu and the variance is mu + mu^2 * sigma * (1 - nu).
+#' The mean is mu and the variance is mu + mu^2 * sigma * (1 - nu)^2.
+#' 
+#' When sigma is below 1e-04 the density is that of a Poisson distribution with
+#' mean mu. The density is computed by a recurrence over the counts 0 to x in
+#' constant memory, so the cost is O(x): about 10 ms per million
+#' (\code{fdDEL(9.2e7, 1e8, 0.5, 0.5)} takes 0.9 s). In a vector call the
+#' recurrence continues from one element to the next while mu, sigma and nu repeat
+#' and x does not decrease.
 #' 
 #' This implementation is based on the algorithms from the gamlss.dist package
-#' by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
-#' including SIMD support and efficient parameter recycling.
+#' by Rigby, R. A. and Stasinopoulos D. M.
 #'
 #' @return
 #' \code{fdDEL} gives the density
-#'
-#' @note
-#' This function is optimised for performance with chunked processing and
-#' efficient memory access patterns.
 #'
 #' @references
 #' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -626,7 +669,7 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' Distribution function for the Delaporte distribution with parameters mu, sigma and nu.
 #' Computes the cumulative distribution function (CDF) of the Delaporte distribution.
 #'
-#' @param q vector of (non-negative integer) quantiles
+#' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means
 #' @param sigma vector of positive dispersion parameters
 #' @param nu vector of parameters between 0 and 1
@@ -635,26 +678,29 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #'
 #' @details
 #' The cumulative distribution function is computed as the sum of the probability
-#' mass function from 0 to q. For computational efficiency, this implementation
-#' employs chunked processing with SIMD optimizations when available and is
-#' optimised for scenarios with varying parameter combinations.
+#' mass function from 0 to q, by the recurrence of \code{\link{fdDEL}}, so the
+#' cost is O(q): about 12 ms per million counts (\code{fpDEL(9.2e7, 1e8, 0.5, 0.5)}
+#' takes 1.1 s). In a vector call, \code{fpDEL(0:q, ...)} with repeated
+#' parameters costs O(q), not O(q^2). The result never exceeds 1.
 #' 
-#' When sigma is very small (< 1e-04), the distribution approaches a Poisson
-#' distribution with parameter mu, and the function switches to using the
-#' more efficient Poisson CDF computation.
+#' When sigma is very small (< 1e-04), the distribution is treated as a Poisson
+#' distribution with mean mu.
+#' 
+#' \emph{Accuracy.} Up to count 4095 the plain recurrence is used. Against the
+#' exact sum of the Poisson and negative binomial convolution
+#' (\eqn{\sum_k f_{Pois}(k) F_{NB}(q-k)}) the largest error over five synthetic
+#' parameter sets (mu about q, sigma 0.1 to 2, nu 0.2 to 0.9) was 1e-15 at q = 10,
+#' 4e-14 at 50, 4e-13 at 200, 9e-12 at 1000 and 5e-11 at 4095. From count 4096
+#' on a compensated recurrence takes over, and the same check gave errors below
+#' 3e-14 at q = 4096, 5000, 20000, 65535 and 200000; over a wider set of
+#' parameters the error is below 6e-13 for counts 4096 to 65535 and below 5e-12
+#' up to 2e9.
 #' 
 #' This implementation is based on the algorithms from the gamlss.dist package
-#' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
-#' optimizations including vectorized transformations and SIMD support for
-#' large datasets with diverse parameter sets.
+#' by Rigby, R. A. and Stasinopoulos D. M.
 #'
 #' @return
 #' \code{fpDEL} gives the cumulative distribution function
-#'
-#' @note
-#' This function is optimised for scenarios where parameters vary between
-#' computations (e.g., random parameters). For applications with repeated
-#' parameter combinations, consider implementing application-specific caching.
 #'
 #' @references
 #' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -697,7 +743,7 @@ fpDEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param p Vector of probabilities.
 #' @param mu Vector of mu (location/mean) parameters (positive).
 #' @param sigma Vector of sigma (scale) parameters (positive).
-#' @param nu Vector of nu (shape) parameters (positive).
+#' @param nu Vector of nu (shape) parameters, between 0 and 1.
 #' @param lower_tail Logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise P[X > x].
 #' @param log_p Logical; if TRUE, probabilities p are given as log(p).
@@ -706,22 +752,34 @@ fpDEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' @details
 #' The Delaporte distribution is a three-parameter discrete distribution
-#' defined as the convolution of a Poisson distribution with mean \code{mu}
-#' and a shifted negative binomial distribution with parameters related to
-#' \code{sigma} and \code{nu}.
+#' defined as the convolution of a Poisson distribution with mean
+#' \code{mu * nu} and a negative binomial distribution with size
+#' \code{1 / sigma} and mean \code{mu * (1 - nu)} (see \code{\link{fdDEL}}).
 #'
-#' This implementation uses an optimised binary search algorithm with
-#' SIMD acceleration where available, and includes intelligent caching
-#' of intermediate CDF calculations for improved performance with repeated
-#' quantile computations.
+#' The quantile is the smallest integer x with P(X <= x) >= p, found by adding
+#' the probabilities from 0 upwards (the recurrence of \code{\link{fdDEL}}).
+#' The cost is O(x): about 12 ms per million counts (a median near 9.2e7, at
+#' mu = 1e8, takes 1.1 s). \code{p = 1} (or above, up to 1.0001) gives
+#' \code{Inf}; any \code{p < 1} has a finite quantile, including \code{p}
+#' within 1e-9 of 1 (\code{fqDEL(1 - 1e-9, 2.03065, 2.30919, 0.830551)} is 25).
+#' A \code{p} so close to 1 that the summed CDF cannot reach it gives
+#' \code{NA}. A quantile beyond 2147483646, the largest integer this function
+#' returns, is \code{NA} too, but only after the scan has run to the end of the
+#' range (there is no closed-form shortcut as for \code{\link{fqBNB}}). The
+#' scan can be stopped with Ctrl-C. The accuracy of the CDF behind it is
+#' described in \code{\link{fpDEL}}.
 #'
 #' Parameter recycling is performed automatically - all parameter vectors
 #' are recycled to the length of the longest vector.
 #'
 #' @section Parameter Validation:
-#' - \code{p} must be in [0,1] for \code{log_p = FALSE}, or in (-Inf, 0] for \code{log_p = TRUE}
-#' - \code{mu}, \code{sigma}, \code{nu} must all be positive
-#' - Invalid parameters result in \code{NA} values in the output
+#' - \code{p} must be a probability (a log probability if \code{log_p = TRUE});
+#'   a value above 1 by up to 1e-4 is treated as 1, anything outside stops
+#'   with an error
+#' - \code{mu} and \code{sigma} must be positive and \code{nu} between 0 and 1,
+#'   otherwise the function stops with an error
+#' - an \code{NA} or \code{NaN} argument gives \code{NA}; any \code{NA} in the
+#'   result gives a warning
 #'
 #' @note
 #' This function is based on the Delaporte distribution implementation from
@@ -814,7 +872,7 @@ fget_C <- function(x, mu, sigma) {
 #' The DPO distribution is a discrete probability distribution that extends the
 #' Poisson distribution by adding an additional dispersion parameter.
 #'
-#' @param x vector of (non-negative integer) quantiles
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means
 #' @param sigma vector of positive dispersion parameters
 #' @param log_ logical; if TRUE, probabilities p are given as log(p)
@@ -826,15 +884,20 @@ fget_C <- function(x, mu, sigma) {
 #' indicates underdispersion.
 #' 
 #' This implementation is based on the algorithms from the gamlss.dist package
-#' by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
-#' including SIMD support and improved caching.
+#' by Rigby, R. A. and Stasinopoulos D. M.
+#'
+#' \emph{Limit.} The normalising constant of the density is a sum over the
+#' counts around mu (its standard deviation is about
+#' \code{sqrt(mu * max(sigma, 1))}), kept in a small per-thread cache keyed by
+#' (mu, sigma). With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+#' example \code{mu = 3e9}, \code{sigma = 4e6}) the sum scans the whole integer
+#' range before it gives up, so \code{fdDPO}, \code{fpDPO} and \code{fqDPO} each
+#' take about 50 s (49.5 to 49.8 s measured) to answer \code{NaN} (\code{NA}
+#' for \code{fqDPO}). An infinite \code{mu} or \code{sigma} gives \code{NaN}
+#' at once.
 #'
 #' @return
 #' \code{fdDPO} gives the density
-#'
-#' @note
-#' This function is optimised for performance with chunked processing and
-#' prefetching for better cache utilization.
 #'
 #' @references
 #' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -871,7 +934,7 @@ fdDPO <- function(x, mu, sigma, log_ = FALSE) {
 #' Distribution function for the DPO (Double Poisson) distribution with parameters mu and sigma.
 #' Computes the cumulative distribution function (CDF) of the DPO distribution.
 #'
-#' @param q vector of (non-negative integer) quantiles
+#' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means
 #' @param sigma vector of positive dispersion parameters
 #' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x]
@@ -879,22 +942,21 @@ fdDPO <- function(x, mu, sigma, log_ = FALSE) {
 #'
 #' @details
 #' The cumulative distribution function is computed using the normalizing constants
-#' approach from gamlss.dist. For computational efficiency, this implementation
-#' employs chunked processing with SIMD optimizations when available and is
-#' optimised for scenarios with varying parameter combinations.
+#' approach from gamlss.dist: the sum of the densities from the first one that
+#' does not underflow up to q. The sum stops once it has settled (a falling term
+#' past the largest no longer changes it), so a q far beyond the mass costs
+#' only as far as the mass. The result never exceeds 1, and the upper tail is
+#' summed from q + 1 where F > 0.5, so it is never negative.
 #' 
 #' This implementation is based on the algorithms from the gamlss.dist package
-#' by Rigby, R. A. and Stasinopoulos D. M., with significant performance
-#' optimizations including vectorized transformations and SIMD support for
-#' large datasets with diverse parameter sets.
+#' by Rigby, R. A. and Stasinopoulos D. M.
+#'
+#' \emph{Limit.} With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+#' example \code{mu = 3e9}, \code{sigma = 4e6}) the normalising constant takes
+#' about 50 s to give up, and the answer is \code{NaN}: see \code{\link{fdDPO}}.
 #'
 #' @return
 #' \code{fpDPO} gives the cumulative distribution function
-#'
-#' @note
-#' This function is optimised for scenarios where parameters vary between
-#' computations (e.g., random parameters). For applications with repeated
-#' parameter combinations, consider implementing application-specific caching.
 #'
 #' @references
 #' Rigby, R. A. and Stasinopoulos D. M. (2005). Generalized additive models for 
@@ -940,24 +1002,36 @@ fpDPO <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' @param lower_tail Logical; if TRUE (default), probabilities are P[X <= x],
 #'   otherwise P[X > x].
 #' @param log_p Logical; if TRUE, probabilities p are given as log(p).
-#' @param max_value Maximum value to search for quantiles (for performance tuning).
+#' @param max_value Ignored; kept for compatibility. The search has no cap.
 #'
 #' @return Vector of quantiles corresponding to the given probabilities.
 #'
 #' @details
 #' The DPO distribution is a two-parameter discrete distribution that reduces
-#' to the Poisson distribution when sigma = 1. This implementation uses an
-#' optimised search algorithm with SIMD acceleration where available, and
-#' includes intelligent caching of intermediate CDF calculations for improved
-#' performance with repeated quantile computations.
+#' to the Poisson distribution when sigma = 1. The quantile is the smallest
+#' integer x with P(X <= x) >= p, found by adding the densities from the first
+#' one that does not underflow, until the sum reaches p.
+#'
+#' \code{p = 1} (or above, up to 1.0001) gives \code{Inf}; any \code{p < 1}
+#' has a finite quantile, including \code{p} within 1e-9 of 1
+#' (\code{fqDPO(c(1 - 1e-9, 1 - 5e-10, 1 - 4e-11), 16.27, 7.53)} is 118 121 130).
+#' A \code{p} so close to 1 that the summed CDF cannot reach it gives \code{NA}.
+#'
+#' \emph{Limit.} With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+#' example \code{mu = 3e9}, \code{sigma = 4e6}) the normalising constant takes
+#' about 50 s to give up, and the answer is \code{NA}: see \code{\link{fdDPO}}.
 #'
 #' Parameter recycling is performed automatically - all parameter vectors
 #' are recycled to the length of the longest vector.
 #'
 #' @section Parameter Validation:
-#' - \code{p} must be in [0,1] for \code{log_p = FALSE}, or in (-Inf, 0] for \code{log_p = TRUE}
-#' - \code{mu}, \code{sigma} must both be positive
-#' - Invalid parameters result in \code{NA} values in the output
+#' - \code{p} must be a probability (a log probability if \code{log_p = TRUE});
+#'   a value above 1 by up to 1e-4 is treated as 1, anything outside stops
+#'   with an error
+#' - \code{mu} and \code{sigma} must be positive, otherwise the function stops
+#'   with an error
+#' - an \code{NA} or \code{NaN} argument gives \code{NA}; any \code{NA} in the
+#'   result gives a warning
 #'
 #' @note
 #' This function is based on the DPO distribution implementation from
@@ -1071,6 +1145,9 @@ fdMN4 <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' where \eqn{\theta_1 = \mu}, \eqn{\theta_2 = \sigma}, \eqn{\theta_3 = \nu},
 #' and \eqn{\theta_4 = 1}.
 #'
+#' \code{lower_tail = FALSE} is computed as 1 - F, so a tiny upper-tail
+#' probability has no relative accuracy (it is 0 once F rounds to 1).
+#'
 #' Parameters are recycled to the length of the longest vector following R's
 #' standard recycling rules.
 #'
@@ -1128,6 +1205,11 @@ fpMN4 <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' The quantiles are computed by comparing p with the cumulative probabilities
 #' of the multinomial distribution.
 #'
+#' A \code{p} exactly equal to a cumulative probability gives the next category
+#' (\code{fqMN4(0.25, 1, 1, 1)} is 2), so \code{fqMN4(fpMN4(k, ...), ...)} is
+#' \code{k + 1}, not \code{k}, for \code{k = 1, 2, 3}; \code{p = 1} gives 4.
+#' \code{lower_tail = FALSE} replaces \code{p} by 1 - \code{p}.
+#'
 #' Parameters are recycled to the length of the longest vector following R's
 #' standard recycling rules.
 #'
@@ -1171,7 +1253,7 @@ fqMN4 <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' Probability density function for the Negative Binomial type I (NBI) distribution
 #' with parameters mu (mean) and sigma (dispersion).
 #'
-#' @param x vector of (non-negative integer) quantiles.
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
@@ -1207,7 +1289,7 @@ fdNBI <- function(x, mu, sigma, log_p = FALSE) {
 #' Cumulative distribution function for the Negative Binomial type I (NBI) distribution
 #' with parameters mu (mean) and sigma (dispersion).
 #'
-#' @param q vector of quantiles.
+#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
@@ -1261,7 +1343,7 @@ fpNBI <- function(q, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' A quantile that is infinite (\eqn{p = 1}) or above 2147483646, the largest
 #' integer this function returns, is \code{NA}, with a warning.
 #'
-#' @return A numeric vector of quantiles.
+#' @return An integer vector of quantiles, \code{NA} where there is none.
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -1285,7 +1367,7 @@ fqNBI <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #' Probability density function for the Sichel distribution with parameters 
 #' mu (mean), sigma (dispersion), and nu (shape).
 #'
-#' @param x vector of (non-negative integer) quantiles.
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of shape parameters (real values).
@@ -1301,6 +1383,10 @@ fqNBI <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' When \eqn{\sigma > 10000} and \eqn{\nu > 0}, the function uses the NBI 
 #' approximation for numerical stability.
+#'
+#' The density at y is computed by a recursion over the counts 0 to y (ratios
+#' of scaled Bessel K functions) in constant memory, so the cost is O(y): about
+#' 6.5 ms per million (\code{fdSICHEL(1e7, 1.2e7, 0.5, -0.5)} takes 65 ms).
 #'
 #' @return A numeric vector of density values.
 #' 
@@ -1330,7 +1416,7 @@ fdSICHEL <- function(x, mu, sigma, nu, log_p = FALSE) {
 #' Distribution function for the Sichel distribution with parameters 
 #' mu (mean), sigma (dispersion), and nu (shape).
 #'
-#' @param q vector of quantiles.
+#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of shape parameters (real values).
@@ -1340,7 +1426,26 @@ fdSICHEL <- function(x, mu, sigma, nu, log_p = FALSE) {
 #'
 #' @details
 #' The cumulative distribution function computes the probability that a 
-#' Sichel random variable is less than or equal to q.
+#' Sichel random variable is less than or equal to q. It is the sum of the
+#' probability mass function from 0 to q, by the same recursion as
+#' \code{\link{fdSICHEL}} (constant memory). The cost is O(q), about 13 ms per
+#' million when the mass lies beyond q (\code{fpSICHEL(1e7, 1.2e7, 0.5, -0.5)}
+#' takes 0.12 s). The sum stops once a falling term past the mode no longer
+#' changes it, so a q far past the mass costs only as far as the mass
+#' (\code{fpSICHEL(5e7, 2, 1, -0.5)} takes under a millisecond). The result
+#' never exceeds 1.
+#'
+#' The sum is in plain double precision and drifts at large counts. Against an
+#' independent numerical integration of the Poisson-GIG mixture, with q about
+#' 0.8 of mu, the largest error over the cases checked (sigma 0.5 and 2, nu -0.5
+#' and 1.5) was 8e-13 at q = 1e4, 7e-12 at 1e5, 7e-11 at 1e6, 7e-10 at 1e7 and
+#' 1.5e-9 at 5e7.
+#'
+#' For a very negative \code{nu} (about -14 and below in the cases checked,
+#' with small \code{mu}: up to 0.5, and up to 2 at \code{nu = -30}) the
+#' recursion breaks down at a count where the upper tail is already below about
+#' 1e-10: the density and the CDF are \code{NaN} from that count on, which is
+#' 8 to 19 in the cases checked.
 #'
 #' @return A numeric vector of probabilities.
 #' 
@@ -1379,10 +1484,30 @@ fpSICHEL <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' @param log_p logical; if TRUE, probabilities p are given as log(p).
 #'
 #' @details
-#' The quantile function uses a divide-and-conquer search algorithm to find
-#' the smallest integer x such that P(X <= x) >= p.
+#' The quantile is the smallest integer x such that P(X <= x) >= p. It is found
+#' by the recursion of \code{\link{fdSICHEL}}, adding the terms from 0 until the
+#' sum reaches p. There is no cap on the number of terms, so the cost is O(x),
+#' about 12.5 ms per million: \code{fqSICHEL(0.5, 2e7, 1, -0.5)} (quantile
+#' 1.35e7) takes 0.17 s and \code{mu = 2e9} (quantile 1.35e9) about 17 s.
 #'
-#' @return A numeric vector of quantiles.
+#' A quantile beyond 2147483646, the largest integer this function returns, is
+#' \code{NA}, with a warning. Before the scan, an O(1) bound on the CDF at
+#' 2147483646 (the Sichel is a Poisson mixture over a generalised inverse
+#' Gaussian law) shows this at once for most such cases: with p = 0.5, sigma = 1
+#' and nu = -0.5, \code{mu = 3.3e9} answers \code{NA} immediately. Close to the
+#' limit, or near p = 1 with a heavy tail, the bound does not decide and the
+#' scan runs over the whole range: about 27 s at \code{mu = 3.19e9} (the slowest
+#' case found; its answer is \code{NA}). The scan can be stopped with Ctrl-C.
+#'
+#' \code{p >= 1} gives \code{NA} with a warning (an integer cannot hold
+#' \code{Inf}). A \code{p} so close to 1 that the summed CDF cannot reach it can
+#' also give \code{NA} with a warning; otherwise quantiles are finite right up
+#' to \code{p = 1 - 1e-12} (\code{fqSICHEL(1 - 1e-12, 2, 1, -0.5)} is 102).
+#'
+#' The CDF sum drifts at large counts and with a very negative \code{nu} and
+#' small \code{mu} breaks down: see \code{\link{fpSICHEL}}.
+#'
+#' @return An integer vector of quantiles, \code{NA} where none was found.
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -1407,7 +1532,7 @@ fqSICHEL <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
 #' nu (shape), and tau (hurdle probability).
 #'
-#' @param x vector of (non-negative integer) quantiles.
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -1449,7 +1574,7 @@ fdZABNB <- function(x, mu, sigma, nu, tau, log = FALSE) {
 #' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
 #' nu (shape), and tau (hurdle probability).
 #'
-#' @param q vector of quantiles.
+#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -1501,7 +1626,14 @@ fpZABNB <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' The zero adjusted (hurdle) beta negative binomial distribution has two parts:
 #' a point mass at zero and a truncated BNB distribution for positive values.
 #'
-#' @return An integer vector of quantiles.
+#' The quantile is found on the BNB scale, after removing the zero mass and
+#' taking a margin of \code{2 * .Machine$double.eps} off \code{p} (gamlss.dist
+#' takes 1e-10), by the scan of \code{\link{fqBNB}}, whose cost (about 4 ms per
+#' million terms) and \code{NA} cases (a quantile beyond 2147483646, or none
+#' found, with a warning) apply here. \code{p >= 1} gives \code{Inf}.
+#'
+#' @return A numeric vector of quantiles (whole numbers, \code{Inf} for
+#'   \code{p >= 1}, \code{NA} where none was found).
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -1525,7 +1657,7 @@ fqZABNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' Probability density function for the Zero-Altered Negative Binomial type I (ZANBI) 
 #' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
 #'
-#' @param x vector of (non-negative integer) quantiles.
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-alteration probabilities (0 < nu < 1).
@@ -1562,7 +1694,7 @@ fdZANBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' Cumulative distribution function for the Zero-Altered Negative Binomial type I (ZANBI)
 #' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
 #'
-#' @param q vector of quantiles.
+#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-alteration probabilities (0 < nu < 1).
@@ -1612,7 +1744,14 @@ fpZANBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' The quantile function returns the smallest integer \eqn{x} such that
 #' \eqn{F(x) \geq p}, where \eqn{F} is the ZANBI cumulative distribution function.
 #'
-#' @return A numeric vector of quantiles.
+#' The probability is mapped to the NBI scale after taking a margin of
+#' \code{2 * .Machine$double.eps} off \code{p}, the rounding of the mixture
+#' sum (gamlss.dist takes 1e-10). \code{p = 1} gives a finite value, the
+#' quantile of a probability just short of 1, not \code{Inf}. A quantile
+#' beyond 2147483646, the largest integer this function returns, is \code{NA},
+#' with a warning, as for \code{\link{fqNBI}}.
+#'
+#' @return An integer vector of quantiles, \code{NA} where there is none.
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -1637,7 +1776,7 @@ fqZANBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' (ZIBNB) distribution with parameters mu (mean), sigma (dispersion),
 #' nu (shape), and tau (zero-inflation probability).
 #'
-#' @param x vector of (non-negative integer) quantiles.
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -1677,7 +1816,7 @@ fdZIBNB <- function(x, mu, sigma, nu, tau, log = FALSE) {
 #' Binomial (ZIBNB) distribution with parameters mu (mean), sigma (dispersion),
 #' nu (shape), and tau (zero-inflation probability).
 #'
-#' @param q vector of quantiles.
+#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -1729,7 +1868,14 @@ fpZIBNB <- function(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' The zero inflated beta negative binomial distribution allows for excess zeros
 #' beyond what the BNB distribution would predict.
 #'
-#' @return An integer vector of quantiles.
+#' The quantile is found on the BNB scale, after removing the zero mass and
+#' taking a margin of \code{2 * .Machine$double.eps} off \code{p} (gamlss.dist
+#' takes 1e-7), by the scan of \code{\link{fqBNB}}, whose cost (about 4 ms per
+#' million terms) and \code{NA} cases (a quantile beyond 2147483646, or none
+#' found, with a warning) apply here. \code{p >= 1} gives \code{Inf}.
+#'
+#' @return A numeric vector of quantiles (whole numbers, \code{Inf} for
+#'   \code{p >= 1}, \code{NA} where none was found).
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -1753,7 +1899,7 @@ fqZIBNB <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) {
 #' Probability density function for the Zero-Inflated Negative Binomial type I (ZINBI) 
 #' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
 #'
-#' @param x vector of (non-negative integer) quantiles.
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-inflation probabilities (0 < nu < 1).
@@ -1790,7 +1936,7 @@ fdZINBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' Cumulative distribution function for the Zero-Inflated Negative Binomial type I (ZINBI)
 #' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
 #'
-#' @param q vector of quantiles.
+#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-inflation probabilities (0 < nu < 1).
@@ -1839,7 +1985,14 @@ fpZINBI <- function(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' The quantile function returns the smallest integer \eqn{x} such that
 #' \eqn{F(x) \geq p}, where \eqn{F} is the ZINBI cumulative distribution function.
 #'
-#' @return A numeric vector of quantiles.
+#' The probability is mapped to the NBI scale after taking a margin of
+#' \code{2 * .Machine$double.eps} off \code{p}, the rounding of the mixture
+#' sum (gamlss.dist takes 1e-10). \code{p = 1} gives a finite value, the
+#' quantile of a probability just short of 1, not \code{Inf}. A quantile
+#' beyond 2147483646, the largest integer this function returns, is \code{NA},
+#' with a warning, as for \code{\link{fqNBI}}.
+#'
+#' @return An integer vector of quantiles, \code{NA} where there is none.
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -1874,9 +2027,17 @@ fqZINBI <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #'
 #' @details
 #' The zero-inflated Sichel distribution is a mixture of a point mass at zero 
-#' and a (truncated at zero) Sichel distribution.
+#' and a Sichel distribution (not truncated at zero):
+#' \eqn{P(Y = 0) = \tau + (1-\tau) f_{SICHEL}(0)}, so the probability of zero
+#' exceeds \eqn{\tau}.
 #'
-#' @return A numeric vector of quantiles.
+#' The quantile is found on the Sichel scale, after removing the zero mass and
+#' taking a margin of \code{2 * .Machine$double.eps} off \code{p} (gamlss.dist
+#' takes 1e-7), by the search of \code{\link{fqSICHEL}}, whose cost (about 12.5
+#' ms per million terms) and \code{NA} cases (a quantile beyond 2147483646)
+#' apply here. \code{p >= 1} gives \code{NA} with a warning.
+#'
+#' @return An integer vector of quantiles, \code{NA} where none was found.
 #' 
 #' @references
 #' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
@@ -1898,7 +2059,7 @@ fqZISICHEL <- function(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE) 
 #' distribution with parameters mu (mean), sigma (dispersion), nu (shape), and
 #' tau (zero-inflation probability).
 #'
-#' @param x vector of (non-negative integer) quantiles.
+#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of shape parameters (real values).
@@ -1935,7 +2096,7 @@ fdZISICHEL <- function(x, mu, sigma, nu, tau, log = FALSE) {
 #' Distribution function for the zero-inflated Sichel distribution with parameters 
 #' mu (mean), sigma (dispersion), nu (shape), and tau (zero-inflation).
 #'
-#' @param q vector of quantiles.
+#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of shape parameters (real values).
@@ -1946,7 +2107,9 @@ fdZISICHEL <- function(x, mu, sigma, nu, tau, log = FALSE) {
 #'
 #' @details
 #' The zero-inflated Sichel distribution is a mixture of a point mass at zero 
-#' and a (truncated at zero) Sichel distribution.
+#' and a Sichel distribution (not truncated at zero):
+#' \eqn{F(q) = \tau + (1-\tau) F_{SICHEL}(q)}. The cost and the accuracy at
+#' large counts are those of \code{\link{fpSICHEL}}.
 #'
 #' @return A numeric vector of probabilities.
 #' 

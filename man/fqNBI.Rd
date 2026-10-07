@@ -19,7 +19,7 @@ otherwise, P[X > x].}
 \item{log_p}{logical; if TRUE, probabilities p are given as log(p).}
 }
 \value{
-A numeric vector of quantiles.
+An integer vector of quantiles, \code{NA} where there is none.
 }
 \description{
 Quantile function for the Negative Binomial type I (NBI) distribution

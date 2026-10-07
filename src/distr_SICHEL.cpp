@@ -39,7 +39,7 @@ using namespace Rcpp;
 //' Probability density function for the Sichel distribution with parameters 
 //' mu (mean), sigma (dispersion), and nu (shape).
 //'
-//' @param x vector of (non-negative integer) quantiles.
+//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of shape parameters (real values).
@@ -55,6 +55,10 @@ using namespace Rcpp;
 //'
 //' When \eqn{\sigma > 10000} and \eqn{\nu > 0}, the function uses the NBI 
 //' approximation for numerical stability.
+//'
+//' The density at y is computed by a recursion over the counts 0 to y (ratios
+//' of scaled Bessel K functions) in constant memory, so the cost is O(y): about
+//' 6.5 ms per million (\code{fdSICHEL(1e7, 1.2e7, 0.5, -0.5)} takes 65 ms).
 //'
 //' @return A numeric vector of density values.
 //' 
@@ -122,7 +126,7 @@ NumericVector fdSICHEL(const NumericVector& x,
 //' Distribution function for the Sichel distribution with parameters 
 //' mu (mean), sigma (dispersion), and nu (shape).
 //'
-//' @param q vector of quantiles.
+//' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of shape parameters (real values).
@@ -132,7 +136,26 @@ NumericVector fdSICHEL(const NumericVector& x,
 //'
 //' @details
 //' The cumulative distribution function computes the probability that a 
-//' Sichel random variable is less than or equal to q.
+//' Sichel random variable is less than or equal to q. It is the sum of the
+//' probability mass function from 0 to q, by the same recursion as
+//' \code{\link{fdSICHEL}} (constant memory). The cost is O(q), about 13 ms per
+//' million when the mass lies beyond q (\code{fpSICHEL(1e7, 1.2e7, 0.5, -0.5)}
+//' takes 0.12 s). The sum stops once a falling term past the mode no longer
+//' changes it, so a q far past the mass costs only as far as the mass
+//' (\code{fpSICHEL(5e7, 2, 1, -0.5)} takes under a millisecond). The result
+//' never exceeds 1.
+//'
+//' The sum is in plain double precision and drifts at large counts. Against an
+//' independent numerical integration of the Poisson-GIG mixture, with q about
+//' 0.8 of mu, the largest error over the cases checked (sigma 0.5 and 2, nu -0.5
+//' and 1.5) was 8e-13 at q = 1e4, 7e-12 at 1e5, 7e-11 at 1e6, 7e-10 at 1e7 and
+//' 1.5e-9 at 5e7.
+//'
+//' For a very negative \code{nu} (about -14 and below in the cases checked,
+//' with small \code{mu}: up to 0.5, and up to 2 at \code{nu = -30}) the
+//' recursion breaks down at a count where the upper tail is already below about
+//' 1e-10: the density and the CDF are \code{NaN} from that count on, which is
+//' 8 to 19 in the cases checked.
 //'
 //' @return A numeric vector of probabilities.
 //' 
@@ -435,10 +458,30 @@ int fqSICHEL_search(const double& p, const double& mu, const double& sigma, cons
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
 //'
 //' @details
-//' The quantile function uses a divide-and-conquer search algorithm to find
-//' the smallest integer x such that P(X <= x) >= p.
+//' The quantile is the smallest integer x such that P(X <= x) >= p. It is found
+//' by the recursion of \code{\link{fdSICHEL}}, adding the terms from 0 until the
+//' sum reaches p. There is no cap on the number of terms, so the cost is O(x),
+//' about 12.5 ms per million: \code{fqSICHEL(0.5, 2e7, 1, -0.5)} (quantile
+//' 1.35e7) takes 0.17 s and \code{mu = 2e9} (quantile 1.35e9) about 17 s.
 //'
-//' @return A numeric vector of quantiles.
+//' A quantile beyond 2147483646, the largest integer this function returns, is
+//' \code{NA}, with a warning. Before the scan, an O(1) bound on the CDF at
+//' 2147483646 (the Sichel is a Poisson mixture over a generalised inverse
+//' Gaussian law) shows this at once for most such cases: with p = 0.5, sigma = 1
+//' and nu = -0.5, \code{mu = 3.3e9} answers \code{NA} immediately. Close to the
+//' limit, or near p = 1 with a heavy tail, the bound does not decide and the
+//' scan runs over the whole range: about 27 s at \code{mu = 3.19e9} (the slowest
+//' case found; its answer is \code{NA}). The scan can be stopped with Ctrl-C.
+//'
+//' \code{p >= 1} gives \code{NA} with a warning (an integer cannot hold
+//' \code{Inf}). A \code{p} so close to 1 that the summed CDF cannot reach it can
+//' also give \code{NA} with a warning; otherwise quantiles are finite right up
+//' to \code{p = 1 - 1e-12} (\code{fqSICHEL(1 - 1e-12, 2, 1, -0.5)} is 102).
+//'
+//' The CDF sum drifts at large counts and with a very negative \code{nu} and
+//' small \code{mu} breaks down: see \code{\link{fpSICHEL}}.
+//'
+//' @return An integer vector of quantiles, \code{NA} where none was found.
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 

@@ -33,6 +33,11 @@ The quantile function returns the smallest integer k such that
 The quantiles are computed by comparing p with the cumulative probabilities
 of the multinomial distribution.
 
+A \code{p} exactly equal to a cumulative probability gives the next category
+(\code{fqMN4(0.25, 1, 1, 1)} is 2), so \code{fqMN4(fpMN4(k, ...), ...)} is
+\code{k + 1}, not \code{k}, for \code{k = 1, 2, 3}; \code{p = 1} gives 4.
+\code{lower_tail = FALSE} replaces \code{p} by 1 - \code{p}.
+
 Parameters are recycled to the length of the longest vector following R's
 standard recycling rules.
 }

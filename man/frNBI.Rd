@@ -7,8 +7,8 @@
 frNBI(n, mu = 1, sigma = 1)
 }
 \arguments{
-\item{n}{Number of observations to generate. If length(n) > 1, the length 
-is taken to be the number required.}
+\item{n}{Number of observations to generate: a single positive number (a
+vector of length greater than 1 is an error). A non-integer is rounded up.}
 
 \item{mu}{Vector of positive mean parameters. Default is 1.}
 

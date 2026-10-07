@@ -3,8 +3,8 @@
 #' Generates random deviates from the Box-Cox Power Exponential distribution 
 #' using high-quality pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of location parameters (positive). Default is 5. Note that 
 #'   mu represents the median of the distribution.
 #' @param sigma Vector of scale parameters (positive). Default is 0.1.
@@ -72,8 +72,8 @@ frBCPEo <- function(n, mu = 5, sigma = 0.1, nu = 1, tau = 2) {
 #' Generates random deviates from the Box-Cox t distribution using high-quality 
 #' pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of location parameters (positive). Default is 5. Note that 
 #'   mu represents the median of the distribution.
 #' @param sigma Vector of scale parameters (positive). Default is 0.1. For 
@@ -165,8 +165,8 @@ frBCT <- function(n, mu = 5, sigma = 0.1, nu = 1, tau = 2) {
 #' Generates random deviates from the Beta Negative Binomial distribution 
 #' using high-quality pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters. Default is 1.
 #' @param sigma Vector of positive dispersion parameters. Default is 1.
 #' @param nu Vector of positive shape parameters. Default is 1.
@@ -243,8 +243,8 @@ frBNB <- function(n, mu = 1, sigma = 1, nu = 1) {
 #' distribution using high-quality pseudo-random number generation via the 
 #' dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters for the BNB component. Default is 1.
 #' @param sigma Vector of positive dispersion parameters for the BNB component. Default is 1.
 #' @param nu Vector of positive shape parameters for the BNB component. Default is 1.
@@ -328,8 +328,8 @@ frZIBNB <- function(n, mu = 1, sigma = 1, nu = 1, tau = 0.1) {
 #' Binomial distribution using high-quality pseudo-random number generation 
 #' via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters for the BNB component. Default is 1.
 #' @param sigma Vector of positive dispersion parameters for the BNB component. Default is 1.
 #' @param nu Vector of positive shape parameters for the BNB component. Default is 1.
@@ -421,8 +421,8 @@ frZABNB <- function(n, mu = 1, sigma = 1, nu = 1, tau = 0.1) {
 #' Generates random deviates from the Double Poisson distribution using 
 #' high-quality pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters. Default is 1.
 #' @param sigma Vector of positive dispersion parameters. Default is 1.
 #' 
@@ -520,8 +520,8 @@ frDPO <- function(n, mu = 1, sigma = 1) {
 #' Generates random deviates from the Delaporte distribution using high-quality 
 #' pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters. Default is 1.
 #' @param sigma Vector of positive dispersion parameters. Default is 1.
 #' @param nu Vector of parameters between 0 and 1. Default is 0.5.
@@ -637,8 +637,8 @@ frDEL <- function(n, mu = 1, sigma = 1, nu = 0.5) {
 #' Generates random deviates from the Negative Binomial type I distribution 
 #' using high-quality pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters. Default is 1.
 #' @param sigma Vector of positive dispersion parameters. Default is 1. For 
 #'   sigma < 0.0001, the distribution reduces to Poisson.
@@ -719,8 +719,8 @@ frNBI <- function(n, mu = 1, sigma = 1) {
 #' Generates random deviates from the Zero-Inflated Negative Binomial type I 
 #' distribution using high-quality pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters. Default is 1.
 #' @param sigma Vector of positive dispersion parameters. Default is 1.
 #' @param nu Vector of zero-inflation probabilities (0 < nu < 1). Default is 0.1.
@@ -795,8 +795,8 @@ frZINBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
 #' Generates random deviates from the Zero-Altered Negative Binomial type I 
 #' distribution using high-quality pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters. Default is 1.
 #' @param sigma Vector of positive dispersion parameters. Default is 1.
 #' @param nu Vector of zero-alteration probabilities (0 < nu < 1). Default is 0.1.
@@ -872,8 +872,8 @@ frZANBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
 #' Generates random deviates from the Sichel distribution using high-quality 
 #' pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters. Default is 1.
 #' @param sigma Vector of positive dispersion parameters. Default is 1.
 #' @param nu Vector of shape parameters (real values). Default is -0.5.
@@ -989,8 +989,8 @@ frSICHEL <- function(n, mu = 1, sigma = 1, nu = -0.5) {
 #' Generates random deviates from the Zero-Inflated Sichel distribution using 
 #' high-quality pseudo-random number generation via the dqrng package.
 #' 
-#' @param n Number of observations to generate. If length(n) > 1, the length 
-#'   is taken to be the number required.
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
 #' @param mu Vector of positive mean parameters. Default is 1.
 #' @param sigma Vector of positive dispersion parameters. Default is 1.
 #' @param nu Vector of shape parameters (real values). Default is -0.5.

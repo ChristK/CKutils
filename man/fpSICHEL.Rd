@@ -7,7 +7,7 @@
 fpSICHEL(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
-\item{q}{vector of quantiles.}
+\item{q}{vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means.}
 
@@ -29,7 +29,26 @@ mu (mean), sigma (dispersion), and nu (shape).
 }
 \details{
 The cumulative distribution function computes the probability that a 
-Sichel random variable is less than or equal to q.
+Sichel random variable is less than or equal to q. It is the sum of the
+probability mass function from 0 to q, by the same recursion as
+\code{\link{fdSICHEL}} (constant memory). The cost is O(q), about 13 ms per
+million when the mass lies beyond q (\code{fpSICHEL(1e7, 1.2e7, 0.5, -0.5)}
+takes 0.12 s). The sum stops once a falling term past the mode no longer
+changes it, so a q far past the mass costs only as far as the mass
+(\code{fpSICHEL(5e7, 2, 1, -0.5)} takes under a millisecond). The result
+never exceeds 1.
+
+The sum is in plain double precision and drifts at large counts. Against an
+independent numerical integration of the Poisson-GIG mixture, with q about
+0.8 of mu, the largest error over the cases checked (sigma 0.5 and 2, nu -0.5
+and 1.5) was 8e-13 at q = 1e4, 7e-12 at 1e5, 7e-11 at 1e6, 7e-10 at 1e7 and
+1.5e-9 at 5e7.
+
+For a very negative \code{nu} (about -14 and below in the cases checked,
+with small \code{mu}: up to 0.5, and up to 2 at \code{nu = -30}) the
+recursion breaks down at a count where the upper tail is already below about
+1e-10: the density and the CDF are \code{NaN} from that count on, which is
+8 to 19 in the cases checked.
 }
 \examples{
 # Single values

@@ -21,15 +21,35 @@ otherwise, P[X > x].}
 \item{log_p}{logical; if TRUE, probabilities p are given as log(p).}
 }
 \value{
-A numeric vector of quantiles.
+An integer vector of quantiles, \code{NA} where none was found.
 }
 \description{
 Quantile function for the Sichel distribution with parameters 
 mu (mean), sigma (dispersion), and nu (shape).
 }
 \details{
-The quantile function uses a divide-and-conquer search algorithm to find
-the smallest integer x such that P(X <= x) >= p.
+The quantile is the smallest integer x such that P(X <= x) >= p. It is found
+by the recursion of \code{\link{fdSICHEL}}, adding the terms from 0 until the
+sum reaches p. There is no cap on the number of terms, so the cost is O(x),
+about 12.5 ms per million: \code{fqSICHEL(0.5, 2e7, 1, -0.5)} (quantile
+1.35e7) takes 0.17 s and \code{mu = 2e9} (quantile 1.35e9) about 17 s.
+
+A quantile beyond 2147483646, the largest integer this function returns, is
+\code{NA}, with a warning. Before the scan, an O(1) bound on the CDF at
+2147483646 (the Sichel is a Poisson mixture over a generalised inverse
+Gaussian law) shows this at once for most such cases: with p = 0.5, sigma = 1
+and nu = -0.5, \code{mu = 3.3e9} answers \code{NA} immediately. Close to the
+limit, or near p = 1 with a heavy tail, the bound does not decide and the
+scan runs over the whole range: about 27 s at \code{mu = 3.19e9} (the slowest
+case found; its answer is \code{NA}). The scan can be stopped with Ctrl-C.
+
+\code{p >= 1} gives \code{NA} with a warning (an integer cannot hold
+\code{Inf}). A \code{p} so close to 1 that the summed CDF cannot reach it can
+also give \code{NA} with a warning; otherwise quantiles are finite right up
+to \code{p = 1 - 1e-12} (\code{fqSICHEL(1 - 1e-12, 2, 1, -0.5)} is 102).
+
+The CDF sum drifts at large counts and with a very negative \code{nu} and
+small \code{mu} breaks down: see \code{\link{fpSICHEL}}.
 }
 \examples{
 # Single values

@@ -22,7 +22,8 @@ fqZIBNB(p, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE)
 \item{log_p}{logical; if TRUE, probabilities p are given as log(p).}
 }
 \value{
-An integer vector of quantiles.
+A numeric vector of quantiles (whole numbers, \code{Inf} for
+  \code{p >= 1}, \code{NA} where none was found).
 }
 \description{
 Quantile function for the Zero Inflated Beta Negative Binomial (ZIBNB) distribution
@@ -31,6 +32,12 @@ with parameters mu (mean), sigma (dispersion), nu (shape), and tau (zero inflati
 \details{
 The zero inflated beta negative binomial distribution allows for excess zeros
 beyond what the BNB distribution would predict.
+
+The quantile is found on the BNB scale, after removing the zero mass and
+taking a margin of \code{2 * .Machine$double.eps} off \code{p} (gamlss.dist
+takes 1e-7), by the scan of \code{\link{fqBNB}}, whose cost (about 4 ms per
+million terms) and \code{NA} cases (a quantile beyond 2147483646, or none
+found, with a warning) apply here. \code{p >= 1} gives \code{Inf}.
 }
 \examples{
 # Single values

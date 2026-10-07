@@ -7,7 +7,7 @@
 fpDPO(q, mu, sigma, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
-\item{q}{vector of (non-negative integer) quantiles}
+\item{q}{vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means}
 
@@ -26,19 +26,18 @@ Computes the cumulative distribution function (CDF) of the DPO distribution.
 }
 \details{
 The cumulative distribution function is computed using the normalizing constants
-approach from gamlss.dist. For computational efficiency, this implementation
-employs chunked processing with SIMD optimizations when available and is
-optimised for scenarios with varying parameter combinations.
+approach from gamlss.dist: the sum of the densities from the first one that
+does not underflow up to q. The sum stops once it has settled (a falling term
+past the largest no longer changes it), so a q far beyond the mass costs
+only as far as the mass. The result never exceeds 1, and the upper tail is
+summed from q + 1 where F > 0.5, so it is never negative.
 
 This implementation is based on the algorithms from the gamlss.dist package
-by Rigby, R. A. and Stasinopoulos D. M., with significant performance
-optimizations including vectorized transformations and SIMD support for
-large datasets with diverse parameter sets.
-}
-\note{
-This function is optimised for scenarios where parameters vary between
-computations (e.g., random parameters). For applications with repeated
-parameter combinations, consider implementing application-specific caching.
+by Rigby, R. A. and Stasinopoulos D. M.
+
+\emph{Limit.} With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+example \code{mu = 3e9}, \code{sigma = 4e6}) the normalising constant takes
+about 50 s to give up, and the answer is \code{NaN}: see \code{\link{fdDPO}}.
 }
 \examples{
 # Calculate CDF for single values

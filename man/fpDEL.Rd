@@ -7,7 +7,7 @@
 fpDEL(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
-\item{q}{vector of (non-negative integer) quantiles}
+\item{q}{vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means}
 
@@ -28,23 +28,26 @@ Computes the cumulative distribution function (CDF) of the Delaporte distributio
 }
 \details{
 The cumulative distribution function is computed as the sum of the probability
-mass function from 0 to q. For computational efficiency, this implementation
-employs chunked processing with SIMD optimizations when available and is
-optimised for scenarios with varying parameter combinations.
+mass function from 0 to q, by the recurrence of \code{\link{fdDEL}}, so the
+cost is O(q): about 12 ms per million counts (\code{fpDEL(9.2e7, 1e8, 0.5, 0.5)}
+takes 1.1 s). In a vector call, \code{fpDEL(0:q, ...)} with repeated
+parameters costs O(q), not O(q^2). The result never exceeds 1.
 
-When sigma is very small (< 1e-04), the distribution approaches a Poisson
-distribution with parameter mu, and the function switches to using the
-more efficient Poisson CDF computation.
+When sigma is very small (< 1e-04), the distribution is treated as a Poisson
+distribution with mean mu.
+
+\emph{Accuracy.} Up to count 4095 the plain recurrence is used. Against the
+exact sum of the Poisson and negative binomial convolution
+(\eqn{\sum_k f_{Pois}(k) F_{NB}(q-k)}) the largest error over five synthetic
+parameter sets (mu about q, sigma 0.1 to 2, nu 0.2 to 0.9) was 1e-15 at q = 10,
+4e-14 at 50, 4e-13 at 200, 9e-12 at 1000 and 5e-11 at 4095. From count 4096
+on a compensated recurrence takes over, and the same check gave errors below
+3e-14 at q = 4096, 5000, 20000, 65535 and 200000; over a wider set of
+parameters the error is below 6e-13 for counts 4096 to 65535 and below 5e-12
+up to 2e9.
 
 This implementation is based on the algorithms from the gamlss.dist package
-by Rigby, R. A. and Stasinopoulos D. M., with significant performance
-optimizations including vectorized transformations and SIMD support for
-large datasets with diverse parameter sets.
-}
-\note{
-This function is optimised for scenarios where parameters vary between
-computations (e.g., random parameters). For applications with repeated
-parameter combinations, consider implementing application-specific caching.
+by Rigby, R. A. and Stasinopoulos D. M.
 }
 \examples{
 # Calculate CDF for single values

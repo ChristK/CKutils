@@ -7,7 +7,7 @@
 fpZISICHEL(q, mu, sigma, nu, tau, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
-\item{q}{vector of quantiles.}
+\item{q}{vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means.}
 
@@ -31,7 +31,9 @@ mu (mean), sigma (dispersion), nu (shape), and tau (zero-inflation).
 }
 \details{
 The zero-inflated Sichel distribution is a mixture of a point mass at zero 
-and a (truncated at zero) Sichel distribution.
+and a Sichel distribution (not truncated at zero):
+\eqn{F(q) = \tau + (1-\tau) F_{SICHEL}(q)}. The cost and the accuracy at
+large counts are those of \code{\link{fpSICHEL}}.
 }
 \examples{
 # Vector inputs with recycling

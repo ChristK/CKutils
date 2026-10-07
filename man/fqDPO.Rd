@@ -18,7 +18,7 @@ otherwise P[X > x].}
 
 \item{log_p}{Logical; if TRUE, probabilities p are given as log(p).}
 
-\item{max_value}{Maximum value to search for quantiles (for performance tuning).}
+\item{max_value}{Ignored; kept for compatibility. The search has no cap.}
 }
 \value{
 Vector of quantiles corresponding to the given probabilities.
@@ -29,10 +29,18 @@ distribution that extends the Poisson distribution with a dispersion parameter.
 }
 \details{
 The DPO distribution is a two-parameter discrete distribution that reduces
-to the Poisson distribution when sigma = 1. This implementation uses an
-optimised search algorithm with SIMD acceleration where available, and
-includes intelligent caching of intermediate CDF calculations for improved
-performance with repeated quantile computations.
+to the Poisson distribution when sigma = 1. The quantile is the smallest
+integer x with P(X <= x) >= p, found by adding the densities from the first
+one that does not underflow, until the sum reaches p.
+
+\code{p = 1} (or above, up to 1.0001) gives \code{Inf}; any \code{p < 1}
+has a finite quantile, including \code{p} within 1e-9 of 1
+(\code{fqDPO(c(1 - 1e-9, 1 - 5e-10, 1 - 4e-11), 16.27, 7.53)} is 118 121 130).
+A \code{p} so close to 1 that the summed CDF cannot reach it gives \code{NA}.
+
+\emph{Limit.} With a huge \code{mu} \emph{and} a huge \code{sigma} (for
+example \code{mu = 3e9}, \code{sigma = 4e6}) the normalising constant takes
+about 50 s to give up, and the answer is \code{NA}: see \code{\link{fdDPO}}.
 
 Parameter recycling is performed automatically - all parameter vectors
 are recycled to the length of the longest vector.
@@ -45,9 +53,13 @@ with gratitude.
 }
 \section{Parameter Validation}{
 
-- \code{p} must be in [0,1] for \code{log_p = FALSE}, or in (-Inf, 0] for \code{log_p = TRUE}
-- \code{mu}, \code{sigma} must both be positive
-- Invalid parameters result in \code{NA} values in the output
+- \code{p} must be a probability (a log probability if \code{log_p = TRUE});
+  a value above 1 by up to 1e-4 is treated as 1, anything outside stops
+  with an error
+- \code{mu} and \code{sigma} must be positive, otherwise the function stops
+  with an error
+- an \code{NA} or \code{NaN} argument gives \code{NA}; any \code{NA} in the
+  result gives a warning
 }
 
 \examples{

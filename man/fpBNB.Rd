@@ -7,7 +7,7 @@
 fpBNB(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
-\item{q}{vector of (non-negative integer) quantiles.}
+\item{q}{vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means.}
 
@@ -28,7 +28,13 @@ with parameters mu (mean), sigma (dispersion), and nu (shape).
 }
 \details{
 The cumulative distribution function is computed by summing the probability mass
-function from 0 to q.
+function from 0 to q. Each term follows from the one before by its ratio
+(recomputed from its logarithm every 1024 terms), and the sum is
+error-compensated. The cost is O(q), about 2.3 ms per million terms when the
+tail is long (\code{fpBNB(1e8, 2, 1, 1)} takes 0.23 s). Past the mode the sum stops
+once the terms underflow, so a short-tailed distribution does not pay for a
+large q (\code{fpBNB(5e7, 1, 1e-3, 1)} takes under a millisecond). The
+result never exceeds 1, so an upper tail is never negative.
 }
 \examples{
 # Single values

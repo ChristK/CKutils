@@ -143,6 +143,9 @@ NumericVector fdMN4(const IntegerVector& x,
 //' where \eqn{\theta_1 = \mu}, \eqn{\theta_2 = \sigma}, \eqn{\theta_3 = \nu},
 //' and \eqn{\theta_4 = 1}.
 //'
+//' \code{lower_tail = FALSE} is computed as 1 - F, so a tiny upper-tail
+//' probability has no relative accuracy (it is 0 once F rounds to 1).
+//'
 //' Parameters are recycled to the length of the longest vector following R's
 //' standard recycling rules.
 //'
@@ -235,6 +238,11 @@ NumericVector fpMN4(const IntegerVector& q,
 //' \deqn{P(X \leq k) \geq p}
 //' The quantiles are computed by comparing p with the cumulative probabilities
 //' of the multinomial distribution.
+//'
+//' A \code{p} exactly equal to a cumulative probability gives the next category
+//' (\code{fqMN4(0.25, 1, 1, 1)} is 2), so \code{fqMN4(fpMN4(k, ...), ...)} is
+//' \code{k + 1}, not \code{k}, for \code{k = 1, 2, 3}; \code{p = 1} gives 4.
+//' \code{lower_tail = FALSE} replaces \code{p} by 1 - \code{p}.
 //'
 //' Parameters are recycled to the length of the longest vector following R's
 //' standard recycling rules.

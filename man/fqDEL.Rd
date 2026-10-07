@@ -13,7 +13,7 @@ fqDEL(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 
 \item{sigma}{Vector of sigma (scale) parameters (positive).}
 
-\item{nu}{Vector of nu (shape) parameters (positive).}
+\item{nu}{Vector of nu (shape) parameters, between 0 and 1.}
 
 \item{lower_tail}{Logical; if TRUE (default), probabilities are P[X <= x],
 otherwise P[X > x].}
@@ -29,14 +29,22 @@ Poisson and shifted negative binomial.
 }
 \details{
 The Delaporte distribution is a three-parameter discrete distribution
-defined as the convolution of a Poisson distribution with mean \code{mu}
-and a shifted negative binomial distribution with parameters related to
-\code{sigma} and \code{nu}.
+defined as the convolution of a Poisson distribution with mean
+\code{mu * nu} and a negative binomial distribution with size
+\code{1 / sigma} and mean \code{mu * (1 - nu)} (see \code{\link{fdDEL}}).
 
-This implementation uses an optimised binary search algorithm with
-SIMD acceleration where available, and includes intelligent caching
-of intermediate CDF calculations for improved performance with repeated
-quantile computations.
+The quantile is the smallest integer x with P(X <= x) >= p, found by adding
+the probabilities from 0 upwards (the recurrence of \code{\link{fdDEL}}).
+The cost is O(x): about 12 ms per million counts (a median near 9.2e7, at
+mu = 1e8, takes 1.1 s). \code{p = 1} (or above, up to 1.0001) gives
+\code{Inf}; any \code{p < 1} has a finite quantile, including \code{p}
+within 1e-9 of 1 (\code{fqDEL(1 - 1e-9, 2.03065, 2.30919, 0.830551)} is 25).
+A \code{p} so close to 1 that the summed CDF cannot reach it gives
+\code{NA}. A quantile beyond 2147483646, the largest integer this function
+returns, is \code{NA} too, but only after the scan has run to the end of the
+range (there is no closed-form shortcut as for \code{\link{fqBNB}}). The
+scan can be stopped with Ctrl-C. The accuracy of the CDF behind it is
+described in \code{\link{fpDEL}}.
 
 Parameter recycling is performed automatically - all parameter vectors
 are recycled to the length of the longest vector.
@@ -49,9 +57,13 @@ The original gamlss.dist implementation is acknowledged with gratitude.
 }
 \section{Parameter Validation}{
 
-- \code{p} must be in [0,1] for \code{log_p = FALSE}, or in (-Inf, 0] for \code{log_p = TRUE}
-- \code{mu}, \code{sigma}, \code{nu} must all be positive
-- Invalid parameters result in \code{NA} values in the output
+- \code{p} must be a probability (a log probability if \code{log_p = TRUE});
+  a value above 1 by up to 1e-4 is treated as 1, anything outside stops
+  with an error
+- \code{mu} and \code{sigma} must be positive and \code{nu} between 0 and 1,
+  otherwise the function stops with an error
+- an \code{NA} or \code{NaN} argument gives \code{NA}; any \code{NA} in the
+  result gives a warning
 }
 
 \examples{

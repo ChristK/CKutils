@@ -45,6 +45,9 @@ When \eqn{\nu \neq 0}: \eqn{x = \mu (\nu\sigma z_a + 1)^{1/\nu}}
 
 This implementation is optimised for cases where tau values are rarely repeated,
 using SIMD vectorisation and per-element computation without caching.
+
+\code{lower_tail = FALSE} replaces \code{p} by 1 - \code{p}, so a quantile
+in the far upper tail (\code{p} tiny) has no relative accuracy.
 }
 \note{
 This implementation is based on the gamlss.dist package qBCPEo function

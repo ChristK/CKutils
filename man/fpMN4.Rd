@@ -34,6 +34,9 @@ The cumulative distribution function of the multinomial distribution with
 where \eqn{\theta_1 = \mu}, \eqn{\theta_2 = \sigma}, \eqn{\theta_3 = \nu},
 and \eqn{\theta_4 = 1}.
 
+\code{lower_tail = FALSE} is computed as 1 - F, so a tiny upper-tail
+probability has no relative accuracy (it is 0 once F rounds to 1).
+
 Parameters are recycled to the length of the longest vector following R's
 standard recycling rules.
 }

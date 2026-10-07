@@ -44,7 +44,7 @@ using namespace Rcpp;
 //' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
 //' nu (shape), and tau (hurdle probability).
 //'
-//' @param x vector of (non-negative integer) quantiles.
+//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of positive shape parameters.
@@ -126,7 +126,7 @@ NumericVector fdZABNB(const NumericVector& x,
 //' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
 //' nu (shape), and tau (hurdle probability).
 //'
-//' @param q vector of quantiles.
+//' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of positive shape parameters.
@@ -219,7 +219,14 @@ NumericVector fpZABNB(const NumericVector& q,
 //' The zero adjusted (hurdle) beta negative binomial distribution has two parts:
 //' a point mass at zero and a truncated BNB distribution for positive values.
 //'
-//' @return An integer vector of quantiles.
+//' The quantile is found on the BNB scale, after removing the zero mass and
+//' taking a margin of \code{2 * .Machine$double.eps} off \code{p} (gamlss.dist
+//' takes 1e-10), by the scan of \code{\link{fqBNB}}, whose cost (about 4 ms per
+//' million terms) and \code{NA} cases (a quantile beyond 2147483646, or none
+//' found, with a warning) apply here. \code{p >= 1} gives \code{Inf}.
+//'
+//' @return A numeric vector of quantiles (whole numbers, \code{Inf} for
+//'   \code{p >= 1}, \code{NA} where none was found).
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 

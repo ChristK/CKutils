@@ -7,7 +7,7 @@
 fdDEL(x, mu, sigma, nu, log_ = FALSE)
 }
 \arguments{
-\item{x}{vector of (non-negative integer) quantiles}
+\item{x}{vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means}
 
@@ -22,25 +22,30 @@ fdDEL(x, mu, sigma, nu, log_ = FALSE)
 }
 \description{
 Density function for the Delaporte distribution with parameters mu, sigma and nu.
-The Delaporte distribution is a discrete probability distribution that can be 
-expressed as a compound Poisson distribution where the intensity parameter follows
-a Gamma distribution.
+The Delaporte distribution is a discrete probability distribution: the sum of
+a Poisson variable and an independent negative binomial variable.
 }
 \details{
-The Delaporte distribution has probability mass function:
-\deqn{P(X = x) = e^{-\mu\nu} \frac{\Gamma(x + 1/\sigma)}{\Gamma(x + 1)\Gamma(1/\sigma)} \left(\frac{\mu\sigma(1-\nu)}{1 + \mu\sigma(1-\nu)}\right)^x \left(\frac{1}{1 + \mu\sigma(1-\nu)}\right)^{1/\sigma}}
-
+The Delaporte distribution is the convolution of a Poisson distribution
+with mean \eqn{\mu\nu} and a negative binomial distribution with size
+\eqn{1/\sigma} and mean \eqn{\mu(1-\nu)}:
+\deqn{P(X = x) = \sum_{k=0}^{x} \frac{e^{-\mu\nu}(\mu\nu)^k}{k!}
+  \frac{\Gamma(x-k+1/\sigma)}{\Gamma(x-k+1)\Gamma(1/\sigma)}
+  \left(\frac{1}{1+\mu\sigma(1-\nu)}\right)^{1/\sigma}
+  \left(\frac{\mu\sigma(1-\nu)}{1+\mu\sigma(1-\nu)}\right)^{x-k}}
 for x = 0, 1, 2, ..., mu > 0, sigma > 0, and 0 < nu < 1.
 
-The mean is mu and the variance is mu + mu^2 * sigma * (1 - nu).
+The mean is mu and the variance is mu + mu^2 * sigma * (1 - nu)^2.
+
+When sigma is below 1e-04 the density is that of a Poisson distribution with
+mean mu. The density is computed by a recurrence over the counts 0 to x in
+constant memory, so the cost is O(x): about 10 ms per million
+(\code{fdDEL(9.2e7, 1e8, 0.5, 0.5)} takes 0.9 s). In a vector call the
+recurrence continues from one element to the next while mu, sigma and nu repeat
+and x does not decrease.
 
 This implementation is based on the algorithms from the gamlss.dist package
-by Rigby, R. A. and Stasinopoulos D. M., with optimizations for performance
-including SIMD support and efficient parameter recycling.
-}
-\note{
-This function is optimised for performance with chunked processing and
-efficient memory access patterns.
+by Rigby, R. A. and Stasinopoulos D. M.
 }
 \examples{
 # Calculate density for single values

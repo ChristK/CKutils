@@ -42,7 +42,7 @@ using namespace Rcpp;
 //' Probability density function for the Negative Binomial type I (NBI) distribution
 //' with parameters mu (mean) and sigma (dispersion).
 //'
-//' @param x vector of (non-negative integer) quantiles.
+//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param log_p logical; if TRUE, probabilities p are given as log(p).
@@ -112,7 +112,7 @@ NumericVector fdNBI(const NumericVector& x,
 //' Cumulative distribution function for the Negative Binomial type I (NBI) distribution
 //' with parameters mu (mean) and sigma (dispersion).
 //'
-//' @param q vector of quantiles.
+//' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
@@ -201,7 +201,7 @@ NumericVector fpNBI(const NumericVector& q,
 //' A quantile that is infinite (\eqn{p = 1}) or above 2147483646, the largest
 //' integer this function returns, is \code{NA}, with a warning.
 //'
-//' @return A numeric vector of quantiles.
+//' @return An integer vector of quantiles, \code{NA} where there is none.
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 

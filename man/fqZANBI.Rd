@@ -21,7 +21,7 @@ otherwise, P[X > x].}
 \item{log_p}{logical; if TRUE, probabilities p are given as log(p).}
 }
 \value{
-A numeric vector of quantiles.
+An integer vector of quantiles, \code{NA} where there is none.
 }
 \description{
 Quantile function for the Zero-Altered Negative Binomial type I (ZANBI)
@@ -30,6 +30,13 @@ distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alterat
 \details{
 The quantile function returns the smallest integer \eqn{x} such that
 \eqn{F(x) \geq p}, where \eqn{F} is the ZANBI cumulative distribution function.
+
+The probability is mapped to the NBI scale after taking a margin of
+\code{2 * .Machine$double.eps} off \code{p}, the rounding of the mixture
+sum (gamlss.dist takes 1e-10). \code{p = 1} gives a finite value, the
+quantile of a probability just short of 1, not \code{Inf}. A quantile
+beyond 2147483646, the largest integer this function returns, is \code{NA},
+with a warning, as for \code{\link{fqNBI}}.
 }
 \examples{
 # Single values

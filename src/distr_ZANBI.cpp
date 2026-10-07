@@ -43,7 +43,7 @@ using namespace Rcpp;
 //' Probability density function for the Zero-Altered Negative Binomial type I (ZANBI) 
 //' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
 //'
-//' @param x vector of (non-negative integer) quantiles.
+//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of zero-alteration probabilities (0 < nu < 1).
@@ -117,7 +117,7 @@ NumericVector fdZANBI(const NumericVector& x,
 //' Cumulative distribution function for the Zero-Altered Negative Binomial type I (ZANBI)
 //' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
 //'
-//' @param q vector of quantiles.
+//' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of zero-alteration probabilities (0 < nu < 1).
@@ -205,7 +205,14 @@ NumericVector fpZANBI(const NumericVector& q,
 //' The quantile function returns the smallest integer \eqn{x} such that
 //' \eqn{F(x) \geq p}, where \eqn{F} is the ZANBI cumulative distribution function.
 //'
-//' @return A numeric vector of quantiles.
+//' The probability is mapped to the NBI scale after taking a margin of
+//' \code{2 * .Machine$double.eps} off \code{p}, the rounding of the mixture
+//' sum (gamlss.dist takes 1e-10). \code{p = 1} gives a finite value, the
+//' quantile of a probability just short of 1, not \code{Inf}. A quantile
+//' beyond 2147483646, the largest integer this function returns, is \code{NA},
+//' with a warning, as for \code{\link{fqNBI}}.
+//'
+//' @return An integer vector of quantiles, \code{NA} where there is none.
 //' 
 //' @references
 //' Rigby, R. A., Stasinopoulos, D. M., Heller, G. Z., and De Bastiani, F. (2019) 
