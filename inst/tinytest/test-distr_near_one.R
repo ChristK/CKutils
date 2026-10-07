@@ -140,3 +140,51 @@ rt(fqBNB, fpBNB, 0:600, 3.9, 0.16, 0.4)
 rt(fqSICHEL, fpSICHEL, 0:60, 2.34544, 0.212277, -6.19696)
 rt(fqSICHEL, fpSICHEL, 0:40, 2.24037, 0.108986, -9.79)
 rt(fqSICHEL, fpSICHEL, 0:500, 1.5, 3, -1.5)
+
+# =====================================================================================================================
+# DEL: the same fix. fqDEL() returned Inf for every p + 1e-9 >= 1 (the gamlss.dist cutoff, as in DPO), although the quantile
+# is finite, and fqDEL_search treated any stalled sum as "not found". Now only p >= 1 is Inf, and a stall settles within
+# CK_P_FUZZ of p, as in fqDPO. Every expectation of this part fails on the base (Inf), except p = 1 (Inf on both, guarding
+# the new `p >= 1` test).
+#
+# Reference values: the convolution F(q) = sum_k dpois(k, mu*nu) * pnbinom(q - k, size = 1/sigma, mu = mu*(1 - nu)) over the
+# Poisson part's 40-sd window, summed as the upper tail (no 1 - F cancellation); shares no code with the package. Each
+# integer pinned has p - F(q - 1) and F(q) - p >= 1e-12 (~1000 times the ~1e-15 accuracy of the package's sums). Where the
+# margin is smaller (the sets with quantiles >= 4096, which run on CkDELAccurate, and p deeper in the window) the expectation
+# is a bracket on the package's own fpDEL.
+
+# ---- quantiles in [1 - 1e-9, 1) are finite (base: Inf) ---------------------------------------------------------------
+expect_identical(fqDEL(1 - 1e-9, 2.03065, 2.30919, 0.830551), 25)
+expect_identical(fqDEL(c(1 - 1e-9, 1 - 5e-10, 1 - 1e-10), 2.03065, 2.30919, 0.830551), c(25, 26, 28))
+expect_identical(fqDEL(c(1 - 1e-9, 1 - 5e-10, 1 - 1e-10), 5, 0.5, 0.3), c(54, 55, 59))
+expect_identical(fqDEL(c(1 - 1e-9, 1 - 5e-10, 1 - 1e-10), 1.2, 0.8, 0.5), c(20, 20, 22))
+expect_identical(fqDEL(c(1 - 1e-9, 1 - 5e-10), 60, 0.9, 0.2), c(935, 965))
+# deeper into the window: finite, and the quantile in the package's own CDF
+p <- 1 - c(1e-10, 1e-12)
+q <- fqDEL(p, 60, 0.9, 0.2)
+expect_true(all(is.finite(q)))
+expect_true(all(fpDEL(q - 1, 60, 0.9, 0.2) < p & p <= fpDEL(q, 60, 0.9, 0.2)))
+# quantiles >= 4096: the search restarts on CkDELAccurate (mu = 2500, sigma = 1.2, nu = 0.1: 54514 at 1 - 1e-9)
+p <- 1 - c(1e-9, 5e-10, 1e-10)
+for (par in list(c(2500, 1.2, 0.1), c(1500, 3, 0.3))) {
+  q <- fqDEL(p, par[1], par[2], par[3])
+  expect_true(all(is.finite(q)) && all(q >= 4096))
+  expect_true(all(fpDEL(q - 1, par[1], par[2], par[3]) < p & p <= fpDEL(q, par[1], par[2], par[3])))
+}
+expect_equal(fqDEL(1 - 1e-9, 2500, 1.2, 0.1) / 54514, 1, tolerance = 1e-4)
+# p = 1 is exactly Inf
+expect_identical(fqDEL(1, 5, 0.5, 0.3), Inf)
+# the same quantile on the lower tail, the upper tail and the log scale (base: Inf on all three)
+expect_identical(fqDEL(1 - 1e-10, 2.03065, 2.30919, 0.830551), 28)
+expect_identical(fqDEL(1e-10, 2.03065, 2.30919, 0.830551, lower_tail = FALSE), 28)
+expect_identical(fqDEL(log1p(-1e-10), 2.03065, 2.30919, 0.830551, log_p = TRUE), 28)
+# the Poisson fast path (sigma < 1e-4) reaches the window too
+expect_equal(fqDEL(c(1 - 5e-10, 1 - 1e-12), 5, 1e-5, 0.5), qpois(c(1 - 5e-10, 1 - 1e-12), 5))
+# a p above the largest sum there is (the terms stop changing it ~2e-15 short of 1) settles, and is not NA
+q <- fqDEL(c(1 - 1e-15, 1 - 2^-53), 2.03065, 2.30919, 0.830551)
+expect_true(!anyNA(q) && all(is.finite(q)) && !is.unsorted(q))
+
+# ---- round trip q(p(x)) == x, p from the package's own CDF ---------------------------------------------------------------
+rt(fqDEL, fpDEL, 0:60, 2.03065, 2.30919, 0.830551)
+rt(fqDEL, fpDEL, 0:300, 5, 0.5, 0.3)
+rt(fqDEL, fpDEL, 0:1200, 60, 0.9, 0.2)

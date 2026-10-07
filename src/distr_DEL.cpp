@@ -30,7 +30,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <cstring>
 #include "recycling_helpers.h"
 #include "distr_DEL.h"   // header-only scalar definitions (fdPO_scalar, ftofydel2_scalar, fdDEL_scalar, fpDEL_hlp_fn, fpDEL_scalar)
-#include "distr_search.h"   // ck_search_gives_up(), CK_SEARCH_MAX
+#include "distr_search.h"   // ck_search_stalled(), ck_search_settled(), CK_SEARCH_MAX
 // [[Rcpp::plugins(cpp17)]]
 using namespace Rcpp;
 
@@ -502,8 +502,10 @@ int fqDEL_search(const double &p,
   
   // Incremental search: sum densities until CDF >= p, one recurrence step per
   // index (O(q); the cumulative sums are fpDEL's, bit for bit). No fixed cap:
-  // ck_search_gives_up() (distr_search.h) ends a search that cannot reach p,
-  // and NA_INTEGER is returned rather than a number.
+  // a non-finite density, or a stalled sum (ck_search_stalled, distr_search.h)
+  // that is not within CK_P_FUZZ of p (ck_search_settled), ends a search that
+  // cannot reach p, and NA_INTEGER is returned rather than a number; a stalled
+  // sum within it returns the index where it stopped.
   // The first CK_DEL_COMPENSATE_AFTER indices run on CkDELRecurrence, as ever,
   // bit for bit. A search that has not reached p by then starts again from 0
   // on CkDELAccurate (distr_DEL.h, ACCURACY), whose terms are those of
@@ -514,8 +516,10 @@ int fqDEL_search(const double &p,
     double prev_density = -1.0;
     for (;;) {
       const double density = exp(r.log_density());
-      if (ck_search_gives_up(density, prev_density, cdf)) {
-        return NA_INTEGER;
+      if (!std::isfinite(density)) return NA_INTEGER;
+      if (ck_search_stalled(density, prev_density, cdf)) {
+        // the mass has settled before index 4096: no restart on phase 2
+        return ck_search_settled(cdf, p) ? r.j - 1 : NA_INTEGER;
       }
       cdf += density;
       if (cdf >= p) {
@@ -531,8 +535,9 @@ int fqDEL_search(const double &p,
   double prev_density = -1.0;
   for (;;) {
     const double density = a.density();
-    if (ck_search_gives_up(density, prev_density, cdf)) {
-      return NA_INTEGER;
+    if (!std::isfinite(density)) return NA_INTEGER;
+    if (ck_search_stalled(density, prev_density, cdf)) {
+      return ck_search_settled(cdf, p) ? a.j - 1 : NA_INTEGER;
     }
     cdf += density;
     if (cdf >= p) {
@@ -663,7 +668,12 @@ NumericVector fqDEL(NumericVector p,
       if (!lower_tail)
         p_i = 1.0 - p_i;
 
-      if (p_i + 1e-09 >= 1.0) {
+      // p = 1 (or above it, within the 1.0001 tolerance) has an infinite
+      // quantile; any p < 1 is searched, and its quantile is finite. The
+      // `p + 1e-09 >= 1` cutoff of gamlss.dist::qDEL guards its R loop and is
+      // deliberately not copied (as in fqDPO): a p so close to 1 that the summed
+      // CDF cannot reach it is settled or NA in fqDEL_search.
+      if (p_i >= 1.0) {
         QQQ[i] = R_PosInf;
       } else {
         // Use optimized incremental search

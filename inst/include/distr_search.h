@@ -68,7 +68,7 @@ inline bool ck_search_stalled(const double& term, const double& prev_term,
 // A term that is not finite, or a stall: the two ways a search gives up. This
 // test has no settle step (a stall is always "not found"); a search that wants
 // one calls ck_search_stalled and ck_search_settled itself, as fqDPO_search,
-// fqBNB_search and fqSICHEL_search do.
+// fqBNB_search, fqSICHEL_search and fqDEL_search do.
 inline bool ck_search_gives_up(const double& term, const double& prev_term,
                                const double& cdf) {
     return !std::isfinite(term) || ck_search_stalled(term, prev_term, cdf);

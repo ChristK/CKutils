@@ -311,6 +311,13 @@
   `< 2e-11` on a fuzz of 297 parameter sets; it is also faster per count (13 ns
   against 23). Values for fewer than 4096 steps, including every count the
   IMPACTncd models use (<= 10), are unchanged bit for bit.
+* **`fqDEL()` returns the finite quantile for `p` in [1 - 1e-9, 1), as `fqDPO()`,
+  `fqBNB()` and `fqSICHEL()` do.** It returned `Inf` for every `p` with
+  `p + 1e-9 >= 1`, the cutoff of `gamlss.dist::qDEL()`: `fqDEL(c(1 - 1e-9,
+  1 - 5e-10, 1 - 1e-10), 2.03065, 2.30919, 0.830551)` is `25 26 28`. Only
+  `p >= 1` is `Inf`, and the search ends with the shared stall rule (a sum that
+  has stopped growing within 64 eps of `p` returns the index where it stopped).
+  The models' DEL draws stay below the window and are unchanged.
 
 ## Documentation
 
@@ -508,6 +515,10 @@
   1.2e4 to 1e9 (above 1e6 only under `at_home()`); vector == element-by-element
   across 4096; `fqDEL(fpDEL(q)) == q` there; odd parameters at 4095, 4096 and
   70000.
+* `test-distr_near_one.R` (DEL part): finite quantiles in [1 - 1e-9, 1) pinned
+  against a Poisson-NB convolution reference (margins of at least 1e-12),
+  brackets on `fpDEL()` for quantiles beyond 4096, `Inf` at `p = 1`, the upper
+  tail and log scale, the settle step, and round trips.
 
 # CKutils 0.1.33
 
