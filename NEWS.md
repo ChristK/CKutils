@@ -135,17 +135,19 @@
   where the median is 1,039,684 (the CDF at 1e6 being 0.488), and `fqSICHEL()`
   1,000,000 for 1,351,683. There is no fixed cap now. A search gives up, with
   NA and a warning, only when the CDF cannot reach p: a term that is not finite,
-  or terms past the largest too small to change the sum. A BNB quantile beyond
-  the int range is reported as NA when the closed-form mode shows it: at once
-  for a large `mu`, otherwise after at most 65,536 terms (about 0.3 ms); where
-  the bound does not show it, after scanning the range (about 9 s). BNB and DPO
-  searches at
-  a large `mu` start at the first term that does not underflow. The time grows
-  with the quantile: about 4 ms per million terms for BNB (`mu = 2e7`: 0.04 s;
-  a quantile of 1.56e9 at `mu = 3e9`: about 6 s), about 0.01 s for SICHEL,
-  whose terms come from a recursion. A SICHEL quantile beyond the int range is
-  reported at once too, from a bound on the CDF (SICHEL is a Poisson mixture
-  over a log-concave law): `fqSICHEL(0.5, mu = 1e300, sigma = 1, nu = -0.5)` and
+  or terms past the largest too small to change a sum that is still more than
+  64 `.Machine$double.eps` (relative) short of p (within that, the index where
+  the sum stopped is returned). A BNB quantile beyond the int range is reported
+  as NA when the closed-form mode shows it: at once for a large `mu`, otherwise
+  after at most 65,536 terms (about 0.3 ms); where the bound does not show it,
+  after scanning the range (about 8 s). BNB and DPO searches at a large `mu`
+  start at the first term that does not underflow. The time grows with the
+  quantile: about 4 ms per million terms for BNB (`mu = 2e7`: 0.04 s; a
+  quantile of 1.56e9 at `mu = 3e9`: about 6 s), about 12.6 ms per million terms
+  for SICHEL (`mu = 2e7`: 0.17 s), whose terms come from a recursion. A SICHEL
+  quantile beyond the int range is reported at once too, from a bound on the
+  CDF (SICHEL is a Poisson mixture over a log-concave law):
+  `fqSICHEL(0.5, mu = 1e300, sigma = 1, nu = -0.5)` and
   `fqZISICHEL()` there are NA in about a millisecond, not after some 40 s that
   could not be interrupted. Only within about 1% (in `mu`) of the limit, or
   further out for `p` within 1e-6 of 1 with a heavy tail, is such a quantile
@@ -199,7 +201,8 @@
   parameter length, which is 0 then, and the floating point exception (SIGFPE)
   ended the process. The other twelve `fr*` functions already return a
   zero-length result. `n <= 0` still stops with "n must be a positive integer",
-  and the draws for non-empty parameters are unchanged.
+  and by this fix alone the draws for non-empty parameters are unchanged (the
+  `frMN4()` bullet on dqrng, below, changes its stream).
 * **`fqDPO()` returns the finite quantile for `p` in [1 - 1e-9, 1), not `Inf`.**
   It returned `Inf` for every `p` with `p + 1e-9 >= 1`, a cutoff copied from
   `gamlss.dist::qDPO()`, where it guards an R loop. The C++ search needs no such
@@ -325,7 +328,7 @@
   the log scale (`fpBNB(1000, 90, 0.02, 0.02, lower_tail = FALSE)` was
   -5.9e-14). The value returned is now at most 1 (a running sum that continues
   to the next element is not clamped). In the models' ranges this moves stored
-  CDF values such as `fpDPO(90, ...)` by at most 1.3e-14 and leaves every
+  CDF values such as `fpDPO(90, ...)` by at most 1.24e-14 and leaves every
   quantile draw unchanged. `fpDPO()` also returns `NaN` at the first
   non-finite term, so an infinite `mu` or `sigma` no longer sums `NaN` terms up
   to `q`.
@@ -356,6 +359,21 @@
   single element there, or the DPO constant at a new `mu` and `sigma` (about
   5 s at `mu = 2e9`, `sigma = 1e4`), runs to its end first. Results are
   unchanged.
+* **Draws of the IMPACTncd models.** Only some fixes of this release move
+  model draws, each for a small share. The zero-inflated / zero-altered
+  offsets: about 1.2e-6 of the fruit (ZISICHEL) draws, 1.3e-7 of alcohol
+  (ZINBI), 2e-8 of the ZANBI durations and 8e-9 of `smok_cig_ex` (ZABNB) go up
+  one step, each to the correct quantile. `p` within 1e-9 of 1: about 4e-10 of
+  the `smok_quit_yrs` and `smok_dur_ex` (DPO) draws and about 1e-13 of
+  `smok_cig_ex` (ZABNB) were `Inf` (`NA_integer_` once the models stored them
+  as integers) and are now finite. `frMN4()` draws from another stream (the
+  models call `fqMN4()`, which is unchanged). The CDF clamp moves CDF values
+  that summed above 1 by at most 1.24e-14 (synthetic parameters over the
+  models' ranges) and no quantile draw; the SICHEL start values move the CDF by
+  less than 2e-13 and the BNB terms by about 1e-14, and no quantile. All other
+  fixes leave the models' draws unchanged: the DPO, BNB, SICHEL and DEL
+  rewrites, the shared stall rule and the new upper tails, which the commits
+  checked bit for bit or draw for draw on the models' parameters.
 
 ## Documentation
 
@@ -411,8 +429,9 @@
   every count from 0 to q. The recurrence is now carried forward one step per
   count, in O(1) memory, and the vector `fdDEL()` and `fpDEL()` carry it from
   one element to the next while `mu`, `sigma` and `nu` repeat (`fpDEL(0:q)` was
-  O(q^3)). The values are the same doubles. A quantile near 1e5
-  (`fqDEL(0.5, 1e5, 0.01, 0.5)`) took 43 s and now takes 3 ms; on 1e6 rows of
+  O(q^3)). The values are the same doubles (from count 4096 on, the accuracy
+  bullet under Bug fixes then changes them). A quantile near 1e5
+  (`fqDEL(0.5, 1e5, 0.01, 0.5)`) took 43 s and now takes 2 ms; on 1e6 rows of
   IMPACTncd's veg parameters `fqDEL()` is 1.4 times and `fpDEL(10, ...)` 2.3
   times faster.
 * The DEL scalars in `inst/include/distr_DEL.h` (`LinkingTo`) are safe at
