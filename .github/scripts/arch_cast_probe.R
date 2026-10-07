@@ -77,9 +77,11 @@ if (identical(direction, expected)) {
 
 if (identical(direction, "INT_MAX (AArch64 style)")) {
   cat("\n   Consequence had the guard not been added: this value would enter\n",
-      "   `for (int i = 0; i <= q; i++)` in fpBNB_scalar/fpDPO_scalar/\n",
-      "   fpDEL_hlp_fn, where i++ at INT_MAX is signed overflow and the loop\n",
-      "   never exits -- a hang, not a wrong number.\n", sep = "")
+      "   the kernels at INT_MAX itself: the BNB, DEL and SICHEL ones now\n",
+      "   return there, but slowly (seconds to a minute, O(q) time), while a\n",
+      "   DPO sum that cannot settle (`for (int i = ...; i <= q; i++)` in\n",
+      "   fpDPO_scalar) overflows i++ at INT_MAX and never exits -- a hang or a\n",
+      "   very slow call, not a wrong number.\n", sep = "")
 }
 
 # --- the part that actually gates CI -----------------------------------------

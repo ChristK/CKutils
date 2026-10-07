@@ -32,8 +32,10 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
 // The MN4 kernels specifically are safe for any int, because the support is the
 // four categories 1:4 and anything outside it returns a density of 0. The
-// contract still matters for the BNB, DPO, DEL and SICHEL kernels, some of
-// which do not return at all when it is violated.
+// contract still matters for the BNB, DPO, DEL and SICHEL kernels:
+// fpDPO_scalar does not return at q == INT_MAX when its sum cannot settle,
+// fdDPO_scalar's log density is wrong there, and the BNB, DEL and SICHEL ones are
+// O(q) in time (see recycling_helpers.h).
 
 #include <Rcpp.h>   // brings in the R:: namespace and Rcpp vector types
 #include <cmath>

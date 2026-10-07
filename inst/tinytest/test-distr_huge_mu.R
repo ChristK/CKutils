@@ -35,7 +35,7 @@ expect_identical(fqDPO(0.5, mu = c(1e4, 2e6), sigma = 2), c(1e4, 2e6),
                  info = "fqDPO (sigma != 1): median at mu = 1e4 and 2e6")
 
 # --- BNB: exact quantiles, CDF and density at large values ---
-# Up to 0.1.34 the BNB log term was lbeta(i+n, m+k) - lbeta(n, m) - lgamma(i+1) -
+# Before 0.1.34 the BNB log term was lbeta(i+n, m+k) - lbeta(n, m) - lgamma(i+1) -
 # lgamma(k) + lgamma(i+k): the last three parts are large and nearly cancel
 # (lgamma(i+1) is 2e10 at i = 1e9), so the term lost digits as i grew, and the CDF
 # was a plain double sum. The expected values are from a quad-precision sum of the

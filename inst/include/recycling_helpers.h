@@ -264,12 +264,13 @@ inline RecycledVectors5 recycle_vectors(const T1& v1, const T2& v2, const T3& v3
 
 // Largest count the header-only *_scalar kernels can be handed safely.
 //
-// The kernels take `int` and overflow their own int arithmetic at INT_MAX
-// itself: the CDF kernels accumulate with `for (int i = 0; i <= q; i++)`, whose
-// i++ is signed-integer overflow when i reaches INT_MAX (so the loop never
-// terminates), and the density kernels evaluate lgammafn(x + 1), which wraps to
-// a negative argument and silently returns a wrong density. INT_MAX - 1 is the
-// largest value for which both are well defined.
+// The kernels take `int`, and the DPO ones still overflow their own int
+// arithmetic at INT_MAX itself: fdDPO_scalar evaluates lgammafn(x + 1), whose
+// argument wraps to INT_MIN, and an fpDPO_scalar sum that cannot settle counts
+// with `for (int i = ...; i <= q; i++)`, whose i++ is signed-integer overflow
+// when i reaches INT_MAX (so that loop never terminates). The BNB, DEL and
+// SICHEL kernels no longer do either (see the contract below). INT_MAX - 1 is
+// the largest value for which every kernel is well defined.
 constexpr double CK_MAX_COUNT = 2147483646.0;  // INT_MAX - 1
 
 // Convert a count argument (x or q, always supplied as a double after
@@ -280,8 +281,8 @@ constexpr double CK_MAX_COUNT = 2147483646.0;  // INT_MAX - 1
 // return to NA. Doing the conversion unguarded is out-of-range float-to-int
 // undefined behaviour, and it is not benign -- x86-64 saturates to INT_MIN (so
 // a huge count silently reads as negative, and a CDF whose true value is ~1
-// comes back as 0) while AArch64 saturates to INT_MAX (which walks the
-// accumulation loops described above).
+// comes back as 0) while AArch64 saturates to INT_MAX (which reaches the
+// INT_MAX cases described in the contract below).
 //
 // This asks only "is the value representable as an int?", never "is it a valid
 // support point?". Range validity stays with each wrapper, which is what lets
@@ -310,48 +311,80 @@ inline bool count_to_int(const double& v, int& value) {
 //     0 <= x, q <= CK_MAX_COUNT        (i.e. <= INT_MAX - 1)
 //
 // Call count_to_int() yourself, or otherwise establish the bound, before
-// passing a count to any *_scalar kernel. Violating it is not a graceful
-// failure -- these are the concrete consequences:
+// passing a count to any *_scalar kernel. Where the contract is broken the
+// consequences differ by family; these are the concrete ones at 0.1.34 (times
+// are for one core of an -O2 build, at INT_MAX, for the parameters shown):
 //
-//   NON-TERMINATION at exactly q == INT_MAX. These accumulate with
-//   `for (int i = 0; i <= q; i++)`, so when i reaches INT_MAX the i++ is
-//   signed-integer overflow and the loop never exits (a call does not return,
-//   and is not interruptible from R):
-//       fpBNB_scalar     (inst/include/distr_BNB.h)
+//   NON-TERMINATION at exactly q == INT_MAX, fpDPO_scalar only, and only for a
+//   sum that cannot settle. It accumulates with `for (int i = ...; i <= q; i++)`,
+//   so i++ at INT_MAX is signed-integer overflow and a loop that has not stopped
+//   by then never exits (the call does not return, and is not interruptible
+//   from R). The sum stops once it has settled, so for a finite mu > 0 and
+//   sigma > 0 a q of INT_MAX returns at once, and a non-finite mu or sigma
+//   returns NaN at once. What still runs to q is a sum of terms that are all 0:
+//   mu <= 0 or sigma <= 0, which the wrappers reject. For those,
+//   fpDPO_scalar(INT_MAX, 0, 1.5) did not return in 90 s, while q = INT_MAX - 1
+//   took 5.8 s.
 //       fpDPO_scalar     (inst/include/distr_DPO.h)
-//       fpDEL_hlp_fn     (inst/include/distr_DEL.h), and fpDEL_scalar via it
-//       fpZABNB_scalar   (inst/include/distr_ZABNB.h), via fpBNB_scalar
 //
-//   SILENTLY WRONG RESULTS at exactly x == INT_MAX. These evaluate
-//   lgamma(x + 1), whose argument wraps to INT_MIN:
-//       fdBNB_scalar     (inst/include/distr_BNB.h)
+//   A WRONG LOG DENSITY at exactly x == INT_MAX. fdDPO_scalar evaluates
+//   lgammafn(x + 1), whose argument wraps to INT_MIN (a pole): the log density
+//   comes back as -Inf, e.g. fdDPO_scalar(INT_MAX, 2, 1.5, log = TRUE) where the
+//   true value is about -2.8e10. On the natural scale that example is 0, which
+//   is also the true value to double precision.
 //       fdDPO_scalar     (inst/include/distr_DPO.h)
-//       fdDEL_scalar     (inst/include/distr_DEL.h)
-//       fdZABNB_scalar   (inst/include/distr_ZABNB.h), via fdBNB_scalar
-//   e.g. fdBNB_scalar(INT_MAX, 2, 1, 1) returns 0 where the true density is
-//   about 2.2e-27.
 //
-//   O(y) ALLOCATION, and a negative size_t at y == INT_MAX. These size a
-//   std::vector from the count itself, so a large y asks for tens of gigabytes
-//   and y + 1 / y + 2 overflows at the boundary:
-//       ftofydel2_scalar   (inst/include/distr_DEL.h)     -- vector(y + 2)
-//       ftofySICHEL2_scalar (inst/include/distr_SICHEL.h) -- vector(y + 1)
-//       fcdfSICHEL_scalar  (inst/include/distr_SICHEL.h)  -- two vector(y + 1)
-//   and, through them, fdDEL_scalar / fpDEL_scalar, fdSICHEL_scalar /
-//   fpSICHEL_scalar, and fdZISICHEL_scalar / fpZISICHEL_scalar.
+// The BNB, DEL and SICHEL kernels no longer fail at INT_MAX itself (they used to:
+// the BNB and DEL CDF loops never returned, the BNB and DEL densities wrapped,
+// and the DEL and SICHEL kernels allocated O(y) memory, with y + 1 or y + 2
+// overflowing at the boundary). Now:
 //
-// Separately from correctness, note that the CDF kernels above are O(q) in
-// TIME with three lgamma/lbeta calls per step, so a merely large-but-legal q
-// is slow rather than wrong: q = 2^31 - 1024 takes roughly five minutes.
-// Budget for that, or bound q well below CK_MAX_COUNT.
+//   - fdBNB_scalar and fdZABNB_scalar work in double and are right at INT_MAX:
+//     fdBNB_scalar(INT_MAX, 2, 1, 1) is 1.21169035e-27, the exact value
+//     12 / ((x + 2)(x + 3)(x + 4)) to the 9 digits printed (it was 0).
+//   - fpBNB_scalar and fpZABNB_scalar count with a 64-bit index and return at
+//     INT_MAX: fpBNB_scalar(INT_MAX, 2, 1, 1) takes 4.8 s (about 2.3 ns per
+//     term). They stop earlier when the terms underflow past the mode, as they
+//     do for a small sigma (sigma = 0.01: 0.001 s).
+//   - ftofydel2_scalar, fdDEL_scalar and fpDEL_hlp_fn (so fpDEL_scalar) carry
+//     one recurrence state, O(1) memory, and return at INT_MAX:
+//     fdDEL_scalar(INT_MAX, 2, 1, 0.5) takes 17.6 s and fpDEL_hlp_fn(INT_MAX,
+//     2, 1, 0.5) 63.5 s (median of 3).
+//   - ftofySICHEL2_scalar and fcdfSICHEL_scalar (so fdSICHEL_scalar,
+//     fpSICHEL_scalar and the ZISICHEL scalars) carry only the previous step of
+//     the recursion: O(1) memory, and no overflow at INT_MAX.
+//     fdSICHEL_scalar(INT_MAX, 2, 1, -0.5) takes 13.9 s. The CDF stops once its
+//     sum has settled, so fpSICHEL_scalar(INT_MAX, 2, 1, -0.5) is instant, and
+//     fpSICHEL_scalar(INT_MAX, 1e9, 1, -0.5), which does not settle early,
+//     takes 25.9 s.
+//   Their cost is TIME: they are O(q) (O(x) for a density) and not interruptible
+//   from R (the searches behind the R functions fqDEL, fqSICHEL and fqDPO, in
+//   src/, check for an interrupt; these kernels do not, as a LinkingTo caller may
+//   run them where R cannot be called), so a large-but-legal count is slow rather
+//   than wrong. Bound q well below CK_MAX_COUNT in anything performance-sensitive.
 //
-// The kernels that are safe for any int, because they are closed form or
-// bounded by their support, are: fdNBI_scalar / fpNBI_scalar (and so the ZANBI
-// and ZINBI scalars built on them), fdMN4_scalar / fpMN4_scalar, and the
-// fq*_search quantile searches, which cap their own iteration count. The
-// frNBI_scalar / frZANBI_scalar / frZINBI_scalar samplers are safe too: they
-// take a uniform and invert the corresponding fq*_scalar, so they inherit that
-// bound and hold no RNG state of their own.
+// One more time cost, in DPO: the normalising constant of fdDPO_scalar and
+// fpDPO_scalar sums over a window around mu. With a huge mu AND a huge sigma
+// (mu = 3e9, sigma = 4e6, for which the window starts at 0) it meets no stopping
+// rule, scans the whole int range and only then gives NaN: 49.6 s for
+// fpDPO_scalar(10, 3e9, 4e6), and the same ~50 s on the first call for
+// fdDPO_scalar(1, 3e9, 4e6). The wrappers inherit it: fqDPO, fpDPO and fdDPO take
+// that long to answer NA / NaN for such a parameter set.
+//
+// The kernels that are safe for any int, because they are closed form or bounded
+// by their support, are: fdNBI_scalar / fpNBI_scalar (and so the ZANBI and
+// ZINBI scalars built on them), and fdMN4_scalar / fpMN4_scalar. The fq*_search
+// quantile searches (distr_search.h) scan at most CK_SEARCH_MAX = INT_MAX - 1
+// terms and return "not found" (NA) for a quantile beyond that, and give up
+// earlier on a search that cannot reach p; they are O(quantile) in time.
+//
+// The frNBI_scalar / frZANBI_scalar / frZINBI_scalar samplers take a uniform
+// and invert the corresponding fq*_scalar, so they inherit its bound and hold no
+// RNG state of their own. They are safe only for a finite mu and sigma and a
+// uniform u < 1, and return NA_INTEGER (not a count) when the quantile is not
+// an int in [0, CK_MAX_COUNT]: u = 1 for frNBI_scalar (the ZANBI and ZINBI
+// ones stay finite there), a non-finite mu, or a mu so large that the quantile
+// exceeds INT_MAX - 1 (frNBI_scalar(0.5, 1e10, 1) is NA).
 
 // Validate a probability argument of a quantile function on the scale the
 // caller actually supplied it.

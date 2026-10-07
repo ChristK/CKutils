@@ -17,8 +17,9 @@
 #
 # The arm64 jobs are not redundant. Out-of-range double -> int conversion is
 # undefined behaviour that resolves DIFFERENTLY per architecture -- INT_MIN on
-# x86-64, INT_MAX on AArch64 -- and only the second turns the CDF kernels'
-# `for (int i = 0; i <= q; i++)` into a non-terminating loop. See
+# x86-64, INT_MAX on AArch64 -- and only the second hands INT_MAX to the kernels
+# (slow for the BNB, DEL and SICHEL ones, a non-terminating `for (int i = ...;
+# i <= q; i++)` in an fpDPO_scalar sum that cannot settle). See
 # inst/tinytest/test-arch-int-conversion.R and the dedicated arch-int-conversion
 # workflow.
 #

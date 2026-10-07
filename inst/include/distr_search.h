@@ -32,7 +32,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     reports "not found" (NA_INTEGER) rather than a number; or
 //   - at a term that is not finite (the density computation broke down), or at
 //     a quantile beyond CK_SEARCH_MAX, which an int cannot hold: also "not found".
-// Up to 0.1.34 the searches stopped after 1e6 terms instead, and returned 1e6
+// Before 0.1.34 the searches stopped after 1e6 terms instead, and returned 1e6
 // as if it were the quantile.
 
 #include <cfloat>

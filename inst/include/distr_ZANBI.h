@@ -33,8 +33,9 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
 // The ZANBI kernels specifically are safe for any int, because the NBI kernels
 // they delegate to are closed form. The contract still matters for the BNB,
-// DPO, DEL and SICHEL kernels, some of which do not return at all when it is
-// violated.
+// DPO, DEL and SICHEL kernels: fpDPO_scalar does not return at q == INT_MAX when
+// its sum cannot settle, fdDPO_scalar's log density is wrong there, and the BNB,
+// DEL and SICHEL ones are O(q) in time (see recycling_helpers.h).
 
 #include <Rcpp.h>
 #include <cmath>

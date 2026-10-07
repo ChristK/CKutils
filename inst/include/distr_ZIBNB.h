@@ -34,9 +34,10 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // fqZIBNB_scalar itself is safe: the fqBNB_search it delegates to scans at most
 // the int range (CK_SEARCH_MAX = INT_MAX - 1, NA beyond; ~9 s to scan all of it)
 // and gives up earlier on a search that cannot reach p (distr_search.h). The
-// contract matters for the DPO, DEL and SICHEL density and CDF kernels, some of
-// which do not return at all when it is violated; the BNB ones return, even at
-// INT_MAX (fpBNB_scalar is O(q) in time: about 5 s there, less where the terms
+// contract matters for the DPO density and CDF kernels (fpDPO_scalar does not
+// return at q == INT_MAX when its sum cannot settle; fdDPO_scalar's log density
+// is wrong there); the BNB, DEL and SICHEL ones return, even at INT_MAX
+// (fpBNB_scalar is O(q) in time: about 5 s there, less where the terms
 // underflow, as it stops then; see distr_BNB.h).
 
 #include <Rcpp.h>

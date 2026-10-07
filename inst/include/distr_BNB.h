@@ -43,7 +43,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 // The BNB terms term(i) = P(X = i), with n = mu nu / sigma, m = 1/sigma + 1, k = 1/nu:
 //   log term(i) = lbeta(i+n, m+k) - lbeta(n, m) - log(i+k) - lbeta(i+1, k),
-// as Gamma(i+k) / (Gamma(i+1) Gamma(k)) = 1 / ((i+k) B(i+1, k)). Up to 0.1.34
+// as Gamma(i+k) / (Gamma(i+1) Gamma(k)) = 1 / ((i+k) B(i+1, k)). Before 0.1.34
 // the last part was -lgamma(i+1) - lgamma(k) + lgamma(i+k): that forms
 // lgamma(i+1) ~ i log i (2e10 at i = 1e9) and rounds lgamma(k) and the argument
 // i+k on its grid, so the term was off by ~1e-9 at i = 1e6 and ~1e-6 at 1e9,
@@ -88,7 +88,7 @@ inline double fdBNB_scalar(const int& x,
     // if (nu    <= 0.0) stop("nu must be greater than 0");
     // if (x      < 0.0) stop("x must be >=0");
 
-    // double argument: no int arithmetic on x (x + 1 wrapped at INT_MAX up to 0.1.34)
+    // double argument: no int arithmetic on x (x + 1 wrapped at INT_MAX before 0.1.34)
     const double logL = ck_bnb_terms(mu, sigma, nu).log_term(static_cast<double>(x));
     return log ? logL : std::exp(logL);
 }

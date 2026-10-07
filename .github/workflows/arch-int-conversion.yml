@@ -13,11 +13,14 @@
 #                       for a CDF whose true value is ~1. A wrong number.
 #
 #   AArch64 (fcvtzs)    saturates toward the sign, so a large positive double
-#                       becomes INT_MAX. That value then enters the
-#                       `for (int i = 0; i <= q; i++)` accumulation in
-#                       fpBNB_scalar / fpDPO_scalar / fpDEL_hlp_fn, where i++ at
-#                       INT_MAX is signed overflow and the loop cannot exit.
-#                       A hang, which no value-comparison test would catch.
+#                       becomes INT_MAX. That value then enters the kernels at
+#                       INT_MAX itself. The BNB, DEL and SICHEL kernels now
+#                       return there, though slowly (seconds to a minute: O(q)
+#                       time); the DPO sum that cannot settle still counts with
+#                       `for (int i = ...; i <= q; i++)` in fpDPO_scalar, where
+#                       i++ at INT_MAX is signed overflow and the loop cannot
+#                       exit. A hang or a minute-long call, which no
+#                       value-comparison test would catch.
 #
 # count_to_int() in recycling_helpers.h removes the conversion entirely, so both
 # architectures must now return NA. This workflow proves that on real arm64

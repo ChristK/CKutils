@@ -376,6 +376,16 @@
   counts truncate; `fqMN4()` at a `p` equal to a CDF value; `lower_tail = FALSE`
   for BCT, BCPEo and MN4 is 1 - F. The `fr*()` functions say that `n` is a
   single number (a vector errors).
+* The hazard contract for the `inst/include` kernels (`recycling_helpers.h`,
+  the README and the `distr_*.h` headers) and the comments of the arch
+  workflows match the code: only the DPO kernels still fail at `INT_MAX`
+  itself (an `fpDPO_scalar()` sum that cannot settle does not return; the
+  `fdDPO_scalar()` log density is `-Inf`); the BNB, DEL and SICHEL kernels
+  return there in O(1) memory but O(q) time (`fpBNB_scalar()` about 5 s,
+  `fpDEL_hlp_fn()` about a minute); the DPO limit at a huge `mu` and `sigma`;
+  the samplers are safe only for finite parameters and `u < 1`; which loops
+  can be interrupted. Comments about behaviour changed in this release say
+  "before 0.1.34", not "up to 0.1.34".
 
 ## Performance
 

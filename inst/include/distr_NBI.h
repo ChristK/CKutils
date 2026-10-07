@@ -33,7 +33,9 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // The NBI kernels specifically are safe for any int, because they are closed
 // form (R::dnbinom / R::pnbinom / R::dpois / R::ppois) rather than accumulating
 // over 0..q. The contract still matters for the BNB, DPO, DEL and SICHEL
-// kernels, some of which do not return at all when it is violated.
+// kernels: fpDPO_scalar does not return at q == INT_MAX when its sum cannot
+// settle, fdDPO_scalar's log density is wrong there, and the BNB, DEL and SICHEL
+// ones are O(q) in time (see recycling_helpers.h).
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (dnbinom_mu, ...)
 #include <cmath>

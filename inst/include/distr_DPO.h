@@ -56,7 +56,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // The normalising constant is the inverse of a sum of terms over y = 0, 1, ...
 // whose mass lies around mu, with a standard deviation of about
 // sqrt(mu * sigma) (taken as sqrt(mu * max(sigma, 1))). The sum has to cover
-// that mass. Up to 0.1.34 its callers stopped it at max(3 * x, 500): for small
+// that mass. Before 0.1.34 its callers stopped it at max(3 * x, 500): for small
 // x and mu beyond ~300 it missed the mass, so densities in the left tail came
 // out many orders of magnitude too large, and once the terms in that window
 // underflowed the constant was Inf (fpDPO(0, 5000, 2) = Inf, and with it every

@@ -476,7 +476,7 @@ extreme_test_grid$sigma <- basic_params$sigma[extreme_test_grid$param_idx]
 ck_extreme_quants_all <- suppressWarnings(fqDPO(extreme_test_grid$p, mu = extreme_test_grid$mu, sigma = extreme_test_grid$sigma))
 gamlss_extreme_quants_all <- suppressWarnings(qDPO(extreme_test_grid$p, mu = extreme_test_grid$mu, sigma = extreme_test_grid$sigma))
 
-# gamlss.dist returns Inf for p + 1e-9 >= 1 (a rule copied into CKutils up to 0.1.34, which made
+# gamlss.dist returns Inf for p + 1e-9 >= 1 (a rule copied into CKutils before 0.1.34, which made
 # every quantile in [1 - 1e-9, 1) Inf although it is finite): compare it where it is finite,
 # and check the rest against the exact quantile from the normalised density (log-sum-exp).
 expect_equal(ck_extreme_quants_all[is.finite(gamlss_extreme_quants_all)],
