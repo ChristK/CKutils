@@ -134,8 +134,13 @@ inline int fqZINBI_scalar(const double& p,
     if (log_p) p_adj = exp(p_adj);
     if (!lower_tail) p_adj = 1.0 - p_adj;
 
-    // Adjust probability for zero-inflation
-    const double p_new = (p_adj - nu) / (1.0 - nu) - 1e-10;
+    // Adjust probability for zero-inflation: p = nu + (1 - nu) F_NBI(x), so the
+    // NBI probability is (p - nu) / (1 - nu). CK_P_SLACK (distr_search.h) is the
+    // rounding slack of that sum. gamlss.dist::qZINBI subtracts 1e-10 here, 1e6
+    // times the rounding, which moved whole bands of p one quantile too low and
+    // broke q(p(x)) == x. p = 1 stays finite, as callers rely on: it maps to
+    // 1 - CK_P_SLACK / (1 - nu), below 1.
+    const double p_new = (p_adj - nu - CK_P_SLACK) / (1.0 - nu);
 
     if (p_new <= 0.0) {
         return 0;

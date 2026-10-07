@@ -151,7 +151,14 @@ inline double fqZIBNB_scalar(const double& p,
   if (log_p) p_ = exp(p_);
   if (!lower_tail) p_ = 1.0 - p_;
 
-  p_ = (p_ - tau)/(1.0 - tau) - (1e-07);
+  // p = 1 has an infinite quantile
+  if (p_ >= 1.0) return R_PosInf;
+
+  // Undo the zero-inflation: p = tau + (1 - tau) F_BNB(x), so the BNB probability
+  // is (p - tau) / (1 - tau). CK_P_SLACK (distr_search.h) is the rounding slack of
+  // that sum. gamlss.dist::qZIBNB subtracts 1e-7 here, 1e9 times the rounding,
+  // which moved whole bands of p one quantile too low and broke q(p(x)) == x.
+  p_ = (p_ - tau - CK_P_SLACK)/(1.0 - tau);
   if (p_ <= 0) p_ = 0.0;
   return fqBNB_scalar(p_, mu, sigma, nu, true, false);
 }

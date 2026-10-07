@@ -47,8 +47,9 @@ rt(fqDPO, fpDPO, 0:90, 7.48826, 5.59393)
 # =====================================================================================================================
 # BNB and SICHEL: the same fix. fqBNB() returned Inf, and fqSICHEL() NA with a warning, for every p + 1e-9 >= 1 (the same
 # gamlss.dist cutoff, copied from its R loop over pBNB / pSICHEL calls), although the quantile is finite. fqZABNB() draws
-# through fqBNB(): it reaches the window through its own transform of p ((p - tau) / (1 - tau) - 1e-10, then the zero mass
-# folded in); fqZIBNB() and fqZISICHEL() subtract 1e-7 and stay clear of it for every p <= 1 (a later commit changes these).
+# through fqBNB(): it reached the window through its own transform of p ((p - tau) / (1 - tau) - 1e-10, then the zero mass
+# folded in); fqZIBNB() and fqZISICHEL() subtracted 1e-7 and stayed clear of it for every p <= 1. The zero-inflated /
+# zero-altered part at the end of this file removed those offsets: all three reach the window now.
 # Every expectation of this part fails on 0.1.34 (Inf for BNB, NA and a warning for SICHEL), except those at p = 1 and above
 # (Inf / NA on both: they guard the new `p >= 1` test). The round trips reach p up to 1 - 1e-10, inside the window, and also
 # guard the exact search (`cdf >= p` compared exactly); the settle expectations (a p above the largest sum there is) fail
@@ -188,3 +189,158 @@ expect_true(!anyNA(q) && all(is.finite(q)) && !is.unsorted(q))
 rt(fqDEL, fpDEL, 0:60, 2.03065, 2.30919, 0.830551)
 rt(fqDEL, fpDEL, 0:300, 5, 0.5, 0.3)
 rt(fqDEL, fpDEL, 0:1200, 60, 0.9, 0.2)
+
+# =====================================================================================================================
+# Zero-inflated and zero-altered quantiles (ZINBI, ZANBI, ZABNB, ZIBNB, ZISICHEL): no 1e-10 / 1e-7 offsets.
+#
+# These five functions undo the zero mass, (p - w) / (1 - w), and then subtracted an ABSOLUTE offset before the base quantile:
+# 1e-10 (ZINBI, ZANBI, ZABNB) or 1e-7 (ZIBNB, ZISICHEL), copied from gamlss.dist. The rounding of p = w + (1 - w) F(x) is only
+# ~1e-16, so the offsets were 1e6 to 1e9 times too wide. Every p in (F(x), F(x) + (1 - w) * offset] came out one quantile too low
+# (fqZIBNB(0.564835214835, 5, 0.5, 1, 0.1) was 2: p lies 5e-8 above F(2), inside the 1e-7 offset; the definition, and
+# gamlss.dist::qZIBNB, give 3), q(p(x)) == x broke wherever the CDF step was below the offset, and the upper end was capped (the
+# quantile at p = 1 - 1e-12 stopped far short of the true one). They now take CK_P_SLACK = 2 * DBL_EPSILON (absolute, on the p
+# scale) off p instead: the rounding of p, and no more.
+#   * p = 1: ZINBI and ZANBI stay finite (IMPACTncd's C++ calls fqZANBI_scalar(1 - rn, ...) and relies on it); the double ones,
+#     ZIBNB and ZABNB, are Inf; the integer ZISICHEL is NA with the warning, as fqSICHEL.
+#   * A zero-altered variate above the mass at 0 is at least 1, and a p up to the mass plus the slack is the mass itself.
+# Every expectation of this part fails on the build before it, except the guards (marked as such: they hold on both and pin what
+# must NOT change, or catch a wrong slack in the other direction) and the checks of the test sets themselves.
+#
+# Reference values: the pmf of the base distribution summed in long double (NBI and BNB by their recurrences, SICHEL from the
+# Bessel K of each order; no code shared with the package). Each integer pinned has p - F(q - 1) and F(q) - p >= 1e-12, 1000
+# times the ~1e-15 accuracy of the package's own sums; fqZIBNB(0.564835214835, ...) has 5e-8. The other expectations are
+# properties (a move of 1e-11 around a CDF value of the package, a round trip) and need no external numbers.
+
+# ---- p a hair above and a hair below a CDF value: q(F(x) + 1e-11) == x + 1 and q(F(x) - 1e-11) == x, for x = 0 and 1 --------
+# 1e-11 is far above the ~1e-16 rounding of p and far below the old offsets ((1 - w) * 1e-10 or * 1e-7 on the p scale), so the
+# old code answered x to the first (the second is a guard: it catches a slack that moves the answer up). F is the package's own
+# CDF, and every set has CDF steps >= 1e-4 around x (checked, a check of the sets that holds on the old build too), so no
+# neighbouring CDF value can matter. The sets include the models' own parameters (alcohol, fruit, durations, smok_cig_ex) and
+# large zero masses (w = 0.9, 0.6, 0.5), where the rounding of p is amplified by 1 / (1 - w) on the scale of the base quantile.
+zz_call <- function(fn, x, par) as.numeric(do.call(fn, c(list(x), as.list(par))))
+zi_sets <- list(
+  ZINBI = list(c(5, .5, .3), c(2, 1, .9), c(20, .2, .05), c(11.1455, .219614, .00433)),
+  ZANBI = list(c(5, .5, .3), c(2, 1, .9), c(20, .2, .05), c(1.41353, 2.88325, .424)),
+  ZIBNB = list(c(5, .5, 1, .1), c(10.6139, .08621, .0174699, .3), c(2, .5, 1, .6)),
+  ZABNB = list(c(5, .5, 1, .1), c(10.6139, .08621, .0174699, .3), c(6.0573, .0490984, .0147, .0004)),
+  ZISICHEL = list(c(2, 1, -2, .1), c(2.34544, .212277, -6.19696, .2), c(1.5, 3, -1.5, .5), c(2.24037, .108986, -9.79, .0163)))
+for (fam in names(zi_sets)) {
+  fq_ <- match.fun(paste0("fq", fam)); fp_ <- match.fun(paste0("fp", fam))
+  up <- dn <- numeric(0)
+  for (par in zi_sets[[fam]]) {
+    Fx <- zz_call(fp_, 0:2, par)
+    expect_true(all(diff(c(0, Fx)) > 1e-4), info = paste(fam, "CDF steps around x = 0, 1 at", paste(par, collapse = ", ")))
+    up <- c(up, zz_call(fq_, Fx[1:2] + 1e-11, par))
+    dn <- c(dn, zz_call(fq_, Fx[1:2] - 1e-11, par))
+  }
+  n_set <- length(zi_sets[[fam]])
+  expect_identical(up, rep(c(1, 2), n_set), info = paste(fam, "q(F(x) + 1e-11) == x + 1, x = 0, 1"))
+  expect_identical(dn, rep(c(0, 1), n_set), info = paste(fam, "q(F(x) - 1e-11) == x, x = 0, 1 (guard)"))
+}
+
+# ---- round trip q(p(x)) == x, p from the package's own CDF (`rt` above) ----------------------------------------------------
+# In the tails the CDF steps fall below the old offsets (on the transformed scale: 1e-10 for ZINBI, ZANBI and ZABNB, 1e-7 for
+# ZIBNB and ZISICHEL) and the old code answered x - 1 there; `rt` keeps the x with a step above 1e-11. The ZINBI and ZANBI sets
+# with nu = 0.9 and 0.999 and the ZABNB set with tau = 0.6 are guards (the old build passes them, its offset being far wider than
+# the rounding): the rounding of p = w + (1 - w) F(x) is amplified by 1 / (1 - w) on the scale of F, which a slack that is
+# relative to F, or none, does not cover.
+rt(fqZINBI, fpZINBI, 0:250, 5, .5, .3)
+rt(fqZINBI, fpZINBI, 0:250, 20, .2, .05)
+rt(fqZINBI, fpZINBI, 0:100, 11.1455, .219614, .00433)
+rt(fqZINBI, fpZINBI, 0:250, 2, 1, .9)          # guard
+rt(fqZINBI, fpZINBI, 0:300, 2, 1, .999)        # guard
+rt(fqZANBI, fpZANBI, 0:250, 5, .5, .3)
+rt(fqZANBI, fpZANBI, 0:250, 20, .2, .05)
+rt(fqZANBI, fpZANBI, 0:600, 1.41353, 2.88325, .424)
+rt(fqZANBI, fpZANBI, 0:250, 2, 1, .9)          # guard
+rt(fqZANBI, fpZANBI, 0:300, 2, 1, .999)        # guard
+rt(fqZIBNB, fpZIBNB, 0:600, 5, .5, 1, .1)
+rt(fqZIBNB, fpZIBNB, 0:400, 10.6139, .08621, .0174699, .3)
+rt(fqZIBNB, fpZIBNB, 0:300, 2, .5, 1, .6)
+rt(fqZABNB, fpZABNB, 0:400, 10.6139, .08621, .0174699, .3)
+rt(fqZABNB, fpZABNB, 0:300, 6.0573, .0490984, .0147, .0004)
+rt(fqZABNB, fpZABNB, 0:300, 2, .5, 1, .6)      # guard
+rt(fqZISICHEL, fpZISICHEL, 0:150, 2, 1, -2, .1)
+rt(fqZISICHEL, fpZISICHEL, 0:80, 2.34544, .212277, -6.19696, .2)
+rt(fqZISICHEL, fpZISICHEL, 0:400, 1.5, 3, -1.5, .5)
+rt(fqZISICHEL, fpZISICHEL, 0:60, 2.24037, .108986, -9.79, .0163)
+
+# ---- zero-altered: p == the mass at 0 is 0, a hair above it is 1 ---------------------------------------------------------------
+# The mass is nu (ZANBI) or tau (ZABNB). The old code answered 0 for every p up to the mass + (1 - w) * 1e-10.
+expect_identical(fqZANBI(.3, 5, .5, .3), 0L)                     # guard
+expect_identical(fqZANBI(.3 + 1e-11, 5, .5, .3), 1L)
+expect_identical(fqZABNB(.1, 5, .5, 1, .1), 0)                   # guard
+expect_identical(fqZABNB(.1 + 1e-11, 5, .5, 1, .1), 1)
+# A p some ulp above the mass, past the slack (4.4e-16) but below what the base quantile resolves, is above it all the same: 1.
+# With a small mu the transformed p rounds to F_base(0) (R's qnbinom also takes a relative fuzz of 8 eps; the BNB search
+# compares the sum with that p), so the base quantile alone says 0 here; the zero-altered variate above the mass is at least 1.
+expect_identical(fqZANBI(.3 + 1e-15, .1, .1, .3), 1L)
+expect_identical(fqZABNB(.1 + 1e-15, .1, .1, 1, .1), 1)
+
+# ---- fqZIBNB(0.564835214835, 5, 0.5, 1, 0.1) is 3, not 2 ----------------------------------------------------------------------
+# p lies 5e-8 above F_ZIBNB(2) = 0.564835164835 (long-double reference; the package's CDF is within 7e-16 of it) and 8e-2 below
+# F_ZIBNB(3), so the quantile is 3, as gamlss.dist::qZIBNB, which has no offset, says. The old 1e-7 offset made it 2.
+expect_identical(fqZIBNB(0.564835214835, 5, 0.5, 1, 0.1), 3)
+# the package's own CDF brackets p the same way (guard: it holds on the old build too)
+expect_true(fpZIBNB(2, 5, 0.5, 1, 0.1) < 0.564835214835 && 0.564835214835 <= fpZIBNB(3, 5, 0.5, 1, 0.1))
+
+# ---- p = 1 ------------------------------------------------------------------------------------------------------------------
+# ZIBNB and ZABNB (double results) are Inf; ZISICHEL (integer) is NA with the warning, as fqSICHEL(1, ...). The old build gave a
+# finite cap for all three. A p above 1, within the 1.0001 tolerance of ZIBNB and ZISICHEL, is Inf / NA too (guards).
+expect_identical(fqZIBNB(1, 5, .5, 1, .1), Inf)
+expect_identical(fqZABNB(1, 5, .5, 1, .1), Inf)
+expect_identical(fqZIBNB(1.00005, 5, .5, 1, .1), Inf)               # guard
+expect_identical(fqZIBNB(0, 5, .5, 1, .1, lower_tail = FALSE), Inf)
+expect_identical(fqZABNB(0, 5, .5, 1, .1, log_p = TRUE), Inf)
+expect_warning(fqZISICHEL(1, 2, 1, -2, .1), "NAs produced")
+expect_true(is.na(suppressWarnings(fqZISICHEL(1, 2, 1, -2, .1))))
+expect_warning(fqZISICHEL(1.00005, 2, 1, -2, .1), "NAs produced")   # guard
+expect_true(is.na(suppressWarnings(fqZISICHEL(1.00005, 2, 1, -2, .1))))   # guard
+# ZINBI and ZANBI keep a finite value at p = 1 (guards), also with a large zero mass, where the slack is amplified
+expect_true(all(is.finite(fqZINBI(1, c(5, 2, 20), c(.5, 1, .2), c(.3, .9, .05)))))
+expect_true(all(is.finite(fqZANBI(1, c(5, 2, 20), c(.5, 1, .2), c(.3, .9, .05)))))
+
+# ---- the upper end is not capped -----------------------------------------------------------------------------------------------
+# p = 1 - 1e-8 ... 1 - 1e-10: the old offsets held the transformed p to at most 1 - 1e-10 (ZINBI, ZANBI, ZABNB) or 1 - 1e-7
+# (ZIBNB, ZISICHEL), so the quantile stopped short: fqZIBNB(1 - 1e-8, 148.473, 0.108158, 1.866, 0.501399) was 7953 for 9936.
+# The integers are the long-double reference quantiles (margin >= 1e-12 each, see above).
+cap <- list(
+  list("ZINBI", c(1010.22, .374893, .419279), c(1e-8, 1e-9), c(8626, 9562)),
+  list("ZINBI", c(11.1455, .219614, .00433), c(1e-9, 1e-10), c(87, 94)),
+  list("ZANBI", c(1.41353, 2.88325, .424), 1e-10, 93),
+  list("ZANBI", c(5, .5, .3), 1e-10, 76),
+  list("ZIBNB", c(148.473, .108158, 1.866, .501399), 1e-8, 9936),
+  list("ZIBNB", c(10.6139, .08621, .0174699, .3), c(1e-8, 1e-9), c(263, 330)),
+  list("ZABNB", c(10.6139, .08621, .0174699, .0004), c(1e-8, 1e-9), c(274, 343)),
+  list("ZABNB", c(6.0573, .0490984, .0147, .000398), c(1e-9, 1e-10), c(151, 177)),
+  list("ZISICHEL", c(2.34544, .212277, -6.19696, .2), c(1e-9, 1e-10), c(33, 37)),
+  list("ZISICHEL", c(2.24037, .108986, -9.79, .0163), c(1e-9, 1e-10), c(22, 24)))
+for (cs in cap) {
+  expect_identical(zz_call(match.fun(paste0("fq", cs[[1]])), 1 - cs[[3]], cs[[2]]), cs[[4]],
+                   info = paste0("fq", cs[[1]], " at 1 - ", paste(cs[[3]], collapse = ", "), " for ", paste(cs[[2]], collapse = ", ")))
+}
+# further in (p = 1 - 1e-12, 1 - 1e-10): the sum is at the limit of double precision, so only that the quantile is far above the
+# old cap (the references: 12337, 113, 16960, 644, 46; the old build: 10703, 95, 8138, 425, 25)
+expect_true(fqZINBI(1 - 1e-12, 1010.22, .374893, .419279) > 12000)
+expect_true(fqZANBI(1 - 1e-12, 1.41353, 2.88325, .424) > 100)
+expect_true(fqZIBNB(1 - 1e-10, 148.473, .108158, 1.866, .501399) > 15000)
+expect_true(fqZABNB(1 - 1e-12, 10.6139, .08621, .0174699, .0004) > 600)
+expect_true(fqZISICHEL(1 - 1e-12, 2.34544, .212277, -6.19696, .2) > 40)
+# the same quantile on the upper tail and the log scale
+expect_identical(fqZINBI(1e-10, 11.1455, .219614, .00433, lower_tail = FALSE), 94L)
+expect_identical(fqZINBI(log1p(-1e-10), 11.1455, .219614, .00433, log_p = TRUE), 94L)
+expect_identical(fqZISICHEL(1e-10, 2.34544, .212277, -6.19696, .2, lower_tail = FALSE), 37L)
+expect_identical(fqZISICHEL(log1p(-1e-10), 2.34544, .212277, -6.19696, .2, log_p = TRUE), 37L)
+expect_identical(fqZABNB(1e-9, 10.6139, .08621, .0174699, .0004, lower_tail = FALSE), 343)
+expect_identical(fqZIBNB(log1p(-1e-9), 10.6139, .08621, .0174699, .3, log_p = TRUE), 330)
+
+# ---- the zero-altered second transform: a small mu (P_base(0) near 1) ----------------------------------------------------------
+# The zero truncation maps the p-scale slack to (1 - P_base(0)) * slack on the scale of the base CDF, below the rounding of that
+# sum when P_base(0) is near 1, so the slack is taken off on the base scale too. Without it: fqZANBI(1, ...) rounds to a
+# probability of exactly 1 (NA, where p = 1 must stay finite), and fqZABNB's exact search fails q(p(1)) == 1.
+res_p1 <- NA_integer_
+expect_silent(res_p1 <- fqZANBI(1, c(.05, .1, .1), c(.1, 1, .1), c(.1, .1, .3)))
+expect_true(!anyNA(res_p1) && all(res_p1 >= 1L), info = "fqZANBI(p = 1) is finite at a small mu, silently")
+rt(fqZABNB, fpZABNB, 0:8, 0.0957895, 0.277371, 0.0231258, 0.0163009)   # P_BNB(0) = 0.98
+rt(fqZABNB, fpZABNB, 0:8, 0.0827971, 0.11918, 0.0154564, 0.00383418)
+rt(fqZABNB, fpZABNB, 0:8, 0.298812, 0.282458, 0.0131807, 0.168673)

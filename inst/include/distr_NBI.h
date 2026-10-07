@@ -37,6 +37,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 #include <Rcpp.h>   // brings in the R:: namespace math functions (dnbinom_mu, ...)
 #include <cmath>
+#include "distr_search.h"   // CK_P_SLACK, used by the ZINBI and ZANBI quantiles (they include this header)
 
 // SIMD-optimised NBI density scalar function
 inline double fdNBI_scalar(const int& x,

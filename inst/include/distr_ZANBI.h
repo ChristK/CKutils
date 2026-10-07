@@ -169,20 +169,29 @@ inline int fqZANBI_scalar(const double& p,
     if (log_p) p_adj = std::exp(p_adj);
     if (!lower_tail) p_adj = 1.0 - p_adj;
 
-    if (p_adj <= nu) {
+    // A p within the rounding slack above the mass nu at 0 is nu itself
+    if (p_adj <= nu + CK_P_SLACK) {
         return 0;
     }
 
-    // Adjust probability for zero-alteration
-    const double p_new = (p_adj - nu) / (1.0 - nu) - 1e-10;
+    // Adjust probability for zero-alteration: above the mass nu at 0 the variate
+    // is the NBI one truncated at 0, so p = nu + (1 - nu) (F_NBI(x) - F_NBI(0)) /
+    // (1 - F_NBI(0)). CK_P_SLACK (distr_search.h) is the rounding slack of that
+    // sum. gamlss.dist::qZANBI subtracts 1e-10 here, 1e6 times the rounding,
+    // which moved whole bands of p one quantile too low and broke q(p(x)) == x.
+    // p = 1 stays finite, as callers rely on: it maps to 1 - CK_P_SLACK / (1 - nu),
+    // below 1.
+    const double p_new = (p_adj - nu - CK_P_SLACK) / (1.0 - nu);
     const double cdf0 = fpNBI_scalar(0, mu, sigma, true, false);
-    const double p_new2 = cdf0 * (1.0 - p_new) + p_new;
+    // The zero-truncation maps the slack to (1 - cdf0) * slack on the base scale, below the rounding of this sum when cdf0 is near 1
+    // (a small mu): it is taken off here as well. This also keeps p = 1 below 1 on that scale (a sum that rounds to 1 is NA).
+    // A negative result (a tiny cdf0 and p_new) is clamped at 0; std::max keeps a NaN.
+    const double p_new2 = std::max(cdf0 * (1.0 - p_new) + p_new - CK_P_SLACK, 0.0);
 
-    if (p_new2 <= 0.0) {
-        return 0;
-    }
-
-    return fqNBI_scalar(p_new2, mu, sigma, true, false);
+    // Above the mass nu at 0 the zero-altered variate is at least 1. NA (a
+    // quantile an int cannot hold) is kept.
+    const int q = fqNBI_scalar(p_new2, mu, sigma, true, false);
+    return (q == NA_INTEGER || q >= 1) ? q : 1;
 }
 
 // SIMD-optimised ZANBI random generation scalar function

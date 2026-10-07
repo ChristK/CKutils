@@ -132,10 +132,15 @@ expect_identical(is.na(res_vec), c(FALSE, TRUE, FALSE),
 expect_equal(n_warn, 1L, info = "fqZINBI warns once per call")
 
 # Guards that hold with or without the fix. p = 1 is NOT an infinite quantile for
-# the zero-inflated quantile (it inverts at 1 - nu-adjusted - 1e-10, a finite
-# value), and it must stay that way: callers rely on the finite value.
+# the zero-inflated quantile (it inverts at 1 - CK_P_SLACK / (1 - nu), a finite
+# value), and it must stay that way: callers rely on the finite value. It was 77
+# while the transform subtracted 1e-10 (the NBI quantile at 1 - 1e-10, a cap); with
+# only the rounding slack taken off it is the NBI quantile a few ulp short of 1 (110
+# when this was written). The value is not pinned: finite, and not below what it was.
+res_p1 <- NA_integer_   # expect_silent() assigns nothing when the call warns: then this fails, instead of an error
 expect_silent(res_p1 <- fqZINBI(1, 5, .5, .3))
-expect_identical(res_p1, 77L, info = "fqZINBI(p = 1) keeps its finite value, silently")
+expect_true(!is.na(res_p1) && res_p1 >= 77L,
+            info = "fqZINBI(p = 1) keeps a finite value, not below the old 77, silently")
 expect_silent(res_na <- fqZINBI(NaN, 5, .5, .3))
 expect_true(is.na(res_na), info = "fqZINBI NaN p is NA, silently")
 

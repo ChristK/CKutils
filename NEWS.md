@@ -329,6 +329,22 @@
   quantile draw unchanged. `fpDPO()` also returns `NaN` at the first
   non-finite term, so an infinite `mu` or `sigma` no longer sums `NaN` terms up
   to `q`.
+* **Zero-inflated and zero-altered quantiles no longer take a fixed 1e-10 or
+  1e-7 off `p`.** After removing the zero mass, `fqZINBI()`, `fqZANBI()` and
+  `fqZABNB()` subtracted 1e-10, and `fqZIBNB()` and `fqZISICHEL()` 1e-7, offsets
+  copied from gamlss.dist that are about a million times the rounding of `p`.
+  Every `p` that close above a CDF value came out one quantile too low
+  (`fqZIBNB(0.564835214835, 5, 0.5, 1, 0.1)` was 2 for 3), `q(p(x)) == x`
+  failed wherever the CDF step was smaller, and the upper end was capped
+  (`fqZIBNB(1 - 1e-8, 148.473, 0.108158, 1.866, 0.501399)` was 7953 for 9936).
+  Only the rounding slack, 2 `DBL_EPSILON`, is now taken off. A zero-altered
+  quantile above the mass at 0 is at least 1. At `p = 1`, `fqZIBNB()` and
+  `fqZABNB()` return `Inf` and `fqZISICHEL()` `NA` with a warning, as their
+  base distributions do; `fqZINBI()` and `fqZANBI()` stay finite, which
+  callers of `fqZANBI_scalar(1 - u, ...)` rely on. In the models, the draws
+  that move go up one step to the correct quantile: about 1.2e-6 of fruit
+  (ZISICHEL) draws, 1.3e-7 of alcohol (ZINBI), 2e-8 of the ZANBI durations
+  and 8e-9 of `smok_cig_ex` (ZABNB).
 
 ## Documentation
 
@@ -535,6 +551,12 @@
   at most 1, a non-negative upper tail and a finite log upper tail; the vector
   `fpDEL()` still equals element-wise calls; `fpDPO(1e7, Inf, 2)` is `NaN` at
   once.
+* `test-distr_near_one.R` (zero-inflated / zero-altered part): `q(F(x) + 1e-11)`
+  and `q(F(x) - 1e-11)` at x = 0 and 1 for all five families, round trips
+  (with zero masses up to 0.999), `p` at the zero mass of ZANBI and ZABNB,
+  `p = 1`, the upper end pinned against a long-double reference, and the
+  zero-altered transform at a small `mu`. `test-fZINBI.R`, `test-fZANBI.R`: the
+  quantile at `p = 1` is finite and not below the old value, instead of pinned.
 
 # CKutils 0.1.33
 

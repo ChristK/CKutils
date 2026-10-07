@@ -147,12 +147,27 @@ inline double fqZABNB_scalar(const double& p,
   if (log_p) p_ = exp(p_);
   if (!lower_tail) p_ = 1.0 - p_;
 
-  p_ = (p_ - tau)/(1.0 - tau) - (1e-010);
+  // A p within the rounding slack above the mass tau at 0 is tau itself
+  if (p_ <= tau + CK_P_SLACK) return 0.0;
+  // p = 1 has an infinite quantile
+  if (p_ >= 1.0) return R_PosInf;
+
+  // Undo the zero-alteration: above the mass tau at 0 the variate is the BNB one
+  // truncated at 0, so p = tau + (1 - tau) (F_BNB(x) - F_BNB(0)) / (1 - F_BNB(0)).
+  // CK_P_SLACK (distr_search.h) is the rounding slack of that sum.
+  // gamlss.dist::qZABNB subtracts 1e-10 here, 1e6 times the rounding, which moved
+  // whole bands of p one quantile too low and broke q(p(x)) == x.
+  p_ = (p_ - tau - CK_P_SLACK)/(1.0 - tau);
   double cdf0 = fpBNB_scalar(0, mu, sigma, nu, true, false);
-  p_ = cdf0 * (1.0 - p_) + p_;
+  // The zero-truncation maps the slack to (1 - cdf0) * slack on the base scale, below the rounding of this sum when cdf0 is near 1
+  // (a small mu): it is taken off here as well.
+  p_ = cdf0 * (1.0 - p_) + p_ - CK_P_SLACK;
   if (p_ < 0.0) p_ = 0.0;
 
-  return fqBNB_scalar(p_, mu, sigma, nu, true, false);
+  // Above the mass tau at 0 the zero-altered variate is at least 1. NaN (the
+  // search gave up) is kept: std::max(1.0, NaN) would be 1.
+  const double q = fqBNB_scalar(p_, mu, sigma, nu, true, false);
+  return (q < 1.0) ? 1.0 : q;
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_ZABNB.cpp)

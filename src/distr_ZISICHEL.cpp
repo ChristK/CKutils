@@ -22,6 +22,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include <algorithm>
 #include "recycling_helpers.h"
 #include "distr_SICHEL.h"
+#include "distr_search.h"     // CK_P_SLACK
 #include "distr_ZISICHEL.h"   // canonical header-only scalar definitions
 // [[Rcpp::plugins(cpp17)]]
 
@@ -120,7 +121,16 @@ IntegerVector fqZISICHEL(NumericVector p,
             pnew[i] = 0.0;
             continue;
         }
-        pnew[i] = (p_transformed[i] - recycled.vec5[i]) / (1.0 - recycled.vec5[i]) - 1e-7;
+        // Undo the zero-inflation: p = tau + (1 - tau) F_SICHEL(x), so the SICHEL
+        // probability is (p - tau) / (1 - tau). CK_P_SLACK (distr_search.h) is the
+        // rounding slack of that sum. gamlss.dist::qZISICHEL subtracts 1e-7 here,
+        // 1e9 times the rounding, which moved whole bands of p one quantile too low
+        // and broke q(p(x)) == x. p = 1 is the quantile Inf, which an int cannot
+        // hold: pnew = 1 makes fqSICHEL report it as NA (with its warning).
+        pnew[i] = (p_transformed[i] >= 1.0)
+                      ? 1.0
+                      : (p_transformed[i] - recycled.vec5[i] - CK_P_SLACK) /
+                            (1.0 - recycled.vec5[i]);
         if (pnew[i] < 0.0) pnew[i] = 0.0;
     }
 

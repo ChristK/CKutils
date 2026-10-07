@@ -144,10 +144,15 @@ expect_identical(is.na(res_vec), c(FALSE, TRUE, FALSE),
 expect_equal(n_warn, 1L, info = "fqZANBI warns once per call")
 
 # Guards that hold with or without the fix. p = 1 is NOT an infinite quantile for
-# the zero-altered quantile (it inverts at a probability 1e-10 short of 1, a finite
-# value), and it must stay that way: IMPACTncd's C++ relies on the finite value.
+# the zero-altered quantile (it inverts at a probability a few ulp (CK_P_SLACK) short
+# of 1, a finite value), and it must stay that way: IMPACTncd's C++ relies on the
+# finite value. It was 78 while the transform subtracted 1e-10 (a cap); with only the
+# rounding slack taken off it is the NBI quantile a few ulp short of 1 (109 when this
+# was written). The value is not pinned: finite, and not below what it was.
+res_p1 <- NA_integer_   # expect_silent() assigns nothing when the call warns: then this fails, instead of an error
 expect_silent(res_p1 <- fqZANBI(1, 5, .5, .3))
-expect_identical(res_p1, 78L, info = "fqZANBI(p = 1) keeps its finite value, silently")
+expect_true(!is.na(res_p1) && res_p1 >= 78L,
+            info = "fqZANBI(p = 1) keeps a finite value, not below the old 78, silently")
 expect_silent(res_na <- fqZANBI(NaN, 5, .5, .3))
 expect_true(is.na(res_na), info = "fqZANBI NaN p is NA, silently")
 

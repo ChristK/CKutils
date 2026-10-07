@@ -50,6 +50,16 @@ constexpr int CK_SEARCH_MAX = INT_MAX - 1;
 constexpr double CK_P_FUZZ = 64.0 * DBL_EPSILON;
 inline bool ck_search_settled(const double& cdf, const double& p) { return cdf >= p * (1.0 - CK_P_FUZZ); }
 
+// The zero-inflated / zero-altered quantiles undo the zero mass first,
+// (p - w) / (1 - w), and p = w + (1 - w) F(x) carries the rounding of that
+// sum: up to half an ulp of 1 (1.1e-16) on the p scale, however small F(x) is,
+// so it can exceed the F(x) it came from after the division. CK_P_SLACK
+// (a few ulp of 1, absolute) is taken off p before the transform, which is what
+// keeps q(p(x)) == x. It replaces the absolute offsets of gamlss.dist (1e-7,
+// 1e-10), which are 1e9 and 1e6 times wider than the rounding they guard
+// against and move whole bands of p to the wrong quantile.
+constexpr double CK_P_SLACK = 2.0 * DBL_EPSILON;
+
 // `cdf` is the sum before `term` is added; `prev_term` the previous term (pass
 // a negative value for the first). A sum still below DBL_MIN (zero, or
 // subnormal) has not settled: an exact-zero term satisfies cdf + 0 == cdf for
