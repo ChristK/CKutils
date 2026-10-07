@@ -322,7 +322,16 @@ int fqDPO_search(const double& p,
     : 0;
   double cdf = 0.0;
   double prev_density = -1.0;
+  // Interruptible: Rcpp::checkUserInterrupt() every 2^20 terms (a scan can run for
+  // tens of seconds). Only src/ loops do this: the inst/include kernels (fqBNB_search,
+  // the DPO normalising-constant loop, fcdfSICHEL_scalar, CkDELCdf) are a LinkingTo API
+  // that a consumer may call from threads where the R API must not be used, so they
+  // stay uninterruptible. The first density at a new (mu, sigma) computes that constant
+  // (cached): an interrupt during it takes effect once it is done (about 5 s at
+  // mu = 2e9, sigma = 1e4).
+  unsigned int steps = 0;
   for (int q = static_cast<int>(start); q <= CK_SEARCH_MAX; q++) {
+    if ((++steps & 0xFFFFF) == 0) Rcpp::checkUserInterrupt();
     const double density = fdDPO_scalar(q, mu, sigma, false);
     if (!std::isfinite(density)) {
       return NA_INTEGER;
@@ -415,6 +424,8 @@ NumericVector fpDPO(const IntegerVector &q,
   const int chunk_size = 32;
   
   for (int chunk_start = 0; chunk_start < n; chunk_start += chunk_size) {
+    // interrupt check every 2^10 elements (R-API call: wrapper only, never in the headers)
+    if (chunk_start != 0 && (chunk_start & 0x3FF) == 0) Rcpp::checkUserInterrupt();
     int chunk_end = std::min(chunk_start + chunk_size, n);
     
     for (int i = chunk_start; i < chunk_end; i++) {

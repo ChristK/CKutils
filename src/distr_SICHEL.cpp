@@ -170,6 +170,8 @@ NumericVector fpSICHEL(const NumericVector& q,
     NumericVector cdf(n);
     
     for (int i = 0; i < n; i++) {
+        // interrupt check every 2^10 elements (wrapper only, never in the headers)
+        if ((i & 0x3FF) == 0 && i != 0) Rcpp::checkUserInterrupt();
         // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
         // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
         // undefined behaviour and it is not benign on either x86-64 or AArch64.
@@ -386,7 +388,14 @@ int fqSICHEL_search(const double& p, const double& mu, const double& sigma, cons
     // number
     const double sigma_alpha_cvec_sq = pow(mu / (sigma * alpha * cvec), 2.0);
 
+    // Interruptible: Rcpp::checkUserInterrupt() every 2^20 terms (a scan can run for
+    // tens of seconds). Only src/ loops do this: the inst/include kernels (fqBNB_search,
+    // the DPO normalising-constant loop, fcdfSICHEL_scalar, CkDELCdf) are a LinkingTo API
+    // that a consumer may call from threads where the R API must not be used, so they
+    // stay uninterruptible.
+    unsigned int steps = 0;
     for (int j = 1; j <= CK_SEARCH_MAX; j++) {
+        if ((++steps & 0xFFFFF) == 0) Rcpp::checkUserInterrupt();
         double tynew_curr = (cvec * sigma * (2.0 * (j + nu) / mu) + (1.0 / tynew_prev)) *
                            sigma_alpha_cvec_sq;
         double lpnew_curr = lpnew_prev + log(tynew_prev) - log(static_cast<double>(j));

@@ -345,6 +345,17 @@
   that move go up one step to the correct quantile: about 1.2e-6 of fruit
   (ZISICHEL) draws, 1.3e-7 of alcohol (ZINBI), 2e-8 of the ZANBI durations
   and 8e-9 of `smok_cig_ex` (ZABNB).
+* **Long quantile searches can be stopped with Ctrl-C.** Nothing in CKutils
+  checked for a user interrupt, so a scan such as `fqSICHEL(0.5, 3.19e9, 1,
+  -0.5)` (about 27 s) or `fqDEL(0.5, 1e9, 0.3, 0.4)` ran to the end.
+  `fqDEL()`, `fqSICHEL()` and `fqDPO()` now check every 2^20 terms, and the
+  vector `fpDEL()`, `fpSICHEL()` and `fpDPO()` every 1024 elements; they stop
+  within a second. The scalar kernels in `inst/include` (`fqBNB_search()`,
+  `CkDELCdf`, `fcdfSICHEL_scalar()`, the DPO normalising constant) do not
+  check, because a LinkingTo caller may run them where R cannot be called: a
+  single element there, or the DPO constant at a new `mu` and `sigma` (about
+  5 s at `mu = 2e9`, `sigma = 1e4`), runs to its end first. Results are
+  unchanged.
 
 ## Documentation
 

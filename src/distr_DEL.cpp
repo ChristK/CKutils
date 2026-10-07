@@ -352,6 +352,8 @@ NumericVector fpDEL(const IntegerVector &q,
   const int chunk_size = 32;
   
   for (int chunk_start = 0; chunk_start < n; chunk_start += chunk_size) {
+    // interrupt check every 2^10 elements (R-API call: wrapper only, never in the headers)
+    if (chunk_start != 0 && (chunk_start & 0x3FF) == 0) Rcpp::checkUserInterrupt();
     int chunk_end = std::min(chunk_start + chunk_size, n);
     
     for (int i = chunk_start; i < chunk_end; i++) {
@@ -511,11 +513,18 @@ int fqDEL_search(const double &p,
   // bit for bit. A search that has not reached p by then starts again from 0
   // on CkDELAccurate (distr_DEL.h, ACCURACY), whose terms are those of
   // CkDELCdf beyond that index: fqDEL(fpDEL(q)) == q there too.
+  // Interruptible: Rcpp::checkUserInterrupt() every 2^20 terms (a scan can run for
+  // tens of seconds). Only src/ loops do this: the inst/include kernels (fqBNB_search,
+  // the DPO normalising-constant loop, fcdfSICHEL_scalar, CkDELCdf) are a LinkingTo API
+  // that a consumer may call from threads where the R API must not be used, so they
+  // stay uninterruptible.
+  unsigned int steps = 0;
   {
     CkDELRecurrence r(mu, sigma, nu);
     double cdf = 0.0;
     double prev_density = -1.0;
     for (;;) {
+      if ((++steps & 0xFFFFF) == 0) Rcpp::checkUserInterrupt();
       const double density = exp(r.log_density());
       if (!std::isfinite(density)) return NA_INTEGER;
       if (ck_search_stalled(density, prev_density, cdf)) {
@@ -535,6 +544,7 @@ int fqDEL_search(const double &p,
   double cdf = 0.0;
   double prev_density = -1.0;
   for (;;) {
+    if ((++steps & 0xFFFFF) == 0) Rcpp::checkUserInterrupt();
     const double density = a.density();
     if (!std::isfinite(density)) return NA_INTEGER;
     if (ck_search_stalled(density, prev_density, cdf)) {
