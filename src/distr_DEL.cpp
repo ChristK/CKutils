@@ -171,10 +171,15 @@ NumericVector fdDEL(const IntegerVector &x,
   // The recurrence of the last DEL element. The next element continues it
   // when it has the same (mu, sigma, nu) and an x at or beyond its index, so
   // fdDEL(0:n, mu, sigma, nu) is O(n) rather than O(n^2); the values are the
-  // same doubles either way.
-  bool have_r = false;
+  // same doubles either way. An x below CK_DEL_COMPENSATE_AFTER uses
+  // CkDELRecurrence (as ever, bit for bit), an x at or above it
+  // CkDELAccurate (distr_DEL.h, ACCURACY); each is kept with its own
+  // parameters, so one kind of element does not discard the other's state.
+  bool have_r = false, have_a = false;
   CkDELRecurrence r(1.0, 1.0, 0.5);
+  CkDELAccurate a;
   double r_mu = 0.0, r_sigma = 0.0, r_nu = 0.0;
+  double a_mu = 0.0, a_sigma = 0.0, a_nu = 0.0;
 
   // Process in chunks for better cache performance
   const int chunk_size = 16;
@@ -223,14 +228,25 @@ NumericVector fdDEL(const IntegerVector &x,
         const double mu_val = recycled.vec2[i];
         const double sigma_val = recycled.vec3[i];
         const double nu_val = recycled.vec4[i];
-        if (!(have_r && mu_val == r_mu && sigma_val == r_sigma &&
-              nu_val == r_nu && r.j <= x_i)) {
-          r = CkDELRecurrence(mu_val, sigma_val, nu_val);
-          r_mu = mu_val; r_sigma = sigma_val; r_nu = nu_val;
-          have_r = true;
+        if (x_i < CK_DEL_COMPENSATE_AFTER) {
+          if (!(have_r && mu_val == r_mu && sigma_val == r_sigma &&
+                nu_val == r_nu && r.j <= x_i)) {
+            r = CkDELRecurrence(mu_val, sigma_val, nu_val);
+            r_mu = mu_val; r_sigma = sigma_val; r_nu = nu_val;
+            have_r = true;
+          }
+          while (r.j < x_i) r.advance();   // r.j == x_i
+          logfy[i] = r.log_density();
+        } else {
+          if (!(have_a && mu_val == a_mu && sigma_val == a_sigma &&
+                nu_val == a_nu && a.j <= x_i)) {
+            a = CkDELAccurate(mu_val, sigma_val, nu_val);
+            a_mu = mu_val; a_sigma = sigma_val; a_nu = nu_val;
+            have_a = true;
+          }
+          while (a.j < x_i) a.advance();   // a.j == x_i
+          logfy[i] = a.log_density();
         }
-        while (r.j < x_i) r.advance();   // r.j == x_i
-        logfy[i] = r.log_density();
         if (!log_)
           logfy[i] = exp(logfy[i]);
       }
@@ -367,7 +383,7 @@ NumericVector fpDEL(const IntegerVector &q,
       const double nu_val = recycled.vec4[i];
       if (!(have_c && mu_val == c_mu && sigma_val == c_sigma &&
             nu_val == c_nu && run.q <= q_i)) {
-        run = CkDELCdf(mu_val, sigma_val, nu_val);
+        run.reset(mu_val, sigma_val, nu_val);
         c_mu = mu_val; c_sigma = sigma_val; c_nu = nu_val; have_c = true;
       }
       cdf[i] = run.advance_to(q_i);
@@ -487,22 +503,44 @@ int fqDEL_search(const double &p,
   // Incremental search: sum densities until CDF >= p, one recurrence step per
   // index (O(q); the cumulative sums are fpDEL's, bit for bit). No fixed cap:
   // ck_search_gives_up() (distr_search.h) ends a search that cannot reach p,
-  // and NA_INTEGER is returned rather than a number
-  CkDELRecurrence r(mu, sigma, nu);
+  // and NA_INTEGER is returned rather than a number.
+  // The first CK_DEL_COMPENSATE_AFTER indices run on CkDELRecurrence, as ever,
+  // bit for bit. A search that has not reached p by then starts again from 0
+  // on CkDELAccurate (distr_DEL.h, ACCURACY), whose terms are those of
+  // CkDELCdf beyond that index: fqDEL(fpDEL(q)) == q there too.
+  {
+    CkDELRecurrence r(mu, sigma, nu);
+    double cdf = 0.0;
+    double prev_density = -1.0;
+    for (;;) {
+      const double density = exp(r.log_density());
+      if (ck_search_gives_up(density, prev_density, cdf)) {
+        return NA_INTEGER;
+      }
+      cdf += density;
+      if (cdf >= p) {
+        return r.j;
+      }
+      if (r.j + 1 == CK_DEL_COMPENSATE_AFTER) break;
+      prev_density = density;
+      r.advance();
+    }
+  }
+  CkDELAccurate a(mu, sigma, nu);
   double cdf = 0.0;
   double prev_density = -1.0;
   for (;;) {
-    const double density = exp(r.log_density());
+    const double density = a.density();
     if (ck_search_gives_up(density, prev_density, cdf)) {
       return NA_INTEGER;
     }
     cdf += density;
     if (cdf >= p) {
-      return r.j;
+      return a.j;
     }
-    if (r.j == CK_SEARCH_MAX) return NA_INTEGER;
+    if (a.j == CK_SEARCH_MAX) return NA_INTEGER;
     prev_density = density;
-    r.advance();
+    a.advance();
   }
 }
 

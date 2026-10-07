@@ -296,6 +296,21 @@
   band. A sum still below `DBL_MIN` no longer counts as settled
   (`ck_search_stalled()`, shared by all the searches; the BNB, SICHEL and DEL
   results are unchanged).
+* **`fpDEL()`, `fqDEL()` and `fdDEL()` are accurate at large counts.** The DEL
+  recurrence formed `log f(j) = logpy0 - lgamma(j + 1) + S_j` in double
+  precision, from numbers of size `j log j` that nearly cancel, so its error grew
+  with `j`: against the exact Poisson + negative binomial convolution the CDF
+  was off by 1e-10 at q = 8e3, -7.5e-8 at 9.4e5, -4.1e-6 at 9.4e6 and 8.8e-3 at
+  9.4e7; quantiles were wrong by 1 to 663,857 units, two of them a false `NA`,
+  and `fqDEL(0.5, 1e9, 0.3, 0.4)` returned 412402586 where the CDF is 1.4e-5.
+  From index 4096 on, the density, the CDF and the quantile search use a
+  re-formulated recurrence: it carries the deviation of the term ratio from its
+  Poisson value (before the Poisson peak) or from 1 (after it), anchors the log
+  density with one `dpois()` at the peak, and sums it with compensation.
+  Measured `|F - F_ref| < 5e-12` for counts up to 2.0e9 (`mu` 1e5 to 2e9) and
+  `< 2e-11` on a fuzz of 297 parameter sets; it is also faster per count (13 ns
+  against 23). Values for fewer than 4096 steps, including every count the
+  IMPACTncd models use (<= 10), are unchanged bit for bit.
 
 ## Documentation
 
@@ -488,6 +503,11 @@
   and exact zeros follow, `fqDPO()` is finite, brackets `p` on `fpDPO()` and
   equals the quantile of the log-sum-exp density, also for `p` from 1e-320 to
   1e-10; a `p` above such a pair's largest sum still ends at once.
+* `test-fDEL_linear.R`: the CDF, density and quantiles from count 4096 on
+  against an R-level Poisson-NB convolution, including exact quantiles at `mu`
+  1.2e4 to 1e9 (above 1e6 only under `at_home()`); vector == element-by-element
+  across 4096; `fqDEL(fpDEL(q)) == q` there; odd parameters at 4095, 4096 and
+  70000.
 
 # CKutils 0.1.33
 
