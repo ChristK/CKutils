@@ -786,3 +786,47 @@ expect_true(all(c("sales", "cost") %in% names(result44)),
              info = "lookup_dt: Cross-platform test adds lookup columns correctly")
 
 
+
+# Test 45: a column of tbl named like one of lookup_dt()'s own variables must not
+# replace that variable in the merge. Inside dt[...] a column takes precedence over
+# a variable of the calling function (data.table scoping), and the merge used
+# `tbl[, (cols) := dtsubset(lookup_tbl, rownum, return_cols)]`: a column named
+# rownum, lookup_tbl or return_cols stopped the call with an error that does not
+# name it -- or, for an integer rownum, returned the values of the wrong rows with
+# no message. Fixed in 0.1.35 (the merge is set(), evaluated in the function).
+lk45 <- CJ(year = 2020L:2022L, product = 1L:3L)
+lk45[, `:=`(sales = year * 10 + product, cost = as.numeric(product))]
+setkey(lk45, year, product)
+base45 <- data.table(year = c(2020L, 2021L, 2022L, 2021L, 2020L),
+                     product = c(1L, 2L, 3L, 1L, 3L))
+clean45 <- lookup_dt(copy(base45), lk45)
+expect_identical(clean45$sales, base45$year * 10 + base45$product,
+                 info = "lookup_dt (45): the clean lookup returns the right rows")
+scratch45 <- list(dbl = rep(c(0, 5), length.out = 5L), int = rep(1L:2L, length.out = 5L))
+for (nm in c("rownum", "lookup_tbl", "return_cols")) {
+  for (kind in names(scratch45)) {
+    t45 <- copy(base45)
+    set(t45, NULL, nm, scratch45[[kind]])
+    r45 <- tryCatch(lookup_dt(t45, lk45), error = function(e) conditionMessage(e))
+    lab <- paste0("a ", kind, " column named ", nm)
+    expect_true(is.data.table(r45), info = paste0("lookup_dt (45): ", lab, " does not stop the lookup"))
+    if (is.data.table(r45)) {
+      expect_identical(r45[, c("sales", "cost")], clean45[, c("sales", "cost")],
+                       info = paste0("lookup_dt (45): ", lab, " leaves the looked-up values right"))
+      expect_identical(r45[[nm]], scratch45[[kind]],
+                       info = paste0("lookup_dt (45): ", lab, " is left as it was"))
+    }
+  }
+}
+# a table with no spare column slots (as after readRDS()/qs) still gets the columns
+nospare45 <- unserialize(serialize(copy(base45), NULL))
+r45b <- lookup_dt(nospare45, lk45)
+expect_true(all(c("sales", "cost") %in% names(r45b)),
+            info = "lookup_dt (45): a table without over-allocation gets the lookup columns")
+expect_identical(r45b[, c("sales", "cost")], clean45[, c("sales", "cost")],
+                 info = "lookup_dt (45): ... with the right values")
+# merge = TRUE still updates a normal table by reference
+t45c <- copy(base45)
+lookup_dt(t45c, lk45)
+expect_true(all(c("sales", "cost") %in% names(t45c)),
+            info = "lookup_dt (45): merge = TRUE updates tbl by reference")

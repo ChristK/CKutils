@@ -1,3 +1,36 @@
+# CKutils 0.1.35
+
+## Bug fixes
+
+* **`lookup_dt()` no longer lets a column of `tbl` replace one of its own
+  variables in the merge.** The values were added with
+  `tbl[, (return_cols_nam) := dtsubset(lookup_tbl, rownum, return_cols)]`, and
+  inside `[.data.table` a column takes precedence over a variable of the calling
+  function. A column of `tbl` named `rownum`, `lookup_tbl` or `return_cols` -- a
+  caller's own scratch column; IMPACTncd's scenario hooks add columns to the
+  population table -- therefore replaced the variable on the right-hand side.
+  A double `rownum`, any `lookup_tbl` and any `return_cols` column stopped the
+  call with an error from the subset ("Row indices must be integer", "Input 'x'
+  must be a data.table", "Column indices must be integer") that does not name
+  the column; an INTEGER `rownum` column gave **no error at all** and the
+  looked-up values of the wrong rows. The merge is now `set(tbl, NULL,
+  return_cols_nam, dtsubset(lookup_tbl, rownum, return_cols))`, whose arguments
+  are evaluated in the function, so no column of `tbl` can reach them. The
+  result is otherwise unchanged: identical to 0.1.34 for every table that has no
+  such column (tested on factor and integer keys, replaced and new value
+  columns, a keyed `tbl`, and a `tbl` with no spare column slots, as after
+  `readRDS()`), and 1e6 rows x 65 columns took 0.022 s against 0.032 s. The
+  other variables of the function (`on`, `nam_i`, `cardinality`, ...) were
+  never on a right-hand side evaluated inside `tbl[...]`.
+
+## Tests
+
+* `test-lookup_dt.R` (Test 45): columns of `tbl` named `rownum`, `lookup_tbl`
+  and `return_cols`, as doubles and as integers, leave the looked-up values
+  equal to those of a table without them; a `tbl` with no spare column slots
+  still gets the lookup columns; `merge = TRUE` still updates a normal `tbl` by
+  reference. Each fails on 0.1.34.
+
 # CKutils 0.1.34
 
 ## Bug fixes

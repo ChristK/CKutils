@@ -308,7 +308,13 @@ lookup_dt <- function(
   # Merge lookup values into tbl or return them separately
   tryCatch({
     if (merge) {
-      tbl[, (return_cols_nam) := dtsubset(lookup_tbl, rownum, return_cols)]
+      # set(), not `tbl[, (return_cols_nam) := dtsubset(lookup_tbl, rownum, return_cols)]`:
+      # inside `[.data.table` a COLUMN of tbl takes precedence over a variable of this
+      # function, so a column of tbl named `rownum`, `lookup_tbl` or `return_cols` (a
+      # caller's own scratch column) replaced the variable on the right-hand side --
+      # an error from the subset, or, for an integer `rownum`, the values of the
+      # wrong rows with no message. set() evaluates its arguments here, in this function.
+      set(tbl, NULL, return_cols_nam, dtsubset(lookup_tbl, rownum, return_cols))
       return(invisible(tbl))
     } else {
       return(invisible(dtsubset(lookup_tbl, rownum, return_cols)))
