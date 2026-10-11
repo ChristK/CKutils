@@ -477,8 +477,9 @@ arrow_in <- function(field, values) {
 #'   Hive-style partitioning. If `NULL` (default), writes a single parquet file.
 #'   If specified, creates a directory structure with partition folders.
 #'   If `TRUE`, automatically partitions by "year" if that column exists.
-#' @param compression Character scalar. Compression codec to use.
-#'   Default is "snappy". Other options include "gzip", "zstd", "lz4", "uncompressed".
+#' @param compression Character scalar. Compression codec to use, for a single
+#'   file and for every file of a partitioned dataset alike. Default is "snappy".
+#'   Other options include "gzip", "zstd", "lz4", "uncompressed".
 #'
 #' @details
 #' The function stores data.table keys in the parquet schema metadata under
@@ -487,7 +488,8 @@ arrow_in <- function(field, values) {
 #'
 #' When `partitioning` is specified, the data is written using
 #' `arrow::write_dataset()` which creates a Hive-style partitioned directory.
-#' Otherwise, `arrow::write_parquet()` is used for a single file.
+#' Otherwise, `arrow::write_parquet()` is used for a single file. Both write
+#' with the codec given in `compression`.
 #'
 #' The `"impactncd"` key mode is designed for the IMPACTncd simulation project
 #' where data tables typically have distribution parameters (mu, sigma, nu, tau)
@@ -641,11 +643,14 @@ write_parquet_dt <- function(
         paste(missing_parts, collapse = ", ")
       )
     }
+    # `compression` reaches the parquet writer of every partition (it used to
+    # be dropped here, so a partitioned write was always snappy)
     arrow::write_dataset(
       dataset = tbl,
       path = path,
       format = "parquet",
-      partitioning = partitioning
+      partitioning = partitioning,
+      compression = compression
     )
   } else {
     arrow::write_parquet(

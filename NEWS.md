@@ -122,6 +122,14 @@
   including `Inf` and a `q` above the int range, where R's conversion to `NA`
   used to skip the parameter checks. Rcpp's error for a non-numeric `q` now
   names `target=double`.
+* **`write_parquet_dt()` writes a partitioned dataset with the codec given in
+  `compression`.** The argument reached only the single-file branch
+  (`arrow::write_parquet()`); `arrow::write_dataset()`, which writes a
+  partitioned dataset, was not given it and fell back to arrow's default, so
+  every partitioned dataset was snappy whatever `compression` said: the
+  metadata of each partition file read `SNAPPY` for "uncompressed", "gzip" and
+  "zstd" alike. It now reaches every partition file (they read `UNCOMPRESSED`,
+  `GZIP` and `ZSTD`). The default, "snappy", writes the same bytes as before.
 * **Draws of the IMPACTncd models.** None change. For `q >= 0` the CDFs are
   `identical()` to 0.1.35 -- on 860 cases (43 parameter sets over the ten
   functions, vector-recycled ones included; five `q` vectors: `0:60` with
@@ -186,6 +194,12 @@
   expects the lower tail at `q = -1` and `-0.5` (and the `mu` stop), and
   `test-fDPO.R`, which expected `NA` at `q = -1`, the lower and upper tail on
   the natural scale. All five are stopped by "q must be >=0" on 0.1.35.
+* `test-write_parquet_dt_compression.R` (new): for each codec the arrow build
+  has, a partitioned write round-trips; zstd and gzip frames are in every
+  partition file written with that codec, and no zstd frame is in an
+  uncompressed or snappy one; every codec gives fewer bytes than
+  "uncompressed"; the single-file branch round-trips with lz4 and zstd. Before
+  the fix 6 of its 17 expectations fail.
 
 # CKutils 0.1.35
 

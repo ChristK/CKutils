@@ -34,8 +34,9 @@ Hive-style partitioning. If `NULL` (default), writes a single parquet file.
 If specified, creates a directory structure with partition folders.
 If `TRUE`, automatically partitions by "year" if that column exists.}
 
-\item{compression}{Character scalar. Compression codec to use.
-Default is "snappy". Other options include "gzip", "zstd", "lz4", "uncompressed".}
+\item{compression}{Character scalar. Compression codec to use, for a single
+file and for every file of a partitioned dataset alike. Default is "snappy".
+Other options include "gzip", "zstd", "lz4", "uncompressed".}
 }
 \value{
 Invisibly returns the path to the written parquet file/directory.
@@ -53,7 +54,8 @@ metadata is read by [read_parquet_dt()] to automatically restore keys.
 
 When `partitioning` is specified, the data is written using
 `arrow::write_dataset()` which creates a Hive-style partitioned directory.
-Otherwise, `arrow::write_parquet()` is used for a single file.
+Otherwise, `arrow::write_parquet()` is used for a single file. Both write
+with the codec given in `compression`.
 
 The `"impactncd"` key mode is designed for the IMPACTncd simulation project
 where data tables typically have distribution parameters (mu, sigma, nu, tau)
