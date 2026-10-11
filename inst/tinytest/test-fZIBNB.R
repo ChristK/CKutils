@@ -170,7 +170,12 @@ if (requireNamespace("gamlss.dist", quietly = TRUE)) {
   expect_true(is.na(fdZIBNB(4e9, 1, 1, 1, 0.1)), info = "fdZIBNB unrepresentable x -> NA")
   expect_true(is.na(fpZIBNB(4e9, 1, 1, 1, 0.1)), info = "fpZIBNB unrepresentable q -> NA")
   expect_error(fdZIBNB(-1, 1, 1, 1, 0.1), "x must be >=0", info = "fdZIBNB rejects x < 0")
-  expect_error(fpZIBNB(-1, 1, 1, 1, 0.1), "q must be >=0", info = "fpZIBNB rejects q < 0")
+  expect_identical(c(fpZIBNB(-1, 1, 1, 1, 0.1), fpZIBNB(-1, 1, 1, 1, 0.1, lower_tail = FALSE),
+                     fpZIBNB(-1, 1, 1, 1, 0.1, log_p = TRUE),
+                     fpZIBNB(-1, 1, 1, 1, 0.1, lower_tail = FALSE, log_p = TRUE)),
+                   c(0, 1, -Inf, 0), info = "fpZIBNB q < 0 is below the support")
+  expect_error(fpZIBNB(-1, -1, 1, 1, 0.1), "mu must be greater than 0",
+               info = "fpZIBNB validates the parameters for q < 0")
   expect_error(fdZIBNB(1, 1, 1, 1, 0), "tau must be >0 and <1", info = "fdZIBNB rejects tau = 0")
   expect_error(fdZIBNB(1, 0, 1, 1, 0.1), "mu must be greater than 0", info = "fdZIBNB rejects mu = 0")
   expect_equal(length(fdZIBNB(numeric(0), 1, 1, 1, 0.1)), 0L,

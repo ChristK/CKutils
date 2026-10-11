@@ -30,7 +30,9 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
 // kernels in this package do no bounds checking; the caller owns
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0.
 // fqZIBNB_scalar itself is safe: the fqBNB_search it delegates to scans at most
 // the int range (CK_SEARCH_MAX = INT_MAX - 1, NA beyond; ~9 s to scan all of it)
 // and gives up earlier on a search that cannot reach p (distr_search.h). The
@@ -108,7 +110,7 @@ inline double fpZIBNB_scalar(const int& q,
     // if (sigma <= 0.0) stop("sigma must be greater than 0");
     // if (nu    <= 0.0) stop("nu must be greater than 0");
     // if (tau   <= 0.0 || tau >= 1.0) stop("tau must be >0 and <1");
-    // if (q      < 0) stop("q must be >=0");
+    // (a q < 0 is not an error: F = 0, the value below the support)
 
     double cdf;
     if (q < 0) {

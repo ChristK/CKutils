@@ -284,8 +284,12 @@ expect_true(is.na(fpZABNB(1, 1, 1, 1, NA_real_)), info = "fpZABNB NA tau -> NA")
 
 expect_error(fdZABNB(-1, 1, 1, 1, 0.1), "x must be >=0",
              info = "fdZABNB rejects x < 0")
-expect_error(fpZABNB(-1, 1, 1, 1, 0.1), "q must be >=0",
-             info = "fpZABNB rejects q < 0")
+expect_identical(c(fpZABNB(-1, 1, 1, 1, 0.1), fpZABNB(-1, 1, 1, 1, 0.1, lower_tail = FALSE),
+                   fpZABNB(-1, 1, 1, 1, 0.1, log_p = TRUE),
+                   fpZABNB(-1, 1, 1, 1, 0.1, lower_tail = FALSE, log_p = TRUE)),
+                 c(0, 1, -Inf, 0), info = "fpZABNB q < 0 is below the support")
+expect_error(fpZABNB(-1, -1, 1, 1, 0.1), "mu must be greater than 0",
+             info = "fpZABNB validates the parameters for q < 0")
 expect_error(fdZABNB(1, 0, 1, 1, 0.1), "mu must be greater than 0",
              info = "fdZABNB rejects mu = 0")
 expect_error(fdZABNB(1, 1, 0, 1, 0.1), "sigma must be greater than 0",

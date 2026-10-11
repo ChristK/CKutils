@@ -1,3 +1,89 @@
+# CKutils 0.1.36
+
+## Bug fixes
+
+* **The count CDFs accept a `q` below 0 and return the CDF below the support,
+  `F = 0`, instead of stopping with "q must be >=0".** `fpNBI()`, `fpBNB()`,
+  `fpSICHEL()`, `fpDPO()`, `fpDEL()`, `fpZINBI()`, `fpZANBI()`, `fpZIBNB()`,
+  `fpZABNB()` and `fpZISICHEL()` stopped on the first negative `q`, so
+  `P(Y < a) = F(a - 1)` could not be had for `a = 0`. IMPACTncd draws an
+  exposure as `qfun(minq + rank * (maxq - minq))`; with `F(-1)` out of reach it
+  took `minq = F(0) = P(Y = 0)` for `min_value: 0`, so every draw lay above the
+  mass at 0 and no simulant of a zero-inflated or zero-adjusted exposure was
+  ever a 0 (no non-drinkers with ZINBI). Any negative `q` -- `-Inf`, `-1e10`,
+  `-1`, and a non-integer in (-1, 0) such as `-0.5` or `-1e-300` -- now gives 0
+  (1 for `lower_tail = FALSE`; `-Inf` and 0 with `log_p = TRUE`), as R's
+  `pnbinom()` and `ppois()` do. The test is on the double, before the count is
+  converted to an `int`: that conversion truncates toward zero, so `-0.5` would
+  read as 0 and give `P(Y = 0)`, the very value being avoided, and `-Inf` would
+  read as `NA`. An `NA` or `NaN` `q` is still `NA`; so is a negative `q` whose
+  `mu`, `sigma`, `nu` or `tau` is `NA` or `NaN` (as in R), and an invalid
+  parameter still stops, with the message it had, for a negative `q` as for
+  any other. `fpDEL()`'s running CDF, which only moves forward, is neither
+  reset nor advanced by a negative element. With the mu = 5, sigma = 1,
+  nu = 0.3 ZINBI, `max_value` 80 and the 10,000 ranks `(i - 0.5) / 10000`,
+  `fqZINBI()` draws 4,167 zeros from `minq = fpZINBI(-1, ...) = 0`
+  (`F(0) / maxq = 0.4167`) and none from `minq = fpZINBI(0, ...)`.
+* **`fpBNB()`, `fpDEL()`, `fpDPO()` and `fpMN4()` take `q` as a numeric
+  vector.** They took an integer vector, so R converted `q` before the C++
+  ran: `-0.5` and `-1e-300` became 0 and gave `F(0)` (`fpBNB(-0.5, 2, 1, 1)`
+  was 0.5 and `fpDPO(-0.5, 2, 1)` 0.135, where the CDF is 0), and `-Inf` and
+  `-1e10` became `NA`, with the warning "NAs introduced by coercion to integer
+  range". They now read `q` as the other wrappers do. Integer input,
+  `NA_integer_` and a positive non-integer (truncated, as before) give the
+  same values, and a `q` of 2147483647 or more is `NA` as before, without R's
+  coercion warning. Two things change at the top of the range, in these
+  functions only, to what the other seven already did: a non-integer in
+  (2147483646, 2147483647), which R truncated to the count 2147483646, is now
+  `NA`; and an invalid parameter now stops for every `q` that is not `NA`,
+  including `Inf` and a `q` above the int range, where R's conversion to `NA`
+  used to skip the parameter checks. Rcpp's error for a non-numeric `q` now
+  names `target=double`.
+* **Draws of the IMPACTncd models.** None change. For `q >= 0` the CDFs are
+  `identical()` to 0.1.35 -- on 860 cases (43 parameter sets over the ten
+  functions, vector-recycled ones included; five `q` vectors: `0:60` with
+  non-integers, 100 and 250, sorted, shuffled, as integers, with `NA`, `NaN`,
+  `Inf` and 4e9, and shuffled with the parameters recycled over it; all four
+  `lower_tail` x `log_p` combinations), on 172 more with negative values
+  interleaved, and on 67,200 calls of an independent review grid -- apart from
+  the two top-of-range changes above. A model that never passes a negative
+  `q` draws exactly as before; IMPACTncd_Engl2026 now computes `minq = 0`
+  itself for `min_value: 0` and does not call the CDF there.
+
+## Documentation
+
+* The `q` argument of the eleven count CDFs (the ten above and `fpMN4()`) says
+  what a negative `q` gives. The caller contract of the header-only kernels
+  (`recycling_helpers.h`, `README.md` and each `distr_*.h`) says that a
+  negative `q` is within it -- the CDF kernels already returned the value below
+  the support -- and that `q` must be tested on the double before
+  `count_to_int()`; `cdf_below_support()` gives that value on each scale and
+  `any_isnan()` tests a row's parameters.
+
+## Tests
+
+* `test-distr_negative_q.R` (new, 2488 expectations, its first 1025 written
+  from the specification alone, without sight of the code): for all ten CDFs,
+  `q` in `-Inf`, `-1e10`, `-3`, `-1`, `-0.5`, `-1e-300` and `-1L` gives the
+  value below the support on all four scales, alone and in mixed vectors with
+  recycled parameters, whose non-negative positions equal separate calls; `NA`,
+  `NaN` and `NA_integer_` stay `NA`; an invalid parameter stops with its own
+  message for a negative `q`; `fpNBI()`, `fpZINBI()` and `fpZANBI()` agree with
+  `pnbinom()` across 0; the draw with `minq = pfun(-1)` has a zero share of
+  `F(0) / maxq` (within 2/N) and with `minq = pfun(0)` none. Added later: an
+  `NA` or `NaN` parameter gives `NA` for a negative `q`, an infinite one the
+  value below the support, and `fpMN4()` handles every negative `q`. On 0.1.35
+  the file stops at its first negative-`q` call; with that error turned into a
+  value, 817 of the first 1025 expectations fail, and the 208 that pass are the
+  non-negative and `NA` ones and 16 parameter checks at `q = -0.5` and
+  `-1e-300` in `fpBNB()`, `fpDEL()` and `fpDPO()`, which R had turned into 0.
+* `test-distr_cpp_branches.R`, `test-fZIBNB.R` and `test-fZABNB.R` expected a
+  negative `q` to stop; they now expect 0, 1, `-Inf` and 0 on the four scales,
+  and that an invalid `mu` still stops for a negative `q`. `test-fNBI.R` now
+  expects the lower tail at `q = -1` and `-0.5` (and the `mu` stop), and
+  `test-fDPO.R`, which expected `NA` at `q = -1`, the lower and upper tail on
+  the natural scale. All five are stopped by "q must be >=0" on 0.1.35.
+
 # CKutils 0.1.35
 
 ## Bug fixes

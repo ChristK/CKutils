@@ -29,7 +29,9 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
 // kernels in this package do no bounds checking; the caller owns
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
+// A negative q is within the contract: fpMN4_scalar returns the value below the
+// support, F = 0 (as it does for any q < 1).
 // The MN4 kernels specifically are safe for any int, because the support is the
 // four categories 1:4 and anything outside it returns a density of 0. The
 // contract still matters for the BNB, DPO, DEL and SICHEL kernels:
@@ -127,7 +129,7 @@ Rcpp::NumericVector fdMN4(const Rcpp::IntegerVector& x,
                           const Rcpp::NumericVector& nu,
                           const bool& log_);
 
-Rcpp::NumericVector fpMN4(const Rcpp::IntegerVector& q,
+Rcpp::NumericVector fpMN4(const Rcpp::NumericVector& q,
                           const Rcpp::NumericVector& mu,
                           const Rcpp::NumericVector& sigma,
                           const Rcpp::NumericVector& nu,

@@ -29,10 +29,12 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (unguarded on purpose -- see recycling_helpers.h for the full
 // statement). These kernels do no bounds checking, so the caller must ensure
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
-// The vectorised fdBNB/fpBNB wrappers below already apply it, but a package
-// using LinkingTo: CKutils to call the scalars directly does not get it.
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0.
+// The vectorised fdBNB/fpBNB wrappers below already apply that test, but a
+// package using LinkingTo: CKutils to call the scalars directly does not get it.
 // fpBNB_scalar is O(q) in time (about 2.3 ns per term: q = 2^31 - 1024 takes
 // about 5 s), but it stops once the terms have fallen below 2e-292 past the
 // mode, as they do for a small sigma: the sum is complete by then.
@@ -105,7 +107,7 @@ inline double fpBNB_scalar(const int& q,
     // if (mu    <= 0.0) stop("mu must be greater than 0");
     // if (sigma <= 0.0) stop("sigma must be greater than 0");
     // if (nu    <= 0.0) stop("nu must be greater than 0");
-    // if (q      < 0) stop("q must be >=0");
+    // (a q < 0 is not an error: F = 0, the value below the support)
 
     const ck_bnb_terms T(mu, sigma, nu);
     auto log_term = [&](double i) { return T.log_term(i); };
@@ -290,7 +292,7 @@ Rcpp::NumericVector fdBNB(const Rcpp::NumericVector& x,
                           const Rcpp::NumericVector& nu,
                           const bool& log);
 
-Rcpp::NumericVector fpBNB(const Rcpp::IntegerVector& q,
+Rcpp::NumericVector fpBNB(const Rcpp::NumericVector& q,
                           const Rcpp::NumericVector& mu,
                           const Rcpp::NumericVector& sigma,
                           const Rcpp::NumericVector& nu,

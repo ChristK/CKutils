@@ -30,9 +30,11 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (unguarded on purpose -- see recycling_helpers.h for the full
 // statement). These kernels do no bounds checking, so the caller must ensure
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
-// The vectorised wrappers below already apply it, but a package using
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0.
+// The vectorised wrappers below already apply that test, but a package using
 // LinkingTo: CKutils to call the scalars directly does not get it. Here the
 // kernels terminate and use O(1) memory for any int, INT_MAX included, but
 // they are O(x) / O(q) in TIME (one log, one division and, for the CDF, one
@@ -410,7 +412,7 @@ Rcpp::NumericVector fdDEL(const Rcpp::IntegerVector &x,
                          const Rcpp::NumericVector &nu,
                          const bool &log_);
 
-Rcpp::NumericVector fpDEL(const Rcpp::IntegerVector &q,
+Rcpp::NumericVector fpDEL(const Rcpp::NumericVector &q,
                          const Rcpp::NumericVector &mu,
                          const Rcpp::NumericVector &sigma,
                          const Rcpp::NumericVector &nu,

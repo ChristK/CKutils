@@ -112,7 +112,7 @@ NumericVector fdZINBI(const NumericVector& x,
 //' Cumulative distribution function for the Zero-Inflated Negative Binomial type I (ZINBI)
 //' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
 //'
-//' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+//' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of zero-inflation probabilities (0 < nu < 1).
@@ -156,9 +156,8 @@ NumericVector fpZINBI(const NumericVector& q,
   for (int i = 0; i < n; i++)
   {
     // NaN/NA q is handled in the compute loop below (mapped to NA); skip the
-    // `< 0` check here because NaN comparisons are always false anyway.
+    // parameter checks for it.
     if (ISNAN(recycled.vec1[i])) continue;
-    if (recycled.vec1[i] < 0) stop("q must be >=0");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
     if (recycled.vec4[i] <= 0.0 || recycled.vec4[i] >= 1.0) stop("nu must be between 0 and 1");
@@ -169,6 +168,14 @@ NumericVector fpZINBI(const NumericVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
+    // q below the support: F = 0, or NA for a NA/NaN parameter. Tested on the
+    // double, before count_to_int(), which would truncate -0.5 to 0 and read
+    // -Inf as NA.
+    if (recycled.vec1[i] < 0.0) {
+      out[i] = any_isnan(recycled.vec2[i], recycled.vec3[i], recycled.vec4[i])
+                 ? NA_REAL : cdf_below_support(lower_tail, log_p);
+      continue;
+    }
     // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
     // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
     // undefined behaviour and it is not benign on either x86-64 or AArch64.

@@ -30,7 +30,9 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
 // kernels in this package do no bounds checking; the caller owns
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0.
 // The ZINBI kernels specifically are safe for any int, because the NBI kernels
 // they delegate to are closed form. The contract still matters for the BNB,
 // DPO, DEL and SICHEL kernels: fpDPO_scalar does not return at q == INT_MAX when
@@ -91,7 +93,7 @@ inline double fpZINBI_scalar(const int& q,
     // if (mu    <= 0.0) stop("mu must be greater than 0");
     // if (sigma <= 0.0) stop("sigma must be greater than 0");
     // if (nu    <= 0.0 || nu >= 1.0) stop("nu must be between 0 and 1");
-    // if (q      < 0) stop("q must be >=0");
+    // (a q < 0 is not an error: F = 0, the value below the support)
 
     if (q < 0) {
         // Below the support: F = 0, so the upper tail is 1.

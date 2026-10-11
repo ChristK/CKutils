@@ -117,7 +117,7 @@ NumericVector fdBNB(const NumericVector& x,
 //' Cumulative distribution function for the Beta Negative Binomial (BNB) distribution
 //' with parameters mu (mean), sigma (dispersion), and nu (shape).
 //'
-//' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+//' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of positive shape parameters.
@@ -150,14 +150,15 @@ NumericVector fdBNB(const NumericVector& x,
 //'
 //' @export
 // [[Rcpp::export]]
-NumericVector fpBNB(const IntegerVector& q,
+NumericVector fpBNB(const NumericVector& q,
                       const NumericVector& mu,
                       const NumericVector& sigma,
                       const NumericVector& nu,
                       const bool& lower_tail = true,
                       const bool& log_p = false)
   {
-  // Recycle vectors to common length (handles IntegerVector->NumericVector conversion automatically)
+  // Recycle vectors to common length. q is a NumericVector, not an IntegerVector:
+  // R would coerce -0.5 to 0 and -Inf to NA (with a warning) before this runs.
   auto recycled = recycle_vectors(q, mu, sigma, nu);
   const int n = recycled.n;
   
@@ -165,10 +166,8 @@ NumericVector fpBNB(const IntegerVector& q,
   for (int i = 0; i < n; i++)
   {
     // NaN/NA q -> handled in the compute loop below (NA_REAL). Skip validation
-    // here so a NaN q does not trip the `< 0` check (NaN comparisons are false
-    // anyway) before we can map it to NA.
+    // here, so its parameters are not checked.
     if (ISNAN(recycled.vec1[i])) continue;
-    if (recycled.vec1[i] < 0) stop("q must be >=0");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
     if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");
@@ -179,6 +178,14 @@ NumericVector fpBNB(const IntegerVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
+    // q below the support: F = 0, or NA for a NA/NaN parameter. Tested on the
+    // double, before count_to_int(), which would truncate -0.5 to 0 and read
+    // -Inf as NA.
+    if (recycled.vec1[i] < 0.0) {
+      out[i] = any_isnan(recycled.vec2[i], recycled.vec3[i], recycled.vec4[i])
+                 ? NA_REAL : cdf_below_support(lower_tail, log_p);
+      continue;
+    }
     // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
     // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
     // undefined behaviour and it is not benign on either x86-64 or AArch64.

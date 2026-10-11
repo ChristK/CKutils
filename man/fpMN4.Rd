@@ -7,7 +7,7 @@
 fpMN4(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
-\item{q}{vector of (integer) quantiles. Must be 1, 2, 3, or 4.}
+\item{q}{vector of quantiles; the categories are 1 to 4. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}. A \code{q} below 1, including a negative one and \code{-Inf}, gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), except that a negative \code{q} gives \code{NA} if a parameter is \code{NA}.}
 
 \item{mu}{vector of (positive) parameters for category 1.}
 

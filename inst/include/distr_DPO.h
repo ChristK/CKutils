@@ -29,9 +29,11 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (unguarded on purpose -- see recycling_helpers.h for the full
 // statement). These kernels do no bounds checking, so the caller must ensure
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
-// The vectorised wrappers below already apply it, but a package using
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0.
+// The vectorised wrappers below already apply that test, but a package using
 // LinkingTo: CKutils to call the scalars directly does not get it. Here:
 //   * fpDPO_scalar adds the densities (about 50 ns each) up to q, but stops once
 //     the sum has settled (see the comment in the function). For a finite mu > 0
@@ -362,7 +364,7 @@ Rcpp::NumericVector fdDPO(const Rcpp::IntegerVector& x,
                           const Rcpp::NumericVector& sigma,
                           const bool& log_);
 
-Rcpp::NumericVector fpDPO(const Rcpp::IntegerVector& q,
+Rcpp::NumericVector fpDPO(const Rcpp::NumericVector& q,
                           const Rcpp::NumericVector& mu,
                           const Rcpp::NumericVector& sigma,
                           const bool& lower_tail,

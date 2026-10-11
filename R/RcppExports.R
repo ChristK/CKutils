@@ -506,7 +506,7 @@ fdBNB <- function(x, mu, sigma, nu, log = FALSE) {
 #' Cumulative distribution function for the Beta Negative Binomial (BNB) distribution
 #' with parameters mu (mean), sigma (dispersion), and nu (shape).
 #'
-#' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -669,7 +669,7 @@ fdDEL <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' Distribution function for the Delaporte distribution with parameters mu, sigma and nu.
 #' Computes the cumulative distribution function (CDF) of the Delaporte distribution.
 #'
-#' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means
 #' @param sigma vector of positive dispersion parameters
 #' @param nu vector of parameters between 0 and 1
@@ -934,7 +934,7 @@ fdDPO <- function(x, mu, sigma, log_ = FALSE) {
 #' Distribution function for the DPO (Double Poisson) distribution with parameters mu and sigma.
 #' Computes the cumulative distribution function (CDF) of the DPO distribution.
 #'
-#' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means
 #' @param sigma vector of positive dispersion parameters
 #' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x]
@@ -1130,7 +1130,7 @@ fdMN4 <- function(x, mu, sigma, nu, log_ = FALSE) {
 #' Distribution function for the multinomial distribution with 4 categories,
 #' optimised for performance with SIMD vectorisation and parameter recycling.
 #'
-#' @param q vector of (integer) quantiles. Must be 1, 2, 3, or 4.
+#' @param q vector of quantiles; the categories are 1 to 4. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}. A \code{q} below 1, including a negative one and \code{-Inf}, gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), except that a negative \code{q} gives \code{NA} if a parameter is \code{NA}.
 #' @param mu vector of (positive) parameters for category 1.
 #' @param sigma vector of (positive) parameters for category 2.
 #' @param nu vector of (positive) parameters for category 3.
@@ -1289,7 +1289,7 @@ fdNBI <- function(x, mu, sigma, log_p = FALSE) {
 #' Cumulative distribution function for the Negative Binomial type I (NBI) distribution
 #' with parameters mu (mean) and sigma (dispersion).
 #'
-#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x],
@@ -1416,7 +1416,7 @@ fdSICHEL <- function(x, mu, sigma, nu, log_p = FALSE) {
 #' Distribution function for the Sichel distribution with parameters 
 #' mu (mean), sigma (dispersion), and nu (shape).
 #'
-#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of shape parameters (real values).
@@ -1574,7 +1574,7 @@ fdZABNB <- function(x, mu, sigma, nu, tau, log = FALSE) {
 #' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
 #' nu (shape), and tau (hurdle probability).
 #'
-#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -1694,7 +1694,7 @@ fdZANBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' Cumulative distribution function for the Zero-Altered Negative Binomial type I (ZANBI)
 #' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-alteration probability).
 #'
-#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-alteration probabilities (0 < nu < 1).
@@ -1816,7 +1816,7 @@ fdZIBNB <- function(x, mu, sigma, nu, tau, log = FALSE) {
 #' Binomial (ZIBNB) distribution with parameters mu (mean), sigma (dispersion),
 #' nu (shape), and tau (zero-inflation probability).
 #'
-#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of positive shape parameters.
@@ -1936,7 +1936,7 @@ fdZINBI <- function(x, mu, sigma, nu, log = FALSE) {
 #' Cumulative distribution function for the Zero-Inflated Negative Binomial type I (ZINBI)
 #' distribution with parameters mu (mean), sigma (dispersion), and nu (zero-inflation probability).
 #'
-#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of zero-inflation probabilities (0 < nu < 1).
@@ -2096,7 +2096,7 @@ fdZISICHEL <- function(x, mu, sigma, nu, tau, log = FALSE) {
 #' Distribution function for the zero-inflated Sichel distribution with parameters 
 #' mu (mean), sigma (dispersion), nu (shape), and tau (zero-inflation).
 #'
-#' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means.
 #' @param sigma vector of positive dispersion parameters.
 #' @param nu vector of shape parameters (real values).

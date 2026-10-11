@@ -126,7 +126,7 @@ NumericVector fdZABNB(const NumericVector& x,
 //' Binomial (ZABNB) distribution with parameters mu (mean), sigma (dispersion),
 //' nu (shape), and tau (hurdle probability).
 //'
-//' @param q vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+//' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means.
 //' @param sigma vector of positive dispersion parameters.
 //' @param nu vector of positive shape parameters.
@@ -173,7 +173,6 @@ NumericVector fpZABNB(const NumericVector& q,
   // Validate parameters after recycling
   for (int i = 0; i < n; i++)
   {
-    if (recycled.vec1[i] < 0) stop("q must be >=0");
     if (recycled.vec2[i] <= 0.0) stop("mu must be greater than 0");
     if (recycled.vec3[i] <= 0.0) stop("sigma must be greater than 0");
     if (recycled.vec4[i] <= 0.0) stop("nu must be greater than 0");
@@ -185,6 +184,15 @@ NumericVector fpZABNB(const NumericVector& q,
   SIMD_HINT
   for (int i = 0; i < n; i++)
   {
+    // q below the support: F = 0, or NA for a NA/NaN parameter. Tested on the
+    // double, before count_to_int(), which would truncate -0.5 to 0 and read
+    // -Inf as NA.
+    if (recycled.vec1[i] < 0.0) {
+      out[i] = any_isnan(recycled.vec2[i], recycled.vec3[i], recycled.vec4[i],
+                         recycled.vec5[i])
+                 ? NA_REAL : cdf_below_support(lower_tail, log_p);
+      continue;
+    }
     // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
     // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
     // undefined behaviour and it is not benign on either x86-64 or AArch64.

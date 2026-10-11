@@ -7,7 +7,7 @@
 fpZANBI(q, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE)
 }
 \arguments{
-\item{q}{vector of quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
+\item{q}{vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means.}
 

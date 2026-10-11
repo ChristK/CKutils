@@ -29,7 +29,9 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (see recycling_helpers.h for the full statement). The *_scalar
 // kernels in this package do no bounds checking; the caller owns
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0.
 // The NBI kernels specifically are safe for any int, because they are closed
 // form (R::dnbinom / R::pnbinom / R::dpois / R::ppois) rather than accumulating
 // over 0..q. The contract still matters for the BNB, DPO, DEL and SICHEL
@@ -70,7 +72,7 @@ inline double fpNBI_scalar(const int& q,
     // Parameter validation (uncommented for performance)
     // if (mu    <= 0.0) stop("mu must be greater than 0");
     // if (sigma <= 0.0) stop("sigma must be greater than 0");
-    // if (q      < 0) stop("q must be >=0");
+    // (a q < 0 is not an error: F = 0, the value below the support)
 
     // For very small sigma values, use Poisson approximation
     if (sigma < 1e-4) {

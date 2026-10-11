@@ -271,7 +271,7 @@ NumericVector fdDEL(const IntegerVector &x,
 //' Distribution function for the Delaporte distribution with parameters mu, sigma and nu.
 //' Computes the cumulative distribution function (CDF) of the Delaporte distribution.
 //'
-//' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+//' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means
 //' @param sigma vector of positive dispersion parameters
 //' @param nu vector of parameters between 0 and 1
@@ -334,7 +334,7 @@ NumericVector fdDEL(const IntegerVector &x,
 //'
 //' @export
 // [[Rcpp::export]]
-NumericVector fpDEL(const IntegerVector &q,
+NumericVector fpDEL(const NumericVector &q,
                       const NumericVector &mu,
                       const NumericVector &sigma,
                       const NumericVector &nu,
@@ -365,20 +365,28 @@ NumericVector fpDEL(const IntegerVector &q,
     int chunk_end = std::min(chunk_start + chunk_size, n);
     
     for (int i = chunk_start; i < chunk_end; i++) {
-      // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
-      // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+      // NaN/NA q -> NA, before anything is checked or converted.
       if (ISNAN(recycled.vec1[i])) {
         cdf[i] = NA_REAL;
         continue;
       }
-      if (recycled.vec1[i] < 0)
-        stop("q must be >=0");
       if (recycled.vec2[i] <= 0.0)
         stop("mu must be greater than 0");
       if (recycled.vec3[i] <= 0.0)
         stop("sigma must be greater than 0");
       if (recycled.vec4[i] <= 0.0 || recycled.vec4[i] >= 1)
         stop("nu must be between 0 and 1");
+
+      // q below the support: F = 0 (NA for a NA/NaN parameter), stored on the
+      // lower-tail scale for the transformation pass below. Tested on the double,
+      // before count_to_int(), which would truncate -0.5 to 0 and read -Inf as NA.
+      // It leaves `run` alone: the cache only moves forward, and this element is
+      // not on it.
+      if (recycled.vec1[i] < 0.0) {
+        cdf[i] = any_isnan(recycled.vec2[i], recycled.vec3[i], recycled.vec4[i])
+                   ? NA_REAL : 0.0;
+        continue;
+      }
 
       // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
       // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int

@@ -128,7 +128,7 @@ NumericVector fdMN4(const IntegerVector& x,
 //' Distribution function for the multinomial distribution with 4 categories,
 //' optimised for performance with SIMD vectorisation and parameter recycling.
 //'
-//' @param q vector of (integer) quantiles. Must be 1, 2, 3, or 4.
+//' @param q vector of quantiles; the categories are 1 to 4. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}. A \code{q} below 1, including a negative one and \code{-Inf}, gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), except that a negative \code{q} gives \code{NA} if a parameter is \code{NA}.
 //' @param mu vector of (positive) parameters for category 1.
 //' @param sigma vector of (positive) parameters for category 2.
 //' @param nu vector of (positive) parameters for category 3.
@@ -181,24 +181,29 @@ NumericVector fdMN4(const IntegerVector& x,
 //' @seealso \code{\link{fdMN4}}, \code{\link{fqMN4}}
 //' @export
 // [[Rcpp::export]]
-NumericVector fpMN4(const IntegerVector& q,
+NumericVector fpMN4(const NumericVector& q,
                     const NumericVector& mu,
                     const NumericVector& sigma,
                     const NumericVector& nu,
                     const bool& lower_tail = true,
                     const bool& log_p = false) {
-  
-  // Use existing recycling infrastructure
+
+  // Use existing recycling infrastructure. q is a NumericVector, not an
+  // IntegerVector: R would coerce -Inf and -1e10 to NA (with a warning) before
+  // this runs, and -0.5 to 0.
   auto recycled = recycle_vectors(q, mu, sigma, nu);
   const int n = recycled.n;
-  
-  // Convert recycled IntegerVector to NumericVector for q
+
   NumericVector q_num = recycled.vec1;
   IntegerVector q_int(n);
   for (int i = 0; i < n; i++) {
-      // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
-      // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
-      // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    // q below the support: read as 0, for which fpMN4_scalar gives the
+    // below-support value (it does for any q < 1). Tested on the double, before
+    // count_to_int(), which would truncate -0.5 to 0 and read -Inf as NA.
+    if (q_num[i] < 0.0) { q_int[i] = 0; continue; }
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
     // Mark an unusable value with NA_INTEGER so the main loop skips it.
     if (!count_to_int(q_num[i], q_int[i])) q_int[i] = NA_INTEGER;
   }
@@ -210,6 +215,13 @@ NumericVector fpMN4(const IntegerVector& q,
   for (int i = 0; i < n; i++) {
     // NaN/NA q propagated from the conversion loop -> NA probability.
     if (q_int[i] == NA_INTEGER) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    // A negative q with a NA/NaN parameter is NA, as R's pnbinom is (the scalar
+    // kernel does not look at the parameters for a q below 1).
+    if (q_num[i] < 0.0 &&
+        any_isnan(recycled.vec2[i], recycled.vec3[i], recycled.vec4[i])) {
       out[i] = NA_REAL;
       continue;
     }

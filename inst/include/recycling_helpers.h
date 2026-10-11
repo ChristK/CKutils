@@ -289,11 +289,32 @@ constexpr double CK_MAX_COUNT = 2147483646.0;  // INT_MAX - 1
 // the count distributions reject a negative x with stop() while fdMN4/fpMN4,
 // whose support is the four categories 1:4, keep returning a density of 0 for
 // an out-of-category value such as -1.
+//
+// A CDF wrapper must test a negative q BEFORE calling this: the cast truncates
+// toward zero, so -0.5 would read as 0 (and give P(Y = 0)), and -Inf is false
+// here (NA) where the CDF is simply 0. See cdf_below_support() below.
 inline bool count_to_int(const double& v, int& value) {
     if (ISNAN(v) || v > CK_MAX_COUNT || v < -CK_MAX_COUNT) return false;
     value = static_cast<int>(v);
     return true;
 }
+
+// The CDF of a count distribution below its support, F(q) = 0 for any q < 0
+// (-Inf and a non-integer in (-1, 0) included), on the scale asked for:
+//   lower_tail, !log_p -> 0      lower_tail, log_p -> -Inf
+//   upper tail, !log_p -> 1      upper tail, log_p -> 0
+// The count CDF wrappers return this for a q < 0, tested on the double before
+// count_to_int(), so that a draw qfun(pfun(-1) + u * (...)) starts at 0 and
+// leaves the mass at 0 reachable. A NA/NaN parameter gives NA instead, as
+// R's pnbinom(-1, size = 1, mu = NA) does; an infinite one does not.
+inline double cdf_below_support(const bool& lower_tail, const bool& log_p) {
+    return lower_tail ? (log_p ? R_NegInf : 0.0)
+                      : (log_p ? 0.0 : 1.0);
+}
+
+// True when any of the arguments is NA or NaN (an infinite one is not).
+template <typename... T>
+inline bool any_isnan(const T&... v) { return (ISNAN(v) || ...); }
 
 // ===========================================================================
 // CALLER CONTRACT FOR THE HEADER-ONLY *_scalar KERNELS  (read before using
@@ -308,10 +329,16 @@ inline bool count_to_int(const double& v, int& value) {
 //
 // The contract is:
 //
-//     0 <= x, q <= CK_MAX_COUNT        (i.e. <= INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT           (i.e. <= INT_MAX - 1)
+//          q <= CK_MAX_COUNT
+//
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0 (cdf_below_support() above gives it on each scale). A
+// density x < 0 is not.
 //
 // Call count_to_int() yourself, or otherwise establish the bound, before
-// passing a count to any *_scalar kernel. Where the contract is broken the
+// passing a count to any *_scalar kernel (test q < 0 on the double first:
+// count_to_int() truncates -0.5 to 0). Where the contract is broken the
 // consequences differ by family; these are the concrete ones at 0.1.34 (times
 // are for one core of an -O2 build, at INT_MAX, for the parameters shown):
 //

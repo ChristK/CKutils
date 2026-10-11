@@ -31,10 +31,12 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (see recycling_helpers.h for the full statement). The
 // *_scalar kernels in this package do no bounds checking; the caller owns
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
-// The vectorised wrappers below already apply it via count_to_int(), but a
-// package using LinkingTo: CKutils to call the scalars directly does not get
-// it. The SICHEL scalars these delegate to take O(1) memory but O(x) / O(q)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0.
+// The vectorised wrappers below already apply those bounds via count_to_int(),
+// but a package using LinkingTo: CKutils to call the scalars directly does not
+// get it. The SICHEL scalars these delegate to take O(1) memory but O(x) / O(q)
 // time (see distr_SICHEL.h), so a large-but-legal count is slow.
 
 #include <Rcpp.h>
@@ -104,7 +106,7 @@ inline double fpZISICHEL_scalar(const int& q,
     // if (mu    <= 0.0) stop("mu must be greater than 0");
     // if (sigma <= 0.0) stop("sigma must be greater than 0");
     // if (tau   <= 0.0 || tau >= 1.0) stop("tau must be between 0 and 1");
-    // if (q      < 0) stop("q must be >=0");
+    // (a q < 0 is not an error: F = 0, the value below the support)
 
     double cdf;
     if (q < 0) {

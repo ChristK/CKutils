@@ -30,12 +30,14 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 //
 // CALLER CONTRACT (unguarded on purpose -- see recycling_helpers.h for the full
 // statement). These kernels do no bounds checking, so the caller must ensure
-//     0 <= x, q <= CK_MAX_COUNT   (INT_MAX - 1)
+//     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
 // before calling them; count_to_int() in recycling_helpers.h does that test.
-// The vectorised fdZABNB/fpZABNB wrappers below already apply it, but a package
-// using LinkingTo: CKutils to call the scalars directly does not get it. The BNB
-// kernels these delegate to no longer fail at INT_MAX itself (fpBNB_scalar
-// counts with a 64-bit index, fdBNB_scalar works in double), so
+// A negative q is within the contract: the CDF kernels return the value below
+// the support, F = 0.
+// The vectorised fdZABNB/fpZABNB wrappers below already apply that test, but a
+// package using LinkingTo: CKutils to call the scalars directly does not get
+// it. The BNB kernels these delegate to no longer fail at INT_MAX itself
+// (fpBNB_scalar counts with a 64-bit index, fdBNB_scalar works in double), so
 // fpZABNB_scalar returns at q == INT_MAX and fdZABNB_scalar is right at
 // x == INT_MAX. The cost remains: fpZABNB_scalar is O(q) in time (about 5 s at
 // q == INT_MAX, less where the terms underflow, as it stops then; see
@@ -100,7 +102,7 @@ inline double fpZABNB_scalar(const int& q,
     // if (sigma <= 0.0) stop("sigma must be greater than 0");
     // if (nu    <= 0.0) stop("nu must be greater than 0");
     // if (tau   <= 0.0 || tau >= 1.0) stop("tau must be >0 and <1");
-    // if (q      < 0) stop("q must be >=0");
+    // (a q < 0 is not an error: F = 0, the value below the support)
 
     double cdf;
     if (q < 0) {

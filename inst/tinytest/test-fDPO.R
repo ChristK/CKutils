@@ -351,8 +351,11 @@ expect_true(is.na(suppressWarnings(tryCatch(fdDPO(1, mu=1, sigma=0), error=funct
 # Test 19: Invalid x values for density and CDF
 expect_true(is.na(suppressWarnings(tryCatch(fdDPO(-1, mu=2, sigma=1), error=function(e) NA))), 
            info = "Invalid x < 0 for density")
-expect_true(is.na(suppressWarnings(tryCatch(fpDPO(-1, mu=2, sigma=1), error=function(e) NA))), 
-           info = "Invalid q < 0 for CDF")
+# A q below 0 is below the support: the CDF is 0 (not an error, not NA)
+expect_identical(fpDPO(c(-1, -0.5, -Inf), mu=2, sigma=1), c(0, 0, 0),
+                 info = "q < 0 for CDF is below the support")
+expect_identical(fpDPO(-1, mu=2, sigma=1, lower_tail=FALSE), 1,
+                 info = "q < 0 for the upper tail")
 
 # =============================================================================
 # SPECIAL CASES AND BOUNDARY CONDITIONS

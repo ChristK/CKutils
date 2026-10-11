@@ -358,7 +358,7 @@ int fqDPO_search(const double& p,
 //' Distribution function for the DPO (Double Poisson) distribution with parameters mu and sigma.
 //' Computes the cumulative distribution function (CDF) of the DPO distribution.
 //'
-//' @param q vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+//' @param q vector of quantiles. A \code{q} below 0 (including \code{-Inf}) gives 0 (1 for \code{lower_tail = FALSE}; \code{log_p = TRUE} takes its log), or \code{NA} if a parameter is \code{NA}; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means
 //' @param sigma vector of positive dispersion parameters
 //' @param lower_tail logical; if TRUE (default), probabilities are P[X <= x], otherwise, P[X > x]
@@ -412,7 +412,7 @@ int fqDPO_search(const double& p,
 //'
 //' @export
 // [[Rcpp::export]]
-NumericVector fpDPO(const IntegerVector &q,
+NumericVector fpDPO(const NumericVector &q,
                       const NumericVector &mu,
                       const NumericVector &sigma,
                       const bool &lower_tail = true,
@@ -433,18 +433,24 @@ NumericVector fpDPO(const IntegerVector &q,
     int chunk_end = std::min(chunk_start + chunk_size, n);
     
     for (int i = chunk_start; i < chunk_end; i++) {
-      // NaN/NA q -> NA: static_cast<int>(NaN) below is out-of-range float-to-int
-      // UB, and a NaN q slips past the `< 0` check (NaN comparisons are false).
+      // NaN/NA q -> NA, before anything is checked or converted.
       if (ISNAN(recycled.vec1[i])) {
         cdf[i] = NA_REAL;
         continue;
       }
-      if (recycled.vec1[i] < 0)
-        stop("q must be >=0");
       if (recycled.vec2[i] <= 0.0)
         stop("mu must be greater than 0");
       if (recycled.vec3[i] <= 0.0)
         stop("sigma must be greater than 0");
+
+      // q below the support: F = 0, or NA for a NA/NaN parameter. Tested on the
+      // double, before count_to_int(), which would truncate -0.5 to 0 and read
+      // -Inf as NA.
+      if (recycled.vec1[i] < 0.0) {
+        cdf[i] = any_isnan(recycled.vec2[i], recycled.vec3[i])
+                   ? NA_REAL : cdf_below_support(lower_tail, log_p);
+        continue;
+      }
 
       // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
       // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int

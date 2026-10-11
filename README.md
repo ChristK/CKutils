@@ -88,16 +88,21 @@ R-facing wrappers (`fdBNB()`, `fpBNB()`, …) validate on your behalf; calling t
 kernels directly means you take that job on. The contract is:
 
 ```
-0 <= x, q <= CK_MAX_COUNT      // CK_MAX_COUNT == INT_MAX - 1
+0 <= x <= CK_MAX_COUNT        // CK_MAX_COUNT == INT_MAX - 1
+     q <= CK_MAX_COUNT
 ```
 
-Use `count_to_int()` from `recycling_helpers.h`, which is exactly the guard the
-wrappers apply:
+A negative `q` is within the contract: the CDF kernels return the value below
+the support, `F = 0` (`0`, or `1` for the upper tail, `-Inf` or `0` on the log
+scale). Use `count_to_int()` from `recycling_helpers.h`, which is exactly the
+guard the wrappers apply, after testing `q` for a negative value (it truncates
+toward zero, so `-0.5` would read as `0`):
 
 ```cpp
+if (q_double < 0.0) return cdf_below_support(lower_tail, log_p);   // before count_to_int()
 int q_i;
 if (!count_to_int(q_double, q_i)) return NA_REAL;   // NA, NaN, or out of range
-double cdf = fpBNB_scalar(q_i, mu, sigma, nu, true, false);
+double cdf = fpBNB_scalar(q_i, mu, sigma, nu, lower_tail, log_p);
 ```
 
 Where the contract is broken the consequences differ by kernel. Only the DPO

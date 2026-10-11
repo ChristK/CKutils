@@ -123,8 +123,10 @@ expect_equal(cdf_ck_small, cdf_gamlss_small, tolerance = tolerance,
              info = "NBI CDF with small sigma should match gamlss.dist pNBI")
 
 # Test 10: CDF parameter validation
-expect_error(fpNBI(c(-1, 0, 1), mu = 1, sigma = 1), 
-             info = "fpNBI should error on negative q")
+expect_identical(fpNBI(c(-1, -0.5, 0), mu = 1, sigma = 1), c(0, 0, pnbinom(0, 1, mu = 1)),
+                 info = "fpNBI of a negative q is 0, below the support")
+expect_error(fpNBI(-1, mu = 0, sigma = 1), "mu must be greater than 0",
+             info = "fpNBI still validates mu for a negative q")
 expect_error(fpNBI(c(0, 1, 2), mu = 0, sigma = 1), 
              info = "fpNBI should error on non-positive mu")
 expect_error(fpNBI(c(0, 1, 2), mu = 1, sigma = 0), 

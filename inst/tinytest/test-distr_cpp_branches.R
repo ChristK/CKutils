@@ -9,6 +9,14 @@
 library(CKutils)
 library(tinytest)
 
+# A q below 0 is below the support, so the CDF is 0 on each scale; the count CDFs
+# used to stop with "q must be >=0". Lower tail, upper tail, and their logs.
+below_support <- function(f, ..., q = -1) {
+  c(f(q, ...), f(q, ..., lower_tail = FALSE),
+    f(q, ..., log_p = TRUE), f(q, ..., lower_tail = FALSE, log_p = TRUE))
+}
+expected_below <- c(0, 1, -Inf, 0)
+
 # --------------------------------------------------------------------------
 # 1. Validation / log_p / lower_tail error branches in fq / fp / fd
 # --------------------------------------------------------------------------
@@ -32,7 +40,8 @@ expect_error(fdNBI(0, mu =  1, sigma = 0, log_p = TRUE), "sigma must be greater 
 expect_error(fdNBI(-1, mu = 1, sigma = 1), "x must be >=0")
 expect_error(fpNBI(0, mu = -1, sigma = 1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpNBI(0, mu =  1, sigma = 0, log_p = TRUE), "sigma must be greater than 0")
-expect_error(fpNBI(-1, mu = 1, sigma = 1), "q must be >=0")
+expect_identical(below_support(fpNBI, mu = 1, sigma = 1), expected_below)
+expect_error(fpNBI(-1, mu = -1, sigma = 1), "mu must be greater than 0")   # a negative q is validated like any other
 
 ## ---- ZINBI (mu, sigma, nu in (0,1)) ----
 expect_error(fdZINBI(0, mu = -1, sigma = 1, nu = 0.1, TRUE), "mu must be greater than 0")
@@ -42,7 +51,8 @@ expect_error(fdZINBI(-1, mu = 1, sigma = 1, nu = 0.1), "x must be >=0")
 expect_error(fpZINBI(0, mu = -1, sigma = 1, nu = 0.1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpZINBI(0, mu = 1, sigma = 0, nu = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fpZINBI(0, mu = 1, sigma = 1, nu = 0, log_p = TRUE), "nu must be between 0 and 1")
-expect_error(fpZINBI(-1, mu = 1, sigma = 1, nu = 0.1), "q must be >=0")
+expect_identical(below_support(fpZINBI, mu = 1, sigma = 1, nu = 0.1), expected_below)
+expect_error(fpZINBI(-1, mu = -1, sigma = 1, nu = 0.1), "mu must be greater than 0")   # a negative q is validated like any other
 expect_error(fqZINBI(log(0.5), mu = -1, sigma = 1, nu = 0.1, log_p = TRUE), "mu must be greater than 0")
 expect_error(fqZINBI(log(0.5), mu = 1, sigma = 0, nu = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fqZINBI(log(0.5), mu = 1, sigma = 1, nu = 2, log_p = TRUE), "nu must be between 0 and 1")
@@ -56,7 +66,8 @@ expect_error(fdZANBI(-1, mu = 1, sigma = 1, nu = 0.1), "x must be >=0")
 expect_error(fpZANBI(0, mu = -1, sigma = 1, nu = 0.1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpZANBI(0, mu = 1, sigma = 0, nu = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fpZANBI(0, mu = 1, sigma = 1, nu = 0, log_p = TRUE), "nu must be between 0 and 1")
-expect_error(fpZANBI(-1, mu = 1, sigma = 1, nu = 0.1), "q must be >=0")
+expect_identical(below_support(fpZANBI, mu = 1, sigma = 1, nu = 0.1), expected_below)
+expect_error(fpZANBI(-1, mu = -1, sigma = 1, nu = 0.1), "mu must be greater than 0")   # a negative q is validated like any other
 expect_error(fqZANBI(log(0.5), mu = -1, sigma = 1, nu = 0.1, log_p = TRUE), "mu must be greater than 0")
 expect_error(fqZANBI(log(0.5), mu = 1, sigma = 0, nu = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fqZANBI(log(0.5), mu = 1, sigma = 1, nu = 2, log_p = TRUE), "nu must be between 0 and 1")
@@ -70,7 +81,8 @@ expect_error(fdBNB(-1, mu = 1, sigma = 1, nu = 1), "x must be >=0")
 expect_error(fpBNB(0, mu = -1, sigma = 1, nu = 1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpBNB(0, mu = 1, sigma = 0, nu = 1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fpBNB(0, mu = 1, sigma = 1, nu = 0, log_p = TRUE), "nu must be greater than 0")
-expect_error(fpBNB(-1, mu = 1, sigma = 1, nu = 1), "q must be >=0")
+expect_identical(below_support(fpBNB, mu = 1, sigma = 1, nu = 1), expected_below)
+expect_error(fpBNB(-1, mu = -1, sigma = 1, nu = 1), "mu must be greater than 0")   # a negative q is validated like any other
 expect_error(fqBNB(log(0.5), mu = -1, sigma = 1, nu = 1, log_p = TRUE), "mu must be greater than 0")
 expect_error(fqBNB(log(0.5), mu = 1, sigma = 0, nu = 1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fqBNB(log(0.5), mu = 1, sigma = 1, nu = 0, log_p = TRUE), "nu must be greater than 0")
@@ -87,7 +99,8 @@ expect_error(fpZABNB(0, mu = -1, sigma = 1, nu = 1, tau = 0.1, lower_tail = FALS
 expect_error(fpZABNB(0, mu = 1, sigma = 0, nu = 1, tau = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fpZABNB(0, mu = 1, sigma = 1, nu = 0, tau = 0.1, log_p = TRUE), "nu must be greater than 0")
 expect_error(fpZABNB(0, mu = 1, sigma = 1, nu = 1, tau = 1.5, log_p = TRUE), "tau must be >0 and <1")
-expect_error(fpZABNB(-1, mu = 1, sigma = 1, nu = 1, tau = 0.1), "q must be >=0")
+expect_identical(below_support(fpZABNB, mu = 1, sigma = 1, nu = 1, tau = 0.1), expected_below)
+expect_error(fpZABNB(-1, mu = -1, sigma = 1, nu = 1, tau = 0.1), "mu must be greater than 0")   # a negative q is validated like any other
 expect_error(fqZABNB(log(0.5), mu = -1, sigma = 1, nu = 1, tau = 0.1, log_p = TRUE), "mu must be greater than 0")
 expect_error(fqZABNB(log(0.5), mu = 1, sigma = 0, nu = 1, tau = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fqZABNB(log(0.5), mu = 1, sigma = 1, nu = 0, tau = 0.1, log_p = TRUE), "nu must be greater than 0")
@@ -105,7 +118,8 @@ expect_error(fdSICHEL(0, mu = 1, sigma = 0, nu = -0.5, log_p = TRUE), "sigma mus
 expect_error(fdSICHEL(-1, mu = 1, sigma = 1, nu = -0.5), "x must be >=0")
 expect_error(fpSICHEL(0, mu = -1, sigma = 1, nu = -0.5, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpSICHEL(0, mu = 1, sigma = 0, nu = -0.5, log_p = TRUE), "sigma must be greater than 0")
-expect_error(fpSICHEL(-1, mu = 1, sigma = 1, nu = -0.5), "q must be >=0")
+expect_identical(below_support(fpSICHEL, mu = 1, sigma = 1, nu = -0.5), expected_below)
+expect_error(fpSICHEL(-1, mu = -1, sigma = 1, nu = -0.5), "mu must be greater than 0")   # a negative q is validated like any other
 # fqSICHEL has a SEPARATE `if (log_p)` validation loop.
 expect_error(fqSICHEL(log(0.5), mu = -1, sigma = 1, nu = -0.5, log_p = TRUE), "mu must be greater than 0")
 expect_error(fqSICHEL(log(0.5), mu = 1, sigma = 0, nu = -0.5, log_p = TRUE), "sigma must be greater than 0")
@@ -116,7 +130,8 @@ expect_error(fqSICHEL(0.5, mu = 1, sigma = 0, nu = -0.5), "sigma must be greater
 expect_error(fpZISICHEL(0, mu = -1, sigma = 1, nu = -0.5, tau = 0.1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpZISICHEL(0, mu = 1, sigma = 0, nu = -0.5, tau = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fpZISICHEL(0, mu = 1, sigma = 1, nu = -0.5, tau = 2, log_p = TRUE), "tau must be between 0 and 1")
-expect_error(fpZISICHEL(-1, mu = 1, sigma = 1, nu = -0.5, tau = 0.1), "q must be >=0")
+expect_identical(below_support(fpZISICHEL, mu = 1, sigma = 1, nu = -0.5, tau = 0.1), expected_below)
+expect_error(fpZISICHEL(-1, mu = -1, sigma = 1, nu = -0.5, tau = 0.1), "mu must be greater than 0")   # a negative q is validated like any other
 # fqZISICHEL has a SEPARATE `if (log_p)` validation loop.
 expect_error(fqZISICHEL(log(0.5), mu = -1, sigma = 1, nu = -0.5, tau = 0.1, log_p = TRUE), "mu must be greater than 0")
 expect_error(fqZISICHEL(log(0.5), mu = 1, sigma = 0, nu = -0.5, tau = 0.1, log_p = TRUE), "sigma must be greater than 0")
@@ -134,7 +149,8 @@ expect_error(fdDEL(-1L, mu = 1, sigma = 1, nu = 0.1), "x must be >=0")
 expect_error(fpDEL(0L, mu = -1, sigma = 1, nu = 0.1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpDEL(0L, mu = 1, sigma = 0, nu = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fpDEL(0L, mu = 1, sigma = 1, nu = 0, log_p = TRUE), "nu must be between 0 and 1")
-expect_error(fpDEL(-1L, mu = 1, sigma = 1, nu = 0.1), "q must be >=0")
+expect_identical(below_support(fpDEL, mu = 1, sigma = 1, nu = 0.1, q = -1L), expected_below)
+expect_error(fpDEL(-1L, mu = -1, sigma = 1, nu = 0.1), "mu must be greater than 0")   # a negative q is validated like any other
 expect_error(fqDEL(log(0.5), mu = -1, sigma = 1, nu = 0.1, log_p = TRUE), "mu must be greater than 0")
 expect_error(fqDEL(log(0.5), mu = 1, sigma = 0, nu = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fqDEL(log(0.5), mu = 1, sigma = 1, nu = 2, log_p = TRUE), "nu must be between 0 and 1")
@@ -147,7 +163,8 @@ expect_error(fdDPO(0L, mu = 1, sigma = 0, TRUE), "sigma must be greater than 0")
 expect_error(fdDPO(-1L, mu = 1, sigma = 1), "x must be >=0")
 expect_error(fpDPO(0L, mu = -1, sigma = 1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpDPO(0L, mu = 1, sigma = 0, log_p = TRUE), "sigma must be greater than 0")
-expect_error(fpDPO(-1L, mu = 1, sigma = 1), "q must be >=0")
+expect_identical(below_support(fpDPO, mu = 1, sigma = 1, q = -1L), expected_below)
+expect_error(fpDPO(-1L, mu = -1, sigma = 1), "mu must be greater than 0")   # a negative q is validated like any other
 expect_error(fqDPO(log(0.5), mu = -1, sigma = 1, log_p = TRUE), "mu must be greater than 0")
 expect_error(fqDPO(log(0.5), mu = 1, sigma = 0, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fqDPO(2, mu = 1, sigma = 1), "p must be between 0 and 1")
