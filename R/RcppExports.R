@@ -603,7 +603,7 @@ fqBNB <- function(p, mu, sigma, nu, lower_tail = TRUE, log_p = FALSE) {
 #' The Delaporte distribution is a discrete probability distribution: the sum of
 #' a Poisson variable and an independent negative binomial variable.
 #'
-#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param x vector of (non-negative integer) quantiles. A negative \code{x}, including a non-integer such as -0.5 and \code{-Inf}, is an error, as for the other count densities; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means
 #' @param sigma vector of positive dispersion parameters
 #' @param nu vector of parameters between 0 and 1
@@ -872,7 +872,7 @@ fget_C <- function(x, mu, sigma) {
 #' The DPO distribution is a discrete probability distribution that extends the
 #' Poisson distribution by adding an additional dispersion parameter.
 #'
-#' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+#' @param x vector of (non-negative integer) quantiles. A negative \code{x}, including a non-integer such as -0.5 and \code{-Inf}, is an error, as for the other count densities; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 #' @param mu vector of positive means
 #' @param sigma vector of positive dispersion parameters
 #' @param log_ logical; if TRUE, probabilities p are given as log(p)

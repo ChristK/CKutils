@@ -359,7 +359,7 @@ Rcpp::NumericVector fget_C(const Rcpp::IntegerVector& x,
                           const Rcpp::NumericVector& mu,
                           const Rcpp::NumericVector& sigma);
 
-Rcpp::NumericVector fdDPO(const Rcpp::IntegerVector& x,
+Rcpp::NumericVector fdDPO(const Rcpp::NumericVector& x,
                           const Rcpp::NumericVector& mu,
                           const Rcpp::NumericVector& sigma,
                           const bool& log_);

@@ -146,6 +146,14 @@ expect_error(fdDEL(0L, mu = -1, sigma = 1, nu = 0.1, TRUE), "mu must be greater 
 expect_error(fdDEL(0L, mu = 1, sigma = 0, nu = 0.1, TRUE), "sigma must be greater than 0")
 expect_error(fdDEL(0L, mu = 1, sigma = 1, nu = 1.5, TRUE), "nu must be between 0 and 1")
 expect_error(fdDEL(-1L, mu = 1, sigma = 1, nu = 0.1), "x must be >=0")
+# x is read as a double: before 0.1.36 R coerced -0.5 and -1e-300 to 0, which
+# gave the density at 0, and -Inf to NA, with a coercion warning
+for (xx in c(-0.5, -1e-300, -Inf)) {
+  expect_error(fdDEL(xx, mu = 1, sigma = 1, nu = 0.1), "x must be >=0", info = paste("fdDEL x =", xx))
+}
+expect_identical(fdDEL(c(0, 2.7, NA), mu = 2, sigma = 1, nu = 0.5),
+                 fdDEL(c(0L, 2L, NA_integer_), mu = 2, sigma = 1, nu = 0.5),
+                 info = "fdDEL: a positive non-integer x is truncated, NA stays NA")
 expect_error(fpDEL(0L, mu = -1, sigma = 1, nu = 0.1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpDEL(0L, mu = 1, sigma = 0, nu = 0.1, log_p = TRUE), "sigma must be greater than 0")
 expect_error(fpDEL(0L, mu = 1, sigma = 1, nu = 0, log_p = TRUE), "nu must be between 0 and 1")
@@ -161,6 +169,13 @@ expect_error(fqDEL(2, mu = 1, sigma = 1, nu = 0.1), "p must be between 0 and 1")
 expect_error(fdDPO(0L, mu = -1, sigma = 1, TRUE), "mu must be greater than 0")
 expect_error(fdDPO(0L, mu = 1, sigma = 0, TRUE), "sigma must be greater than 0")
 expect_error(fdDPO(-1L, mu = 1, sigma = 1), "x must be >=0")
+# x is read as a double (see fdDEL above)
+for (xx in c(-0.5, -1e-300, -Inf)) {
+  expect_error(fdDPO(xx, mu = 1, sigma = 1.5), "x must be >=0", info = paste("fdDPO x =", xx))
+}
+expect_identical(fdDPO(c(0, 2.7, NA), mu = 2, sigma = 1.5),
+                 fdDPO(c(0L, 2L, NA_integer_), mu = 2, sigma = 1.5),
+                 info = "fdDPO: a positive non-integer x is truncated, NA stays NA")
 expect_error(fpDPO(0L, mu = -1, sigma = 1, lower_tail = FALSE, log_p = TRUE), "mu must be greater than 0")
 expect_error(fpDPO(0L, mu = 1, sigma = 0, log_p = TRUE), "sigma must be greater than 0")
 expect_identical(below_support(fpDPO, mu = 1, sigma = 1, q = -1L), expected_below)

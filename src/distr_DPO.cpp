@@ -176,7 +176,7 @@ NumericVector fget_C(const IntegerVector& x,
 //' The DPO distribution is a discrete probability distribution that extends the
 //' Poisson distribution by adding an additional dispersion parameter.
 //'
-//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+//' @param x vector of (non-negative integer) quantiles. A negative \code{x}, including a non-integer such as -0.5 and \code{-Inf}, is an error, as for the other count densities; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means
 //' @param sigma vector of positive dispersion parameters
 //' @param log_ logical; if TRUE, probabilities p are given as log(p)
@@ -230,12 +230,14 @@ NumericVector fget_C(const IntegerVector& x,
 //'
 //' @export
 // [[Rcpp::export]]
-NumericVector fdDPO(const IntegerVector &x,
+NumericVector fdDPO(const NumericVector &x,
                       const NumericVector &mu,
                       const NumericVector &sigma,
                       const bool &log_ = false)
 {
-  // Recycle vectors to common length
+  // Recycle vectors to common length. x is a NumericVector, not an
+  // IntegerVector: R would coerce -0.5 to 0 (and so give the density at 0
+  // where the `< 0` check below should stop) and -Inf to NA before this runs.
   auto recycled = recycle_vectors(x, mu, sigma);
   const int n = recycled.n;
   

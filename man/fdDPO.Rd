@@ -7,7 +7,7 @@
 fdDPO(x, mu, sigma, log_ = FALSE)
 }
 \arguments{
-\item{x}{vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
+\item{x}{vector of (non-negative integer) quantiles. A negative \code{x}, including a non-integer such as -0.5 and \code{-Inf}, is an error, as for the other count densities; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.}
 
 \item{mu}{vector of positive means}
 

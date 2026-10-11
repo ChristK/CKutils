@@ -406,7 +406,7 @@ inline double fpDEL_scalar(const int &q,
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_DEL.cpp)
-Rcpp::NumericVector fdDEL(const Rcpp::IntegerVector &x,
+Rcpp::NumericVector fdDEL(const Rcpp::NumericVector &x,
                          const Rcpp::NumericVector &mu,
                          const Rcpp::NumericVector &sigma,
                          const Rcpp::NumericVector &nu,

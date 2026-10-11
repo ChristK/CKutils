@@ -248,12 +248,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // fdDEL
-NumericVector fdDEL(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log_);
+NumericVector fdDEL(const NumericVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log_);
 RcppExport SEXP _CKutils_fdDEL(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP log_SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type nu(nuSEXP);
@@ -308,12 +308,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // fdDPO
-NumericVector fdDPO(const IntegerVector& x, const NumericVector& mu, const NumericVector& sigma, const bool& log_);
+NumericVector fdDPO(const NumericVector& x, const NumericVector& mu, const NumericVector& sigma, const bool& log_);
 RcppExport SEXP _CKutils_fdDPO(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP log_SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< const bool& >::type log_(log_SEXP);

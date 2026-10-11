@@ -103,7 +103,7 @@ inline void simd_log_4(const double* input, double* output) {
 //' The Delaporte distribution is a discrete probability distribution: the sum of
 //' a Poisson variable and an independent negative binomial variable.
 //'
-//' @param x vector of (non-negative integer) quantiles. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
+//' @param x vector of (non-negative integer) quantiles. A negative \code{x}, including a non-integer such as -0.5 and \code{-Inf}, is an error, as for the other count densities; a non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}.
 //' @param mu vector of positive means
 //' @param sigma vector of positive dispersion parameters
 //' @param nu vector of parameters between 0 and 1
@@ -161,13 +161,15 @@ inline void simd_log_4(const double* input, double* output) {
 //'
 //' @export
 // [[Rcpp::export]]
-NumericVector fdDEL(const IntegerVector &x,
+NumericVector fdDEL(const NumericVector &x,
                       const NumericVector &mu,
                       const NumericVector &sigma,
                       const NumericVector &nu,
                       const bool &log_ = false)
 {
-  // Recycle vectors to common length
+  // Recycle vectors to common length. x is a NumericVector, not an
+  // IntegerVector: R would coerce -0.5 to 0 (and so give the density at 0
+  // where the `< 0` check below should stop) and -Inf to NA before this runs.
   auto recycled = recycle_vectors(x, mu, sigma, nu);
   const int n = recycled.n;
   

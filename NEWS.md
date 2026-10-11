@@ -133,6 +133,19 @@
   including `Inf` and a `q` above the int range, where R's conversion to `NA`
   used to skip the parameter checks. Rcpp's error for a non-numeric `q` now
   names `target=double`.
+* **`fdDPO()` and `fdDEL()` take `x` as a numeric vector, so a negative `x`
+  stops for them as for the other count densities.** They took an integer
+  vector, so R converted `x` first: `-0.5` and `-1e-300` became 0 and gave the
+  density at 0 without a word (`fdDPO(-0.5, 2, 1.5)` was 0.210, the probability
+  of a 0, and `fdDEL(-0.5, 2, 1, 0.5)` 0.184), where `fdNBI()`, `fdBNB()`,
+  `fdSICHEL()` and the zero-inflated and zero-adjusted densities stop with
+  "x must be >=0"; and `-Inf` became `NA`, with R's coercion warning. Every
+  negative `x` now stops with that message. For `x >= 0` the values are
+  `identical()` to before (integer, non-integer, shuffled and `NA`/`NaN`
+  grids, recycled parameters, both scales), with the same top-of-range
+  changes as for the CDFs above: no coercion warning for an `x` of 2147483647
+  or more, `NA` for a non-integer in (2147483646, 2147483647), and a stop for
+  an invalid parameter next to `x = Inf`.
 * **`write_parquet_dt()` writes a partitioned dataset with the codec given in
   `compression`.** The argument reached only the single-file branch
   (`arrow::write_parquet()`); `arrow::write_dataset()`, which writes a
@@ -205,6 +218,9 @@
   expects the lower tail at `q = -1` and `-0.5` (and the `mu` stop), and
   `test-fDPO.R`, which expected `NA` at `q = -1`, the lower and upper tail on
   the natural scale. All five are stopped by "q must be >=0" on 0.1.35.
+  `test-distr_cpp_branches.R` also expects `fdDPO()` and `fdDEL()` to stop at
+  `x = -0.5`, `-1e-300` and `-Inf` (all six returned a value or `NA` before),
+  and a positive non-integer `x` to give the density of its integer part.
 * `test-write_parquet_dt_compression.R` (new): for each codec the arrow build
   has, a partitioned write round-trips; zstd and gzip frames are in every
   partition file written with that codec, and no zstd frame is in an
