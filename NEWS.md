@@ -82,6 +82,17 @@
   `fqZAGA()` 0.35 s against `qZAGA()` 0.37 s (bare `qgamma()` on the rows that
   reach it, 0.35 s), and gamlss.dist takes 0.8 to 1.3 times as long for the
   density and 1.1 to 1.3 times for the CDF.
+* **`write_parquet_dt()` takes `compression_level`**, the level of the
+  `compression` codec, for a single file and for every file of a partitioned
+  dataset alike (e.g. `compression = "zstd", compression_level = 9`). `NULL`,
+  the default, keeps arrow's default level and writes the same bytes as
+  before. arrow caps a zstd, brotli or lz4 level beyond the codec's range
+  (zstd 100 writes what 22 does); gzip takes 0 to 9, and anything else stops
+  with a message that says so, where arrow's own error was "zlib deflateInit
+  failed: (unknown error)"; "snappy" and "uncompressed" have no levels, and
+  giving one is arrow's error. `NA` and non-whole numbers are refused. On a
+  40,000-row table partitioned by year, zstd level 19 wrote 195,608 bytes
+  against 205,651 at arrow's default zstd level (1).
 
 ## Bug fixes
 
@@ -199,7 +210,12 @@
   partition file written with that codec, and no zstd frame is in an
   uncompressed or snappy one; every codec gives fewer bytes than
   "uncompressed"; the single-file branch round-trips with lz4 and zstd. Before
-  the fix 6 of its 17 expectations fail.
+  the fix 6 of its first 17 expectations fail. The other 21 cover
+  `compression_level`: `NULL` writes the same bytes as no argument, zstd level
+  19 is smaller than level 1 on both branches, a level-9 round trip, 9 and 9L
+  alike, zstd 100 capped at 22, gzip levels 1 and 9 differ, the gzip range
+  message, the refusal of `"9"`, two numbers, `NA`, 1.5, `Inf` and an empty
+  vector, and arrow's error for a level with snappy on both branches.
 
 # CKutils 0.1.35
 

@@ -480,6 +480,15 @@ arrow_in <- function(field, values) {
 #' @param compression Character scalar. Compression codec to use, for a single
 #'   file and for every file of a partitioned dataset alike. Default is "snappy".
 #'   Other options include "gzip", "zstd", "lz4", "uncompressed".
+#' @param compression_level `NULL` (default) or a single whole number: the
+#'   level of the `compression` codec, for a single file and for every file of
+#'   a partitioned dataset alike. `NULL` keeps arrow's default level for the
+#'   codec. A higher level compresses more and writes more slowly, e.g.
+#'   `compression = "zstd", compression_level = 9`. zstd takes 1 to 22 (and
+#'   negative, faster levels), brotli 0 to 11 and lz4 a level too; arrow caps a
+#'   level beyond a codec's range at its end. gzip takes 0 to 9 only (anything
+#'   else is an error). "snappy" and "uncompressed" have no levels: giving one
+#'   with them is an error.
 #'
 #' @details
 #' The function stores data.table keys in the parquet schema metadata under
@@ -489,7 +498,7 @@ arrow_in <- function(field, values) {
 #' When `partitioning` is specified, the data is written using
 #' `arrow::write_dataset()` which creates a Hive-style partitioned directory.
 #' Otherwise, `arrow::write_parquet()` is used for a single file. Both write
-#' with the codec given in `compression`.
+#' with the codec given in `compression`, at the level in `compression_level`.
 #'
 #' The `"impactncd"` key mode is designed for the IMPACTncd simulation project
 #' where data tables typically have distribution parameters (mu, sigma, nu, tau)
@@ -531,6 +540,10 @@ arrow_in <- function(field, values) {
 #' # Auto-partition by year if column exists
 #' write_parquet_dt(dt, "output_dir", partitioning = TRUE)
 #'
+#' # zstd at level 9 (smaller files than the default snappy, slower to write)
+#' write_parquet_dt(dt, "output_dir", partitioning = "year",
+#'                  compression = "zstd", compression_level = 9)
+#'
 #' # Read from fst and write to parquet
 #' write_parquet_dt("data.fst", "output.parquet", keys = c("id", "year"))
 #' }
@@ -542,7 +555,8 @@ write_parquet_dt <- function(
     path,
     keys = NULL,
     partitioning = NULL,
-    compression = "snappy"
+    compression = "snappy",
+    compression_level = NULL
 ) {
   # Input validation
   if (!requireNamespace("arrow", quietly = TRUE)) {
@@ -557,6 +571,24 @@ write_parquet_dt <- function(
   }
 
   stopifnot(is.character(path), length(path) == 1L)
+
+  # The level goes to arrow as an integer. NA is refused here (arrow would
+  # silently take it as "no level"). arrow caps an out-of-range zstd, brotli or
+  # lz4 level itself; gzip (zlib) takes 0 to 9 only, and arrow reports anything
+  # else as "zlib deflateInit failed: (unknown error)", so that case is caught
+  # here with a message that says so.
+  if (!is.null(compression_level)) {
+    if (!is.numeric(compression_level) || length(compression_level) != 1L ||
+        !is.finite(compression_level) ||
+        compression_level != round(compression_level)) {
+      stop("'compression_level' must be NULL or a single whole number.")
+    }
+    compression_level <- as.integer(compression_level)
+    if (identical(tolower(compression), "gzip") &&
+        (compression_level < 0L || compression_level > 9L)) {
+      stop("'compression_level' must be between 0 and 9 for gzip.")
+    }
+  }
 
   # Handle input: data.table or fst file path
   if (is.character(x) && length(x) == 1L && file.exists(x)) {
@@ -643,20 +675,23 @@ write_parquet_dt <- function(
         paste(missing_parts, collapse = ", ")
       )
     }
-    # `compression` reaches the parquet writer of every partition (it used to
-    # be dropped here, so a partitioned write was always snappy)
+    # `compression` and `compression_level` reach the parquet writer of every
+    # partition (the codec used to be dropped here, so a partitioned write was
+    # always snappy)
     arrow::write_dataset(
       dataset = tbl,
       path = path,
       format = "parquet",
       partitioning = partitioning,
-      compression = compression
+      compression = compression,
+      compression_level = compression_level
     )
   } else {
     arrow::write_parquet(
       x = tbl,
       sink = path,
-      compression = compression
+      compression = compression,
+      compression_level = compression_level
     )
   }
 
