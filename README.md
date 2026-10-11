@@ -149,6 +149,16 @@ parameters and `u < 1`: they return `NA_INTEGER` (not a count) when the quantile
 is not an `int` in `[0, CK_MAX_COUNT]` (`u = 1` for `frNBI_scalar`, a non-finite
 `mu`, or a `mu` so large that the quantile exceeds `INT_MAX - 1`).
 
+The zero-adjusted gamma (`distr_ZAGA.h`: `fdZAGA_scalar`, `fpZAGA_scalar`,
+`fqZAGA_scalar` and `frZAGA_scalar`) is continuous, so none of the count contract
+applies to it: the kernels take and return doubles and convert nothing to `int`.
+They still validate nothing (`mu > 0`, `sigma > 0`, `0 < nu < 1`, with `mu` and
+`sigma` finite, are yours to guarantee), call R's gamma functions, and
+`frZAGA_scalar` takes a uniform you supply, like the count samplers. Outside that
+contract they return `NaN` or a plausible but wrong number (`sigma = -1` acts as
+`1`), never hang; and a `mu * sigma^2` below the normal range (subnormal) loses
+accuracy, as in gamlss.dist.
+
 `recycling_helpers.h` carries the authoritative statement of all of the above,
 and each `distr_*.h` repeats the part that applies to it.
 

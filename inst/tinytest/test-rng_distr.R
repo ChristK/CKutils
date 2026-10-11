@@ -3,17 +3,21 @@
 # apply the corresponding inverse-CDF (fqXXX) transformation.
 
 # -----------------------------------------------------------------------------
-# Continuous distributions: frBCPEo, frBCT
+# Continuous distributions: frBCPEo, frBCT, frZAGA
 # -----------------------------------------------------------------------------
-cont_funs <- list(
-  frBCPEo = function(n, ...) frBCPEo(n, ...),
-  frBCT   = function(n, ...) frBCT(n, ...)
+# Each entry: function plus a list of valid parameters to exercise the body
+# (frZAGA has no tau, and needs 0 < nu < 1).
+cont_calls <- list(
+  list(nm = "frBCPEo", fun = frBCPEo, args = list(mu = 5, sigma = 0.1, nu = 1, tau = 2)),
+  list(nm = "frBCT",   fun = frBCT,   args = list(mu = 5, sigma = 0.1, nu = 1, tau = 2)),
+  list(nm = "frZAGA",  fun = frZAGA,  args = list(mu = 5, sigma = 0.5, nu = 0.2))
 )
 
-for (nm in names(cont_funs)) {
-  f <- cont_funs[[nm]]
+for (cc in cont_calls) {
+  nm <- cc$nm
+  f <- function(n) do.call(cc$fun, c(list(n = n), cc$args))
   set.seed(42)
-  x <- f(100, mu = 5, sigma = 0.1, nu = 1, tau = 2)
+  x <- f(100)
   expect_equal(length(x), 100L, info = paste(nm, "returns requested length"))
   expect_true(all(is.finite(x)), info = paste(nm, "produces finite values"))
   expect_true(is.numeric(x), info = paste(nm, "returns numeric"))
@@ -26,6 +30,13 @@ for (nm in names(cont_funs)) {
   expect_error(f(-3), info = paste(nm, "errors on negative n"))
 }
 
+# frZAGA is a double vector on [0, Inf) with exact zeros
+dqrng::dqset.seed(7)
+x <- frZAGA(2000, mu = 5, sigma = 0.5, nu = 0.2)
+expect_true(is.double(x), info = "frZAGA returns doubles, not integers")
+expect_true(all(x >= 0), info = "frZAGA is non-negative")
+expect_true(any(x == 0) && any(x > 0), info = "frZAGA has exact zeros and positive values")
+
 # parameter recycling for the continuous functions
 set.seed(1)
 expect_equal(length(frBCPEo(10, mu = c(1, 2), sigma = 0.3, nu = c(-0.5, 0.5), tau = 4)),
@@ -33,6 +44,9 @@ expect_equal(length(frBCPEo(10, mu = c(1, 2), sigma = 0.3, nu = c(-0.5, 0.5), ta
 set.seed(1)
 expect_equal(length(frBCT(10, mu = c(1, 2), sigma = 0.3, nu = c(-0.5, 0.5), tau = 4)),
              10L, info = "frBCT recycles parameters")
+set.seed(1)
+expect_equal(length(frZAGA(10, mu = c(1, 2), sigma = 0.3, nu = c(0.1, 0.5))),
+             10L, info = "frZAGA recycles parameters")
 
 # -----------------------------------------------------------------------------
 # Count distributions: frBNB, frZIBNB, frZABNB, frDPO, frDEL,
@@ -79,6 +93,12 @@ dqrng::dqset.seed(99)
 b <- frDPO(50, mu = 3, sigma = 1)
 expect_equal(a, b, info = "frDPO is reproducible under a fixed dqrng seed")
 
+dqrng::dqset.seed(99)
+a <- frZAGA(50, mu = 3, sigma = 0.5, nu = 0.2)
+dqrng::dqset.seed(99)
+b <- frZAGA(50, mu = 3, sigma = 0.5, nu = 0.2)
+expect_identical(a, b, info = "frZAGA is reproducible under a fixed dqrng seed")
+
 
 # =============================================================================
 # Header-only RNG scalars must agree with the exported R samplers
@@ -90,6 +110,8 @@ expect_equal(a, b, info = "frDPO is reproducible under a fixed dqrng seed")
 # seed. They now invert the same CDF from a caller-supplied uniform, which is
 # exactly what the R functions do with dqrng::dqrunif(), so the two must agree
 # draw for draw. Reached through the internal .fr*_scalar_vec bridges.
+# frZAGA_scalar (continuous, so its draws are doubles) was written to the same
+# contract from the start.
 # =============================================================================
 if (requireNamespace("dqrng", quietly = TRUE)) {
   n_par <- 1000L
@@ -105,7 +127,12 @@ if (requireNamespace("dqrng", quietly = TRUE)) {
     list(nm = "frZINBI", R = frZINBI, p = list(mu = 2, sigma = 1, nu = 0.1),
          C = function(u, p) CKutils:::.frZINBI_scalar_vec(u, p$mu, p$sigma, p$nu)),
     list(nm = "frZINBI", R = frZINBI, p = list(mu = 0.3, sigma = 2, nu = 0.5),
-         C = function(u, p) CKutils:::.frZINBI_scalar_vec(u, p$mu, p$sigma, p$nu))
+         C = function(u, p) CKutils:::.frZINBI_scalar_vec(u, p$mu, p$sigma, p$nu)),
+    # ZAGA is continuous: the draws are doubles, compared bit for bit
+    list(nm = "frZAGA",  R = frZAGA,  p = list(mu = 2, sigma = 1, nu = 0.1),
+         C = function(u, p) CKutils:::.frZAGA_scalar_vec(u, p$mu, p$sigma, p$nu)),
+    list(nm = "frZAGA",  R = frZAGA,  p = list(mu = 1e-3, sigma = 0.05, nu = 0.5),
+         C = function(u, p) CKutils:::.frZAGA_scalar_vec(u, p$mu, p$sigma, p$nu))
   )
   for (k in seq_along(parity_cases)) {
     cs <- parity_cases[[k]]
@@ -115,7 +142,7 @@ if (requireNamespace("dqrng", quietly = TRUE)) {
     dqrng::dqset.seed(4242)
     from_C <- cs$C(dqrng::dqrunif(n_par), cs$p)
     expect_identical(
-      as.integer(from_C), as.integer(from_R),
+      as.numeric(from_C), as.numeric(from_R),
       info = paste(lbl, "- scalar kernel matches the exported R sampler under one seed")
     )
   }

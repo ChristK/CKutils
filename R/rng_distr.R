@@ -867,6 +867,83 @@ frZANBI <- function(n, mu = 1, sigma = 1, nu = 0.1) {
     r
 }
 
+#' Random Generation for Zero-Adjusted Gamma (ZAGA) Distribution
+#'
+#' Generates random deviates from the Zero-Adjusted Gamma distribution using
+#' high-quality pseudo-random number generation via the dqrng package.
+#'
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
+#' @param mu Vector of positive means of the gamma part. Default is 1.
+#' @param sigma Vector of positive coefficients of variation of the gamma part.
+#'   Default is 1.
+#' @param nu Vector of zero probabilities (0 < nu < 1). Default is 0.1.
+#'
+#' @details
+#' This function generates random variates from the ZAGA distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqZAGA}
+#' }
+#'
+#' The ZAGA distribution is a three-parameter mixed distribution for
+#' non-negative continuous data with exact zeros. It's a mixture of a point mass
+#' at zero and a gamma distribution on the positive reals.
+#'
+#' Key characteristics:
+#' \itemize{
+#'   \item Support: the non-negative reals
+#'   \item P(Y = 0) = nu
+#'   \item Given Y > 0, Y follows a gamma distribution with mean mu and
+#'     coefficient of variation sigma (shape 1/sigma^2, scale mu * sigma^2)
+#'   \item Mean: (1 - nu) * mu
+#'   \item Variance: (1 - nu) * mu^2 * (sigma^2 + nu)
+#' }
+#'
+#' Unlike \code{\link{frZINBI}}, the result is continuous (a double vector, not
+#' integers), and the share of exact zeros is nu itself: the gamma part has no
+#' mass at zero of its own.
+#'
+#' @return Vector of random deviates from the ZAGA distribution.
+#'
+#' @examples
+#' # Generate 100 random values with default parameters
+#' x <- frZAGA(100)
+#' hist(x, main = "ZAGA Random Variates")
+#'
+#' # Generate with custom parameters
+#' x <- frZAGA(1000, mu = 5, sigma = 0.5, nu = 0.2)
+#' summary(x)
+#'
+#' # The share of zeros is nu, the mean is (1 - nu) * mu
+#' mean(x == 0)  # approximately 0.2
+#' mean(x)       # approximately 4
+#'
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019).
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R.
+#' Chapman and Hall/CRC.
+#'
+#' @seealso
+#' \code{\link{fdZAGA}}, \code{\link{fpZAGA}}, \code{\link{fqZAGA}} for
+#' other ZAGA distribution functions.
+#'
+#' \code{\link[gamlss.dist]{rZAGA}} for the original implementation.
+#'
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#'
+#' @export
+#' @importFrom dqrng dqrunif
+frZAGA <- function(n, mu = 1, sigma = 1, nu = 0.1) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqZAGA(p, mu = mu, sigma = sigma, nu = nu)
+    r
+}
+
 #' Random Generation for Sichel Distribution
 #' 
 #' Generates random deviates from the Sichel distribution using high-quality 

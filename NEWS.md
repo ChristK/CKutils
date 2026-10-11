@@ -1,5 +1,88 @@
 # CKutils 0.1.36
 
+## New features
+
+* **`fdZAGA()`, `fpZAGA()`, `fqZAGA()` and `frZAGA()`: the zero-adjusted gamma
+  distribution of gamlss.dist, in C++.** `P(Y = 0) = nu`; given `Y > 0`, `Y` is
+  gamma with mean `mu` and coefficient of variation `sigma` (shape
+  `1 / sigma^2`, scale `mu * sigma^2`), so `E[Y] = (1 - nu) * mu` and
+  `Var[Y] = (1 - nu) * mu^2 * (sigma^2 + nu)`. The arguments are those of the
+  other families (`fpZAGA(q, mu, sigma, nu, lower_tail, log_p)`;
+  `frZAGA(n, mu = 1, sigma = 1, nu = 0.1)` is
+  `fqZAGA(dqrng::dqrunif(n), ...)`). The parameters are checked after
+  recycling: `mu` and `sigma` positive and finite, `0 < nu < 1`; an element
+  with an `NA` or `NaN` argument gives `NA` and is not checked, and a `NaN`
+  from finite arguments (e.g. `sigma^2` underflowing) warns "NaNs produced".
+  ZAGA is continuous: `fqZAGA()` and `frZAGA()` return doubles, and the count
+  contract of `recycling_helpers.h` does not apply. The kernels
+  `fdZAGA_scalar()`, `fpZAGA_scalar()`, `fqZAGA_scalar()` and `frZAGA_scalar()`
+  are `inline` in the new `inst/include/distr_ZAGA.h` for a package that
+  declares `LinkingTo: CKutils` (they validate nothing and call R's gamma
+  functions); `frZAGA_scalar()` takes a caller-supplied uniform and agrees with
+  `frZAGA()` draw for draw under one `dqset.seed()`, as the count samplers do.
+
+  **Switching from gamlss.dist reproduces a model's draws.** The lower tail on
+  the natural scale is that of gamlss.dist bit for bit: `fqZAGA(u, mu, sigma,
+  nu)` and `fpZAGA(q, mu, sigma, nu)` are `identical()` to `qZAGA()` and
+  `pZAGA()` (`q >= 0`) on 1e6 vector rows (`mu` 1 to 80, `sigma` 0.3 to 3,
+  `nu` 0.05 to 0.9, with `u == nu` and one ulp either side) and on 2e5 random
+  parameter sets over the whole range. A parameter table with `nu` of exactly
+  0 now stops (gamlss.dist accepts it; `nu = .Machine$double.xmin` reproduces
+  `qZAGA(nu = 0)`), and an `NA` parameter gives `NA` where gamlss.dist stops.
+  Everything else that differs is deliberate, documented and tested:
+
+  - **The upper tail is direct, never `1 - F`.** `fpZAGA(q, lower_tail =
+    FALSE)` is `(1 - nu) * pgamma(q, lower.tail = FALSE)` (in log space for
+    `log_p`), and `fqZAGA(p, lower_tail = FALSE)` inverts it on its own scale.
+    `1 - F` loses everything once `F` rounds to 1:
+    `pZAGA(300, 2, 1, 0.1, lower.tail = FALSE)` is 0 where the value is
+    6.457586e-66, which `fpZAGA()` gives, and its log (-150.1054) stays finite
+    at `q = 1e4`. `qZAGA(1e-300, 2, 1, 0.1, lower.tail = FALSE)` stops where
+    `fqZAGA()` gives 1381.34, the exact `-mu * log(p / (1 - nu))`. Over 20,000
+    random parameter sets with a gamma tail of 1e-8 to 1e-300, `pZAGA()` was
+    exactly 0 at 19,467.
+  - **The log scale keeps its accuracy at both ends.** `fpZAGA(q, log_p =
+    TRUE)` is `log1p(-U)`, from the direct upper tail `U`, where `F > 1/2`, not
+    `log(F)`, which is 0 once `F` rounds to 1 (`-6.457586e-66` at `q = 300`,
+    where `pZAGA()` gives 0); and `fqZAGA(p, log_p = TRUE)` inverts the upper
+    tail `-expm1(p)` for `p > -log(2)`, not `exp(p)`, which rounds to 1 above
+    about -5.6e-17 (`Inf`; `qZAGA()` stops) and has lost most of the tail before
+    that. The upper tail on the log scale is inverted from the lower one where
+    its reduced probability is above 1/2 (otherwise R's `qgamma()` was up to
+    18 % off, or `NaN`, for `nu` below about 1e-184). At the zero mass the log
+    scale is exact: `fpZAGA(0, log_p = TRUE)` is `log(nu)` and
+    `fqZAGA(log(nu), log_p = TRUE)` is 0.
+  - **`q < 0` is on the requested tail and scale**: `0`, `-Inf`, `1` and `0`
+    for `(lower_tail, log_p)` = (TRUE, FALSE), (TRUE, TRUE), (FALSE, FALSE) and
+    (FALSE, TRUE); `pZAGA()` gives 0 in all four. A negative `x` or `q` is not
+    an error (`fdZINBI()` and `fdBCT()` still stop on one).
+  - **`fdZAGA(x < 0, log = TRUE)` is `-Inf`** (`dZAGA()` gives 0) and
+    `fdZAGA(Inf)` is 0 (`dZAGA()` gives `NaN`). Where `mu * sigma^2` is so
+    small that R's `dgamma()` underflows (`fdZAGA(1.004e-250, 1e-250, 1e-4,
+    0.3)` was 0 for 8.6e-94), the density is the exponential of the log
+    density.
+  - **`fqZAGA(1)` is `Inf`** (`qZAGA()` stops), as for `fqBCT()`, and a
+    quantile is never negative: R's `qgamma()` returns negative values at a
+    shape beyond about 1e49 (`sigma` below about 1e-25), which give `NaN`.
+  - **The parameter range is strict**: gamlss.dist lets `nu` of 0 or 1, and in
+    `dZAGA()` and `pZAGA()` `mu` or `sigma` of 0 (giving `NaN`), through.
+
+  Where gamlss.dist is right the two agree: on 20,000 random parameter sets
+  (`mu` 1e-3 to 1e3, `sigma` 0.05 to 5, `nu` 0.01 to 0.9) the largest relative
+  difference is 9.7e-13 for the density (gamlss.dist builds it from
+  `lgamma()`; `fdZAGA()` equals `stats::dgamma()`), 0 for the lower-tail CDF
+  and quantile, and 1.7e-12 for the upper-tail quantile. Against a
+  quad-precision reference the CDF is within 1.4e-11 on all four scales (R's
+  own `pgamma()` error at shape 1e8). Round trips hold to 2.6e-14
+  (`fpZAGA(fqZAGA(p))`, `p > nu`) and 7.4e-12 (`fqZAGA(fpZAGA(x))` away from
+  the zero mass). `frZAGA()` draws equal `fqZAGA(dqrunif(n), ...)` exactly,
+  with zero share, mean, variance and a KS test of the positive part within
+  sampling error at n = 4e6. Speed is that of gamlss.dist, as both end in R's
+  `dgamma()`, `pgamma()` and `qgamma()`: at n = 1e6 with vector parameters,
+  `fqZAGA()` 0.35 s against `qZAGA()` 0.37 s (bare `qgamma()` on the rows that
+  reach it, 0.35 s), and gamlss.dist takes 0.8 to 1.3 times as long for the
+  density and 1.1 to 1.3 times for the CDF.
+
 ## Bug fixes
 
 * **The count CDFs accept a `q` below 0 and return the CDF below the support,
@@ -59,9 +142,29 @@
   the support -- and that `q` must be tested on the double before
   `count_to_int()`; `cdf_below_support()` gives that value on each scale and
   `any_isnan()` tests a row's parameters.
+* `README.md` and `inst/include/distr_ZAGA.h` describe the ZAGA kernels: what
+  they return at the edges, that they validate nothing (outside the parameter
+  contract they give `NaN` or a plausible but wrong number, e.g. `sigma = -1`
+  acts as 1, and never hang), and that a subnormal `mu * sigma^2` loses
+  accuracy, as in gamlss.dist.
 
 ## Tests
 
+* `test-fZAGA.R` (new, 557 expectations, the first 376 written from the
+  specification alone, without sight of the code, and checked against a
+  pure-R reference and against gamlss.dist, which fails exactly the
+  documented departures): closed forms from `stats::dgamma()`, `pgamma()` and
+  `qgamma()` and the exponential (`sigma = 1`) and Erlang (`sigma = 0.5`)
+  formulae on all four scales; agreement with gamlss.dist where it is right,
+  and `identical()` natural-scale lower tails; each departure above, with
+  reference values from a quad-precision implementation; `NA`/`NaN`,
+  recycling, zero-length arguments, every error message; round trips; the
+  `frZAGA()` moments; and the zero share of a draw truncated with
+  `minq = fpZAGA(-1, ...)`.
+* `test-rng_distr.R`: `frZAGA()` joins the seed-reproducibility and recycling
+  checks and the parity test of the header-only sampler against the exported
+  one (internal bridge `.frZAGA_scalar_vec()`, compared bit for bit); the
+  continuous-distribution loop now carries per-function arguments.
 * `test-distr_negative_q.R` (new, 2488 expectations, its first 1025 written
   from the specification alone, without sight of the code): for all ten CDFs,
   `q` in `-Inf`, `-1e10`, `-3`, `-1`, `-0.5`, `-1e-300` and `-1L` gives the
