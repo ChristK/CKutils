@@ -31,7 +31,8 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // kernels in this package do no bounds checking; the caller owns
 //     0 <= x <= CK_MAX_COUNT   and   q <= CK_MAX_COUNT   (INT_MAX - 1)
 // A negative q is within the contract: fpMN4_scalar returns the value below the
-// support, F = 0 (as it does for any q < 1).
+// support, F = 0 (as it does for any q < 1). For MN4 so is a negative x:
+// fdMN4_scalar gives it density 0, as any x outside 1:4.
 // The MN4 kernels specifically are safe for any int, because the support is the
 // four categories 1:4 and anything outside it returns a density of 0. The
 // contract still matters for the BNB, DPO, DEL and SICHEL kernels:
@@ -123,7 +124,7 @@ inline int fqMN4_scalar(const double& p,
 }
 
 // Vectorised, Rcpp-exported wrappers (defined in src/distr_MN4.cpp)
-Rcpp::NumericVector fdMN4(const Rcpp::IntegerVector& x,
+Rcpp::NumericVector fdMN4(const Rcpp::NumericVector& x,
                           const Rcpp::NumericVector& mu,
                           const Rcpp::NumericVector& sigma,
                           const Rcpp::NumericVector& nu,

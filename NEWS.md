@@ -146,6 +146,15 @@
   changes as for the CDFs above: no coercion warning for an `x` of 2147483647
   or more, `NA` for a non-integer in (2147483646, 2147483647), and a stop for
   an invalid parameter next to `x = Inf`.
+* **`fdMN4()` takes `x` as a numeric vector too.** Its categories are 1 to 4
+  and any other `x` has density 0, but R coerced `-Inf` and `-1e10` to `NA`,
+  with its coercion warning, before the C++ ran. Every negative `x` now has
+  density 0 (`-Inf` on the log scale), silently, or `NA` if a parameter is
+  `NA` or `NaN`, as `fpMN4()` gives for a negative `q` (a negative non-integer
+  such as `-0.5` used to give 0 there). For `x >= 0` the values are
+  `identical()` to before, `NA` and invalid parameters included, except that a
+  non-integer in (2147483646, 2147483647), which R truncated to 2147483646, is
+  now `NA`.
 * **`write_parquet_dt()` writes a partitioned dataset with the codec given in
   `compression`.** The argument reached only the single-file branch
   (`arrow::write_parquet()`); `arrow::write_dataset()`, which writes a
@@ -221,6 +230,11 @@
   `test-distr_cpp_branches.R` also expects `fdDPO()` and `fdDEL()` to stop at
   `x = -0.5`, `-1e-300` and `-Inf` (all six returned a value or `NA` before),
   and a positive non-integer `x` to give the density of its integer part.
+  `test-fMN4.R` expects density 0 (log `-Inf`), without a warning, for `x` in
+  `-Inf`, `-1e10`, `-1`, `-0.5` and `-1e-300`, alone and among categories with
+  recycled parameters, `NA` for a negative `x` with a `NA` or `NaN`
+  parameter, and truncation of a positive non-integer; 5 of these fail before
+  the fix.
 * `test-write_parquet_dt_compression.R` (new): for each codec the arrow build
   has, a partitioned write round-trips; zstd and gzip frames are in every
   partition file written with that codec, and no zstd frame is in an

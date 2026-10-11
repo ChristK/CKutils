@@ -40,7 +40,7 @@ using namespace Rcpp;
 //' Density function for the multinomial distribution with 4 categories,
 //' optimised for performance with SIMD vectorisation and parameter recycling.
 //'
-//' @param x vector of (integer) quantiles. Must be 1, 2, 3, or 4.
+//' @param x vector of quantiles; the categories are 1 to 4. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}. An \code{x} outside the categories, including a negative one and \code{-Inf}, has density 0 (\code{-Inf} with \code{log_ = TRUE}), except that a negative \code{x} gives \code{NA} if a parameter is \code{NA}.
 //' @param mu vector of (positive) parameters for category 1.
 //' @param sigma vector of (positive) parameters for category 2.
 //' @param nu vector of (positive) parameters for category 3.
@@ -85,23 +85,28 @@ using namespace Rcpp;
 //' @seealso \code{\link{fpMN4}}, \code{\link{fqMN4}}
 //' @export
 // [[Rcpp::export]]
-NumericVector fdMN4(const IntegerVector& x,
+NumericVector fdMN4(const NumericVector& x,
                     const NumericVector& mu,
                     const NumericVector& sigma,
                     const NumericVector& nu,
                     const bool& log_ = false) {
-  
-  // Use existing recycling infrastructure
+
+  // Use existing recycling infrastructure. x is a NumericVector, not an
+  // IntegerVector: R would coerce -Inf and -1e10 to NA (with a warning) before
+  // this runs, and -0.5 to 0.
   auto recycled = recycle_vectors(x, mu, sigma, nu);
   const int n = recycled.n;
-  
-  // Convert recycled IntegerVector to NumericVector for x
+
   NumericVector x_num = recycled.vec1;
   IntegerVector x_int(n);
   for (int i = 0; i < n; i++) {
-      // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
-      // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
-      // undefined behaviour and it is not benign on either x86-64 or AArch64.
+    // x outside the categories, below them: read as 0, which fdMN4_scalar
+    // gives density 0 (as for any x outside 1:4). Tested on the double, before
+    // count_to_int(), which would truncate -0.5 to 0 and read -Inf as NA.
+    if (x_num[i] < 0.0) { x_int[i] = 0; continue; }
+    // NA/NaN or a count too large to convert to int -> NA. See count_to_int()
+    // in recycling_helpers.h: the unguarded cast is out-of-range float-to-int
+    // undefined behaviour and it is not benign on either x86-64 or AArch64.
     // Mark an unusable value with NA_INTEGER so the main loop skips it.
     if (!count_to_int(x_num[i], x_int[i])) x_int[i] = NA_INTEGER;
   }
@@ -113,6 +118,13 @@ NumericVector fdMN4(const IntegerVector& x,
   for (int i = 0; i < n; i++) {
     // NaN/NA x propagated from the conversion loop -> NA density.
     if (x_int[i] == NA_INTEGER) {
+      out[i] = NA_REAL;
+      continue;
+    }
+    // A negative x with a NA/NaN parameter is NA, as for fpMN4 (the scalar
+    // kernel does not look at the parameters for an x outside 1:4).
+    if (x_num[i] < 0.0 &&
+        any_isnan(recycled.vec2[i], recycled.vec3[i], recycled.vec4[i])) {
       out[i] = NA_REAL;
       continue;
     }

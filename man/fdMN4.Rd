@@ -7,7 +7,7 @@
 fdMN4(x, mu, sigma, nu, log_ = FALSE)
 }
 \arguments{
-\item{x}{vector of (integer) quantiles. Must be 1, 2, 3, or 4.}
+\item{x}{vector of quantiles; the categories are 1 to 4. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}. An \code{x} outside the categories, including a negative one and \code{-Inf}, has density 0 (\code{-Inf} with \code{log_ = TRUE}), except that a negative \code{x} gives \code{NA} if a parameter is \code{NA}.}
 
 \item{mu}{vector of (positive) parameters for category 1.}
 

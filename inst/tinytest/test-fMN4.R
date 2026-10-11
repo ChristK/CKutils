@@ -92,6 +92,26 @@ expect_equal(
   info = "PDF: Invalid x values return -Inf when log=TRUE"
 )
 
+# Test 5b: every negative x is outside the categories, read as a double. Before
+# 0.1.36 x was an integer vector: R coerced -Inf and -1e10 to NA (with a
+# coercion warning) before the C++ ran.
+neg_x <- c(-Inf, -1e10, -1, -0.5, -1e-300)
+expect_identical(fdMN4(neg_x, mu = 1, sigma = 1, nu = 1), rep(0, 5),
+                 info = "PDF: a negative x, -Inf included, has density 0")
+expect_silent(fdMN4(neg_x, mu = 1, sigma = 1, nu = 1), info = "PDF: and no warning")
+expect_identical(fdMN4(neg_x, mu = 1, sigma = 1, nu = 1, log_ = TRUE), rep(-Inf, 5),
+                 info = "PDF: a negative x has log density -Inf")
+expect_identical(fdMN4(c(-Inf, 1, -0.5, 4), mu = c(1, 2), sigma = 0.5, nu = 2),
+                 c(0, fdMN4(1, 2, 0.5, 2), 0, fdMN4(4, 2, 0.5, 2)),   # mu recycles as 1, 2, 1, 2
+                 info = "PDF: negatives next to categories, with recycled parameters")
+# A negative x with a NA parameter is NA, as for fpMN4
+expect_true(all(is.na(suppressWarnings(fdMN4(-1, mu = c(NA, 1, 1), sigma = c(1, NaN, 1), nu = c(1, 1, NA))))),
+            info = "PDF: a negative x with a NA/NaN parameter is NA")
+# Integer and positive non-integer x as before: truncated, NA stays NA
+expect_identical(suppressWarnings(fdMN4(c(1, 2.5, 3.999, NA), 1, 2, 3)),
+                 suppressWarnings(fdMN4(c(1L, 2L, 3L, NA_integer_), 1, 2, 3)),
+                 info = "PDF: a non-integer x is truncated and NA stays NA")
+
 # =============================================================================
 # CDF TESTS  
 # =============================================================================

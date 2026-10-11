@@ -1077,7 +1077,7 @@ fqDPO <- function(p, mu, sigma, lower_tail = TRUE, log_p = FALSE, max_value = 0L
 #' Density function for the multinomial distribution with 4 categories,
 #' optimised for performance with SIMD vectorisation and parameter recycling.
 #'
-#' @param x vector of (integer) quantiles. Must be 1, 2, 3, or 4.
+#' @param x vector of quantiles; the categories are 1 to 4. A non-integer is truncated to an integer; a count above 2147483646 gives \code{NA}. An \code{x} outside the categories, including a negative one and \code{-Inf}, has density 0 (\code{-Inf} with \code{log_ = TRUE}), except that a negative \code{x} gives \code{NA} if a parameter is \code{NA}.
 #' @param mu vector of (positive) parameters for category 1.
 #' @param sigma vector of (positive) parameters for category 2.
 #' @param nu vector of (positive) parameters for category 3.
