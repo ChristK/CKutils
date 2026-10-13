@@ -20,8 +20,9 @@
 # (a non-integer q >= 0 is truncated, which equals floor there).
 #
 # fpMN4 (categorical on 1:4, and 0 below its support) takes a q that is a double too,
-# so that -Inf and -1e10 are not coerced to NA: section 11. fpBCT, fpBCPEo
-# (continuous) and every d* and q* function are out of scope.
+# so that -Inf and -1e10 are not coerced to NA: section 11. The continuous fpBCPE and
+# fpBCPEo (support q > 0) give the same values for q <= 0 and no longer stop on a
+# negative q: section 12. fpBCT and every d* and q* function are out of scope.
 
 # Set tolerance for floating point comparisons
 tolerance <- sqrt(.Machine$double.eps)
@@ -568,3 +569,49 @@ expect_identical(suppressWarnings(fp_mn4(c(1, NA, 3))),
                  c(0.22222222222222221, NA, 0.77777777777777779), info = "fpMN4(c(1, NA, 3))")
 expect_warning(fp_mn4(NA_real_), "NaNs were produced", info = "fpMN4(NA) warns as before")
 # --- q >= 0 against 0be2c75: end
+
+# =============================================================================
+# 12. fpBCPE AND fpBCPEo: q <= 0 IS BELOW THE SUPPORT (q > 0), NOT AN ERROR
+# =============================================================================
+# fpBCPEo stopped with "q must be positive" for q < 0. Both now give the value below
+# the support on the requested tail and scale for every q <= 0 (q = 0 included: the
+# support is q > 0), with no warning; a NA / NaN parameter gives NA there, and an
+# invalid parameter still stops with its message. (A function this build lacks gives
+# NA, and a call that stops gives its message, so a check fails rather than aborts.)
+fp_bcpe_fns <- list(
+  fpBCPE  = get0("fpBCPE", envir = asNamespace("CKutils"), inherits = FALSE,
+                 ifnotfound = function(...) NA_real_),
+  fpBCPEo = fpBCPEo)
+bcpe_par <- list(mu = 2, sigma = 0.4, nu = 0.7, tau = 1.5)
+qneg_bcpe <- c(-Inf, -1e10, -1, -0.5, -1e-300, 0, -1L)
+bcpe_val <- function(expr) tryCatch(expr, error = function(e) conditionMessage(e))
+for (nm in names(fp_bcpe_fns)) {
+  f <- fp_bcpe_fns[[nm]]
+  for (k in seq_len(nrow(tails))) {
+    lt <- tails$lower_tail[k]
+    lp <- tails$log_p[k]
+    b <- below_support(lt, lp)
+    lab <- sprintf("%s(q <= 0), lower_tail = %s, log_p = %s", nm, lt, lp)
+    expect_silent(bcpe_val(do.call(f, c(list(qneg_bcpe), bcpe_par, list(lower_tail = lt, log_p = lp)))))
+    expect_identical(bcpe_val(do.call(f, c(list(qneg_bcpe), bcpe_par, list(lower_tail = lt, log_p = lp)))),
+                     rep(b, length(qneg_bcpe)), info = lab)
+    # with vector parameters (nu of both signs and 0) the value is the same
+    expect_identical(bcpe_val(f(c(-1, 0, -Inf, -2), mu = c(1, 3), sigma = 0.2, nu = c(-1, 0, 2, 1e-12),
+                                tau = c(0.5, 2, 8, 2), lower_tail = lt, log_p = lp)),
+                     rep(b, 4L), info = paste(lab, "vector parameters"))
+    # a NA / NaN parameter at a negative q is NA
+    for (arg in names(bcpe_par)) {
+      bp <- bcpe_par
+      bp[[arg]] <- NA_real_
+      expect_true(all(is.na(bcpe_val(do.call(f, c(list(c(-1, 0)), bp, list(lower_tail = lt, log_p = lp)))))),
+                  info = paste(lab, arg, "= NA"))
+    }
+  }
+  # an invalid parameter still stops, also at a negative q
+  expect_error(f(-1, mu = -1, sigma = 1, nu = 1, tau = 2), "mu must be positive", info = nm)
+  expect_error(f(-1, mu = 1, sigma = 0, nu = 1, tau = 2), "sigma must be positive", info = nm)
+  expect_error(f(-1, mu = 1, sigma = 1, nu = 1, tau = Inf), "tau must be finite", info = nm)
+  # the values for q > 0 are untouched by the q <= 0 positions of a vector
+  expect_identical(bcpe_val(f(c(-1, 1.5, 0, 3), 2, 0.4, 0.7, 1.5))[c(2, 4)],
+                   bcpe_val(f(c(1.5, 3), 2, 0.4, 0.7, 1.5)), info = paste(nm, "mixed vector"))
+}

@@ -1,7 +1,101 @@
-# Test BCPEo distribution functions against gamlss.dist reference
+# Test BCPEo distribution functions
 # Using tinytest framework
+#
+# The first section (BCPEo IS BCPE) needs only CKutils and always runs. The comparisons with the
+# gamlss.dist reference follow it and are skipped when gamlss.dist is not available.
 
-# Skip tests if gamlss.dist is not available
+# The value of a call, or the message of the error it raises: a comparison of such values fails
+# (rather than aborting the file) when a function is missing or stops.
+bcpe_value <- function(expr) tryCatch(expr, error = function(e) conditionMessage(e))
+
+# =============================================================================
+# BCPEo IS BCPE
+# gamlss.dist's dBCPEo/pBCPEo/qBCPEo are line for line dBCPE/pBCPE/qBCPE (the gamlss
+# families BCPE() and BCPEo() differ only in the link for mu), and fdBCPEo, fpBCPEo
+# and fqBCPEo are thin wrappers over the same validation and kernels as fdBCPE, fpBCPE
+# and fqBCPE: identical() results on every tail and scale, at the edges, with NA, and
+# the same errors. (A function missing from a build gives its message, so each
+# comparison fails rather than aborting the file.)
+# =============================================================================
+bcpe_fn <- function(nm) {
+  ns <- asNamespace("CKutils")
+  if (exists(nm, envir = ns, inherits = FALSE)) get(nm, envir = ns)
+  else function(...) stop(nm, " is not in this build")
+}
+fdB <- bcpe_fn("fdBCPE"); fpB <- bcpe_fn("fpBCPE"); fqB <- bcpe_fn("fqBCPE"); frB <- bcpe_fn("frBCPE")
+
+g <- expand.grid(y = c(-Inf, -1, 0, 1e-300, 1e-10, 0.3, 1, 2.5, 10, 1e10, 1e300, Inf, NA),
+                 mu = c(0.5, 2), sigma = c(0.1, 1.5), nu = c(-2, -1e-12, 0, 0.7, 3),
+                 tau = c(0.8, 2, 6))
+for (lg in c(FALSE, TRUE)) {
+  expect_identical(
+    bcpe_value(fdBCPEo(g$y, g$mu, g$sigma, g$nu, g$tau, log_ = lg)),
+    bcpe_value(fdB(g$y, g$mu, g$sigma, g$nu, g$tau, log_ = lg)),
+    info = paste("fdBCPEo is fdBCPE, log_ =", lg))
+}
+for (lt in c(TRUE, FALSE)) for (lp in c(FALSE, TRUE)) {
+  expect_identical(
+    bcpe_value(fpBCPEo(g$y, g$mu, g$sigma, g$nu, g$tau, lower_tail = lt, log_p = lp)),
+    bcpe_value(fpB(g$y, g$mu, g$sigma, g$nu, g$tau, lower_tail = lt, log_p = lp)),
+    info = paste("fpBCPEo is fpBCPE, lower_tail =", lt, "log_p =", lp))
+}
+gp <- expand.grid(p = c(0, 1e-300, 1e-12, 0.1, 0.5, 0.9, 1 - 1e-12, 1, NA),
+                  mu = c(0.5, 2), sigma = c(0.1, 1.5), nu = c(-2, -1e-12, 0, 0.7, 3),
+                  tau = c(0.8, 2, 6))
+for (lt in c(TRUE, FALSE)) for (lp in c(FALSE, TRUE)) {
+  pp <- if (lp) log(gp$p) else gp$p
+  expect_identical(
+    bcpe_value(fqBCPEo(pp, gp$mu, gp$sigma, gp$nu, gp$tau, lower_tail = lt, log_p = lp)),
+    bcpe_value(fqB(pp, gp$mu, gp$sigma, gp$nu, gp$tau, lower_tail = lt, log_p = lp)),
+    info = paste("fqBCPEo is fqBCPE, lower_tail =", lt, "log_p =", lp))
+}
+dqrng::dqset.seed(2026)
+r_o <- frBCPEo(500, mu = 25, sigma = 0.15, nu = c(-1, 0, 0.5), tau = c(1.5, 2, 4))
+dqrng::dqset.seed(2026)
+r_b <- bcpe_value(frB(500, mu = 25, sigma = 0.15, nu = c(-1, 0, 0.5), tau = c(1.5, 2, 4)))
+expect_identical(r_o, r_b, info = "frBCPEo is frBCPE under one dqset.seed")
+for (bad in list(list(x = 1, mu = 0, sigma = 1, nu = 1, tau = 2),
+                 list(x = 1, mu = 1, sigma = -1, nu = 1, tau = 2),
+                 list(x = 1, mu = 1, sigma = 1, nu = 1, tau = 0),
+                 list(x = 1, mu = Inf, sigma = 1, nu = 1, tau = 2),
+                 list(x = 1, mu = 1, sigma = 1, nu = -Inf, tau = 2))) {
+  expect_identical(bcpe_value(do.call(fdBCPEo, bad)), bcpe_value(do.call(fdB, bad)),
+                   info = paste("fdBCPEo and fdBCPE stop with the same message:",
+                                bcpe_value(do.call(fdB, bad))))
+}
+
+# What changed for BCPEo (it gains every fix of the BCPE kernels):
+# a q below the support is not an error, on the requested tail and scale
+expect_identical(bcpe_value(fpBCPEo(c(-Inf, -1, 0), 2, 0.5, 1, 2)), c(0, 0, 0),
+                 info = "fpBCPEo: q <= 0 gives F = 0 (no longer an error)")
+expect_identical(bcpe_value(fpBCPEo(c(-Inf, -1, 0), 2, 0.5, 1, 2, lower_tail = FALSE)), c(1, 1, 1),
+                 info = "fpBCPEo: q <= 0 gives an upper tail of 1")
+expect_identical(bcpe_value(fpBCPEo(c(-1, 0), 2, 0.5, 1, 2, log_p = TRUE)), c(-Inf, -Inf),
+                 info = "fpBCPEo: q <= 0 gives log F = -Inf")
+expect_identical(bcpe_value(fpBCPEo(c(-1, 0), 2, 0.5, 1, 2, lower_tail = FALSE, log_p = TRUE)), c(0, 0),
+                 info = "fpBCPEo: q <= 0 gives a log upper tail of 0")
+# the density at x = 0 is 0 for every nu (it was Inf for 0 < nu < 1 and NaN for
+# nu <= 0 and nu = 1), and at x = Inf it is 0
+expect_identical(suppressWarnings(fdBCPEo(0, 2, 0.5, c(-1, 0, 0.5, 1, 2), 2)), rep(0, 5),
+                 info = "fdBCPEo(0) is 0 for every nu")
+expect_identical(fdBCPEo(Inf, 2, 0.5, c(-1, 0.5, 1, 2), 2), rep(0, 4),
+                 info = "fdBCPEo(Inf) is 0")
+# NA in any argument gives NA, silently (it warned "NaNs or NAs were produced")
+expect_silent(fdBCPEo(c(1, NA), 2, 0.5, 1, 2))
+expect_silent(fpBCPEo(1, c(2, NA), 0.5, 1, 2))
+expect_silent(fqBCPEo(0.5, 2, 0.5, c(1, NA), 2))
+expect_identical(is.na(fqBCPEo(c(0.5, NA, 0.5), 2, 0.5, 1, c(2, 2, NaN))), c(FALSE, TRUE, TRUE),
+                 info = "fqBCPEo: NA or NaN in any argument gives NA")
+# infinite parameters are errors (they gave NaN or meaningless numbers)
+expect_error(fpBCPEo(1, 2, Inf, 1, 2), "sigma must be finite")
+expect_error(fqBCPEo(0.5, 2, 0.5, Inf, 2), "nu must be finite")
+expect_error(fdBCPEo(1, 2, 0.5, 1, Inf), "tau must be finite")
+# the upper-tail quantile is not found from 1 - p: p = 1e-20 is a finite quantile
+expect_true(is.finite(fqBCPEo(1e-20, 25, 0.15, 0, 2, lower_tail = FALSE)) &&
+              fqBCPEo(1e-20, 25, 0.15, 0, 2, lower_tail = FALSE) > 90,
+            info = "fqBCPEo: far upper tail on its own scale")
+
+# Skip the rest if gamlss.dist is not available
 if (!requireNamespace("gamlss.dist", quietly = TRUE)) {
   exit_file("gamlss.dist not available - skipping BCPEo validation tests")
 }
@@ -64,14 +158,21 @@ expect_equal(
   info = "PDF: log=TRUE correctness test"
 )
 
-# Test 3: PDF edge case (nu approx  0)
-pdf_ck_edge <- fdBCPEo(edge_data$x, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
-pdf_ref_edge <- dBCPEo(edge_data$x, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
+# Largest relative difference of two vectors (0 where they are equal, so 0/0 and
+# Inf/Inf count as agreement).
+max_rel <- function(a, b) max(ifelse(a == b, 0, abs(a / b - 1)))
 
-expect_equal(
-  pdf_ck_edge,
-  pdf_ref_edge,
-  info = "PDF: nuapprox 0 edge case test"
+# Test 3: PDF edge case (nu approx  0)
+# gamlss.dist's ((x/mu)^nu - 1)/(nu*sigma) cancels at nu = 1e-12 (dBCPEo is off by
+# up to ~3e-4 on these points), so the reference is the nu = 0 limit, log(x/mu)/sigma,
+# which gamlss.dist computes exactly: at nu = 1e-12 the density is within ~2e-10 of it (limit 1e-9)
+# and the CDF and quantile within ~1e-11 (limit 1e-10).
+pdf_ck_edge <- fdBCPEo(edge_data$x, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
+pdf_ref_edge <- dBCPEo(edge_data$x, edge_data$mu, edge_data$sigma, 0, edge_data$tau)
+
+expect_true(
+  max_rel(pdf_ck_edge, pdf_ref_edge) < 1e-9,
+  info = "PDF: nuapprox 0 edge case test (against the nu = 0 limit)"
 )
 
 # =============================================================================
@@ -99,36 +200,65 @@ expect_equal(
 )
 
 # Test 6: CDF with log_p = TRUE
+# gamlss.dist's log.p is log(F), and its F = 0.5*(1 + G*sign(z)) rounds to 0 in the far
+# lower tail, so its log is -Inf there; compare where it is finite, and check that the
+# log scale (computed in log space) is finite everywhere and agrees with log(F) where F
+# is a normal double.
 cdf_ck_log <- fpBCPEo(data$q, data$mu, data$sigma, data$nu, data$tau, log_p = TRUE)
 cdf_ref_log <- pBCPEo(data$q, data$mu, data$sigma, data$nu, data$tau, log.p = TRUE)
+cdf_ok <- is.finite(cdf_ref_log)
 
 expect_equal(
-  cdf_ck_log,
-  cdf_ref_log,
-  info = "CDF: log_p=TRUE correctness test"
+  cdf_ck_log[cdf_ok],
+  cdf_ref_log[cdf_ok],
+  info = "CDF: log_p=TRUE correctness test (where gamlss.dist's log(F) is finite)"
+)
+expect_true(
+  !all(cdf_ok) && all(is.finite(cdf_ck_log)),
+  info = "CDF: log_p=TRUE is finite where gamlss.dist's log(F) is -Inf"
+)
+cdf_ck_nat <- fpBCPEo(data$q, data$mu, data$sigma, data$nu, data$tau)
+cdf_norm <- cdf_ck_nat > 1e-300
+expect_true(
+  max_rel(exp(cdf_ck_log[cdf_norm]), cdf_ck_nat[cdf_norm]) < 1e-13,
+  info = "CDF: exp(log F) is F"
 )
 
 # Test 7: CDF with both lower_tail = FALSE and log_p = TRUE
-cdf_ck_both <- fpBCPEo(data$q, data$mu, data$sigma, data$nu, data$tau, 
+# gamlss.dist's upper tail is 1 - F: exactly 0 where F rounds to 1 (log 0), and short
+# of digits where 1 - F is small, so compare where its upper tail exceeds 1e-3. The
+# upper tail here is direct: on the log scale it is log1p(-F), about -F, where F is
+# tiny, and not log(1 - F) = 0.
+cdf_ck_both <- fpBCPEo(data$q, data$mu, data$sigma, data$nu, data$tau,
                        lower_tail = FALSE, log_p = TRUE)
-cdf_ref_both <- pBCPEo(data$q, data$mu, data$sigma, data$nu, data$tau, 
+cdf_ref_both <- pBCPEo(data$q, data$mu, data$sigma, data$nu, data$tau,
                        lower.tail = FALSE, log.p = TRUE)
+upper_ok <- pBCPEo(data$q, data$mu, data$sigma, data$nu, data$tau, lower.tail = FALSE) > 1e-3
 
 expect_equal(
-  cdf_ck_both,
-  cdf_ref_both,
-  info = "CDF: lower_tail=FALSE + log_p=TRUE correctness test"
+  cdf_ck_both[upper_ok],
+  cdf_ref_both[upper_ok],
+  info = "CDF: lower_tail=FALSE + log_p=TRUE correctness test (where 1 - F > 1e-3)"
+)
+tiny_F <- cdf_ref_both == 0 & cdf_ck_log > -700
+expect_true(
+  any(tiny_F) && all(cdf_ck_both[tiny_F] < 0) &&
+    max_rel(cdf_ck_both[tiny_F], -exp(cdf_ck_log[tiny_F])) < 1e-13,
+  info = "CDF: log upper tail is log1p(-F) (about -F), not 0, where F is tiny"
 )
 
 
 # Test 8: CDF edge case (nu approx  0)
+# As in test 3, the reference is gamlss.dist's nu = 0 limit (pBCPEo at nu = 1e-12 is
+# off by up to ~3e-4 on these points), where that limit is itself accurate: F > 1e-3 (below,
+# its 0.5*(1 + G*sign(z)) cancels, and is 0 under ~1e-16).
 cdf_ck_edge <- fpBCPEo(edge_data$q, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
-cdf_ref_edge <- pBCPEo(edge_data$q, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
+cdf_ref_edge <- pBCPEo(edge_data$q, edge_data$mu, edge_data$sigma, 0, edge_data$tau)
+edge_ok <- cdf_ref_edge > 1e-3
 
-expect_equal(
-  cdf_ck_edge,
-  cdf_ref_edge,
-  info = "CDF: nuapprox 0 edge case test"
+expect_true(
+  sum(edge_ok) > 30 && max_rel(cdf_ck_edge[edge_ok], cdf_ref_edge[edge_ok]) < 1e-10,
+  info = "CDF: nuapprox 0 edge case test (against the nu = 0 limit)"
 )
 
 # =============================================================================
@@ -180,13 +310,14 @@ expect_equal(
 )
 
 # Test 13: Quantile edge case (nu approx  0)
+# As in test 3, the reference is gamlss.dist's exact nu = 0 limit (qBCPEo at
+# nu = 1e-12 is off by up to ~3e-4 on these points).
 quantile_ck_edge <- fqBCPEo(edge_data$p, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
-quantile_ref_edge <- qBCPEo(edge_data$p, edge_data$mu, edge_data$sigma, edge_data$nu, edge_data$tau)
+quantile_ref_edge <- qBCPEo(edge_data$p, edge_data$mu, edge_data$sigma, 0, edge_data$tau)
 
-expect_equal(
-  quantile_ck_edge,
-  quantile_ref_edge,
-  info = "Quantile: nuapprox 0 edge case test"
+expect_true(
+  max_rel(quantile_ck_edge, quantile_ref_edge) < 1e-10,
+  info = "Quantile: nuapprox 0 edge case test (against the nu = 0 limit)"
 )
 
 # =============================================================================
@@ -410,9 +541,17 @@ if (length(edge_idx) > 0) {
 # =============================================================================
 
 # Test 16: Error handling for invalid inputs
-expect_error(
-  fdBCPEo(c(-1, 1), c(1, 1), c(1, 1), c(1, 1), c(1, 1)),
-  "x must be >=0"
+# A negative x is not an error: it is below the support, with density 0 (log: -Inf).
+# (bcpe_value(), defined at the top of this file, gives the message of a call that stops.)
+expect_identical(
+  bcpe_value(fdBCPEo(c(-1, 1), c(1, 1), c(1, 1), c(1, 1), c(1, 1))),
+  c(0, fdBCPEo(1, 1, 1, 1, 1)),
+  info = "PDF: x < 0 has density 0 (no longer an error)"
+)
+expect_identical(
+  bcpe_value(fdBCPEo(c(-1, -Inf, 0), 1, 1, 1, 1, log_ = TRUE)),
+  rep(-Inf, 3),
+  info = "PDF: log density at x <= 0 is -Inf"
 )
 
 expect_error(

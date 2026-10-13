@@ -94,6 +94,135 @@
   40,000-row table partitioned by year, zstd level 19 wrote 195,608 bytes
   against 205,651 at arrow's default zstd level (1).
 
+* **`fdBCPE()`, `fpBCPE()`, `fqBCPE()` and `frBCPE()`: the Box-Cox power exponential
+  distribution of gamlss.dist (Rigby and Stasinopoulos 2004), in C++.** The Box-Cox
+  transform of `Y > 0`, `z = ((Y / mu)^nu - 1) / (nu * sigma)` (`log(Y / mu) / sigma` for
+  `nu = 0`), is a power exponential variable with unit variance and shape `tau` (the normal
+  for `tau = 2`, the Laplace for `tau = 1`) truncated to the range of the transform, `z > -b`
+  for `nu > 0` and `z < b` for `nu < 0`, `b = 1 / (sigma * abs(nu))`; `nu = 1` with `tau = 2`
+  is a normal truncated at 0 and `nu = 0` with `tau = 2` the lognormal. `mu` is the value of
+  `Y` at which the transform is 0 (the median of the power exponential): exactly the median of
+  `Y` for `nu = 0`, while for `nu != 0` the truncated mass moves the median of `Y` a little
+  (`F(mu)` is 0.4933 at `sigma = 0.3`, `nu = 1.5`, `tau = 2`; over 1e6 random IMPACTncd-like
+  parameter sets, `mu` 15 to 40, `sigma` 0.05 to 0.3, `nu` -1.5 to 1.5, `tau` 1.2 to 4, the
+  median is within 0.16 % of `mu` for 99 % of them and within 0.53 % for all). `sigma` is
+  approximately the coefficient of variation for `nu >= 0` and a small `sigma` only: for
+  `nu < 0` the upper tail of `Y` is a power law of index `abs(nu)`, so the variance is
+  infinite for `-2 <= nu < 0` and the mean for `-1 <= nu < 0`. The arguments are those of the
+  other families (`fpBCPE(q, mu, sigma, nu, tau, lower_tail, log_p)`; `frBCPE(n, mu = 5, sigma
+  = 0.1, nu = 1, tau = 2)` is `fqBCPE(dqrng::dqrunif(n), ...)`). The parameters are checked
+  after recycling: `mu`, `sigma` and `tau` positive, all four finite (`nu` is any real), and
+  `p` in `[0, 1]` (`<= 0` on the log scale); every real `x` and `q` is valid. An element
+  with an `NA` or `NaN` argument gives `NA` and is not checked, and a `NaN` from valid
+  arguments warns "NaNs produced" (none came out of 2e5 random parameter sets for each of
+  the ten functions and tail/scale combinations, with `mu` from 1e-250 to 1e250, `sigma` from
+  1e-8 to 1e3, `abs(nu)` up to 50 and down to 1e-300, `tau` from 1e-3 to 1e3). BCPE is
+  continuous: `fqBCPE()` and `frBCPE()` return doubles, and the count contract of
+  `recycling_helpers.h` does not apply. The kernels `fdBCPE_scalar()`, `fpBCPE_scalar()`,
+  `fqBCPE_scalar()` and `frBCPE_scalar()` are `inline` in the new
+  `inst/include/distr_BCPE.h` for a package that declares `LinkingTo: CKutils` (they validate
+  nothing and call R's gamma functions); `frBCPE_scalar()` takes a caller-supplied uniform
+  and agrees with `frBCPE()` draw for draw under one `dqset.seed()`. The accuracy claims
+  below were checked over `mu` 1e-6 to 1e6, `sigma` 1e-3 to 10, `nu` -10 to 10 (and `abs(nu)`
+  down to 1e-300), `tau` 0.05 to 100, `x` and `q` from 1e-298 to 1e299, `p` down to 1e-300
+  and `log p` down to -1e4; outside that range the functions return numbers, but their
+  accuracy is not verified.
+
+  **Switching from gamlss.dist reproduces a model's draws.** On the natural scale of the
+  lower tail the functions repeat gamlss.dist's arithmetic operation for operation wherever
+  that arithmetic is accurate (the "gamlss region"), so there `fdBCPE()` (both scales),
+  `fpBCPE()` and `fqBCPE()` are `identical()` to `dBCPE()`, `pBCPE()` and `qBCPE()` called on
+  a vector. The region is, for the density, `nu = 0` or `abs(nu) * min(1, sigma) >= 2^-8`,
+  and `tau >= 1`; for the CDF, those, and `F_T(z) >= 2^-8` where `z < 0` (gamlss.dist's lower
+  tail of the power exponential), a truncation (`nu > 0`) that subtracts at most half of
+  `F_T(z)`, and a value not above 1; for the quantile, `nu = 0` or `abs(nu) * min(1, w) >=
+  2^-8` (`w` is the base of the power `w^(1/nu)`) and `min(pt, 1 - pt) >= 2^-8 * max(1, sigma
+  / w)` (`pt` is gamlss.dist's target in the power exponential); and for all three, none of
+  gamlss.dist's intermediates (`y / mu`, `c`, the gamma argument, the gamma quantile)
+  outside the normal range of doubles. In 1e6 rows over the supported domain (`mu` 1e-6 to
+  1e6, `sigma` 1e-3 to 10, `abs(nu)` up to 10 and 0, `tau` 0.05 to 100) the region holds
+  548,926 of the densities, 440,860 of the CDFs and 989,369 of the quantiles, and in 1e6
+  IMPACTncd-like rows 981,213, 976,139 and 989,497; every one of them is `identical()` to
+  gamlss.dist. On the IMPACTncd-like rows (`x` at the quantiles of the same parameters)
+  `fdBCPE()` is `identical()` to `dBCPE()` for 98.3 % of the rows (98.7 % on the log scale),
+  `fpBCPE()` to `pBCPE()` for 98.1 % and `fqBCPE()` to `qBCPE()` for 99.2 %. The remaining
+  0.8 % of the quantiles differ from `qBCPE()` by up to 1.5e-10, where `qBCPE()` is the less
+  accurate: on 200 of them against a 50-digit reference `fqBCPE()` was off by at most
+  2.8e-15 and `qBCPE()` by 1.5e-10. Two caveats on `identical()`. First, the last bit of
+  `exp()` of an argument below 2^-26 in absolute value: from R 4.6.0 `exp()` of a vector
+  returns `1 + x` there, while byte-compiled code on a length-one argument calls the C
+  library (R 4.5 and earlier use the C library throughout), so gamlss.dist itself differs
+  between R versions, and between a scalar call and a vector call; the functions follow the
+  rule of the R they are compiled against, in the form of a vector call. Second, the products
+  that gamlss.dist adds to something are kept from fusing into FMA instructions on every
+  GNU-compatible compiler (a bare `-mavx512f` build included). And the parity includes
+  gamlss.dist's own rounding error, which grows as `sigma` falls (its `z` carries the rounding
+  error of `y / mu` divided by `sigma`): for `sigma <= 0.01` `F` is off by up to about 5e-14
+  (absolute; `pBCPE(1.00056e-6, 1e-6, 0.001, 0, 1)` by 3.4e-14) and the density by up to about
+  1e-12, so `F` plus the upper tail, which is computed directly, equals 1 to that and not to a
+  few ulp. Everything else is computed stably, and differs from gamlss.dist where gamlss.dist
+  is wrong:
+
+  - **The upper tail is direct, never `1 - F`.** `pBCPE(100, 25, .15, 0, 2, lower.tail =
+    FALSE)` is 0 where the value is 1.21e-20, and `qBCPE(1e-20, 25, .15, 0, 2, lower.tail =
+    FALSE)` is `Inf` where it is 100.31.
+  - **The log scale keeps its accuracy at both ends.** `pBCPE(5, 25, .15, 0, 2, log.p =
+    TRUE)` is `-Inf` where the value is -60.862 (`log(F)`, with `F` rounded to 0), and
+    `qBCPE(-1e-300, 25, .15, 0, 2, log.p = TRUE)` is `Inf` where `fqBCPE()` gives 6476.5:
+    `exp(p)` rounds to 1, whereas `fqBCPE()` inverts `-expm1(p)` for `p > -log(2)`.
+  - **The far lower tail.** `pBCPE(7, 25, .15, 0, 2)` is 0 where the value is 1.0653e-17
+    (`0.5 * (1 + G * sign(z))` rounds to 0 below about 1e-16), and `qBCPE(1e-20, 25, .15,
+    0, 2)` is 0 where it is 6.2309.
+  - **A `nu` near 0.** `((y / mu)^nu - 1) / (nu * sigma)` cancels. `qBCPE(.9, 25, .15, 1e-12,
+    2)` is 30.30057 where the value is 30.29881 (5.8e-5 relative); at `nu = 1e-12` `dBCPE()`
+    is off in the fourth to fifth digit (median relative error 9.7e-5 over 1e5
+    IMPACTncd-like rows, 1.8e-3 at the 99th percentile, 8.3e-3 at most). At `nu = 1e-17` the
+    power is exactly 1: `dBCPE(15, 25, .15, 1e-17, 2)` is 0.1773 where the density is
+    5.4e-4, `pBCPE()` is 0.5 for `q / mu` from `exp(-5.55)` to `exp(11.1)` (0 below, 1
+    above), and `qBCPE()` returns `mu` for `p` of 0.3 and 0.9; `qBCPE(1e-300, 25, .15, 1e-17,
+    2)` is `Inf` where the quantile is 0.0965.
+  - **The power-law tail next to the truncation point** (`q -> 0` for `nu > 0`, `q -> Inf`
+    for `nu < 0`) keeps its relative accuracy, on the log scale far below the double range:
+    `pBCPE(1e-100, 25, .15, .5, 2, log.p = TRUE)` is `-Inf` where the value is -203.956.
+  - **A `tau` below 1.** `f_T` has a cusp at 0, and the absolute error of gamlss.dist's
+    `z` near the median meets it: at `tau = 0.05`, `sigma = 0.05`, `nu = 0.5`, `dBCPE(25 *
+    (1 + 1e-15), 25, .05, .5, .05, log = TRUE)` is 21.602 where the value is 21.506 (and
+    7.3 off at one ulp from `mu`), and at `nu = 0.0789` `pBCPE()` is off by up to 2.1e-4.
+    The region needs `tau >= 1`.
+  - **A large `tau`.** gamlss.dist's `0.5 * abs(z / c)^tau` underflows to 0 near the median
+    and `F` becomes exactly 0.5: `pBCPE(25.0025, 25, .15, .5, 100)` is 0.5 where the value is
+    0.500192 (3.8e-4 relative); and its quotient `(F1 - F2) / F3` can round to `1 +
+    2.2e-16` (31 of 1e6 rows over the domain), a probability above 1, which `fpBCPE()`
+    never returns.
+  - **Edges.** The log density at `x <= 0` is `-Inf` (`dBCPE()` gives 0, with a warning for
+    `x < 0`) and the density at `x = Inf` is 0 (`dBCPE()` gives `NaN` for `nu >= 1`); the
+    density at `x = 0` is a convention, not the limit (which is `Inf` for `0 < nu < 1`:
+    `fdBCPE(1e-300, 25, .15, .5, 2)` is 1.32e111). `q <= 0` is on the requested tail and
+    scale, `0`, `-Inf`, `1` and `0` for `(lower_tail, log_p)` = (TRUE, FALSE), (TRUE, TRUE),
+    (FALSE, FALSE), (FALSE, TRUE) (`pBCPE()` gives 0 in all four). `p = 0` and `p = 1` give
+    `0` and `Inf` on the lower tail and `Inf` and `0` on the upper tail (on the log scale
+    `p = -Inf` and `p = 0`); a quantile is never negative.
+  - **The parameter range is strict.** `mu`, `sigma` or `tau` of 0 or `Inf` and an infinite
+    `nu` stop (`dBCPE()` lets them through, giving `NaN` or, for an infinite `mu` or
+    `sigma`, 0), and a `p` outside `[0, 1]` stops (`qBCPE()`: `NaN` with a warning). `NA`
+    gives `NA`: `dBCPE()`, `pBCPE()` and `qBCPE()` stop for an `NA` in `mu`, `sigma` or
+    `tau`, an `NA` `nu` gives `NA` in `dBCPE()` and `pBCPE()` but `qBCPE(.5, nu = NA)` is 0.
+
+  One limit: for `log p` below about -1e17 at `tau = 0.05` (-1e32 at `tau = 0.1`, -2e93 at
+  `tau = 0.3`, never for `tau >= 1`) the quantile of the power exponential overflows, and
+  `fqBCPE()` returns 0 (lower tail, `nu < 0`) or `Inf` (upper tail, `nu > 0`) even where the
+  true quantile is a finite double (`fqBCPE(-1e100, 20, 1, -8, .1, log_p = TRUE)` is 0, the
+  value 5.95e-123); a `log p` of -1e5 is far from it.
+
+  Against a 50-digit reference (`inst/tinytest/bcpe_reference.csv`, 3198 points over `mu`
+  1e-6 to 1e6, `sigma` 1e-3 to 10, `tau` 0.05 to 100 and `nu` from -10 to 10, down to 1e-300
+  in size: all four tails and scales, the far tails to 1e-300, the power-law regime including
+  the deep tails at `tau` 60 to 100, R's `qgamma` band, the edges) every row is within its
+  tolerance (1e-13 relative, or 16 ulp times the condition number of the point if larger, and
+  5e-13 inside the gamlss region), the worst at 0.5 of it. At n = 1e6 with vector parameters
+  (one thread, medians of five) `fdBCPE()` takes 0.39 s against 0.60 s for `dBCPE()`,
+  `fpBCPE()` 0.50 s against 0.91 s and `fqBCPE()` 0.99 s against 1.16 s.
+
 ## Bug fixes
 
 * **The count CDFs accept a `q` below 0 and return the CDF below the support,
@@ -163,7 +292,7 @@
   metadata of each partition file read `SNAPPY` for "uncompressed", "gzip" and
   "zstd" alike. It now reaches every partition file (they read `UNCOMPRESSED`,
   `GZIP` and `ZSTD`). The default, "snappy", writes the same bytes as before.
-* **Draws of the IMPACTncd models.** None change. For `q >= 0` the CDFs are
+* **Draws of the IMPACTncd models: the count CDFs.** None change. For `q >= 0` the CDFs are
   `identical()` to 0.1.35 -- on 860 cases (43 parameter sets over the ten
   functions, vector-recycled ones included; five `q` vectors: `0:60` with
   non-integers, 100 and 250, sorted, shuffled, as integers, with `NA`, `NaN`,
@@ -173,6 +302,37 @@
   the two top-of-range changes above. A model that never passes a negative
   `q` draws exactly as before; IMPACTncd_Engl2026 now computes `minq = 0`
   itself for `min_value: 0` and does not call the CDF there.
+
+* **`fdBCPEo()`, `fpBCPEo()`, `fqBCPEo()` and `frBCPEo()` are the BCPE functions.**
+  gamlss.dist's `dBCPEo()`, `pBCPEo()`, `qBCPEo()` and `rBCPEo()` are line for line `dBCPE()`
+  and the others (the families `BCPE()` and `BCPEo()` differ only in the default link for
+  `mu`), so the four keep their signatures, give `identical()` results to `fdBCPE()` and the
+  others, are documented on their help pages (`?fdBCPEo` opens `?fdBCPE`), and gain every
+  change above; `inst/include/distr_BCPEo.h` has the inline aliases `fdBCPEo_scalar()` to
+  `frBCPEo_scalar()`. What changes for existing callers:
+  - a negative `x` or `q` is no longer an error ("x must be >=0", "q must be positive"):
+    the density is 0 and the CDF 0, `-Inf`, 1 and 0 on the four tail/scale combinations;
+  - `fdBCPEo(0, 25, .15, nu, 2)` is 0 for every `nu` (it was `Inf` for `0 < nu < 1` and
+    `NaN` with a warning for `nu <= 0` and `nu = 1`);
+  - the upper tail is no longer `1 - F` and the log scale no longer `log(F)`
+    (`fpBCPEo(100, 25, .15, 0, 2, lower_tail = FALSE)` was 0 for 1.21e-20,
+    `fpBCPEo(5, 25, .15, 0, 2, log_p = TRUE)` `-Inf` for -60.862), and
+    `fqBCPEo(1e-20, 25, .15, 0, 2)` is 6.2309 (it was `NaN` with a warning);
+  - an `NA` argument gives `NA` without the warning "NaNs or NAs were produced" (and
+    `fdBCPEo(x, tau = NA)` is `NA`, where it was 0);
+  - an infinite parameter stops ("mu must be finite", ...), where `fdBCPEo(20, mu = Inf, 0.15,
+    0.5, 2)` was 0; a positive `p` on the log scale gives "p must be <=0 when log_p = TRUE (p is
+    on the log scale)" where it gave "p must be between 0 and 1".
+  The natural lower tail is also faster: 0.85, 0.68 and 0.94 times the time of the old
+  `fdBCPEo()`, `fpBCPEo()` and `fqBCPEo()` at n = 1e6.
+* **Draws of the IMPACTncd models: BCPEo.** `fqBCPEo()` and `frBCPEo()` draws are the same as
+  before for 98.4 % of 1e6 IMPACTncd-like rows (`mu` 15 to 40, `sigma` 0.05 to 0.3, `nu` -1.5
+  to 1.5, `tau` 1.2 to 4, `u` uniform); the others differ by at most 1.5e-10 relative (99.9
+  % of the rows by less than 3.4e-14), where the old value carried gamlss.dist's own error.
+  The old `fqBCPEo()` was `identical()` to `qBCPE()` for 99.19 % of these rows and the new
+  one is for 99.17 %: every element in the gamlss region is, and where the others differ
+  the new value is the more accurate. The densities are the same as before for 81.6 % of the
+  rows (largest relative difference 1.3e-14), the lower-tail CDFs for 95.0 % (5.5e-11).
 
 ## Documentation
 
@@ -188,6 +348,22 @@
   contract they give `NaN` or a plausible but wrong number, e.g. `sigma = -1`
   acts as 1, and never hang), and that a subnormal `mu * sigma^2` loses
   accuracy, as in gamlss.dist.
+
+* The help pages `?fdBCPE`, `?fpBCPE`, `?fqBCPE` and `?frBCPE` document the four functions
+  and, as aliases, `fdBCPEo()`, `fpBCPEo()`, `fqBCPEo()` and `frBCPEo()`: the definition, that
+  BCPE and BCPEo are the same distribution, the region where the results are gamlss.dist's
+  own, every departure above, the supported domain and the measured accuracy, the small-sigma
+  accuracy of gamlss.dist's arithmetic that the region keeps, the validation and `NA`
+  handling, the limit of the quantile at a huge `abs(log p)`, and the last-bit difference
+  between a scalar and a vector call of gamlss.dist's own `qBCPE()`, `dBCPE()` and `pBCPE()`
+  when `exp()` meets a tiny argument (from R 4.6.0, byte-compiled R takes the C library
+  `exp()` for a length-one argument, while R's vectorised `exp()` returns `1 + x` for
+  `abs(x) <= 2^-26`; `fqBCPE()`, `fdBCPE()` and `fpBCPE()` follow the vector form of the R they
+  are compiled against). `README.md` has a paragraph on the BCPE kernels
+  (`inst/include/distr_BCPE.h`, `distr_BCPEo.h`): that they validate nothing, call R's gamma
+  functions, return `NA_REAL` for a `NaN` or `NA` argument and what they return at the edges
+  (outside the parameter contract they give `NaN`, `Inf` or a plausible but wrong number, and
+  never hang); the header states the supported domain and its two limits.
 
 ## Tests
 
@@ -246,6 +422,24 @@
   alike, zstd 100 capped at 22, gzip levels 1 and 9 differ, the gzip range
   message, the refusal of `"9"`, two numbers, `NA`, 1.5, `Inf` and an empty
   vector, and arrow's error for a level with snappy on both branches.
+
+* `test-fBCPE.R` (new, 1726 expectations): closed forms (`pnorm()`, `qnorm()` and `dnorm()`
+  for `tau = 2`, exponentials for the Laplace, `tau = 1`), 80-digit values, the 3198-row
+  reference table (with deep-tail quantile rows at `tau` 60 to 100), `integrate()` of the
+  density against the CDF, `identical()` parity with gamlss.dist inside the region and each
+  departure above, an `exp()` band block (rows built so that an `exp()` argument of
+  gamlss.dist is below 2^-26; it fails if the package uses the `exp()` rule of the other R
+  version), on all four tail/scale combinations, `NA`/`NaN`, recycling, zero-length
+  arguments, every error message, round trips and the `frBCPE()` draws.
+* `test-fBCPEo.R` (49 to 82 expectations): the expectations that encoded gamlss.dist's
+  errors (`nu` = 1e-12, `log(F)` of 0, `log(1 - F)` of 0, a negative `x` stopping) now compare
+  where gamlss.dist is accurate and check each departure, and a grid with edges, both tails
+  and scales checks that the BCPEo functions are `identical()` to the BCPE ones, errors
+  included. `test-distr_cpp_branches.R` (179 to 218): a negative `x` or `q` is below the
+  support, and the "must be finite" and `log_p` messages for both families. `test-rng_distr.R`
+  (108 to 124): `frBCPE()` joins the continuous samplers and the header sampler is compared
+  bit for bit with it (internal bridge `.frBCPE_scalar_vec()`). `test-distr_negative_q.R`
+  (2488 to 2552): a section for `fpBCPE()` and `fpBCPEo()`.
 
 # CKutils 0.1.35
 

@@ -1,62 +1,113 @@
-#' Random Generation for Box-Cox Power Exponential (BCPEo) Distribution
-#' 
-#' Generates random deviates from the Box-Cox Power Exponential distribution 
+#' Random Generation for Box-Cox Power Exponential (BCPE) Distribution
+#'
+#' Generates random deviates from the Box-Cox Power Exponential distribution
 #' using high-quality pseudo-random number generation via the dqrng package.
-#' 
+#' \code{frBCPEo} is the same sampler (gamlss.dist's BCPEo is the same
+#' distribution; see \code{\link{fdBCPE}}).
+#'
 #' @param n Number of observations to generate: a single positive number (a
 #'   vector of length greater than 1 is an error). A non-integer is rounded up.
-#' @param mu Vector of location parameters (positive). Default is 5. Note that 
-#'   mu represents the median of the distribution.
-#' @param sigma Vector of scale parameters (positive). Default is 0.1.
-#' @param nu Vector of first shape parameters (real). Default is 1. Controls 
-#'   the skewness of the distribution.
-#' @param tau Vector of second shape parameters (positive). Default is 2. 
-#'   Controls the kurtosis of the distribution.
-#' 
+#' @param mu Vector of positive median parameters (the median up to the effect
+#'   of the truncation; see \code{\link{fdBCPE}}). Default is 5.
+#' @param sigma Vector of positive scale parameters. Default is 0.1.
+#' @param nu Vector of (real) Box-Cox powers, controlling the skewness. Default
+#'   is 1.
+#' @param tau Vector of positive power-exponential shapes, controlling the
+#'   kurtosis. Default is 2.
+#'
 #' @details
-#' This function generates random variates from the BCPEo distribution by:
+#' This function generates random variates from the BCPE distribution by:
 #' \enumerate{
 #'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
-#'   \item Applying the inverse CDF transformation using \code{fqBCPEo}
+#'   \item Applying the inverse CDF transformation using \code{fqBCPE}
 #' }
-#' 
-#' The BCPEo distribution is a four-parameter continuous distribution that 
-#' extends the Box-Cox normal distribution. It's particularly useful for 
-#' modelling positive continuous data with flexible skewness and kurtosis.
-#' 
-#' The use of \code{dqrng::dqrunif} provides superior random number generation 
-#' compared to base R's \code{runif}, with better statistical properties and 
+#'
+#' The BCPE distribution (Rigby and Stasinopoulos, 2004) is a four-parameter
+#' continuous distribution on the positive reals: the Box-Cox transform of
+#' \eqn{Y} is a power exponential variable (normal for \eqn{\tau = 2}{tau = 2})
+#' truncated to the range of the transform. It extends the Box-Cox normal
+#' distribution with a kurtosis parameter, and is used to model positive
+#' continuous data with flexible skewness and kurtosis.
+#'
+#' Key characteristics:
+#' \itemize{
+#'   \item Support: the positive reals
+#'   \item mu is the median of Y for nu = 0; for nu != 0 the truncated mass
+#'     moves the median a little (see \code{\link{fdBCPE}})
+#'   \item sigma is approximately the coefficient of variation for a small
+#'     sigma and nu >= 0 only (for nu < 0 the upper tail of Y is a power law of
+#'     index |nu|, with an infinite variance for -2 <= nu < 0)
+#'   \item nu controls the skewness (nu = 1 with tau = 2 is a truncated normal
+#'     for Y; nu = 0 gives the log power exponential)
+#'   \item tau controls the kurtosis (tau = 2 normal, tau < 2 heavier tails,
+#'     tau > 2 lighter)
+#' }
+#'
+#' Since \code{fqBCPE} reproduces \code{gamlss.dist::qBCPE} bit for bit on the
+#' bulk of a typical model (about 99 \% of 1e6 draws of mu 15 to 40, sigma 0.05
+#' to 0.3, nu -1.5 to 1.5, tau 1.2 to 4; see \code{\link{fqBCPE}}, which also
+#' says when it does not), \code{frBCPE} and \code{gamlss.dist::rBCPE} give the
+#' same draws from the same uniforms there;
+#' \code{rBCPE} draws its uniforms with \code{runif}, \code{frBCPE} with
+#' \code{dqrng::dqrunif}. \code{frBCPEo(n, ...)} is
+#' \code{fqBCPEo(dqrng::dqrunif(n), ...)}, which equals \code{frBCPE} draw for
+#' draw under one \code{dqrng::dqset.seed()}.
+#'
+#' The use of \code{dqrng::dqrunif} provides superior random number generation
+#' compared to base R's \code{runif}, with better statistical properties and
 #' faster generation speeds.
-#' 
-#' @return Vector of random deviates from the BCPEo distribution.
-#' 
+#'
+#' @return Vector of random deviates from the BCPE distribution (doubles).
+#'
 #' @examples
 #' # Generate 100 random values with default parameters
-#' x <- frBCPEo(100)
-#' hist(x, main = "BCPEo Random Variates")
-#' 
+#' x <- frBCPE(100)
+#' hist(x, main = "BCPE Random Variates")
+#'
 #' # Generate with custom parameters
-#' x <- frBCPEo(1000, mu = 2, sigma = 0.5, nu = 0.5, tau = 3)
+#' x <- frBCPE(1000, mu = 25, sigma = 0.15, nu = 0.5, tau = 3)
 #' summary(x)
-#' 
+#' median(x)  # approximately mu = 25
+#'
 #' # Vector of parameters (recycling applies)
-#' x <- frBCPEo(10, mu = c(1, 2), sigma = 0.3, nu = c(-0.5, 0.5), tau = 4)
-#' 
+#' x <- frBCPE(10, mu = c(1, 2), sigma = 0.3, nu = c(-0.5, 0.5), tau = 4)
+#'
+#' # frBCPEo gives the same draws under one seed
+#' dqrng::dqset.seed(1); a <- frBCPE(5, 25, 0.15, 0.5, 2)
+#' dqrng::dqset.seed(1); b <- frBCPEo(5, 25, 0.15, 0.5, 2)
+#' identical(a, b)
+#'
 #' @references
-#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019). 
-#' Distributions for modelling location, scale, and shape: Using GAMLSS in R. 
+#' Rigby, R. A. and Stasinopoulos, D. M. (2004) Smooth centile curves for skew and
+#' kurtotic data modelled using the Box-Cox power exponential distribution.
+#' Statistics in Medicine, 23, 3053-3076.
+#'
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019).
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R.
 #' Chapman and Hall/CRC.
-#' 
-#' @seealso 
-#' \code{\link{fdBCPEo}}, \code{\link{fpBCPEo}}, \code{\link{fqBCPEo}} for 
-#' other BCPEo distribution functions.
-#' 
+#'
+#' @seealso
+#' \code{\link{fdBCPE}}, \code{\link{fpBCPE}}, \code{\link{fqBCPE}} for
+#' other BCPE distribution functions.
+#'
 #' \code{\link[gamlss.dist]{rBCPE}} for the original implementation.
-#' 
+#'
 #' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
-#' 
+#'
 #' @export
 #' @importFrom dqrng dqrunif
+frBCPE <- function(n, mu = 5, sigma = 0.1, nu = 1, tau = 2) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqBCPE(p, mu = mu, sigma = sigma, nu = nu, tau = tau)
+    r
+}
+
+#' @rdname frBCPE
+#' @export
 frBCPEo <- function(n, mu = 5, sigma = 0.1, nu = 1, tau = 2) {
     if (any(n <= 0)) {
         stop(paste("n must be a positive integer", "\n", ""))

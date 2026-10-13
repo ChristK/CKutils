@@ -18,13 +18,13 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 // Internal bridges to the header-only random-generation scalars.
 //
-// frNBI_scalar / frZANBI_scalar / frZINBI_scalar / frZAGA_scalar are inline
-// kernels in inst/include/ for LinkingTo: CKutils consumers; nothing else in this
-// package calls them, so without a bridge they would be unreachable from R and
-// could not be tested. These four functions map a vector of uniforms through the
-// corresponding kernel, which is exactly what the exported R frNBI() /
-// frZANBI() / frZINBI() / frZAGA() do with dqrng::dqrunif() -- so a test can feed
-// both the same uniforms and assert identical output
+// frNBI_scalar / frZANBI_scalar / frZINBI_scalar / frZAGA_scalar / frBCPE_scalar
+// are inline kernels in inst/include/ for LinkingTo: CKutils consumers; nothing
+// else in this package calls them, so without a bridge they would be unreachable
+// from R and could not be tested. These five functions map a vector of uniforms
+// through the corresponding kernel, which is exactly what the exported R frNBI() /
+// frZANBI() / frZINBI() / frZAGA() / frBCPE() do with dqrng::dqrunif() -- so a test
+// can feed both the same uniforms and assert identical output
 // (inst/tinytest/test-rng_distr.R).
 //
 // They are deliberately NOT exported: no roxygen block, and the R-side names
@@ -36,6 +36,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include "distr_ZANBI.h"
 #include "distr_ZINBI.h"
 #include "distr_ZAGA.h"
+#include "distr_BCPE.h"
 // [[Rcpp::plugins(cpp17)]]
 
 using namespace Rcpp;
@@ -85,5 +86,20 @@ NumericVector frZAGA_scalar_vec(const NumericVector& u,
   const int n = u.size();
   NumericVector out(n);
   for (int i = 0; i < n; i++) out[i] = frZAGA_scalar(u[i], mu, sigma, nu);
+  return out;
+}
+
+// BCPE is continuous: the draws are doubles, not integers. The parameters are
+// scalars here, as for the other bridges.
+// [[Rcpp::export(.frBCPE_scalar_vec)]]
+NumericVector frBCPE_scalar_vec(const NumericVector& u,
+                                const double& mu,
+                                const double& sigma,
+                                const double& nu,
+                                const double& tau)
+{
+  const int n = u.size();
+  NumericVector out(n);
+  for (int i = 0; i < n; i++) out[i] = frBCPE_scalar(u[i], mu, sigma, nu, tau);
   return out;
 }

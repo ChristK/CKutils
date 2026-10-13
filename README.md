@@ -40,6 +40,7 @@ dtb[]
 
 # Statistical distributions
 fdBCPEo(x = 1:5, mu = rep(2, 5), sigma = rep(0.5, 5), nu = rep(1, 5), tau = rep(2, 5))  # BCPEo density
+fdBCPE(x = 1:5, mu = 2, sigma = 0.5, nu = 1, tau = 2)  # BCPE density (BCPEo is the same distribution)
 
 # Utility functions
 normalise(c(1, 2, 3, 4, 5))  # Normalise to [0,1]
@@ -158,6 +159,20 @@ They still validate nothing (`mu > 0`, `sigma > 0`, `0 < nu < 1`, with `mu` and
 contract they return `NaN` or a plausible but wrong number (`sigma = -1` acts as
 `1`), never hang; and a `mu * sigma^2` below the normal range (subnormal) loses
 accuracy, as in gamlss.dist.
+
+The Box-Cox power exponential (`distr_BCPE.h`: `fdBCPE_scalar`, `fpBCPE_scalar`,
+`fqBCPE_scalar` and `frBCPE_scalar`; `distr_BCPEo.h` has the same kernels as
+`fdBCPEo_scalar` to `frBCPEo_scalar`, because gamlss.dist's BCPEo is the same
+distribution) is continuous, so none of the count contract applies to it either:
+the kernels take and return doubles and convert nothing to `int`. They validate
+nothing (`mu > 0`, `sigma > 0` and `tau > 0`, with all four parameters finite,
+are yours to guarantee), call R's gamma functions (call them from a thread that
+may call into R), return `NA_REAL` for a `NaN` or `NA` argument, and define the
+edges: `x <= 0` and `x = Inf` have density 0, `q <= 0` and `q = Inf` give the CDF
+below and above the support on the requested tail and scale, and `p = 0` or `1`
+give 0 or `Inf` (`Inf` or 0 on the upper tail). `frBCPE_scalar` takes a uniform
+you supply, like the count samplers. Outside the parameter contract they return
+`NaN`, `Inf` or a plausible but wrong number, and never hang.
 
 `recycling_helpers.h` carries the authoritative statement of all of the above,
 and each `distr_*.h` repeats the part that applies to it.

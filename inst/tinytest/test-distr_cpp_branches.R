@@ -204,15 +204,55 @@ expect_error(fqBCT(2, mu = 1, sigma = 1, nu = 1, tau = 5), "p must be between 0 
 expect_error(fdBCPEo(1, mu = -1, sigma = 1, nu = 1, tau = 2, TRUE), "mu must be positive")
 expect_error(fdBCPEo(1, mu = 1, sigma = 0, nu = 1, tau = 2, TRUE), "sigma must be positive")
 expect_error(fdBCPEo(1, mu = 1, sigma = 1, nu = 1, tau = 0, TRUE), "tau must be positive")
-expect_error(fdBCPEo(-1, mu = 1, sigma = 1, nu = 1, tau = 2), "x must be >=0")
+# A negative x or q is below the support, not an error (density 0; F = 0, upper tail 1).
+# (A call that stops gives its message, so the comparison fails rather than aborting.)
+bcpe_val <- function(expr) tryCatch(expr, error = function(e) conditionMessage(e))
+expect_identical(bcpe_val(fdBCPEo(-1, mu = 1, sigma = 1, nu = 1, tau = 2)), 0)
+expect_identical(bcpe_val(fpBCPEo(-1, mu = 1, sigma = 1, nu = 1, tau = 2)), 0)
+expect_identical(bcpe_val(fpBCPEo(-1, mu = 1, sigma = 1, nu = 1, tau = 2, lower_tail = FALSE)), 1)
 expect_error(fpBCPEo(1, mu = -1, sigma = 1, nu = 1, tau = 2, lower_tail = FALSE, log_p = TRUE), "mu must be positive")
 expect_error(fpBCPEo(1, mu = 1, sigma = 0, nu = 1, tau = 2, log_p = TRUE), "sigma must be positive")
 expect_error(fpBCPEo(1, mu = 1, sigma = 1, nu = 1, tau = 0, log_p = TRUE), "tau must be positive")
-expect_error(fpBCPEo(-1, mu = 1, sigma = 1, nu = 1, tau = 2), "q must be positive")
 expect_error(fqBCPEo(log(0.5), mu = -1, sigma = 1, nu = 1, tau = 2, log_p = TRUE), "mu must be positive")
 expect_error(fqBCPEo(log(0.5), mu = 1, sigma = 0, nu = 1, tau = 2, log_p = TRUE), "sigma must be positive")
 expect_error(fqBCPEo(log(0.5), mu = 1, sigma = 1, nu = 1, tau = 0, log_p = TRUE), "tau must be positive")
 expect_error(fqBCPEo(2, mu = 1, sigma = 1, nu = 1, tau = 2), "p must be between 0 and 1")
+expect_error(fqBCPEo(0.5, mu = 1, sigma = 1, nu = 1, tau = 2, log_p = TRUE), "log_p")
+# Infinite parameters are errors (nu has no range, but must be finite).
+expect_error(fdBCPEo(1, mu = Inf, sigma = 1, nu = 1, tau = 2), "mu must be finite")
+expect_error(fpBCPEo(1, mu = 1, sigma = Inf, nu = 1, tau = 2), "sigma must be finite")
+expect_error(fqBCPEo(0.5, mu = 1, sigma = 1, nu = -Inf, tau = 2), "nu must be finite")
+expect_error(fdBCPEo(1, mu = 1, sigma = 1, nu = 1, tau = Inf), "tau must be finite")
+
+## ---- BCPE: the same validation and messages as BCPEo ----
+if (exists("fdBCPE", envir = asNamespace("CKutils"), inherits = FALSE)) {
+  bcpe_msgs <- list(
+    list(a = list(mu = -1, sigma = 1, nu = 1, tau = 2),  m = "mu must be positive"),
+    list(a = list(mu = 0, sigma = 1, nu = 1, tau = 2),   m = "mu must be positive"),
+    list(a = list(mu = 1, sigma = 0, nu = 1, tau = 2),   m = "sigma must be positive"),
+    list(a = list(mu = 1, sigma = 1, nu = 1, tau = -2),  m = "tau must be positive"),
+    list(a = list(mu = -Inf, sigma = 1, nu = 1, tau = 2), m = "mu must be positive"),
+    list(a = list(mu = Inf, sigma = 1, nu = 1, tau = 2), m = "mu must be finite"),
+    list(a = list(mu = 1, sigma = Inf, nu = 1, tau = 2), m = "sigma must be finite"),
+    list(a = list(mu = 1, sigma = 1, nu = Inf, tau = 2), m = "nu must be finite"),
+    list(a = list(mu = 1, sigma = 1, nu = 1, tau = Inf), m = "tau must be finite"))
+  for (b in bcpe_msgs) {
+    expect_error(do.call(fdBCPE, c(list(1), b$a)), b$m, info = paste("fdBCPE:", b$m))
+    expect_error(do.call(fpBCPE, c(list(1), b$a, list(lower_tail = FALSE, log_p = TRUE))), b$m,
+                 info = paste("fpBCPE:", b$m))
+    expect_error(do.call(fqBCPE, c(list(0.5), b$a)), b$m, info = paste("fqBCPE:", b$m))
+  }
+  expect_error(fqBCPE(-0.1, 1, 1, 1, 2), "p must be between 0 and 1")
+  expect_error(fqBCPE(1.1, 1, 1, 1, 2), "p must be between 0 and 1")
+  expect_error(fqBCPE(0.1, 1, 1, 1, 2, log_p = TRUE), "log_p")
+  # the bad element is found after recycling, wherever it is
+  expect_error(fpBCPE(c(1, 2, 3), 1, c(1, 1, 0), 1, 2), "sigma must be positive")
+  # a NA row is not checked: NA, silently, even next to an otherwise invalid value
+  expect_identical(fdBCPE(c(1, NA), c(1, -1), 1, 1, 2), c(fdBCPE(1, 1, 1, 1, 2), NA))
+  expect_silent(fqBCPE(0.5, c(1, NA), 1, c(1, Inf), 2))
+} else {
+  expect_true(FALSE, info = "fdBCPE is not in this build")
+}
 
 # --------------------------------------------------------------------------
 # 2. NOTE: the compiled frNBI / frZINBI / frZANBI wrappers that used to be
