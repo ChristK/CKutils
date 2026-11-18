@@ -18,12 +18,12 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 
 // Internal bridges to the header-only random-generation scalars.
 //
-// frNBI_scalar / frZANBI_scalar / frZINBI_scalar / frZAGA_scalar / frBCPE_scalar
+// frNBI_scalar / frZANBI_scalar / frZINBI_scalar / frZAGA_scalar / frBCPE_scalar / frBE_scalar
 // are inline kernels in inst/include/ for LinkingTo: CKutils consumers; nothing
 // else in this package calls them, so without a bridge they would be unreachable
-// from R and could not be tested. These five functions map a vector of uniforms
+// from R and could not be tested. These six functions map a vector of uniforms
 // through the corresponding kernel, which is exactly what the exported R frNBI() /
-// frZANBI() / frZINBI() / frZAGA() / frBCPE() do with dqrng::dqrunif() -- so a test
+// frZANBI() / frZINBI() / frZAGA() / frBCPE() / frBE() do with dqrng::dqrunif() -- so a test
 // can feed both the same uniforms and assert identical output
 // (inst/tinytest/test-rng_distr.R).
 //
@@ -37,6 +37,7 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 #include "distr_ZINBI.h"
 #include "distr_ZAGA.h"
 #include "distr_BCPE.h"
+#include "distr_BE.h"
 // [[Rcpp::plugins(cpp17)]]
 
 using namespace Rcpp;
@@ -101,5 +102,18 @@ NumericVector frBCPE_scalar_vec(const NumericVector& u,
   const int n = u.size();
   NumericVector out(n);
   for (int i = 0; i < n; i++) out[i] = frBCPE_scalar(u[i], mu, sigma, nu, tau);
+  return out;
+}
+
+// BE is continuous: the draws are doubles, not integers. The parameters are
+// scalars here, as for the other bridges.
+// [[Rcpp::export(.frBE_scalar_vec)]]
+NumericVector frBE_scalar_vec(const NumericVector& u,
+                              const double& mu,
+                              const double& sigma)
+{
+  const int n = u.size();
+  NumericVector out(n);
+  for (int i = 0; i < n; i++) out[i] = frBE_scalar(u[i], mu, sigma);
   return out;
 }
