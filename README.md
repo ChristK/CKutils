@@ -160,6 +160,16 @@ contract they return `NaN` or a plausible but wrong number (`sigma = -1` acts as
 `1`), never hang; and a `mu * sigma^2` below the normal range (subnormal) loses
 accuracy, as in gamlss.dist.
 
+The beta in gamlss.dist's BE parametrisation (`distr_BE.h`: `fdBE_scalar`,
+`fpBE_scalar`, `fqBE_scalar` and `frBE_scalar`) is continuous on (0, 1). The kernels
+validate nothing (`0 < mu < 1` and `0 < sigma < 1` are yours to guarantee), give
+`NA` for an `NA` or `NaN` argument, compute the shapes `mu * k` and
+`(1 - mu) * k` with `k = (1 - sigma^2) / sigma^2` in R's order of evaluation, and
+call R's beta functions, so they inherit `qbeta`'s limits where the smaller shape is
+below 1e-2 (a precision warning on some rows; a quantile exactly 0 or 1, or slightly
+outside [0, 1], up to about 1e-11). `frBE_scalar` takes a uniform you supply, like the
+other samplers.
+
 The Box-Cox power exponential (`distr_BCPE.h`: `fdBCPE_scalar`, `fpBCPE_scalar`,
 `fqBCPE_scalar` and `frBCPE_scalar`; `distr_BCPEo.h` has the same kernels as
 `fdBCPEo_scalar` to `frBCPEo_scalar`, because gamlss.dist's BCPEo is the same

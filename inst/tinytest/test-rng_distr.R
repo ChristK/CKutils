@@ -3,7 +3,7 @@
 # apply the corresponding inverse-CDF (fqXXX) transformation.
 
 # -----------------------------------------------------------------------------
-# Continuous distributions: frBCPE, frBCPEo, frBCT, frZAGA
+# Continuous distributions: frBCPE, frBCPEo, frBCT, frZAGA, frBE
 # -----------------------------------------------------------------------------
 # A function this build lacks is replaced by one that returns NA, so its checks fail
 # rather than abort the file.
@@ -16,7 +16,8 @@ cont_calls <- list(
   list(nm = "frBCPE",  fun = frBCPE_, args = list(mu = 5, sigma = 0.1, nu = 1, tau = 2)),
   list(nm = "frBCPEo", fun = frBCPEo, args = list(mu = 5, sigma = 0.1, nu = 1, tau = 2)),
   list(nm = "frBCT",   fun = frBCT,   args = list(mu = 5, sigma = 0.1, nu = 1, tau = 2)),
-  list(nm = "frZAGA",  fun = frZAGA,  args = list(mu = 5, sigma = 0.5, nu = 0.2))
+  list(nm = "frZAGA",  fun = frZAGA,  args = list(mu = 5, sigma = 0.5, nu = 0.2)),
+  list(nm = "frBE",    fun = ck_fun("frBE"), args = list(mu = 0.6, sigma = 0.3))
 )
 
 for (cc in cont_calls) {
@@ -166,7 +167,12 @@ if (requireNamespace("dqrng", quietly = TRUE)) {
     list(nm = "frZAGA",  R = frZAGA,  p = list(mu = 2, sigma = 1, nu = 0.1),
          C = function(u, p) CKutils:::.frZAGA_scalar_vec(u, p$mu, p$sigma, p$nu)),
     list(nm = "frZAGA",  R = frZAGA,  p = list(mu = 1e-3, sigma = 0.05, nu = 0.5),
-         C = function(u, p) CKutils:::.frZAGA_scalar_vec(u, p$mu, p$sigma, p$nu))
+         C = function(u, p) CKutils:::.frZAGA_scalar_vec(u, p$mu, p$sigma, p$nu)),
+    # BE is continuous: doubles, bit for bit; a central and a skewed, near-boundary case
+    list(nm = "frBE",    R = ck_fun("frBE"), p = list(mu = 0.6, sigma = 0.3),
+         C = function(u, p) ck_fun(".frBE_scalar_vec")(u, p$mu, p$sigma)),
+    list(nm = "frBE",    R = ck_fun("frBE"), p = list(mu = 0.02, sigma = 0.9),
+         C = function(u, p) ck_fun(".frBE_scalar_vec")(u, p$mu, p$sigma))
   )
   for (k in seq_along(parity_cases)) {
     cs <- parity_cases[[k]]

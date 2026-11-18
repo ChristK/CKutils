@@ -250,6 +250,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fdBE
+NumericVector fdBE(const NumericVector& x, const NumericVector& mu, const NumericVector& sigma, const bool& log);
+RcppExport SEXP _CKutils_fdBE(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdBE(x, mu, sigma, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fpBE
+NumericVector fpBE(const NumericVector& q, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fpBE(SEXP qSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fpBE(q, mu, sigma, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fqBE
+NumericVector fqBE(const NumericVector& p, const NumericVector& mu, const NumericVector& sigma, const bool& lower_tail, const bool& log_p);
+RcppExport SEXP _CKutils_fqBE(SEXP pSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP lower_tailSEXP, SEXP log_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type lower_tail(lower_tailSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type log_p(log_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(fqBE(p, mu, sigma, lower_tail, log_p));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fdBNB
 NumericVector fdBNB(const NumericVector& x, const NumericVector& mu, const NumericVector& sigma, const NumericVector& nu, const bool& log);
 RcppExport SEXP _CKutils_fdBNB(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP nuSEXP, SEXP logSEXP) {
@@ -916,6 +960,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// frBE_scalar_vec
+NumericVector frBE_scalar_vec(const NumericVector& u, const double& mu, const double& sigma);
+RcppExport SEXP _CKutils_frBE_scalar_vec(SEXP uSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const double& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(frBE_scalar_vec(u, mu, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fct_to_int_cpp
 IntegerVector fct_to_int_cpp(SEXP x, bool inplace);
 RcppExport SEXP _CKutils_fct_to_int_cpp(SEXP xSEXP, SEXP inplaceSEXP) {
@@ -1278,6 +1335,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_fdBCT", (DL_FUNC) &_CKutils_fdBCT, 6},
     {"_CKutils_fpBCT", (DL_FUNC) &_CKutils_fpBCT, 7},
     {"_CKutils_fqBCT", (DL_FUNC) &_CKutils_fqBCT, 7},
+    {"_CKutils_fdBE", (DL_FUNC) &_CKutils_fdBE, 4},
+    {"_CKutils_fpBE", (DL_FUNC) &_CKutils_fpBE, 5},
+    {"_CKutils_fqBE", (DL_FUNC) &_CKutils_fqBE, 5},
     {"_CKutils_fdBNB", (DL_FUNC) &_CKutils_fdBNB, 5},
     {"_CKutils_fpBNB", (DL_FUNC) &_CKutils_fpBNB, 6},
     {"_CKutils_fqBNB", (DL_FUNC) &_CKutils_fqBNB, 6},
@@ -1321,6 +1381,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CKutils_frZINBI_scalar_vec", (DL_FUNC) &_CKutils_frZINBI_scalar_vec, 4},
     {"_CKutils_frZAGA_scalar_vec", (DL_FUNC) &_CKutils_frZAGA_scalar_vec, 4},
     {"_CKutils_frBCPE_scalar_vec", (DL_FUNC) &_CKutils_frBCPE_scalar_vec, 5},
+    {"_CKutils_frBE_scalar_vec", (DL_FUNC) &_CKutils_frBE_scalar_vec, 3},
     {"_CKutils_fct_to_int_cpp", (DL_FUNC) &_CKutils_fct_to_int_cpp, 2},
     {"_CKutils_starts_from_1_cpp", (DL_FUNC) &_CKutils_starts_from_1_cpp, 5},
     {"_CKutils_key_order_cpp", (DL_FUNC) &_CKutils_key_order_cpp, 2},

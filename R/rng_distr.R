@@ -995,6 +995,72 @@ frZAGA <- function(n, mu = 1, sigma = 1, nu = 0.1) {
     r
 }
 
+#' Random Generation for the Beta Distribution (BE parametrisation)
+#'
+#' Generates random deviates from the beta distribution with mean \code{mu}
+#' and dispersion \code{sigma}, as gamlss.dist's \code{BE()} parametrises it,
+#' using high-quality pseudo-random number generation via the dqrng package.
+#'
+#' @param n Number of observations to generate: a single positive number (a
+#'   vector of length greater than 1 is an error). A non-integer is rounded up.
+#' @param mu Vector of means (0 < mu < 1). Default is 0.5.
+#' @param sigma Vector of dispersions (0 < sigma < 1). Default is 0.2.
+#'
+#' @details
+#' This function generates random variates from the BE distribution by:
+#' \enumerate{
+#'   \item Generating high-quality uniform random numbers using \code{dqrng::dqrunif}
+#'   \item Applying the inverse CDF transformation using \code{fqBE}
+#' }
+#'
+#' Key characteristics:
+#' \itemize{
+#'   \item Support: (0, 1)
+#'   \item Shapes: \code{mu * k} and \code{(1 - mu) * k}, with
+#'     \code{k = (1 - sigma^2) / sigma^2}
+#'   \item Mean: mu
+#'   \item Variance: sigma^2 * mu * (1 - mu)
+#' }
+#'
+#' The per-element kernel \code{frBE_scalar()} in \code{inst/include/distr_BE.h}
+#' takes a uniform you supply and agrees with \code{frBE()} draw for draw under
+#' one \code{dqrng::dqset.seed()}.
+#'
+#' @return A double vector of random deviates in [0, 1]: where a shape is
+#'   small (sigma near 1) a draw can be exactly 0 or 1, and below a shape of
+#'   1e-2 a value slightly outside [0, 1] (up to about 1e-11; \code{qbeta}'s
+#'   rounding, see \code{\link{fqBE}}).
+#'
+#' @examples
+#' x <- frBE(1000, mu = 0.6, sigma = 0.3)
+#' mean(x)  # approximately 0.6
+#' var(x)   # approximately 0.3^2 * 0.6 * 0.4 = 0.0216
+#'
+#' @references
+#' Rigby, R.A., Stasinopoulos, D.M., Heller, G.Z., and De Bastiani, F. (2019).
+#' Distributions for modelling location, scale, and shape: Using GAMLSS in R.
+#' Chapman and Hall/CRC.
+#'
+#' @seealso
+#' \code{\link{fdBE}}, \code{\link{fpBE}}, \code{\link{fqBE}} for
+#' other BE distribution functions.
+#'
+#' \code{\link[gamlss.dist]{rBE}} for the original implementation.
+#'
+#' \code{\link[dqrng]{dqrunif}} for the high-quality random number generator used.
+#'
+#' @export
+#' @importFrom dqrng dqrunif
+frBE <- function(n, mu = 0.5, sigma = 0.2) {
+    if (any(n <= 0)) {
+        stop(paste("n must be a positive integer", "\n", ""))
+    }
+    n <- ceiling(n)
+    p <- dqrng::dqrunif(n)
+    r <- fqBE(p, mu = mu, sigma = sigma)
+    r
+}
+
 #' Random Generation for Sichel Distribution
 #' 
 #' Generates random deviates from the Sichel distribution using high-quality 

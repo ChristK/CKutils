@@ -1,3 +1,47 @@
+# CKutils 0.1.37
+
+## New features
+
+* **`fdBE()`, `fpBE()`, `fqBE()` and `frBE()`: the beta distribution in
+  gamlss.dist's BE parametrisation, in C++** (mean `mu` and dispersion `sigma`,
+  both in (0, 1); variance `sigma^2 * mu * (1 - mu)`). Moved from
+  IMPACTncdEngland2026, which shipped `fpBE()` / `fqBE()` in its own
+  `R/beta_dist.R` (2026-11-17) for its free-sugar fraction, so every
+  single-family exposure distribution of that model now lives in CKutils (its
+  HbA1c two-component mixture, built on `fpBCT()` / `fqBCT()`, stays in the model). The arguments are those of
+  the other families (`fqBE(p, mu, sigma, lower_tail, log_p)`;
+  `frBE(n, mu = 0.5, sigma = 0.2)` is `fqBE(dqrng::dqrunif(n), ...)`); the
+  kernels `fdBE_scalar()` to `frBE_scalar()` are `inline` in the new
+  `inst/include/distr_BE.h` for a package that declares `LinkingTo: CKutils`.
+
+  **A model switching from that R code keeps its draws bit for bit.** The shapes
+  are `k = (1 - sigma^2) / sigma^2`, `shape1 = mu * k`, `shape2 = (1 - mu) * k`,
+  evaluated in that order one operator at a time (the product `sigma * sigma`
+  is kept out of an FMA, as in BCPE) and passed to R's own `dbeta()`, `pbeta()`
+  and `qbeta()`: `fqBE()`, `fpBE()` and `fdBE()` are `identical()` to that R code
+  on 2e5 random parameter sets, both tails and both scales, and on a
+  `mu x sigma` grid at the draws' extreme `p`. gamlss.dist evaluates the shapes
+  in another order (`a = mu * (1 - sigma^2) / (sigma^2)`, `b = a * (1 - mu) / mu`),
+  which differs by at most 2 ulp in a shape (a quantile by up to 2.3e-15 for `mu`
+  and `sigma` in (0.05, 0.95), more where a shape is small), so the
+  functions agree with `qBE()` / `pBE()` / `dBE()` to within that, not bit for
+  bit. Otherwise they differ by design from gamlss.dist: an `NA` or `NaN`
+  argument gives `NA` (gamlss.dist stops on an `NA` parameter); the upper tail is
+  `qbeta()`'s (`qBE(lower.tail = FALSE)` returns the lower-tail quantile in
+  gamlss.dist 6.1.11); `fqBE()` does not snap `p` below 1e-10 to 0 or above
+  1 - 1e-10 to 1; `fpBE()` outside [0, 1] and `fdBE()` there and at the ends are
+  `pbeta()`'s and `dbeta()`'s on the requested tail and scale. The parameters are
+  checked after recycling (`0 < mu < 1`, `0 < sigma < 1`; an element with an
+  `NA` argument is not checked), and a `p` outside [0, 1] is an error.
+  R's own limits stay, all where the smaller shape is below 1e-2 (`sigma` near 1
+  with `mu` near 0 or 1): `qbeta()` can warn that full precision may not have
+  been achieved, and a quantile (or an `frBE()` draw) on the natural scale can be
+  exactly 0 or 1, or slightly outside [0, 1] (about 1e-13 for a smaller shape of
+  1e-3 to 1e-2, up to about 1e-11 below 1e-4), most often without the warning.
+  Tests: `inst/tinytest/test-fBE.R` (with a control that the comparison sees the
+  other order of evaluation, and that `fqBE()` warns exactly where `qbeta()`
+  does) and the sampler parity of `test-rng_distr.R`.
+
 # CKutils 0.1.36
 
 ## New features
