@@ -1095,7 +1095,11 @@ warns_of <- function(expr) {
 
 # 1. fqZAGA(lower_tail = FALSE, log_p = TRUE) for p just below log(1 - nu) ------------
 
-uq <- function(p, mu = 1, sigma = 0.05, nu = 1e-300) {
+# nu = 1e-300, written in C99 hex as are the other inputs below whose exact double matters (the hex literal is
+# the double the decimal names): R on Apple Silicon reads decimals with long double = double (R_strtod in R's
+# src/main/util.c): 1e-300 4 ulp low, and -1.0000000000000002e-300 as -9.99999984e-301, above log(1 - nu),
+# where the quantile is 0
+uq <- function(p, mu = 1, sigma = 0.05, nu = 0x1.56e1fc2f8f359p-997) {
     fqZAGA(p, mu, sigma, nu, lower_tail = FALSE, log_p = TRUE)
 }
 nm1 <- num("upper log quantile")
@@ -1109,8 +1113,10 @@ expect_close(uq(p_pair), c(0.080230162657415241, 0.080192135758497915), tol = 1e
              info = paste0(nm1, "the pair that was non-monotone, against the quad reference"))
 expect_true(all(diff(uq(p_pair)) < 0),
             info = paste0(nm1, "a larger p (a larger upper tail) gives a smaller quantile"))
-# p one double below log(1 - nu) = -1e-300: the reduced log tail is subnormal (2e-316)
-q_sub <- uq(-1.0000000000000002e-300, mu = 1e100, sigma = 0.5)
+# p one double below log(1 - nu) = -1e-300 (-1.0000000000000002e-300): the reduced log tail is subnormal (2e-316)
+expect_identical(log1p(-0x1.56e1fc2f8f359p-997), -0x1.56e1fc2f8f359p-997,
+                 info = paste0(nm1, "design: log(1 - nu) is -nu, so the next p below it is p_sub"))
+q_sub <- uq(-0x1.56e1fc2f8f35ap-997, mu = 1e100, sigma = 0.5)
 expect_true(is.finite(q_sub) && q_sub > 0, info = paste0(nm1, "mu = 1e100: finite, it was NaN"))
 expect_close(q_sub, 6.27879720421535121408e20, tol = 1e-10,
              info = paste0(nm1, "mu = 1e100, sigma = 0.5: the quad reference 6.2787972e20"))
@@ -1205,18 +1211,37 @@ expect_identical(fdZAGA(x_h, mu_h, sg_h, nu_h),
 # 4. a quantile is never negative --------------------------------------------------------
 
 n4 <- conv("quantile >= 0")
-for (cs in list(list(p = 0.4, mu = 1e10, sg = 1e-40, nu = 0.17, lt = FALSE, lp = FALSE),
-                list(p = log(0.6), mu = 1e10, sg = 1e-40, nu = 0.17, lt = TRUE, lp = TRUE),
-                list(p = 0.4, mu = 3.9847972202982205e+51, sg = 2.687813101924436e-88, nu = 0.16892664670012891,
-                     lt = FALSE, lp = FALSE),
-                list(p = 9.9769265646432601e-55, mu = 3.9847972202982205e+51, sg = 2.687813101924436e-88,
-                     nu = 0.16892664670012891, lt = FALSE, lp = FALSE))) {
-    w4 <- warns_of(fqZAGA(cs$p, cs$mu, cs$sg, cs$nu, lower_tail = cs$lt, log_p = cs$lp))
-    expect_true(is.nan(w4$value),
-                info = paste0(n4, "a negative qgamma value is NaN: p ", format(cs$p), " sigma ", cs$sg))
-    expect_identical(w4$warnings, "NaNs produced",
-                     info = paste0(n4, "...with one warning: p ", format(cs$p), " sigma ", cs$sg))
+# The first two cases give a negative qgamma value everywhere. The last two were found by a search (mu
+# 3.9847972202982205e+51, sigma 2.687813101924436e-88, nu 0.16892664670012891, p 0.4 and 9.9769265646432601e-55;
+# their inputs in C99 hex, as for uq() above). Whether R's own qgamma is negative there, at a shape of 1.4e175, is
+# R's arithmetic and may differ by platform, so they are judged against it: where qgamma (at the arguments the
+# upper-tail kernel hands it) is negative the quantile is NaN with one warning, elsewhere it is qgamma's value.
+qg_upper <- function(p, mu, sg, nu) {
+    suppressWarnings(qgamma(p / (1 - nu), shape = 1 / sg^2, scale = mu * sg^2, lower.tail = FALSE))
 }
+n_nan4 <- 0L
+for (cs in list(list(p = 0.4, mu = 1e10, sg = 1e-40, nu = 0.17, lt = FALSE, lp = FALSE, judge = FALSE),
+                list(p = log(0.6), mu = 1e10, sg = 1e-40, nu = 0.17, lt = TRUE, lp = TRUE, judge = FALSE),
+                list(p = 0.4, mu = 0x1.54d048e6dc49p+171, sg = 0x1.11c233908d198p-291, nu = 0x1.59f636b8p-3,
+                     lt = FALSE, lp = FALSE, judge = TRUE),
+                list(p = 0x1.8769e49412613p-180, mu = 0x1.54d048e6dc49p+171, sg = 0x1.11c233908d198p-291,
+                     nu = 0x1.59f636b8p-3, lt = FALSE, lp = FALSE, judge = TRUE))) {
+    w4 <- warns_of(fqZAGA(cs$p, cs$mu, cs$sg, cs$nu, lower_tail = cs$lt, log_p = cs$lp))
+    ref <- if (cs$judge) qg_upper(cs$p, cs$mu, cs$sg, cs$nu) else -1
+    if (is.na(ref) || ref < 0) {
+        n_nan4 <- n_nan4 + 1L
+        expect_true(is.nan(w4$value),
+                    info = paste0(n4, "a negative qgamma value is NaN: p ", format(cs$p), " sigma ", cs$sg))
+        expect_identical(w4$warnings, "NaNs produced",
+                         info = paste0(n4, "...with one warning: p ", format(cs$p), " sigma ", cs$sg))
+    } else {
+        expect_identical(w4$value, ref,
+                         info = paste0(n4, "where qgamma is not negative, its value: p ", format(cs$p), " sigma ", cs$sg))
+        expect_identical(w4$warnings, character(0),
+                         info = paste0(n4, "...without a warning: p ", format(cs$p), " sigma ", cs$sg))
+    }
+}
+expect_true(n_nan4 >= 2L, info = paste0(n4, "design: the NaN branch is taken on this platform"))
 # a quantile is NaN or non-negative on the whole sweep of huge shapes, on all four tails
 sg4 <- 10^-seq(20, 100, by = 4)
 p4 <- c(0.3, 0.6, 0.9)

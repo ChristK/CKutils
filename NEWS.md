@@ -1,3 +1,44 @@
+# CKutils 0.1.38
+
+## Bug fixes
+
+* **`fpZAGA()` is `identical()` to `gamlss.dist::pZAGA()` on every platform.** The
+  natural-scale lower tail `nu + (1 - nu) * G` was compiled as one fused
+  multiply-add (FMA) wherever the compiler may contract one, which rounds once
+  where R rounds the product and the sum separately: GCC by default
+  (`-ffp-contract=fast`) on any target with FMA (every arm64; x86-64 from
+  `-march=x86-64-v3`) and clang on macOS (`-ffp-contract=on`). Such a build differed
+  from `pZAGA()` by an ulp on 15 % of rows (145,220 of 1e6; the log-scale lower tail
+  on 2 %), so the identity test failed on the arm64 and macOS runners, and on the
+  x86-64 ones once GitHub's `ubuntu-latest` image moved from Ubuntu 24.04 to 26.04:
+  its GCC 15 defaults to `-march=x86-64-v3`, FMA on (measured on the runner, where
+  `CKutils.so` held 110 FMA instructions and 0.1.37 differed from `pZAGA()` on 74 of
+  the test's 600 rows; the stock `ubuntu:26.04` container's GCC still targets
+  baseline x86-64). The product is now rounded on its own (`zaga_rnd()` in
+  `inst/include/distr_ZAGA.h`, the barrier `bcpe_rnd()` and `be_rnd()` use). Where no
+  FMA is emitted (R's default flags on x86-64) every ZAGA function, both tails and
+  both scales, and `frZAGA()`'s draws are bit for bit those of 0.1.37 (1e6 rows); a
+  `-march=x86-64-v3` build now gives the same values, and `pZAGA()`'s.
+
+## Tests
+
+* **The tests read exact inputs on every platform.** R on Apple Silicon reads
+  decimal numbers with `long double` the same as `double` (`R_strtod()` in R's
+  `src/main/util.c` accumulates the digits and scales by the power of ten in
+  `long double`): a 17-digit decimal comes out a few ulp off, and one near 1e-300
+  by up to 2.4e-7 (the power of ten it scales by is subnormal there). The BCPE and
+  ZAGA tests whose points sit next to the `tau < 1` cusp, at targets of 1e-300 or
+  on a branch decided by the last bit therefore failed on macOS (31 expectations)
+  although the kernels were right: with their inputs read by R's own `R_strtod()`
+  compiled on Linux with `-mlong-double-64` (and FMA, as clang builds it), the same
+  expectations fail here, with the values the macOS runner printed. Now `bcpe_reference.csv` carries exact C99-hex copies of
+  its numeric columns (`arg_x` ... `value_x`; the decimal columns stay, for
+  reading), which the test reads; the cusp table holds the offset `dy` of
+  `y = 25 * (1 + dy)`; the ZAGA inputs whose exact double matters are hex
+  literals; and the two searched-for ZAGA cases where R's `qgamma()` returns a
+  negative value at a shape of 1.4e175 are judged against `qgamma()` itself at the
+  same arguments (NaN with one warning where it is negative, its value elsewhere).
+
 # CKutils 0.1.37
 
 ## New features

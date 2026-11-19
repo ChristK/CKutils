@@ -60,12 +60,36 @@ Fifth Floor, Boston, MA 02110-1301  USA. */
 // scale does so too, from the gamma part's lower tail log(-expm1(r)) where its
 // upper tail exp(r) exceeds 1/2. The natural-scale lower tail is the plain
 // nu + (1 - nu) * G and its inverse, unchanged.
+//
+// That lower tail is identical() to gamlss.dist::pZAGA (the IMPACTncd alcohol model
+// uses it in place of pZAGA), which assumes that (1 - nu) * G is rounded before nu is
+// added, as R rounds each operator. A compiler allowed to fuse the product and the sum
+// into one FMA rounds once and differs by an ulp on some rows: GCC does so by default
+// (-ffp-contract=fast) wherever the target has FMA (every arm64; x86-64 from
+// -march=x86-64-v3), and clang on macOS (-ffp-contract=on). zaga_rnd() forces that
+// rounding, as bcpe_rnd() does in distr_BCPE.h; where no FMA is emitted (R's default
+// x86-64 flags) it changes nothing.
 // The natural-scale density is (1 - nu) * dgamma, but where dgamma underflows (a
 // tiny scale mu * sigma^2) it is exp(log1p(-nu) + log dgamma), which stays
 // accurate.
 
 #include <Rcpp.h>
 #include <cmath>
+
+// Returns x rounded to double, so that a product passed through it cannot be fused
+// with the following addition into one FMA (see the note above). Unconditional on
+// every GNU-compatible compiler (an empty asm statement through which the value
+// passes in memory: no feature macro covers every flag that enables FMA), and a
+// volatile copy elsewhere; the same barrier as bcpe_rnd() and be_rnd().
+inline double zaga_rnd(double x) {
+#if defined(__GNUC__) || defined(__clang__)
+    __asm__ volatile("" : "+m"(x));
+    return x;
+#else
+    volatile double v = x;
+    return v;
+#endif
+}
 
 // ZAGA density scalar function
 //   x == 0: nu
@@ -181,8 +205,9 @@ inline double fpZAGA_scalar(const double& q,
         if (upper < 0.5) return std::log1p(-upper);
     }
 
-    // F(q) = nu + (1-nu) * G(q); G(0) = 0 makes F(0) exactly nu.
-    double cdf = nu + (1.0 - nu) * R::pgamma(q, shape, scale, true, false);
+    // F(q) = nu + (1-nu) * G(q); G(0) = 0 makes F(0) exactly nu. The product is
+    // rounded on its own (zaga_rnd), as gamlss.dist's R code rounds it.
+    double cdf = nu + zaga_rnd((1.0 - nu) * R::pgamma(q, shape, scale, true, false));
     if (cdf > 1.0) cdf = 1.0;
 
     return log_p ? std::log(cdf) : cdf;
